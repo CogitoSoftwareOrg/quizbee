@@ -1,0 +1,9 @@
+FROM node:24.3.0
+
+WORKDIR /app
+
+RUN corepack enable && corepack prepare pnpm@10.15.0 --activate
+
+COPY ./package.json ./pnpm-lock.yaml ./
+
+CMD ["pnpm","run","dev","--","--host","0.0.0.0"]

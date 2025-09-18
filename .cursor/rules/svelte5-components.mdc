@@ -1,0 +1,10 @@
+---
+description: 
+globs: *.svelte,*.svelte.ts
+alwaysApply: false
+---
+[svelte5.txt](../docs/svelte5.txt)
+
+use modern svelte 5 syntax
+- Use runes $state, $derived, $effect
+- Use classical html callback props, for example onclick NOT on:click (without :)

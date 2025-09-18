@@ -1,0 +1,12 @@
+---
+description: 
+globs: *.astro,*.svelte
+alwaysApply: false
+---
+
+- Use modern tailwind v4 for styles
+- Use daisyUI 5 if possible, use its semantic vars
+- Never write dark:, never hardcode theme variants inside components
+
+[global.css](../../app/src/app.css)
+[daisy5.txt](../docs/daisy5.txt)
