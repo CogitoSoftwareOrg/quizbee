@@ -9,7 +9,7 @@ from .utils.extract_pr import extract_pr_id_from_coolify_url
 
 
 class Settings(BaseSettings):
-    env: str = Field(default="local", alias="PUBLIC_ENV")
+    env: str = Field(default="local", alias="ENV")
     coolify_url: str | None = Field(default=None)
     pr_id: int | None = Field(default=None)
     redis_prefix: str = Field(default="")
