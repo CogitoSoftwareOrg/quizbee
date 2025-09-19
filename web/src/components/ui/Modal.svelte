@@ -1,0 +1,94 @@
+<script lang="ts">
+	import { X } from 'lucide-svelte';
+	import type { ClassValue } from 'svelte/elements';
+
+	import { portal } from '../actions/portal';
+
+	import Button from './Button.svelte';
+
+	interface Props {
+		open?: boolean;
+		portalId?: string;
+		class?: ClassValue;
+		children?: any;
+		onclose?: () => void;
+		backdrop?: boolean;
+		noPadding?: boolean;
+		placement?: 'top' | 'bottom' | 'left' | 'right' | 'center';
+		order?: number;
+		transparent?: boolean;
+
+		transition?: boolean;
+		id?: string;
+	}
+
+	let {
+		open = $bindable(false),
+		portalId = 'body',
+		class: className = '',
+		children,
+		onclose,
+		placement = 'center',
+		backdrop = false,
+		noPadding = false,
+		transparent = false,
+		id
+	}: Props = $props();
+
+	let dialogElement: HTMLDialogElement | null = $state(null);
+
+	let placementClass = $derived.by(() => {
+		switch (placement) {
+			case 'top':
+				return 'modal-top';
+			case 'bottom':
+				return 'modal-bottom';
+			case 'left':
+				return 'modal-start';
+			case 'right':
+				return 'modal-end';
+			case 'center':
+				return 'modal-middle';
+		}
+	});
+
+	function handleClose() {
+		open = false;
+		dialogElement?.close();
+		onclose?.();
+	}
+
+	$effect(() => {
+		if (!dialogElement) return;
+		if (open) {
+			dialogElement.showModal();
+		} else {
+			handleClose();
+		}
+	});
+</script>
+
+<div use:portal={portalId}>
+	<dialog
+		{id}
+		style={transparent ? 'background: transparent' : ''}
+		bind:this={dialogElement}
+		class={['modal', placementClass]}
+	>
+		<div class={['modal-box relative', noPadding && 'p-0', className]}>
+			<div class="absolute right-2 top-2">
+				<Button color="neutral" style="ghost" onclick={handleClose} circle>
+					<X size={24} />
+				</Button>
+			</div>
+
+			{@render children()}
+		</div>
+
+		{#if backdrop}
+			<form method="dialog" class="modal-backdrop">
+				<button onclick={handleClose}>close</button>
+			</form>
+		{/if}
+	</dialog>
+</div>
