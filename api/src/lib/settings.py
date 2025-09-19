@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     pr_id: int | None = Field(default=None)
     redis_prefix: str = Field(default="")
 
-    pb_url: str = Field(default="http://localhost:8090", alias="PUBLIC_PB_URL")
+    pb_url: str = Field(default="http://localhost:8090", alias="PB_URL")
     pb_email: str = Field(default="admin@admin.com")
     pb_password: str = Field(default="admin")
 
