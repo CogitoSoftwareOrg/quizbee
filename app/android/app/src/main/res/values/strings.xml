@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Quizbee</string>
+    <string name="title_activity_main">Quizbee</string>
+    <string name="package_name">com.quizbee.app</string>
+    <string name="custom_url_scheme">com.quizbee.app</string>
+</resources>

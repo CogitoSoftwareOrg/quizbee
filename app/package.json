@@ -5,6 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev --host 0.0.0.0 --port 5173",
+		"build:gen-types": "npx pocketbase-typegen --url http://localhost:8090 --email cogitoteamdev@gmail.com --password 'breAth20' --out src/lib/pb/pocketbase-types.ts",
 		"build": "vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
@@ -53,6 +54,11 @@
 		]
 	},
 	"dependencies": {
+		"@capacitor/android": "^7.4.3",
+		"@capacitor/cli": "^7.4.3",
+		"@capacitor/core": "^7.4.3",
+		"@capacitor/ios": "^7.4.3",
+		"@capacitor/preferences": "^7.0.2",
 		"dompurify": "^3.2.7",
 		"lucide-svelte": "^0.544.0",
 		"luxon": "^3.7.2",

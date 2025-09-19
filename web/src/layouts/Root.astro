@@ -1,7 +1,10 @@
 ---
+import { getLangFromUrl } from "@/i18n/utils";
 import "@/styles/global.css";
 
-const { title, lang } = Astro.props;
+const { title } = Astro.props;
+
+const lang = getLangFromUrl(Astro.url);
 ---
 
 <!doctype html>
