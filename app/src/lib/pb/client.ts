@@ -2,7 +2,7 @@ import { Preferences } from '@capacitor/preferences';
 import PocketBase, { AsyncAuthStore } from 'pocketbase';
 import { PUBLIC_PB_URL } from '$env/static/public';
 
-import { computeEnvUrl } from '$lib/helpers/compute-env-url';
+import { computeEnvUrl } from '$lib/utils/compute-env-url';
 
 import type { TypedPocketBase } from './pocketbase-types';
 

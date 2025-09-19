@@ -1,12 +1,9 @@
 export const ssr = false;
 export const prerender = false;
 
-import { pbReady } from '$lib/pb/client';
+import { pbReady, setPBOnChange } from '$lib/pb';
 
 export async function load() {
-	await pbReady;
-
-	return {
-		ok: true
-	};
+	const pb = await pbReady;
+	setPBOnChange(pb);
 }
