@@ -51,5 +51,15 @@
 		"onlyBuiltDependencies": [
 			"esbuild"
 		]
+	},
+	"dependencies": {
+		"dompurify": "^3.2.7",
+		"lucide-svelte": "^0.544.0",
+		"luxon": "^3.7.2",
+		"marked": "^16.3.0",
+		"nanoid": "^5.1.5",
+		"pocketbase": "^0.26.2",
+		"stripe": "^18.5.0",
+		"zod": "^4.1.9"
 	}
 }

@@ -1,1 +1,42 @@
 @import "tailwindcss";
+
+@plugin "daisyui" {
+  themes: all;
+}
+
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+@plugin "daisyui/theme" {
+  name: "corporate";
+  default: true;
+  --color-primary: var(--color-lime-600);
+  --color-secondary: var(--color-amber-600);
+  /* --color-neutral-content: var(--color-slate-200); */
+  --color-neutral: var(--color-gray-700);
+}
+
+@plugin "daisyui/theme" {
+  name: "sunset";
+  default: true;
+  --color-primary: var(--color-lime-500);
+  --color-secondary: var(--color-yellow-500);
+  /* --color-neutral-content: var(--color-slate-200); */
+  /* --color-neutral: var(--color-slate-500); */
+}
+
+/* Sidebar width transitions */
+.sidebar-open {
+  width: 256px;
+}
+
+.sidebar-closed {
+  width: 64px;
+}
+
+.inner-open {
+  width: 256px;
+}
+
+.inner-closed {
+  width: 0px;
+}
