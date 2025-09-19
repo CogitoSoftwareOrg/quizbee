@@ -15,6 +15,7 @@
     "astro": "^5.13.8",
     "svelte": "^5.38.10",
     "tailwindcss": "^4.1.13",
+    "theme-change": "^2.5.0",
     "typescript": "^5.9.2"
   },
   "devDependencies": {

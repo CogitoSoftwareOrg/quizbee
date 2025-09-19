@@ -2,6 +2,9 @@
 import { getLangFromUrl } from "@/i18n/utils";
 import "@/styles/global.css";
 
+import ThemeLoad from "@/components/features/ThemeLoad.astro";
+import ThemeController from "@/components/features/ThemeController.svelte";
+
 const { title } = Astro.props;
 
 const lang = getLangFromUrl(Astro.url);
@@ -17,6 +20,8 @@ const lang = getLangFromUrl(Astro.url);
     <title>{title}</title>
   </head>
   <body>
+    <ThemeLoad />
+    <ThemeController client:load />
     <slot />
   </body>
 </html>

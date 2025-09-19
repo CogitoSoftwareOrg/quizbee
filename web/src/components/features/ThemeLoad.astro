@@ -1,0 +1,27 @@
+---
+
+---
+
+<script is:inline>
+  const DEFAULT_THEME = "cupcake";
+
+  if (localStorage.getItem("theme") === null) {
+    document.documentElement.setAttribute("data-theme", DEFAULT_THEME);
+    localStorage.setItem("theme", DEFAULT_THEME);
+  } else {
+    document.documentElement.setAttribute(
+      "data-theme",
+      localStorage.getItem("theme")
+    );
+  }
+
+  document.addEventListener("astro:before-swap", (e) => {
+    const theme = localStorage.getItem("theme") ?? DEFAULT_THEME;
+    e.newDocument.documentElement.setAttribute("data-theme", theme);
+  });
+</script>
+
+<script>
+  import { themeChange } from "theme-change";
+  themeChange(false);
+</script>
