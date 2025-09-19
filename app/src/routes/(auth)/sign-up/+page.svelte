@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 
 	import { pb } from '$lib/pb';
+	import ThemeController from '$lib/features/ThemeController.svelte';
 
 	import Oauth from '../Oauth.svelte';
 
@@ -52,6 +53,7 @@
 </script>
 
 <div class="mx-auto mt-8 max-w-md px-4">
+	<ThemeController />
 	<h1 class="mb-6 text-center text-3xl font-bold">Create New Account</h1>
 
 	<div class="mb-4">

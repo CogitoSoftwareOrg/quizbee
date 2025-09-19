@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 
+	import ThemeController from '$lib/features/ThemeController.svelte';
 	import { pb } from '$lib/pb';
+
 	import Oauth from '../Oauth.svelte';
 
 	let email = $state('');
@@ -32,6 +34,7 @@
 </script>
 
 <div class="mx-auto mt-8 max-w-md px-4">
+	<ThemeController />
 	<h1 class="mb-6 text-center text-3xl font-bold">Sign In to Your Account</h1>
 
 	<!-- OAuth buttons -->
