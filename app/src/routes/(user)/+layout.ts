@@ -1,11 +1,27 @@
 import { goto } from '$app/navigation';
 
 import { pb } from '$lib/pb';
+import type { UsersResponse } from '$lib/pb/pocketbase-types';
+import type { UserExpand } from '$lib/pb/expands';
 
-export async function load() {
-	if (!pb!.authStore.isValid) goto('/sign-in');
+const EXPAND = [
+	'subscriptions_via_user',
+	'materials_via_user',
+	'quizAttempts_via_user',
+	'quizes_via_author',
+	'quizes_via_author.quizItems_via_quiz'
+].join(',');
 
-	// const userPromise = pb!.collection('users').authRefresh();
-	// return { userPromise };
-	return {};
+export async function load({ depends }) {
+	depends('global:user');
+
+	if (!pb?.authStore.isValid) await goto('/sign-in');
+
+	const userLoadPromise: Promise<UsersResponse<unknown, UserExpand>> = pb!
+		.collection('users')
+		.authRefresh({
+			expand: EXPAND
+		})
+		.then((res) => res.record as UsersResponse<unknown, UserExpand>);
+	return { userLoadPromise };
 }

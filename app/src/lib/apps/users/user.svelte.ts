@@ -9,10 +9,23 @@ import type { UserExpand } from '$lib/pb/expands';
 // import type { Sender } from '../chats/types';
 
 class UserStore {
-	user = $state<UsersResponse<UserExpand> | null>(
-		pb!.authStore.isValid ? (pb!.authStore.record as UsersResponse<UserExpand>) : null
-	);
-	token = $state<string | null>(null);
+	_loaded = $state(false);
+
+	_user: UsersResponse<unknown, UserExpand> | null = $state(null);
+	token: string | null = $state(null);
+
+	get loaded() {
+		return this._loaded;
+	}
+	setLoaded() {
+		this._loaded = true;
+	}
+	get user() {
+		return this._user;
+	}
+	set user(user: UsersResponse<unknown, UserExpand> | null) {
+		this._user = user;
+	}
 
 	// sender: Sender = $derived({
 	// 	id: this.user?.id || '',
@@ -22,26 +35,21 @@ class UserStore {
 	// });
 
 	async subscribe(userId: string) {
-		return pb!.collection('users').subscribe(
-			userId,
-			(e) => {
-				switch (e.action) {
-					case 'update':
-						pb!.authStore.save(pb!.authStore.token, e.record as AuthRecord);
-						break;
-					case 'delete':
-						pb!.authStore.clear();
-						break;
-				}
-			},
-			{
-				expand: ''
+		return pb!.collection('users').subscribe(userId, (e) => {
+			console.log(e);
+			switch (e.action) {
+				case 'update':
+					pb!.authStore.save(pb!.authStore.token, e.record as AuthRecord);
+					break;
+				case 'delete':
+					pb!.authStore.clear();
+					break;
 			}
-		);
+		});
 	}
 
 	unsubscribe(userId: string) {
-		return pb!.collection('users').unsubscribe(userId);
+		pb!.collection('users').unsubscribe(userId);
 	}
 }
 

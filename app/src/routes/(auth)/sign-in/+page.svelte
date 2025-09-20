@@ -23,7 +23,7 @@
 			await pb!.collection('users').authWithPassword(email, password, {
 				expand: ''
 			});
-			await goto('/');
+			await goto('/home');
 		} catch (err) {
 			console.error(err);
 			error = err as any;

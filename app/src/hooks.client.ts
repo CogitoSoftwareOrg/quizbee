@@ -1,10 +1,9 @@
 import type { Handle } from '@sveltejs/kit';
 
-import { pbReady, setPBOnChange } from '$lib/pb';
+import { pbReady } from '$lib/pb';
 
 export const handle: Handle = async ({ event, resolve }) => {
-	const pb = await pbReady;
-	setPBOnChange(pb);
+	await pbReady;
 
 	const response = await resolve(event);
 	return response;

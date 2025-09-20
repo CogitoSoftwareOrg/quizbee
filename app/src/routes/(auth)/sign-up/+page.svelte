@@ -42,7 +42,7 @@
 			await pb!.collection('users').authWithPassword(email, password, {
 				expand: ''
 			});
-			await goto('/');
+			await goto('/home');
 			await pb!.collection('users').requestVerification(email);
 		} catch (err) {
 			console.error(err);
