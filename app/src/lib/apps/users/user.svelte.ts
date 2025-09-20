@@ -16,7 +16,6 @@ class UserStore {
 		return this._user;
 	}
 	set user(user: UsersResponse<UserExpand> | null) {
-		if (user?.expand) user.expand = undefined;
 		this._user = user;
 	}
 

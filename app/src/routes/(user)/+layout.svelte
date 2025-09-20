@@ -10,15 +10,17 @@
 
 	// wait for user to be loaded
 	$effect(() => {
-		data.userLoadPromise.then((user) => {
-			const materials = user.expand.materials_via_user || [];
-			const quizAttempts = user.expand.quizAttempts_via_user || [];
-			const quizes = user.expand.quizes_via_author || [];
+		data.userLoadPromise.then((userLoad) => {
+			const materials = userLoad.expand.materials_via_user || [];
+			const quizAttempts = userLoad.expand.quizAttempts_via_user || [];
+			const quizes = userLoad.expand.quizes_via_author || [];
 
-			userStore.user = user;
 			materialsStore.materials = materials;
 			quizAttemptsStore.quizAttempts = quizAttempts;
 			quizesStore.quizes = quizes;
+
+			userLoad.expand = undefined;
+			userStore.user = userLoad;
 		});
 	});
 

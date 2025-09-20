@@ -12,7 +12,9 @@ const EXPAND = [
 	'quizes_via_author.quizItems_via_quiz'
 ].join(',');
 
-export async function load() {
+export async function load({ depends }) {
+	depends('global:user');
+
 	if (!pb!.authStore.isValid) goto('/sign-in');
 
 	const userLoadPromise: Promise<UsersResponse<UserExpand>> = pb!
