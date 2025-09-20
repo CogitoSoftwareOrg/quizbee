@@ -1,21 +1,14 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import { PanelRightOpen, PanelRightClose, Home, User } from 'lucide-svelte';
+	import { PanelRightOpen, PanelRightClose } from 'lucide-svelte';
 	import ThemeController from '$lib/features/ThemeController.svelte';
+	import ProfileRow from '$lib/apps/users/ProfileRow.svelte';
+	import SidebarNavigation from './SidebarNavigation.svelte';
 
 	const { children } = $props();
 
 	let sidebarOpen = $state(true);
-	let theme = $state<'corporate' | 'business'>('corporate');
-
 	function toggleSidebar() {
 		sidebarOpen = !sidebarOpen;
-	}
-
-	function setTheme(next: 'corporate' | 'business') {
-		theme = next;
-		document.documentElement.setAttribute('data-theme', next);
-		localStorage.setItem('theme', next);
 	}
 </script>
 
@@ -33,28 +26,9 @@
 			{/if}
 		</a>
 
-		<nav class="flex-1">
-			<ul class="menu px-2">
-				<li>
-					<a
-						href="/home"
-						class={['rounded-md', page.url.pathname.startsWith('/home') ? 'active' : '']}
-					>
-						<Home class="size-5" />
-						{#if sidebarOpen}<span>Home</span>{/if}
-					</a>
-				</li>
-				<li>
-					<a
-						href="/profile"
-						class={['rounded-md', page.url.pathname.startsWith('/profile') ? 'active' : '']}
-					>
-						<User class="size-5" />
-						{#if sidebarOpen}<span>Profile</span>{/if}
-					</a>
-				</li>
-			</ul>
-		</nav>
+		<SidebarNavigation {sidebarOpen} />
+
+		<ProfileRow {sidebarOpen} />
 	</aside>
 
 	<main class="flex h-full flex-1 flex-col">
