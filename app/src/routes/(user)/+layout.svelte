@@ -3,6 +3,8 @@
 	import { materialsStore } from '$lib/apps/materials/materials.svelte.js';
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte.js';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte.js';
+	import ThemeController from '$lib/features/ThemeController.svelte';
+	import type { UserExpand } from '$lib/pb/expands.js';
 
 	const { data, children } = $props();
 
@@ -19,8 +21,9 @@
 			quizAttemptsStore.quizAttempts = quizAttempts;
 			quizesStore.quizes = quizes;
 
-			userLoad.expand = undefined;
+			userLoad.expand = {} as UserExpand;
 			userStore.user = userLoad;
+			userStore.setLoaded();
 		});
 	});
 
@@ -41,10 +44,12 @@
 </script>
 
 {#await data.userLoadPromise}
-	<div class="loading loading-spinner loading-lg"></div>
+	<div class="flex h-screen items-center justify-center">
+		<div class="loading loading-spinner loading-xl"></div>
+		<p>We are loading app for you... :3</p>
+	</div>
 {:then}
 	{@render children?.()}
-	{JSON.stringify(user)}
 {:catch error}
 	{JSON.stringify(error)}
 {/await}

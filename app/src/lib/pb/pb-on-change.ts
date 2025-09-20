@@ -11,7 +11,7 @@ pb!.authStore.onChange((token, record) => {
 	if (record && pb!.authStore.isValid) {
 		console.log('rec', record);
 		try {
-			const user = record as UsersResponse<UserExpand>;
+			const user = record as UsersResponse<unknown, UserExpand>;
 			userStore.user = user;
 			userStore.token = token;
 

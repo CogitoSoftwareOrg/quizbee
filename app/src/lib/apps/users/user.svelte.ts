@@ -9,13 +9,21 @@ import type { UserExpand } from '$lib/pb/expands';
 // import type { Sender } from '../chats/types';
 
 class UserStore {
-	_user: UsersResponse<UserExpand> | null = $state(null);
+	_loaded = $state(false);
+
+	_user: UsersResponse<unknown, UserExpand> | null = $state(null);
 	token: string | null = $state(null);
 
+	get loaded() {
+		return this._loaded;
+	}
+	setLoaded() {
+		this._loaded = true;
+	}
 	get user() {
 		return this._user;
 	}
-	set user(user: UsersResponse<UserExpand> | null) {
+	set user(user: UsersResponse<unknown, UserExpand> | null) {
 		this._user = user;
 	}
 

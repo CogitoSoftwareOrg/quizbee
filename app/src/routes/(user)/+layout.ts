@@ -15,13 +15,13 @@ const EXPAND = [
 export async function load({ depends }) {
 	depends('global:user');
 
-	if (!pb!.authStore.isValid) goto('/sign-in');
+	if (!pb?.authStore.isValid) await goto('/sign-in');
 
-	const userLoadPromise: Promise<UsersResponse<UserExpand>> = pb!
+	const userLoadPromise: Promise<UsersResponse<unknown, UserExpand>> = pb!
 		.collection('users')
 		.authRefresh({
 			expand: EXPAND
 		})
-		.then((res) => res.record as UsersResponse<UserExpand>);
+		.then((res) => res.record as UsersResponse<unknown, UserExpand>);
 	return { userLoadPromise };
 }

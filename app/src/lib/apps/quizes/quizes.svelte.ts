@@ -1,13 +1,13 @@
-import { pb } from '$lib/pb';
+import { pb, type QuizExpand } from '$lib/pb';
 import type { QuizesResponse } from '$lib/pb/pocketbase-types';
 
 class QuizesStore {
-	_quizes: QuizesResponse[] = $state([]);
+	_quizes: QuizesResponse<QuizExpand>[] = $state([]);
 
 	get quizes() {
 		return this._quizes;
 	}
-	set quizes(quizes: QuizesResponse[]) {
+	set quizes(quizes: QuizesResponse<QuizExpand>[]) {
 		const sortedQuizes = quizes.toSorted((a, b) => b.created.localeCompare(a.created));
 		this._quizes = sortedQuizes;
 	}
@@ -16,7 +16,7 @@ class QuizesStore {
 		return pb!.collection('quizes').subscribe(
 			'*',
 			(e) => {
-				const quiz = e.record;
+				const quiz = e.record as QuizesResponse<QuizExpand>;
 				switch (e.action) {
 					case 'create':
 						this.quizes.unshift(quiz);
@@ -30,7 +30,8 @@ class QuizesStore {
 				}
 			},
 			{
-				filter: `user = "${userId}"`
+				filter: `user = "${userId}"`,
+				expand: 'quizItems_via_quiz'
 			}
 		);
 	}
