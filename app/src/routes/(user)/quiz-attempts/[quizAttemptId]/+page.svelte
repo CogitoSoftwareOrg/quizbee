@@ -31,7 +31,7 @@
 		const clamped = Math.max(0, Math.min(idx, max));
 		const u = new URL(page.url);
 		u.searchParams.set('itemIdx', String(clamped));
-		goto(u, { replaceState: clamped !== idx, keepfocus: true, noscroll: true });
+		goto(u, { replaceState: clamped !== idx, keepFocus: true, noScroll: true });
 	}
 </script>
 
