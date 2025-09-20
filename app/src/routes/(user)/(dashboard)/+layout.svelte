@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Honey from '$lib/assets/icons/honey.svg';
+
 	import { PanelRightOpen, PanelRightClose } from 'lucide-svelte';
 	import ThemeController from '$lib/features/ThemeController.svelte';
 	import ProfileRow from '$lib/apps/users/ProfileRow.svelte';
@@ -20,7 +22,7 @@
 		]}
 	>
 		<a href="/home" class="relative mb-4 flex select-none items-center justify-center gap-2 px-2">
-			<div class="bg-primary/10 size-8 rounded"></div>
+			<img src={Honey} alt="Quizbee" class="bg-primary/20 size-8 rounded" />
 			{#if sidebarOpen}
 				<p class="text-primary text-xl font-semibold">Quizbee</p>
 			{/if}

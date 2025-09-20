@@ -42,3 +42,14 @@
 .inner-closed {
 	width: 0px;
 }
+
+@font-face {
+	font-family: 'Roboto';
+	src: url('/fonts/Roboto-VariableFont.ttf') format('truetype');
+	font-weight: 100 900; /* если variable */
+	font-style: normal;
+	font-display: swap;
+}
+:root {
+	--font-sans: 'Roboto', system-ui, sans-serif;
+}

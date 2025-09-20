@@ -2,11 +2,9 @@
 	import '../app.css';
 	import '$lib/pb/pb-on-change';
 
-	import { fly } from 'svelte/transition';
 	import { afterNavigate } from '$app/navigation';
-	import { page } from '$app/state';
 
-	import favicon from '$lib/assets/favicon.svg';
+	import favicon from '$lib/assets/icons/honey.svg';
 	import PortalHost from '$lib/actions/PortalHost.svelte';
 
 	let { children } = $props();
@@ -18,6 +16,7 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
+	<link rel="preload" as="font" href="/fonts/Roboto-VariableFont.ttf" type="font/ttf" />
 </svelte:head>
 
 <PortalHost />
