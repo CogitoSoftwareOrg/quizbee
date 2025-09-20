@@ -14,6 +14,7 @@
 </main>
 
 <style>
+	
 	main {
 		padding: 2rem;
 		max-width: 800px;
