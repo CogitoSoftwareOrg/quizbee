@@ -10,6 +10,7 @@
 
 	import ThemeController from '$lib/features/ThemeController.svelte';
 	import ProfileRow from '$lib/apps/users/ProfileRow.svelte';
+	import { uiStore } from '$lib/apps/users/ui.svelte';
 
 	import SidebarNavigation from './SidebarNavigation.svelte';
 
@@ -17,11 +18,9 @@
 
 	const user = $derived(userStore.user);
 
-	let sidebarOpen = $state(true);
-
 	// wait for user to be loaded
 	$effect(() => {
-		data.userLoadPromise.then((userLoad) => {
+		data.userLoadPromise.then(async (userLoad) => {
 			const materials = userLoad.expand.materials_via_user || [];
 			const quizAttempts = userLoad.expand.quizAttempts_via_user || [];
 			const quizes = userLoad.expand.quizes_via_author || [];
@@ -32,6 +31,8 @@
 
 			userLoad.expand = {} as UserExpand;
 			userStore.user = userLoad;
+
+			await uiStore.loadState();
 			userStore.setLoaded();
 		});
 	});
@@ -62,19 +63,19 @@
 		<aside
 			class={[
 				'bg-base-100 border-base-200 z-10 flex h-full shrink-0 flex-col border-r pt-4 transition-all duration-300 ease-in-out',
-				sidebarOpen ? 'w-56' : 'w-14'
+				uiStore.globalSidebarOpen ? 'w-56' : 'w-14'
 			]}
 		>
 			<a href="/home" class="relative mb-4 flex select-none items-center justify-center gap-2 px-2">
 				<img src={Honey} alt="Quizbee" class="bg-primary/20 size-8 rounded" />
-				{#if sidebarOpen}
+				{#if uiStore.globalSidebarOpen}
 					<p class="text-primary text-xl font-semibold">Quizbee</p>
 				{/if}
 			</a>
 
-			<SidebarNavigation {sidebarOpen} />
+			<SidebarNavigation />
 
-			<ProfileRow {sidebarOpen} />
+			<ProfileRow />
 		</aside>
 
 		<main class="flex h-full flex-1 flex-col">
@@ -84,8 +85,10 @@
 						<input
 							class="hidden"
 							type="checkbox"
-							checked={sidebarOpen}
-							onchange={() => (sidebarOpen = !sidebarOpen)}
+							checked={uiStore.globalSidebarOpen}
+							onchange={() => {
+								uiStore.toggleGlobalSidebar();
+							}}
 						/>
 						<PanelRightOpen class="swap-on text-neutral-500" size={24} />
 						<PanelRightClose class="swap-off text-neutral-500" size={24} />

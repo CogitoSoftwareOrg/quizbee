@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { House, ChartBar, CreditCard } from 'lucide-svelte';
-
-	const { sidebarOpen = true } = $props<{ sidebarOpen?: boolean }>();
+	import { uiStore } from '$lib/apps/users/ui.svelte';
 
 	const navItems = [
 		{
@@ -39,7 +38,7 @@
 </script>
 
 <nav class="flex min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
-	{#if sidebarOpen}
+	{#if uiStore.globalSidebarOpen}
 		<ul class="menu menu-vertical w-full gap-1 px-2 pb-2">
 			{#each navItems as item}
 				<li class="w-full">

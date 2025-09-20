@@ -9,12 +9,12 @@
 	import Man from '$lib/assets/images/Man.jpg';
 	import { clickOutside } from '$lib/actions/click-outside';
 	import { userStore } from '$lib/apps/users/user.svelte';
+	import { uiStore } from '$lib/apps/users/ui.svelte';
 
 	interface Props {
 		class?: ClassValue;
-		sidebarOpen?: boolean;
 	}
-	let { class: className, sidebarOpen = true }: Props = $props();
+	let { class: className }: Props = $props();
 
 	let open = $state(false);
 
@@ -32,7 +32,7 @@
 	use:clickOutside={{ callback: () => (open = false) }}
 	class={[
 		'dropdown dropdown-top border-base-200 flex cursor-pointer items-center gap-2 border-t p-1',
-		sidebarOpen
+		uiStore.globalSidebarOpen
 			? 'dropdown-center dropdown-hover justify-between'
 			: 'dropdown-right justify-center',
 		className
@@ -44,7 +44,7 @@
 		<img src={avatar} alt="avatar" />
 	</div>
 
-	{#if sidebarOpen}
+	{#if uiStore.globalSidebarOpen}
 		<div class="flex h-full flex-1 flex-col gap-1">
 			<p class="truncate text-sm font-semibold">{user?.name || user?.email}</p>
 			<p class="badge-primary badge badge-sm font-semibold">:3</p>
@@ -59,7 +59,7 @@
 	<ul
 		class={[
 			'dropdown-content menu rounded-box border-base-200 space-y-1 border p-2 shadow',
-			sidebarOpen ? 'w-full' : 'w-52'
+			uiStore.globalSidebarOpen ? 'w-full' : 'w-52'
 		]}
 	>
 		<li>
