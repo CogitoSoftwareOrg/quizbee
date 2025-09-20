@@ -2,7 +2,12 @@ import { pb } from '$lib/pb';
 import type { MessagesResponse } from '$lib/pb/pocketbase-types';
 
 class MessagesStore {
+	_loaded = $state(false);
 	_messages: MessagesResponse[] = $state([]);
+
+	get loaded() {
+		return this._loaded;
+	}
 
 	get messages() {
 		return this._messages;
@@ -10,6 +15,14 @@ class MessagesStore {
 	set messages(messages: MessagesResponse[]) {
 		const sortedMessages = messages.toSorted((a, b) => b.created.localeCompare(a.created));
 		this._messages = sortedMessages;
+	}
+
+	async load(quizAttemptId: string) {
+		const messages = await pb!.collection('messages').getFullList({
+			filter: `quizAttempt = "${quizAttemptId}"`
+		});
+		this.messages = messages;
+		this._loaded = true;
 	}
 
 	async subscribe(quizAttemptId: string) {

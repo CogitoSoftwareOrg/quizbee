@@ -5,6 +5,7 @@
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte.js';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte.js';
 	import { userStore } from '$lib/apps/users/user.svelte.js';
+	import { messageStore } from '$lib/apps/messages/messages.svelte.js';
 
 	const {} = $props();
 
@@ -29,6 +30,16 @@
 
 	$effect(() => {
 		if (userStore.loaded && !quizAttempt) goto('/home');
+	});
+	$effect(() => {
+		if (!quizAttempt) return;
+
+		messageStore.load(quizAttempt.id).then(() => {
+			messageStore.subscribe(quizAttempt.id);
+		});
+		return () => {
+			messageStore.unsubscribe(quizAttempt.id);
+		};
 	});
 
 	function gotoItem(idx: number) {
