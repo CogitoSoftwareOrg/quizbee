@@ -7,26 +7,32 @@
 	};
 
 	interface Props {
-		globalFiles?: FileList | null;
+		inputText?: string;
+		attachedFiles?: File[];
 	}
 
-	let { globalFiles = null }: Props = $props();
+	let { inputText = $bindable(''), attachedFiles = $bindable([]) }: Props = $props();
 
 	let filePreviews = $state<FilePreview[]>([]);
 	let inputElement: HTMLInputElement;
 	let isDragging = $state(false);
 
-	// Следим за изменениями globalFiles с помощью $effect
+	
+	// Обновляем attachedFiles когда меняется filePreviews
 	$effect(() => {
-		if (globalFiles) {
-			handleGlobalFiles(globalFiles);
+		if (filePreviews.length > 0) {
+			const files = filePreviews.map(fp => fp.file);
+			const fileList = new DataTransfer();
+			files.forEach(file => fileList.items.add(file));
+			attachedFiles = Array.from(fileList.files);
+		} else {
 			untrack(() => {
-				globalFiles = null; // Сбрасываем после обработки (неотслеживаемо)
+				attachedFiles = [];
 			});
 		}
 	});
 
-	function handleGlobalFiles(files: FileList) {
+	function handleGlobalFiles(files: File[]) {
 		const newFiles = Array.from(files);
 		const newFilePreviews = newFiles.map((file) => ({
 			file,
@@ -196,7 +202,8 @@
 		</button>
 		<input 
 			type="text" 
-			placeholder="Start typing a prompt for your quiz " 
+			placeholder="Write a prompt for your quiz and attach relevant material" 
+			bind:value={inputText}
 			class="text-input"
 			onpaste={handlePaste}
 		/>
@@ -236,7 +243,7 @@
 		flex-direction: column;
 		gap: 10px;
 		width: 100%;
-		max-width: 600px;
+		max-width: 800px;
 		margin: 0 auto;
 		font-family: sans-serif;
 		transition: background-color 0.2s ease;
