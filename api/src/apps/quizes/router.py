@@ -1,5 +1,14 @@
 from pocketbase import PocketBase, FileUpload
-from fastapi import APIRouter, Form, Request, Query, HTTPException, File, UploadFile
+from fastapi import (
+    APIRouter,
+    Form,
+    Request,
+    Query,
+    HTTPException,
+    File,
+    UploadFile,
+    status,
+)
 from fastapi.responses import StreamingResponse, JSONResponse
 import json
 import logging
@@ -23,6 +32,7 @@ async def create_quiz_endpoint(
     old_file_names: list[str] = Form(default=[]),
     files: list[UploadFile] = File(default=[]),
     user_id: str = Form(),
+    with_attempt: bool = Form(default=True),
 ):
     # AUTH
     # pb_token = request.cookies.get("pb_token")
@@ -69,16 +79,52 @@ async def create_quiz_endpoint(
         }
     )
 
-    quiz_attempt = await admin_pb.collection("quizAttempts").create(
-        {
-            "user": user_id,
-            "quiz": quiz.get("id", ""),
-        }
-    )
+    if with_attempt:
+        quiz_attempt = await admin_pb.collection("quizAttempts").create(
+            {
+                "user": user_id,
+                "quiz": quiz.get("id", ""),
+            }
+        )
+    else:
+        quiz_attempt = {}
 
     return JSONResponse(
         content={
             "quiz_attempt_id": quiz_attempt.get("id", ""),
             "quiz_id": quiz.get("id", ""),
-        }
+        },
+        status_code=status.HTTP_201_CREATED,
+    )
+
+
+@quizes_router.post("/{quiz_id}")
+async def generate_quiz_items(
+    admin_pb: AdminPB,
+    quiz_id: str,
+):
+    LIMIT = 2
+
+    quiz_items = await admin_pb.collection("quizeItems").get_full_list(
+        options={
+            "params": {
+                "filter": f"quiz = '{quiz_id}' && status = 'blank'",
+                "sort": "order",
+            }
+        },
+    )
+    if not quiz_items:
+        raise HTTPException(status_code=404, detail="Quiz items not found")
+
+    for i in range(LIMIT):
+        quiz_item = quiz_items[i]
+        await admin_pb.collection("quizeItems").update(
+            quiz_item.get("id", ""),
+            {
+                "status": "generating",
+            },
+        )
+
+    return JSONResponse(
+        content={"quiz_items": quiz_items}, status_code=status.HTTP_200_OK
     )
