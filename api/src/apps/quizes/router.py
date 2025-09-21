@@ -17,6 +17,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field
 
+from lib.clients.http import HTTPAsyncClient
 from src.apps.messages import pb_to_ai
 from src.lib.settings import settings
 from src.lib.clients import AdminPB
@@ -38,7 +39,6 @@ async def create_quiz(
     query: str = Form(),
     old_file_names: list[str] = Form(default=[]),
     files: list[UploadFile] = File(default=[]),
-    user_id: str = Form(),
     with_attempt: bool = Form(default=True),
 ):
     # AUTH
@@ -54,6 +54,7 @@ async def create_quiz(
 
     # SUBSCRIPTION
     # user_id = user.get("id", "")
+    user_id = "lhjpor907gtxpry"
     try:
         subscription = await admin_pb.collection("subscriptions").get_first(
             options={"params": {"filter": f"user = '{user_id}'"}},
@@ -107,6 +108,7 @@ async def create_quiz(
 
 # GENERATE QUIZ ITEMS TASK
 async def _generate_quiz_task(
+    http: HTTPAsyncClient,
     admin_pb: AdminPB,
     quiz_id: str,
     limit: int,
@@ -119,6 +121,7 @@ async def _generate_quiz_task(
             }
         },
     )
+    materials = quiz.get("expand", {}).get("materials", [])
     quiz_items = quiz.get("expand", {}).get("quizItems_via_quiz", [])
     quiz_items = sorted(
         filter(lambda i: i.get("status") == "blank", quiz_items),
@@ -142,7 +145,9 @@ async def _generate_quiz_task(
     try:
         res = await quizer_agent.run(
             user_prompt=q,
-            deps=QuizerDeps(admin_pb=admin_pb, quiz_id=quiz_id),
+            deps=QuizerDeps(
+                admin_pb=admin_pb, quiz=quiz, materials=materials, http=http
+            ),
             output_type=make_quiz_patch_model(
                 limit
             ),  # dynamic schema ONLY for quiz_items
@@ -196,6 +201,7 @@ class GenerateQuizItems(BaseModel):
 
 @quizes_router.patch("/{quiz_id}")
 async def generate_quiz_items(
+    http: HTTPAsyncClient,
     admin_pb: AdminPB,
     quiz_id: str,
     dto: GenerateQuizItems,
@@ -210,7 +216,7 @@ async def generate_quiz_items(
         raise HTTPException(status_code=404, detail="Quiz items not found")
 
     # Generate
-    background.add_task(_generate_quiz_task, admin_pb, quiz_id, dto.limit)
+    background.add_task(_generate_quiz_task, http, admin_pb, quiz_id, dto.limit)
 
     return JSONResponse(
         content={"scheduled": True, "quiz_id": quiz_id, "limit": dto.limit},

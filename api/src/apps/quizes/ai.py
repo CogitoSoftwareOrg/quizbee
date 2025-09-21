@@ -1,5 +1,8 @@
 from dataclasses import dataclass
 import logging
+import httpx
+from langfuse.api import Model
+from pocketbase.models.dtos import Record
 from pydantic_ai import (
     Agent,
     RunContext,
@@ -8,6 +11,12 @@ from pydantic_ai import (
 from pocketbase import PocketBase
 from typing import Annotated, Any
 from pydantic import BaseModel, Field, create_model
+from pydantic_ai.messages import (
+    ModelMessage,
+    SystemPromptPart,
+    UserPromptPart,
+    ModelRequest,
+)
 
 from src.lib.clients import langfuse_client
 from src.lib.settings import settings
@@ -15,8 +24,10 @@ from src.lib.settings import settings
 
 @dataclass
 class QuizerDeps:
+    http: httpx.AsyncClient
     admin_pb: PocketBase
-    quiz_id: str
+    quiz: Record
+    materials: list[Record]
 
 
 class WrongAnswer(BaseModel):
@@ -89,20 +100,60 @@ def make_quiz_patch_model(n_items: int):
 QUIZER_LLM = "gemini-2.5-flash-lite"
 
 
+async def build_langfuse_messages(
+    ctx: RunContext[QuizerDeps],
+    messages: list[ModelMessage],
+) -> list[ModelMessage]:
+    materials = await load_materials_from_records(ctx.deps.http, ctx.deps.materials)
+    materials = materials or "<no materials>"
+    chat = langfuse_client.get_prompt(
+        "create_quiz_patch", label=settings.env, type="chat"
+    ).compile(
+        materials=materials,
+    )
+    parts = []
+    for chat_msg in chat:
+        if chat_msg["role"] == "system":  # pyright: ignore[reportGeneralTypeIssues]
+            parts.append(
+                SystemPromptPart(
+                    content=chat_msg[
+                        "content"
+                    ]  # pyright: ignore[reportGeneralTypeIssues]
+                )
+            )
+        else:
+            parts.append(
+                UserPromptPart(
+                    content=chat_msg[
+                        "content"
+                    ]  # pyright: ignore[reportGeneralTypeIssues]
+                )
+            )
+
+    return [ModelRequest(parts=parts)] + messages
+
+
 quizer_agent = Agent(
     model=QUIZER_LLM,
     deps_type=QuizerDeps,
     instrument=True,
-    system_prompt="",
-    history_processors=[],
+    history_processors=[build_langfuse_messages],
     output_type=QuizPatch,
     retries=3,
 )
 
 
-@quizer_agent.system_prompt
-async def system_prompt(ctx: RunContext[QuizerDeps]):
-    logging.info(
-        f"System prompt for {ctx.deps.quiz_id} env: {settings.env} langfuse: {settings.langfuse_public_key}"
-    )
-    return langfuse_client.get_prompt("create_quiz", label=settings.env).compile()
+async def load_materials_from_records(
+    http: httpx.AsyncClient, records: list[Record]
+) -> str:
+    contents = []
+    for m in records:
+        mid = m.get("id")
+        col = m.get("collectionName")
+        fname = m.get("file")
+        url = f"{settings.pb_url}/api/files/{col}/{mid}/{fname}"
+        resp = await http.get(url)
+        resp.raise_for_status()
+        contents.append(resp.text)
+    materials = "\n\n".join(contents)
+    return materials
