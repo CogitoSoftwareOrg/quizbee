@@ -2,8 +2,8 @@
 
 onRecordCreate((e) => {
   // before creation
-  if (e.record.get("itemLimit") === 0) {
-    e.record.set("itemLimit", 10);
+  if (e.record.get("itemsLimit") === 0) {
+    e.record.set("itemsLimit", 10);
   }
 
   e.next();
@@ -11,7 +11,7 @@ onRecordCreate((e) => {
   $app.runInTransaction((txApp) => {
     // do something in the transaction
     const col = txApp.findCollectionByNameOrId("quizItems");
-    for (let i = 0; i < e.record.get("itemLimit"); i++) {
+    for (let i = 0; i < e.record.get("itemsLimit"); i++) {
       const item = new Record(col);
       item.set("quiz", e.record.id);
       item.set("order", i);

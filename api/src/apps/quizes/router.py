@@ -20,7 +20,7 @@ from pydantic import BaseModel, Field
 from lib.clients.http import HTTPAsyncClient
 from src.apps.messages import pb_to_ai
 from src.lib.settings import settings
-from src.lib.clients import AdminPB
+from src.lib.clients import AdminPB, langfuse_client
 
 from .ai import (
     QuizPatch,
@@ -36,10 +36,10 @@ quizes_router = APIRouter(prefix="/quizes", tags=["quizes"])
 async def create_quiz(
     admin_pb: AdminPB,
     request: Request,
-    query: str = Form(),
     old_file_names: list[str] = Form(default=[]),
     files: list[UploadFile] = File(default=[]),
     with_attempt: bool = Form(default=True),
+    query: str = Form(),
 ):
     # AUTH
     # pb_token = request.cookies.get("pb_token")
@@ -82,7 +82,7 @@ async def create_quiz(
     quiz = await admin_pb.collection("quizes").create(
         {
             "author": user_id,
-            "question": query,
+            "query": query,
             "materials": material_ids,
         }
     )
@@ -110,6 +110,7 @@ async def create_quiz(
 async def _generate_quiz_task(
     http: HTTPAsyncClient,
     admin_pb: AdminPB,
+    user_id: str,
     quiz_id: str,
     limit: int,
 ):
@@ -143,15 +144,20 @@ async def _generate_quiz_task(
     # Prepare request to LLM
     q = quiz.get("query", "")
     try:
-        res = await quizer_agent.run(
-            user_prompt=q,
-            deps=QuizerDeps(
-                admin_pb=admin_pb, quiz=quiz, materials=materials, http=http
-            ),
-            output_type=make_quiz_patch_model(
-                limit
-            ),  # dynamic schema ONLY for quiz_items
-        )
+        with langfuse_client.start_as_current_span(name="chat-turn") as span:
+            res = await quizer_agent.run(
+                user_prompt=q,
+                deps=QuizerDeps(
+                    admin_pb=admin_pb, quiz=quiz, materials=materials, http=http
+                ),
+                output_type=make_quiz_patch_model(
+                    limit
+                ),  # dynamic schema ONLY for quiz_items
+            )
+            span.update_trace(
+                user_id=user_id,
+                session_id=quiz_id,
+            )
     except Exception as e:
         logging.exception("Agent run failed for quiz %s: %s", quiz_id, e)
         # можно вернуть items в "failed"
@@ -207,6 +213,21 @@ async def generate_quiz_items(
     dto: GenerateQuizItems,
     background: BackgroundTasks,
 ):
+    # AUTH
+    # pb_token = request.cookies.get("pb_token")
+    # if not pb_token:
+    #     raise HTTPException(status_code=401, detail=f"Unauthorized: no pb_token")
+    # try:
+    #     pb = PocketBase(settings.pb_url)
+    #     pb._inners.auth.set_user({"token": pb_token, "record": {}})
+    #     user = await pb.collection("users").auth.refresh()
+    # except Exception as e:
+    #     raise HTTPException(status_code=401, detail=f"Unauthorized: {e}")
+
+    # SUBSCRIPTION
+    # user_id = user.get("id", "")
+    user_id = "lhjpor907gtxpry"
+
     # Prevalidate
     quiz = await admin_pb.collection("quizes").get_one(
         quiz_id, options={"params": {"expand": "materials,quizItems_via_quiz"}}
@@ -216,7 +237,9 @@ async def generate_quiz_items(
         raise HTTPException(status_code=404, detail="Quiz items not found")
 
     # Generate
-    background.add_task(_generate_quiz_task, http, admin_pb, quiz_id, dto.limit)
+    background.add_task(
+        _generate_quiz_task, http, admin_pb, user_id, quiz_id, dto.limit
+    )
 
     return JSONResponse(
         content={"scheduled": True, "quiz_id": quiz_id, "limit": dto.limit},

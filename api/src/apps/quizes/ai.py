@@ -19,6 +19,7 @@ from pydantic_ai.messages import (
 )
 
 from src.lib.clients import langfuse_client
+from src.lib.config import LLMS
 from src.lib.settings import settings
 
 
@@ -97,7 +98,7 @@ def make_quiz_patch_model(n_items: int):
     )
 
 
-QUIZER_LLM = "gemini-2.5-flash-lite"
+QUIZER_LLM = LLMS.GEMINI_2_5_FLASH_LITE
 
 
 async def build_langfuse_messages(
@@ -156,4 +157,8 @@ async def load_materials_from_records(
         resp.raise_for_status()
         contents.append(resp.text)
     materials = "\n\n".join(contents)
+
+    # if len(ENCODERS[QUIZER_LLM].encode(materials)) > 200_000:
+    #     materials = materials[:100_000]
+
     return materials
