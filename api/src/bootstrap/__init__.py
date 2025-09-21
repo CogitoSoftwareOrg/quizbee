@@ -6,10 +6,12 @@ from starlette.middleware.cors import CORSMiddleware
 from mcp.server.fastmcp import FastMCP
 import httpx
 
+from src.apps.quizes import quizes_router
 from src.lib.clients.pb import ensure_admin_pb, init_admin_pb
 from src.lib.settings import settings
 
 mcp = FastMCP("MCP", stateless_http=True)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -32,10 +34,10 @@ async def lifespan(app: FastAPI):
 
 def create_app():
     app = FastAPI(
-        lifespan=lifespan, dependencies=[
-            Depends(ensure_admin_pb)
-            ], prefix="/api"
+        lifespan=lifespan, dependencies=[Depends(ensure_admin_pb)], prefix="/api"
     )
+
+    app.include_router(quizes_router)
 
     # CORS: allow credentials from specific app origins (including PR subdomains)
     allowed_origins: list[str] = []
@@ -53,18 +55,14 @@ def create_app():
         pr = settings.pr_id
         assert pr is not None
         allowed_origins = [
-            f"https://{pr}.prod-app.growplex.dev",
-            f"https://{pr}.prod-web.growplex.dev",
-            f"https://{pr}.app.growplex.dev",
-            f"https://{pr}.web.growplex.dev",
+            f"https://{pr}-app-quizbee.cogitosoftware.nl",
+            f"https://{pr}-web-quizbee.cogitosoftware.nl",
         ]
     elif settings.env == "production":
         # Production/base
         allowed_origins = [
-            "https://prod-app.growplex.dev",
-            "https://prod-web.growplex.dev",
-            "https://app.growplex.dev",
-            "https://web.growplex.dev",
+            "https://app-quizbee.cogitosoftware.nl",
+            "https://web-quizbee.cogitosoftware.nl",
         ]
 
     app.add_middleware(
