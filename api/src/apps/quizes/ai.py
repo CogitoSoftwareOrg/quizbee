@@ -101,6 +101,7 @@ quizer_agent = Agent(
     system_prompt="",
     history_processors=[],
     output_type=QuizPatch,
+    retries=3,
 )
 
 

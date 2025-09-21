@@ -119,7 +119,7 @@ async def _generate_quiz_task(
     # Mark as "generating"
     for qi in quiz_items[:limit]:
         try:
-            await admin_pb.collection("quizeItems").update(
+            await admin_pb.collection("quizItems").update(
                 qi.get("id", ""),
                 {"status": "generating"},
             )
@@ -141,7 +141,7 @@ async def _generate_quiz_task(
         # можно вернуть items в "failed"
         # for qi in quiz_items[:limit]:
         #     try:
-        #         await admin_pb.collection("quizeItems").update(
+        #         await admin_pb.collection("quizItems").update(
         #             qi.get("id", ""), {"status": "failed"}
         #         )
         #     except Exception:
@@ -155,7 +155,7 @@ async def _generate_quiz_task(
         logging.exception("Validation failed for quiz %s: %s", quiz_id, e)
         # for qi in quiz_items[:limit]:
         #     try:
-        #         await admin_pb.collection("quizeItems").update(
+        #         await admin_pb.collection("quizItems").update(
         #             qi.get("id", ""), {"status": "failed"}
         #         )
         #     except Exception:
@@ -163,7 +163,7 @@ async def _generate_quiz_task(
         return
 
     # Update items with final data
-    for qi, patch_qi in zip(quiz_items, patch.quiz_items):
+    for qi, patch_qi in zip(quiz_items[:limit], patch.quiz_items):
         answers = [
             {
                 "content": wa.answer,
@@ -179,7 +179,7 @@ async def _generate_quiz_task(
             }
         ]
         try:
-            await admin_pb.collection("quizeItems").update(
+            await admin_pb.collection("quizItems").update(
                 qi.get("id", ""),
                 {
                     "answers": answers,  # pyright: ignore[reportArgumentType]
@@ -215,5 +215,6 @@ async def generate_quiz_items(
     background.add_task(_generate_quiz_task, admin_pb, quiz_id, dto.limit)
 
     return JSONResponse(
-        content={"quiz_items": quiz_items}, status_code=status.HTTP_202_ACCEPTED
+        content={"scheduled": True, "quiz_id": quiz_id, "limit": dto.limit},
+        status_code=status.HTTP_202_ACCEPTED,
     )
