@@ -79,11 +79,10 @@ def make_quiz_patch_model(n_items: int):
             max_length=n_items,
         ),
     ]
-    # create_model returns a full Pydantic model class
     return create_model(
         f"QuizPatch_{n_items}",
         quiz_items=(QuizItemsField, ...),
-        __base__=BaseModel,
+        __base__=QuizPatch,
     )
 
 

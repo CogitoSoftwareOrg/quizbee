@@ -159,8 +159,7 @@ async def _generate_quiz_task(
         #         pass
         return
 
-    patch_like = res.output  # QuizPatch_{n}
-    patch = QuizPatch.model_validate(patch_like.model_dump())
+    patch = res.output  # QuizPatch_{n}
 
     # Update items with final data
     for qi, patch_qi in zip(quiz_items[:limit], patch.quiz_items):
