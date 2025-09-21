@@ -1,6 +1,7 @@
 from pocketbase import PocketBase, FileUpload
 from fastapi import (
     APIRouter,
+    BackgroundTasks,
     Form,
     Request,
     Query,
@@ -12,14 +13,20 @@ from fastapi import (
 from fastapi.responses import StreamingResponse, JSONResponse
 import json
 import logging
+from typing import Annotated
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ValidationError
 
 from src.apps.messages import pb_to_ai
 from src.lib.settings import settings
 from src.lib.clients import AdminPB
 
-from .ai import QUIZER_LLM, quizer_agent, QuizerDeps
+from .ai import (
+    QuizPatch,
+    quiz_patch_output_schema,
+    quizer_agent,
+    QuizerDeps,
+)
 
 quizes_router = APIRouter(prefix="/quizes", tags=["quizes"])
 
@@ -98,33 +105,115 @@ async def create_quiz_endpoint(
     )
 
 
+# GENERATE QUIZ ITEMS TASK
+async def _generate_quiz_task(
+    admin_pb: AdminPB,
+    quiz_id: str,
+    limit: int,
+):
+    quiz = await admin_pb.collection("quizes").get_one(
+        quiz_id, options={"params": {"expand": "materials,quizItems_via_quiz"}}
+    )
+    quiz_items = quiz.get("expand", {}).get("quizItems_via_quiz", [])
+
+    # Mark as "generating"
+    for qi in quiz_items[:limit]:
+        try:
+            await admin_pb.collection("quizeItems").update(
+                qi.get("id", ""),
+                {"status": "generating"},
+            )
+        except Exception as e:
+            logging.exception("Failed to set generating for %s: %s", qi.get("id"), e)
+
+    # Prepare request to LLM
+    q = quiz.get("query", "")
+    try:
+        res = await quizer_agent.run(
+            user_prompt=q,
+            deps=QuizerDeps(admin_pb=admin_pb, quiz_id=quiz_id),
+            output_type=quiz_patch_output_schema(
+                limit
+            ),  # dynamic schema ONLY for quiz_items
+        )
+    except Exception as e:
+        logging.exception("Agent run failed for quiz %s: %s", quiz_id, e)
+        # можно вернуть items в "failed"
+        # for qi in quiz_items[:limit]:
+        #     try:
+        #         await admin_pb.collection("quizeItems").update(
+        #             qi.get("id", ""), {"status": "failed"}
+        #         )
+        #     except Exception:
+        #         pass
+        return
+
+    # Type/validate response
+    try:
+        patch = QuizPatch.model_validate(res.output)
+    except ValidationError as e:
+        logging.exception("Validation failed for quiz %s: %s", quiz_id, e)
+        # for qi in quiz_items[:limit]:
+        #     try:
+        #         await admin_pb.collection("quizeItems").update(
+        #             qi.get("id", ""), {"status": "failed"}
+        #         )
+        #     except Exception:
+        #         pass
+        return
+
+    # Update items with final data
+    for qi, patch_qi in zip(quiz_items, patch.quiz_items):
+        answers = [
+            {
+                "content": wa.answer,
+                "explanation": wa.explanation,
+                "correct": False,
+            }
+            for wa in patch_qi.wrong_answers
+        ] + [
+            {
+                "content": patch_qi.right_answer.answer,
+                "explanation": patch_qi.right_answer.explanation,
+                "correct": True,
+            }
+        ]
+        try:
+            await admin_pb.collection("quizeItems").update(
+                qi.get("id", ""),
+                {
+                    "answers": answers,  # pyright: ignore[reportArgumentType]
+                    "question": patch_qi.question,
+                    "status": "final",
+                },
+            )
+        except Exception as e:
+            logging.exception("Failed to finalize %s: %s", qi.get("id"), e)
+
+
+class GenerateQuizItems(BaseModel):
+    limit: Annotated[int, Field(default=2, ge=2, le=5)]
+
+
 @quizes_router.post("/{quiz_id}")
 async def generate_quiz_items(
     admin_pb: AdminPB,
     quiz_id: str,
+    dto: GenerateQuizItems,
+    background: BackgroundTasks,
 ):
-    LIMIT = 2
-
-    quiz_items = await admin_pb.collection("quizeItems").get_full_list(
-        options={
-            "params": {
-                "filter": f"quiz = '{quiz_id}' && status = 'blank'",
-                "sort": "order",
-            }
-        },
+    # Prevalidate
+    quiz = await admin_pb.collection("quizes").get_one(
+        quiz_id, options={"params": {"expand": "materials,quizItems_via_quiz"}}
     )
+    quiz_items = quiz.get("expand", {}).get("quizItems_via_quiz", [])
     if not quiz_items:
         raise HTTPException(status_code=404, detail="Quiz items not found")
 
-    for i in range(LIMIT):
-        quiz_item = quiz_items[i]
-        await admin_pb.collection("quizeItems").update(
-            quiz_item.get("id", ""),
-            {
-                "status": "generating",
-            },
-        )
+    # Generate
+    dto.limit = min(dto.limit, len(quiz_items))
+    background.add_task(_generate_quiz_task, admin_pb, quiz_id, dto.limit)
 
     return JSONResponse(
-        content={"quiz_items": quiz_items}, status_code=status.HTTP_200_OK
+        content={"quiz_items": quiz_items}, status_code=status.HTTP_202_ACCEPTED
     )

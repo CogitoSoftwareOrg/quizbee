@@ -16,6 +16,7 @@ from src.lib.settings import settings
 @dataclass
 class QuizerDeps:
     admin_pb: PocketBase
+    quiz_id: str
 
 
 class WrongAnswer(BaseModel):
@@ -92,13 +93,14 @@ def quiz_patch_output_schema(n_items: int):
 
 QUIZER_LLM = "gemini-2.5-flash-lite"
 
+
 quizer_agent = Agent(
     model=QUIZER_LLM,
     deps_type=QuizerDeps,
     instrument=True,
     system_prompt="",
     history_processors=[],
-    # output_type=QuizPatch,
+    output_type=QuizPatch,
 )
 
 
