@@ -7,7 +7,7 @@ from pydantic_ai import (
 )
 from pocketbase import PocketBase
 from typing import Annotated, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, create_model
 
 from src.lib.clients import langfuse_client
 from src.lib.settings import settings
@@ -65,29 +65,25 @@ class QuizItem(BaseModel):
 class QuizPatch(BaseModel):
     quiz_items: Annotated[
         list[QuizItem],
-        Field(
-            title="Quiz Items",
-            description="An array of exactly 2 quiz items.",
-            # min_length=5,
-            # max_length=5,
-        ),
+        Field(title="Quiz Items", description="An array of exactly 2 quiz items."),
     ]
 
 
-def quiz_patch_output_schema(n_items: int):
-    """
-    Берём схему из Pydantic-модели Quiz, патчим ТОЛЬКО quiz_items,
-    и делаем StructuredDict для output_type.
-    """
-    schema = QuizPatch.model_json_schema()
-
-    qi = schema.get("properties", {}).get("quiz_items", {})
-    qi["minItems"] = n_items
-    qi["maxItems"] = n_items
-    qi["description"] = f"An array of exactly {n_items} quiz items."
-
-    return StructuredDict(
-        schema, name="QuizPatch", description=f"QuizPatch with exactly {n_items} items"
+def make_quiz_patch_model(n_items: int):
+    QuizItemsField = Annotated[
+        list[QuizItem],
+        Field(
+            title="Quiz Items",
+            description=f"An array of exactly {n_items} quiz items.",
+            min_length=n_items,
+            max_length=n_items,
+        ),
+    ]
+    # create_model returns a full Pydantic model class
+    return create_model(
+        f"QuizPatch_{n_items}",
+        quiz_items=(QuizItemsField, ...),
+        __base__=BaseModel,
     )
 
 
@@ -106,5 +102,8 @@ quizer_agent = Agent(
 
 
 @quizer_agent.system_prompt
-async def system_prompt():
+async def system_prompt(ctx: RunContext[QuizerDeps]):
+    logging.info(
+        f"System prompt for {ctx.deps.quiz_id} env: {settings.env} langfuse: {settings.langfuse_public_key}"
+    )
     return langfuse_client.get_prompt("create_quiz", label=settings.env).compile()

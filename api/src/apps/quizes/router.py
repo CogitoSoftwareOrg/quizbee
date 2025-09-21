@@ -15,7 +15,7 @@ import json
 import logging
 from typing import Annotated
 
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field
 
 from src.apps.messages import pb_to_ai
 from src.lib.settings import settings
@@ -23,7 +23,7 @@ from src.lib.clients import AdminPB
 
 from .ai import (
     QuizPatch,
-    quiz_patch_output_schema,
+    make_quiz_patch_model,
     quizer_agent,
     QuizerDeps,
 )
@@ -32,7 +32,7 @@ quizes_router = APIRouter(prefix="/quizes", tags=["quizes"])
 
 
 @quizes_router.post("/")
-async def create_quiz_endpoint(
+async def create_quiz(
     admin_pb: AdminPB,
     request: Request,
     query: str = Form(),
@@ -112,9 +112,20 @@ async def _generate_quiz_task(
     limit: int,
 ):
     quiz = await admin_pb.collection("quizes").get_one(
-        quiz_id, options={"params": {"expand": "materials,quizItems_via_quiz"}}
+        quiz_id,
+        options={
+            "params": {
+                "expand": "materials,quizItems_via_quiz",
+            }
+        },
     )
     quiz_items = quiz.get("expand", {}).get("quizItems_via_quiz", [])
+    quiz_items = sorted(
+        filter(lambda i: i.get("status") == "blank", quiz_items),
+        key=lambda x: x.get("order", 0),
+    )
+
+    limit = min(limit, len(quiz_items))
 
     # Mark as "generating"
     for qi in quiz_items[:limit]:
@@ -132,7 +143,7 @@ async def _generate_quiz_task(
         res = await quizer_agent.run(
             user_prompt=q,
             deps=QuizerDeps(admin_pb=admin_pb, quiz_id=quiz_id),
-            output_type=quiz_patch_output_schema(
+            output_type=make_quiz_patch_model(
                 limit
             ),  # dynamic schema ONLY for quiz_items
         )
@@ -148,19 +159,8 @@ async def _generate_quiz_task(
         #         pass
         return
 
-    # Type/validate response
-    try:
-        patch = QuizPatch.model_validate(res.output)
-    except ValidationError as e:
-        logging.exception("Validation failed for quiz %s: %s", quiz_id, e)
-        # for qi in quiz_items[:limit]:
-        #     try:
-        #         await admin_pb.collection("quizItems").update(
-        #             qi.get("id", ""), {"status": "failed"}
-        #         )
-        #     except Exception:
-        #         pass
-        return
+    patch_like = res.output  # QuizPatch_{n}
+    patch = QuizPatch.model_validate(patch_like.model_dump())
 
     # Update items with final data
     for qi, patch_qi in zip(quiz_items[:limit], patch.quiz_items):
@@ -195,7 +195,7 @@ class GenerateQuizItems(BaseModel):
     limit: Annotated[int, Field(default=2, ge=2, le=5)]
 
 
-@quizes_router.post("/{quiz_id}")
+@quizes_router.patch("/{quiz_id}")
 async def generate_quiz_items(
     admin_pb: AdminPB,
     quiz_id: str,
@@ -211,7 +211,6 @@ async def generate_quiz_items(
         raise HTTPException(status_code=404, detail="Quiz items not found")
 
     # Generate
-    dto.limit = min(dto.limit, len(quiz_items))
     background.add_task(_generate_quiz_task, admin_pb, quiz_id, dto.limit)
 
     return JSONResponse(
