@@ -32,14 +32,7 @@
 		}
 	});
 
-	function handleGlobalFiles(files: File[]) {
-		const newFiles = Array.from(files);
-		const newFilePreviews = newFiles.map((file) => ({
-			file,
-			previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : null
-		}));
-		filePreviews = [...filePreviews, ...newFilePreviews];
-	}
+	
 
 	function openFileDialog() {
 		inputElement.click();
@@ -121,10 +114,15 @@
 		}
 	}
 
-	function getFileExtension(filename: string): string {
-		const extension = filename.split('.').pop()?.toUpperCase();
-		return extension || 'FILE';
+	function handleTextareaResize(event: Event) {
+		const target = event.target as HTMLTextAreaElement;
+		target.style.height = 'auto';
+		const scrollHeight = target.scrollHeight;
+		const maxHeight = 7.5 * 16; // 7.5rem в пикселях (предполагая 16px = 1rem)
+		target.style.height = Math.min(scrollHeight, maxHeight) + 'px';
 	}
+
+	
 
 	function getFileIcon(filename: string): string {
 		const extension = filename.split('.').pop()?.toLowerCase();
@@ -162,6 +160,13 @@
 		return iconMap[extension || ''] || 'unknown';
 	}
 
+	function truncateFileName(filename: string, maxLength: number = 50): string {
+		if (filename.length <= maxLength) {
+			return filename;
+		}
+		return filename.substring(0, maxLength - 3) + '...';
+	}
+
 	onDestroy(() => {
 		filePreviews.forEach((fp) => {
 			if (fp.previewUrl) {
@@ -172,8 +177,11 @@
 </script>
 
 <div 
-	class="file-input-container"
-	class:dragging={isDragging}
+	class="flex flex-col gap-2.5 w-full max-w-3xl mx-auto font-sans transition-colors duration-200 rounded-lg p-2"
+	class:bg-blue-50={isDragging}
+	class:border-2={isDragging}
+	class:border-dashed={isDragging}
+	class:border-blue-500={isDragging}
 	ondragover={handleDragOver}
 	ondragleave={handleDragLeave}
 	ondrop={handleDrop}
@@ -182,8 +190,8 @@
 	tabindex="0"
 	aria-label="Drop files here or click to upload"
 >
-	<div class="input-wrapper">
-		<button onclick={openFileDialog} class="attach-btn" aria-label="Attach files">
+	<div class="flex items-center border border-gray-300 rounded-3xl px-4 py-4 bg-gray-50 transition-colors duration-200 focus-within:border-gray-400">
+		<button onclick={openFileDialog} class="bg-transparent border-none cursor-pointer p-0 mr-2 flex items-center text-gray-600 hover:text-gray-800" aria-label="Attach files">
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
 				width="24"
@@ -200,13 +208,14 @@
 				/></svg
 			>
 		</button>
-		<input 
-			type="text" 
+		<textarea 
 			placeholder="Write a prompt for your quiz and attach relevant material" 
 			bind:value={inputText}
-			class="text-input"
+			class="flex-grow border-none outline-none bg-transparent text-lg py-1 pl-4 focus:outline-none focus:ring-0 focus:shadow-none resize-none overflow-y-auto min-h-[1.5rem] max-h-[7.5rem] leading-6"
 			onpaste={handlePaste}
-		/>
+			rows="1"
+			oninput={handleTextareaResize}
+		></textarea>
 		<input
 			type="file"
 			bind:this={inputElement}
@@ -216,19 +225,19 @@
 		/>
 	</div>
 	{#if filePreviews.length > 0}
-		<div class="files-preview">
+		<div class="grid grid-cols-5 gap-4 px-3">
 			{#each filePreviews as { file, previewUrl }, index}
-				<div class="file-item">
+				<div class="group relative w-full aspect-square rounded-lg overflow-hidden bg-gray-200">
 					{#if previewUrl}
-						<img src={previewUrl} alt={file.name} class="image-preview" />
+						<img src={previewUrl} alt={file.name} class="w-full h-full object-cover" />
 					{:else}
-						<div class="file-placeholder">
+						<div class="flex flex-col items-center w-full h-full p-2 text-center text-gray-600">
 							
-							<img src="/file-format-icons/{getFileIcon(file.name)}.svg" alt="File icon" class="file-icon" />
-							<span class="file-name">{file.name}</span>
+							<img src="/file-format-icons/{getFileIcon(file.name)}.svg" alt="File icon" class="w-10 h-10 mb-1" />
+							<span class="text-[14px] break-words break-all line-clamp-3 leading-tight h-24 flex items-center" title={file.name}>{truncateFileName(file.name)}</span>
 						</div>
 					{/if}
-					<button onclick={() => removeFile(index)} class="remove-btn" aria-label="Remove file"
+					<button onclick={() => removeFile(index)} class="absolute top-1 right-1 bg-black/50 text-white border-none rounded-full w-5 h-5 flex items-center justify-center cursor-pointer text-sm leading-none opacity-0 transition-opacity group-hover:opacity-100" aria-label="Remove file"
 						>&times;</button
 					>
 				</div>
@@ -237,145 +246,4 @@
 	{/if}
 </div>
 
-<style>
-	.file-input-container {
-		display: flex;
-		flex-direction: column;
-		gap: 10px;
-		width: 100%;
-		max-width: 800px;
-		margin: 0 auto;
-		font-family: sans-serif;
-		transition: background-color 0.2s ease;
-		border-radius: 8px;
-		padding: 8px;
-	}
 
-	.file-input-container.dragging {
-		background-color: #e8f0fe;
-		border: 2px dashed #4285f4;
-	}
-
-	.input-wrapper {
-		display: flex;
-		align-items: center;
-		border: 1px solid #ccc;
-		border-radius: 24px;
-		padding: 16px 16px;
-		background-color: #f8f9fa;
-		transition: border-color 0.2s ease;
-	}
-
-	.input-wrapper:focus-within {
-		border-color: #dadce0;
-		outline: none;
-	}
-
-	.text-input {
-		flex-grow: 1;
-		border: none;
-		outline: none;
-		background: none;
-		font-size: 18px;
-		padding: 4px 0 4px 16px;
-	}
-
-	.text-input:focus {
-		outline: none;
-		box-shadow: none;
-	}
-
-	.attach-btn {
-		background: none;
-		border: none;
-		cursor: pointer;
-		padding: 0;
-		margin-right: 8px;
-		display: flex;
-		align-items: center;
-		color: #5f6368;
-	}
-
-	.attach-btn:hover {
-		color: #202124;
-	}
-
-	.files-preview {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, 140px);
-		gap: 16px;
-		padding: 0 12px;
-		justify-content: start;
-	}
-
-	.file-item {
-		position: relative;
-		width: 150px;
-		height: 150px;
-		border-radius: 8px;
-		overflow: hidden;
-		background-color: #e8eaed;
-	}
-
-	.image-preview {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-	}
-
-	.file-placeholder {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		width: 100%;
-		height: 100%;
-		padding: 8px;
-		text-align: center;
-		color: #5f6368;
-	}
-
-	.file-name {
-		font-size: 13px;
-		word-break: break-all;
-		display: -webkit-box;
-		-webkit-line-clamp: 3;
-		line-clamp: 3;
-		-webkit-box-orient: vertical;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		margin-top: auto;
-		flex-grow: 1;
-		display: flex;
-		align-items: flex-end;
-	}
-
-	.file-icon {
-		width: 48px;
-		height: 48px;
-		margin: 8px 0;
-	}
-
-	.remove-btn {
-		position: absolute;
-		top: 4px;
-		right: 4px;
-		background: rgba(0, 0, 0, 0.5);
-		color: white;
-		border: none;
-		border-radius: 50%;
-		width: 20px;
-		height: 20px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		cursor: pointer;
-		font-size: 14px;
-		line-height: 1;
-		opacity: 0;
-		transition: opacity 0.2s;
-	}
-
-	.file-item:hover .remove-btn {
-		opacity: 1;
-	}
-</style>

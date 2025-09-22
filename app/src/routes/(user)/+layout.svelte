@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { PanelRightOpen, PanelRightClose } from 'lucide-svelte';
+	import { page } from '$app/state';
 
 	import { userStore } from '$lib/apps/users/user.svelte';
 	import { materialsStore } from '$lib/apps/materials/materials.svelte.js';
@@ -17,6 +18,7 @@
 	const { data, children } = $props();
 
 	const user = $derived(userStore.user);
+	const isNewQuizPage = $derived(page.url.pathname === '/quizes/new');
 
 	// wait for user to be loaded
 	$effect(() => {
@@ -79,7 +81,10 @@
 		</aside>
 
 		<main class="flex h-full flex-1 flex-col">
-			<header class="border-base-200 flex items-center justify-between border-b px-3 py-3">
+			<header class={[
+				'flex items-center justify-between px-3 py-3',
+				isNewQuizPage ? '' : 'border-base-200 border-b'
+			]}>
 				<div class="flex items-center gap-2">
 					<label class="swap swap-rotate">
 						<input
