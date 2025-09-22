@@ -38,6 +38,7 @@ class CreateQuizDto(BaseModel):
     material_ids: list[str] = Field(default=[])
     with_attempt: bool = Field(default=True)
     query: str = Field(default="")
+    difficulty: str = Field(default="intermediate")
 
 
 @quizes_router.post("/")
@@ -88,6 +89,7 @@ async def create_quiz(
             "query": dto.query,
             "materials": dto.material_ids,  # pyright: ignore[reportArgumentType]
             "itemsLimit": dto.number_of_questions,  # pyright: ignore[reportArgumentType]
+            "difficulty": dto.difficulty,
         }
     )
 

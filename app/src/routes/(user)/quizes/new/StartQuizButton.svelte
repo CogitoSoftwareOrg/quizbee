@@ -44,7 +44,7 @@
         material_ids: selectedMaterialIds,
         with_attempt: true,
         number_of_questions: questionCount,
-        difficulty: selectedDifficulty,
+        difficulty: selectedDifficulty.toLowerCase(),
       };
 
       const createResponse = await fetch(`${computeApiUrl()}/quizes`, {
