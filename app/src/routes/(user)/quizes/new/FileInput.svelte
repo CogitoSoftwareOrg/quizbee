@@ -196,13 +196,6 @@
 		}
 	}
 
-	function handleKeyDown(event: KeyboardEvent) {
-		if (event.key === 'Enter' || event.key === ' ') {
-			event.preventDefault();
-			openFileDialog();
-		}
-	}
-
 	function handleTextareaResize(event: Event) {
 		const target = event.target as HTMLTextAreaElement;
 		target.style.height = 'auto';
@@ -278,7 +271,6 @@
 	ondragover={handleDragOver}
 	ondragleave={handleDragLeave}
 	ondrop={handleDrop}
-	onkeydown={handleKeyDown}
 	role="button"
 	tabindex="0"
 	aria-label="Drop files here or click to upload"
