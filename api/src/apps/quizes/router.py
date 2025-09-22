@@ -32,15 +32,21 @@ from .ai import (
 quizes_router = APIRouter(prefix="/quizes", tags=["quizes"])
 
 
+class CreateQuizDto(BaseModel):
+    material_ids: list[str] = Field(default=[])
+    with_attempt: bool = Field(default=True)
+    query: str = Field(default="")
+
+
 @quizes_router.post("/")
 async def create_quiz(
     admin_pb: AdminPB,
     request: Request,
-    old_file_names: list[str] = Form(default=[]),
-    files: list[UploadFile] = File(default=[]),
-    with_attempt: bool = Form(default=True),
-    query: str = Form(),
+    dto: CreateQuizDto,
 ):
+    if not dto.material_ids and not dto.query:
+        raise HTTPException(status_code=400, detail="Material IDs or query is required")
+
     # AUTH
     pb_token = request.cookies.get("pb_token")
     if not pb_token:
@@ -63,30 +69,15 @@ async def create_quiz(
         # raise HTTPException(status_code=401, detail=f"Unauthorized: {e}")
 
     # CREATE QUIZ
-    material_ids = []
-    for file in files:
-        material = await admin_pb.collection("materials").create(
-            {
-                "user": user_id,
-                "file": FileUpload((file.filename or "material_file", file.file)),
-            }
-        )
-        material_ids.append(material.get("id", ""))
-    for name in old_file_names:
-        material = await admin_pb.collection("materials").get_first(
-            options={"params": {"filter": f"file = '{name}'"}},
-        )
-        material_ids.append(material.get("id", ""))
-
     quiz = await admin_pb.collection("quizes").create(
         {
             "author": user_id,
-            "query": query,
-            "materials": material_ids,
+            "query": dto.query,
+            "materials": dto.material_ids,  # pyright: ignore[reportArgumentType]
         }
     )
 
-    if with_attempt:
+    if dto.with_attempt:
         quiz_attempt = await admin_pb.collection("quizAttempts").create(
             {
                 "user": user_id,
@@ -170,6 +161,7 @@ async def _generate_quiz_task(
     patch = res.output  # QuizPatch_{n}
 
     # Update items with final data
+    upd = {}
     for qi, patch_qi in zip(quiz_items[:limit], patch.quiz_items):
         answers = [
             {
@@ -186,7 +178,7 @@ async def _generate_quiz_task(
             }
         ]
         try:
-            await admin_pb.collection("quizItems").update(
+            upd = await admin_pb.collection("quizItems").update(
                 qi.get("id", ""),
                 {
                     "answers": answers,  # pyright: ignore[reportArgumentType]
@@ -196,6 +188,12 @@ async def _generate_quiz_task(
             )
         except Exception as e:
             logging.exception("Failed to finalize %s: %s", qi.get("id"), e)
+
+    # HARD TRIGGER OF SUBSCRIPTION, IMPROVE TO SUBSCRIBE QUIZ ITEMS LATER
+    await admin_pb.collection("quizes").update(
+        quiz_id,
+        {"updated": upd.get("updated", "")},
+    )
 
 
 class GenerateQuizItems(BaseModel):

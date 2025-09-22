@@ -17,6 +17,11 @@ class UIStore {
 		this._state.globalSidebarOpen = !this._state.globalSidebarOpen;
 		this.saveState();
 	}
+	setGlobalSidebarOpen(open: boolean) {
+		if (!this._state) return;
+		this._state.globalSidebarOpen = open;
+		this.saveState();
+	}
 
 	async loadState() {
 		console.log('loadState');
