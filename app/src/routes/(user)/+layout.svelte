@@ -14,7 +14,7 @@
 	import { uiStore } from '$lib/apps/users/ui.svelte';
 
 	import SidebarNavigation from './SidebarNavigation.svelte';
-	import { page } from '$app/state';
+	
 
 	const { data, children } = $props();
 
