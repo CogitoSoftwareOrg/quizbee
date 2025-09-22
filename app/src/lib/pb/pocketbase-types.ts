@@ -99,7 +99,9 @@ export type SuperusersRecord = {
 
 export type MaterialsRecord = {
 	created?: IsoDateString
+	file?: string
 	id: string
+	title?: string
 	updated?: IsoDateString
 	user?: RecordIdString
 }
@@ -119,7 +121,8 @@ export type MessagesRecord<Tmetadata = unknown> = {
 	updated?: IsoDateString
 }
 
-export type QuizAttemptsRecord = {
+export type QuizAttemptsRecord<Tchoices = unknown> = {
+	choices?: null | Tchoices
 	created?: IsoDateString
 	id: string
 	quiz?: RecordIdString
@@ -127,21 +130,31 @@ export type QuizAttemptsRecord = {
 	user?: RecordIdString
 }
 
-export type QuizItemsRecord<TcorrectAnswer = unknown, TwrongAnswers = unknown> = {
-	correctAnswer?: null | TcorrectAnswer
+export enum QuizItemsStatusOptions {
+	"final" = "final",
+	"generating" = "generating",
+	"blank" = "blank",
+	"failed" = "failed",
+}
+export type QuizItemsRecord<Tanswers = unknown> = {
+	answers?: null | Tanswers
 	created?: IsoDateString
 	id: string
+	order?: number
 	question?: string
 	quiz?: RecordIdString
+	status?: QuizItemsStatusOptions
 	updated?: IsoDateString
-	wrongAnswers?: null | TwrongAnswers
 }
 
 export type QuizesRecord = {
 	author?: RecordIdString
 	created?: IsoDateString
 	id: string
+	itemsLimit?: number
 	materials?: RecordIdString[]
+	query?: string
+	title?: string
 	updated?: IsoDateString
 }
 
@@ -168,11 +181,10 @@ export type SubscriptionsRecord = {
 	created?: IsoDateString
 	currentPeriodEnd?: IsoDateString
 	id: string
-	messageLimit?: number
-	messageUsage?: number
-	quizLimit?: number
-	quizUsage?: number
-	quizesRemained?: number
+	messagesLimit?: number
+	messagesUsage?: number
+	quizItemsLimit?: number
+	quizItemsUsage?: number
 	status?: SubscriptionsStatusOptions
 	stripeCustomer?: string
 	stripeSubscription?: string
@@ -203,8 +215,8 @@ export type OtpsResponse<Texpand = unknown> = Required<OtpsRecord> & BaseSystemF
 export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> & AuthSystemFields<Texpand>
 export type MaterialsResponse<Texpand = unknown> = Required<MaterialsRecord> & BaseSystemFields<Texpand>
 export type MessagesResponse<Tmetadata = unknown, Texpand = unknown> = Required<MessagesRecord<Tmetadata>> & BaseSystemFields<Texpand>
-export type QuizAttemptsResponse<Texpand = unknown> = Required<QuizAttemptsRecord> & BaseSystemFields<Texpand>
-export type QuizItemsResponse<TcorrectAnswer = unknown, TwrongAnswers = unknown, Texpand = unknown> = Required<QuizItemsRecord<TcorrectAnswer, TwrongAnswers>> & BaseSystemFields<Texpand>
+export type QuizAttemptsResponse<Tchoices = unknown, Texpand = unknown> = Required<QuizAttemptsRecord<Tchoices>> & BaseSystemFields<Texpand>
+export type QuizItemsResponse<Tanswers = unknown, Texpand = unknown> = Required<QuizItemsRecord<Tanswers>> & BaseSystemFields<Texpand>
 export type QuizesResponse<Texpand = unknown> = Required<QuizesRecord> & BaseSystemFields<Texpand>
 export type StripeEventsResponse<Texpand = unknown> = Required<StripeEventsRecord> & BaseSystemFields<Texpand>
 export type SubscriptionsResponse<Texpand = unknown> = Required<SubscriptionsRecord> & BaseSystemFields<Texpand>

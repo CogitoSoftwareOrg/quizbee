@@ -31,12 +31,13 @@ function setPBCookie() {
 	const host = typeof window !== 'undefined' ? window.location.hostname : '';
 	const isQuizbee = host.endsWith('quizbee.cogitosoftware.nl');
 	const domainAttr = isQuizbee ? 'Domain=.cogitosoftware.nl' : undefined;
+	const maxAge = 100 * 24 * 60 * 60;
 	document.cookie = [
 		`pb_token=${pb!.authStore.token}`,
 		domainAttr,
 		'Secure',
 		'Path=/',
-		'Max-Age=600',
+		`Max-Age=${maxAge}`,
 		'SameSite=None'
 	]
 		.filter(Boolean)
