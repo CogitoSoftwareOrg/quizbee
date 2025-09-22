@@ -42,19 +42,18 @@ async def create_quiz(
     query: str = Form(),
 ):
     # AUTH
-    # pb_token = request.cookies.get("pb_token")
-    # if not pb_token:
-    #     raise HTTPException(status_code=401, detail=f"Unauthorized: no pb_token")
-    # try:
-    #     pb = PocketBase(settings.pb_url)
-    #     pb._inners.auth.set_user({"token": pb_token, "record": {}})
-    #     user = await pb.collection("users").auth.refresh()
-    # except Exception as e:
-    #     raise HTTPException(status_code=401, detail=f"Unauthorized: {e}")
+    pb_token = request.cookies.get("pb_token")
+    if not pb_token:
+        raise HTTPException(status_code=401, detail=f"Unauthorized: no pb_token")
+    try:
+        pb = PocketBase(settings.pb_url)
+        pb._inners.auth.set_user({"token": pb_token, "record": {}})
+        user = (await pb.collection("users").auth.refresh()).get("record", {})
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Unauthorized: {e}")
 
     # SUBSCRIPTION
-    # user_id = user.get("id", "")
-    user_id = "lhjpor907gtxpry"
+    user_id = user.get("id", "")
     try:
         subscription = await admin_pb.collection("subscriptions").get_first(
             options={"params": {"filter": f"user = '{user_id}'"}},
@@ -210,21 +209,20 @@ async def generate_quiz_items(
     quiz_id: str,
     dto: GenerateQuizItems,
     background: BackgroundTasks,
+    request: Request,
 ):
-    # AUTH
-    # pb_token = request.cookies.get("pb_token")
-    # if not pb_token:
-    #     raise HTTPException(status_code=401, detail=f"Unauthorized: no pb_token")
-    # try:
-    #     pb = PocketBase(settings.pb_url)
-    #     pb._inners.auth.set_user({"token": pb_token, "record": {}})
-    #     user = await pb.collection("users").auth.refresh()
-    # except Exception as e:
-    #     raise HTTPException(status_code=401, detail=f"Unauthorized: {e}")
+    pb_token = request.cookies.get("pb_token")
+    if not pb_token:
+        raise HTTPException(status_code=401, detail=f"Unauthorized: no pb_token")
+    try:
+        pb = PocketBase(settings.pb_url)
+        pb._inners.auth.set_user({"token": pb_token, "record": {}})
+        user = (await pb.collection("users").auth.refresh()).get("record", {})
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Unauthorized: {e}")
 
     # SUBSCRIPTION
-    # user_id = user.get("id", "")
-    user_id = "lhjpor907gtxpry"
+    user_id = user.get("id", "")
 
     # Prevalidate
     quiz = await admin_pb.collection("quizes").get_one(

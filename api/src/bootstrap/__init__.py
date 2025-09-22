@@ -69,7 +69,7 @@ def create_app():
         CORSMiddleware,
         allow_origins=allowed_origins,
         allow_origin_regex=allow_origin_regex,
-        allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+        allow_methods=["GET", "POST", "DELETE", "OPTIONS", "PATCH"],
         allow_credentials=True,
         allow_headers=["Authorization", "Content-Type"],
         # expose_headers=["Mcp-Session-Id"], # Only for stateful mode

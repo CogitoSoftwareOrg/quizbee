@@ -18,7 +18,7 @@ export async function load({ depends }) {
 
 	if (!pb?.authStore.isValid) await goto('/sign-in');
 
-	const userLoadPromise: Promise<UsersResponse<unknown, UserExpand>> = pb!
+	const userLoadPromise: Promise<UsersResponse<unknown, UserExpand> | null> = pb!
 		.collection('users')
 		.authRefresh({
 			expand: EXPAND
@@ -27,6 +27,7 @@ export async function load({ depends }) {
 		.catch(async () => {
 			console.error('Failed to load user:', error);
 			await goto('/sign-in');
+			return null;
 		});
 	return { userLoadPromise };
 }

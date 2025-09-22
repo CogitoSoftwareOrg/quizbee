@@ -30,7 +30,7 @@ class QuizesStore {
 				}
 			},
 			{
-				filter: `user = "${userId}"`,
+				filter: `author = "${userId}"`,
 				expand: 'quizItems_via_quiz'
 			}
 		);
