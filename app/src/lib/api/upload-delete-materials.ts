@@ -1,13 +1,8 @@
 import { pb } from '$lib/pb';
 import type { MaterialsResponse } from '$lib/pb/pocketbase-types';
 
-/**
- * Загружает файл в коллекцию materials PocketBase
- * @param file - Файл для загрузки
- * @param title - Название материала (по умолчанию имя файла)
- * @returns Promise с ID созданного материала
- */
-export async function uploadMaterial(file: File, title?: string): Promise<string> {
+
+export async function uploadMaterial(file: File, title: string): Promise<MaterialsResponse> {
 	if (!pb) {
 		throw new Error('PocketBase client is not initialized');
 	}
@@ -18,12 +13,12 @@ export async function uploadMaterial(file: File, title?: string): Promise<string
 
 	const formData = new FormData();
 	formData.append('file', file);
-	formData.append('title', title || file.name);
+	formData.append('title', title);
 	formData.append('user', pb.authStore.model?.id || '');
 
 	try {
 		const material: MaterialsResponse = await pb.collection('materials').create(formData);
-		return material.id;
+		return material;
 	} catch (error) {
 		console.error('Error uploading material:', error);
 		throw new Error(`Failed to upload material: ${error instanceof Error ? error.message : 'Unknown error'}`);

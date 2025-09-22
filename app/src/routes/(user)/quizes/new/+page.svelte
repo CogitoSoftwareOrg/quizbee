@@ -4,7 +4,20 @@
     import QuestionNumberSelector from './QuestionNumberSelector.svelte';
     // import { computeApiUrl } from '$lib/api/compute-url';
 
-    let attachedFiles = $state<File[]>([]);
+    type AttachedFile = {
+		file?: File;
+		previewUrl: string | null;
+		materialId?: string;
+		material?: import('$lib/pb/pocketbase-types').MaterialsResponse;
+		name: string;
+		uploadPromise?: Promise<import('$lib/pb/pocketbase-types').MaterialsResponse>;
+		isUploading?: boolean;
+		uploadError?: string;
+	};
+
+    
+
+    let attachedFiles = $state<AttachedFile[]>([]);
     let selectedDifficulty = $state('intermediate');
     let questionCount = $state(10);
     let inputText = $state('');
@@ -54,7 +67,8 @@
         <div class="text-center">
             <div class="flex items-center justify-center gap-2">
                 <h2 class="text-4xl font-semibold mb-1">Describe your quiz</h2>
-                <div class="tooltip tooltip-bottom -mt-1 [&:before]:text-lg [&:before]:px-6 [&:before]:py-3 [&:before]:max-w-[30rem] [&:before]:whitespace-pre-line [&:before]:text-left" data-tip="Describe your quiz in detail below, or simply attach files and we'll base the questions on their content. For the best results, do both!
+                <div class="tooltip tooltip-bottom -mt-1 [&:before]:text-lg [&:before]:px-6 [&:before]:py-3 [&:before]:max-w-[30rem] [&:before]:whitespace-pre-line [&:before]:text-left"
+                 data-tip="Describe your quiz in detail below, or simply attach files and we'll base the questions on their content. For the best results, do both!
 
 Feel free to attach presentations, PDFs, images, and more—we support a wide range of file types. For the most accurate questions, a few focused documents are more effective than many large ones." >
                     <svg 

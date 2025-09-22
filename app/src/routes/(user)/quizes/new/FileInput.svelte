@@ -1,65 +1,134 @@
 <script lang="ts">
-	import { onDestroy, untrack } from 'svelte';
+	import { onDestroy } from 'svelte';
+	import { uploadMaterial, deleteMaterial } from '$lib/api/upload-delete-materials';
 
-	type FilePreview = {
-		file: File;
+	type AttachedFile = {
+		file?: File;
 		previewUrl: string | null;
+		materialId?: string;
+		name: string;
+		isUploading?: boolean;
+		uploadError?: string;
 	};
 
 	interface Props {
 		inputText?: string;
-		attachedFiles?: File[];
+		attachedFiles?: AttachedFile[];
 	}
 
+
+	
 	let { inputText = $bindable(''), attachedFiles = $bindable([]) }: Props = $props();
 
-	let filePreviews = $state<FilePreview[]>([]);
 	let inputElement: HTMLInputElement;
 	let isDragging = $state(false);
 
-	
-	// Обновляем attachedFiles когда меняется filePreviews
-	$effect(() => {
-		if (filePreviews.length > 0) {
-			const files = filePreviews.map(fp => fp.file);
-			const fileList = new DataTransfer();
-			files.forEach(file => fileList.items.add(file));
-			attachedFiles = Array.from(fileList.files);
-		} else {
-			untrack(() => {
-				attachedFiles = [];
-			});
-		}
-	});
+	/**
+	 * Создает AttachedFile объект и автоматически начинает загрузку на PocketBase
+	 * Возвращает promise который резолвится в materialId после успешной загрузки
+	 */
+	async function createAttachedFileWithUpload(file: File): Promise<{ attachedFile: AttachedFile; materialIdPromise: Promise<string> }> {
+		const attachedFile: AttachedFile = $state({
+			file,
+			previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
+			name: file.name,
+			isUploading: true,
+			uploadError: undefined,
+			materialId: undefined,
+			
+		});
 
-	
+		// Создаем promise для загрузки
+		const materialIdPromise = (async (): Promise<string> => {
+			try {
+				const material = await uploadMaterial(attachedFile.file!, attachedFile.name);
+				
+				// Проверяем, что получили material.id
+				if (!material.id) {
+					throw new Error('Material ID not received from PocketBase');
+				}
+				
+				// Обновляем состояние после успешной загрузки и получения ID
+				attachedFile.materialId = material.id;
+				attachedFile.isUploading = false;
+				
+				return material.id;
+			} catch (error) {
+				// Обрабатываем ошибку - удаляем файл из UI
+				console.error('Failed to upload file:', attachedFile.name, error);
+				
+				// Находим индекс файла в массиве и удаляем его
+				const fileIndex = attachedFiles.indexOf(attachedFile);
+				if (fileIndex !== -1) {
+					// Освобождаем URL превью если есть
+					if (attachedFile.previewUrl) {
+						URL.revokeObjectURL(attachedFile.previewUrl);
+					}
+					attachedFiles.splice(fileIndex, 1);
+					attachedFiles = attachedFiles;
+				}
+				
+				throw error;
+			}
+		})();
+
+		return { attachedFile, materialIdPromise };
+	}
 
 	function openFileDialog() {
 		inputElement.click();
 	}
 
-	function handleFileChange(event: Event) {
+	async function handleFileChange(event: Event) {
 		const target = event.target as HTMLInputElement;
 		if (target.files) {
 			const newFiles = Array.from(target.files);
-			const newFilePreviews = newFiles.map((file) => ({
-				file,
-				previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : null
-			}));
-			filePreviews = [...filePreviews, ...newFilePreviews];
+			
+			// Обрабатываем файлы последовательно, чтобы избежать auto-cancellation в PocketBase
+			for (const file of newFiles) {
+				const { attachedFile, materialIdPromise } = await createAttachedFileWithUpload(file);
+				
+				// Добавляем файл в UI сразу (с индикатором загрузки)
+				attachedFiles = [...attachedFiles, attachedFile];
+				
+				// Ждем завершения загрузки текущего файла перед переходом к следующему
+				try {
+					const materialId = await materialIdPromise;
+					console.log(`File ${file.name} uploaded successfully with ID: ${materialId}`);
+				} catch (error) {
+					console.error(`Failed to upload file ${file.name}:`, error);
+					// Ошибка уже обработана в createAttachedFileWithUpload (файл удален из UI)
+				}
+			}
 		}
 	}
 
-	function removeFile(index: number) {
-		const fileToRemove = filePreviews[index];
+	
+
+	async function removeFile(index: number) {
+		const fileToRemove = attachedFiles[index];
+		
+		// Освобождаем URL превью если есть
 		if (fileToRemove.previewUrl) {
 			URL.revokeObjectURL(fileToRemove.previewUrl);
 		}
-		filePreviews.splice(index, 1);
-		filePreviews = filePreviews;
+		
+		// Удаляем материал с сервера если он был загружен
+		if (fileToRemove.materialId) {
+			try {
+				await deleteMaterial(fileToRemove.materialId);
+			} catch (error) {
+				console.error('Failed to delete material from server:', error);
+				// Не блокируем удаление из UI даже если не удалось удалить с сервера
+			}
+		}
+		
+		// Удаляем из списка
+		attachedFiles.splice(index, 1);
+		attachedFiles = attachedFiles;
 	}
 
-	function handlePaste(event: ClipboardEvent) {
+	async function handlePaste(event: ClipboardEvent) {
 		const clipboardData = event.clipboardData;
 		if (!clipboardData) return;
 
@@ -69,16 +138,24 @@
 		if (imageItems.length > 0) {
 			event.preventDefault(); // Предотвращаем вставку текста
 
-			imageItems.forEach(item => {
-				const file = item.getAsFile();
-				if (file) {
-					const newFilePreview = {
-						file,
-						previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : null
-					};
-					filePreviews = [...filePreviews, newFilePreview];
+			const files = imageItems.map(item => item.getAsFile()).filter(file => file !== null) as File[];
+			
+			// Обрабатываем файлы последовательно, чтобы избежать auto-cancellation в PocketBase
+			for (const file of files) {
+				const { attachedFile, materialIdPromise } = await createAttachedFileWithUpload(file);
+				
+				// Добавляем файл в UI сразу (с индикатором загрузки)
+				attachedFiles = [...attachedFiles, attachedFile];
+				
+				// Ждем завершения загрузки текущего файла перед переходом к следующему
+				try {
+					const materialId = await materialIdPromise;
+					console.log(`Pasted file ${file.name} uploaded successfully with ID: ${materialId}`);
+				} catch (error) {
+					console.error(`Failed to upload pasted file ${file.name}:`, error);
+					// Ошибка уже обработана в createAttachedFileWithUpload (файл удален из UI)
 				}
-			});
+			}
 		}
 	}
 
@@ -92,18 +169,30 @@
 		isDragging = false;
 	}
 
-	function handleDrop(event: DragEvent) {
+	async function handleDrop(event: DragEvent) {
 		event.preventDefault();
 		isDragging = false;
 
 		const files = event.dataTransfer?.files;
 		if (files) {
 			const newFiles = Array.from(files);
-			const newFilePreviews = newFiles.map((file) => ({
-				file,
-				previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : null
-			}));
-			filePreviews = [...filePreviews, ...newFilePreviews];
+			
+			// Обрабатываем файлы последовательно, чтобы избежать auto-cancellation в PocketBase
+			for (const file of newFiles) {
+				const { attachedFile, materialIdPromise } = await createAttachedFileWithUpload(file);
+				
+				// Добавляем файл в UI сразу (с индикатором загрузки)
+				attachedFiles = [...attachedFiles, attachedFile];
+				
+				// Ждем завершения загрузки текущего файла перед переходом к следующему
+				try {
+					const materialId = await materialIdPromise;
+					console.log(`Dropped file ${file.name} uploaded successfully with ID: ${materialId}`);
+				} catch (error) {
+					console.error(`Failed to upload dropped file ${file.name}:`, error);
+					// Ошибка уже обработана в createAttachedFileWithUpload (файл удален из UI)
+				}
+			}
 		}
 	}
 
@@ -168,11 +257,15 @@
 	}
 
 	onDestroy(() => {
-		filePreviews.forEach((fp) => {
-			if (fp.previewUrl) {
-				URL.revokeObjectURL(fp.previewUrl);
+		// Освобождаем все URL превью
+		attachedFiles.forEach((attachedFile) => {
+			if (attachedFile.previewUrl) {
+				URL.revokeObjectURL(attachedFile.previewUrl);
 			}
 		});
+		
+		// Примечание: Мы НЕ удаляем материалы с сервера при уничтожении компонента,
+		// так как они могут быть использованы в других местах приложения
 	});
 </script>
 
@@ -224,19 +317,26 @@
 			style="display: none;"
 		/>
 	</div>
-	{#if filePreviews.length > 0}
+	{#if attachedFiles.length > 0}
 		<div class="grid grid-cols-5 gap-4 px-3">
-			{#each filePreviews as { file, previewUrl }, index}
+			{#each attachedFiles as attachedFile, index}
 				<div class="group relative w-full aspect-square rounded-lg overflow-hidden bg-gray-200">
-					{#if previewUrl}
-						<img src={previewUrl} alt={file.name} class="w-full h-full object-cover" />
+					{#if attachedFile.previewUrl}
+						<img src={attachedFile.previewUrl} alt={attachedFile.name} class="w-full h-full object-cover" />
 					{:else}
 						<div class="flex flex-col items-center w-full h-full p-2 text-center text-gray-600">
-							
-							<img src="/file-format-icons/{getFileIcon(file.name)}.svg" alt="File icon" class="w-10 h-10 mb-1" />
-							<span class="text-[14px] break-words break-all line-clamp-3 leading-tight h-24 flex items-center" title={file.name}>{truncateFileName(file.name)}</span>
+							<img src="/file-format-icons/{getFileIcon(attachedFile.name)}.svg" alt="File icon" class="w-10 h-10 mb-1" />
+							<span class="text-[14px] break-words break-all line-clamp-3 leading-tight h-24 flex items-center" title={attachedFile.name}>{truncateFileName(attachedFile.name)}</span>
 						</div>
 					{/if}
+					
+					<!-- Индикатор загрузки -->
+					{#if attachedFile.isUploading}
+						<div class="absolute inset-0 bg-black/50 flex items-center justify-center">
+							<div class="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+						</div>
+					{/if}
+					
 					<button onclick={() => removeFile(index)} class="absolute top-1 right-1 bg-black/50 text-white border-none rounded-full w-5 h-5 flex items-center justify-center cursor-pointer text-sm leading-none opacity-0 transition-opacity group-hover:opacity-100" aria-label="Remove file"
 						>&times;</button
 					>

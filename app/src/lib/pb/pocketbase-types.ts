@@ -99,7 +99,9 @@ export type SuperusersRecord = {
 
 export type MaterialsRecord = {
 	created?: IsoDateString
+	file?: string
 	id: string
+	title?: string
 	updated?: IsoDateString
 	user?: RecordIdString
 }
@@ -142,6 +144,7 @@ export type QuizesRecord = {
 	created?: IsoDateString
 	id: string
 	materials?: RecordIdString[]
+	title?: string
 	updated?: IsoDateString
 }
 
@@ -170,8 +173,8 @@ export type SubscriptionsRecord = {
 	id: string
 	messageLimit?: number
 	messageUsage?: number
-	quizLimit?: number
-	quizUsage?: number
+	quizItemsLimit?: number
+	quizItemsUsage?: number
 	quizesRemained?: number
 	status?: SubscriptionsStatusOptions
 	stripeCustomer?: string

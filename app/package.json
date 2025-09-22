@@ -5,7 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev --host 0.0.0.0 --port 5173",
-		"build:gen-types": "npx pocketbase-typegen --url http://localhost:8090 --email cogitoteamdev@gmail.com --password 'breAth20' --out src/lib/pb/pocketbase-types.ts",
+		"build:gen-types": "npx pocketbase-typegen --url http://localhost:8090 --email cogitoteamdev@gmail.com --password 'password' --out src/lib/pb/pocketbase-types.ts",
 		"build": "vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
