@@ -14,6 +14,7 @@
 	import { uiStore } from '$lib/apps/users/ui.svelte';
 
 	import SidebarNavigation from './SidebarNavigation.svelte';
+	import { page } from '$app/state';
 
 	const { data, children } = $props();
 
@@ -23,18 +24,17 @@
 	// wait for user to be loaded
 	$effect(() => {
 		data.userLoadPromise.then(async (userLoad) => {
-			const materials = userLoad.expand.materials_via_user || [];
-			const quizAttempts = userLoad.expand.quizAttempts_via_user || [];
-			const quizes = userLoad.expand.quizes_via_author || [];
+			const materials = userLoad?.expand.materials_via_user || [];
+			const quizAttempts = userLoad?.expand.quizAttempts_via_user || [];
+			const quizes = userLoad?.expand.quizes_via_author || [];
 
 			materialsStore.materials = materials;
 			quizAttemptsStore.quizAttempts = quizAttempts;
 			quizesStore.quizes = quizes;
 
-			userLoad.expand = {} as UserExpand;
-			userStore.user = userLoad;
+			userLoad!.expand = {} as UserExpand;
+			userStore.user = userLoad!;
 
-			await uiStore.loadState();
 			userStore.setLoaded();
 		});
 	});
@@ -53,6 +53,11 @@
 			quizesStore.unsubscribe();
 		};
 	});
+
+	function getTitle() {
+		const t = page.url.pathname.split('/').at(1);
+		return `${t?.charAt(0).toUpperCase()}${t?.slice(1)}`;
+	}
 </script>
 
 {#await data.userLoadPromise}
@@ -98,7 +103,7 @@
 						<PanelRightOpen class="swap-on text-neutral-500" size={24} />
 						<PanelRightClose class="swap-off text-neutral-500" size={24} />
 					</label>
-					<h1 class="hidden text-sm font-semibold sm:block">Welcome</h1>
+					<h1 class="hidden text-sm font-semibold sm:block">{getTitle()}</h1>
 				</div>
 
 				<ThemeController />

@@ -8,7 +8,7 @@ const UIStateSchema = z.object({
 type UIState = z.infer<typeof UIStateSchema>;
 
 class UIStore {
-	private _state: UIState | null = $state(null);
+	private _state: UIState | null = $state(UIStateSchema.parse({}));
 
 	globalSidebarOpen = $derived(this._state?.globalSidebarOpen);
 
@@ -17,16 +17,26 @@ class UIStore {
 		this._state.globalSidebarOpen = !this._state.globalSidebarOpen;
 		this.saveState();
 	}
+	setGlobalSidebarOpen(open: boolean) {
+		if (!this._state) return;
+		this._state.globalSidebarOpen = open;
+		this.saveState();
+	}
 
 	async loadState() {
 		console.log('loadState');
 		const raw = await Preferences.get({ key: 'uiState' });
 		if (raw.value) {
-			const state = UIStateSchema.parse(JSON.parse(raw.value));
-			this._state = state;
+			try {
+				this._state = UIStateSchema.parse(JSON.parse(raw.value));
+				return;
+			} catch {
+				console.error('Failed to parse UI state');
+			}
 		}
 
 		this._state = UIStateSchema.parse({});
+		await this.saveState();
 	}
 
 	private async saveState() {
