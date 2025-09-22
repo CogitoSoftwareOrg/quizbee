@@ -144,15 +144,13 @@ async def _generate_quiz_task(
     # Prepare request to LLM
     q = quiz.get("query", "")
     try:
-        with langfuse_client.start_as_current_span(name="chat-turn") as span:
+        with langfuse_client.start_as_current_span(name="quiz-patch") as span:
             res = await quizer_agent.run(
                 user_prompt=q,
                 deps=QuizerDeps(
                     admin_pb=admin_pb, quiz=quiz, materials=materials, http=http
                 ),
-                output_type=make_quiz_patch_model(
-                    limit
-                ),  # dynamic schema ONLY for quiz_items
+                output_type=make_quiz_patch_model(limit),
             )
             span.update_trace(
                 user_id=user_id,
