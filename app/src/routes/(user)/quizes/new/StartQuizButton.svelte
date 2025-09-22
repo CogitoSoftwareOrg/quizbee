@@ -67,7 +67,7 @@
 
       
       const updateQuizPayload = {
-        limit: questionCount, 
+        limit: 5, 
       };
 
       const updateResponse = await fetch(`${computeApiUrl()}/quizes/${quizId}`, {

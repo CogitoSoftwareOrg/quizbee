@@ -221,7 +221,7 @@ async def _generate_quiz_task(
 
 
 class GenerateQuizItems(BaseModel):
-    limit: Annotated[int, Field(default=2, ge=2, le=50)]  ## тут я изменил le с 5 на 50
+    limit: Annotated[int, Field(default=2, ge=2, le=5)]  
 
 
 @quizes_router.patch("/{quiz_id}")
