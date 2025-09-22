@@ -2,6 +2,7 @@
     import FileInput from './FileInput.svelte';
     import DifficultySelector from './DifficultySelector.svelte';
     import QuestionNumberSelector from './QuestionNumberSelector.svelte';
+    import StartQuizButton from './StartQuizButton.svelte';
     // import { computeApiUrl } from '$lib/api/compute-url';
 
     type AttachedFile = {
@@ -21,22 +22,6 @@
     let selectedDifficulty = $state('intermediate');
     let questionCount = $state(10);
     let inputText = $state('');
-
-    // Вычисляемое свойство для проверки активности кнопки
-    const hasFiles = $derived(attachedFiles.length > 0);
-    const hasText = $derived(inputText.trim().length > 0);
-    const isSubmitDisabled = $derived(!hasFiles && !hasText);
-
-
-  
-    function handleSubmit() {
-        console.log('Файлы:', attachedFiles);
-        console.log('Сложность:', selectedDifficulty);
-        console.log('Количество вопросов:', questionCount);
-        console.log('Текст:', inputText);
-        console.log('Количество файлов:', attachedFiles.length);
-        console.log('Есть текст:', inputText.trim().length > 0);
-    }
 
 
 </script>
@@ -159,12 +144,11 @@ Feel free to attach presentations, PDFs, images, and more—we support a wide ra
 
     <!-- Кнопка создать квиз внизу -->
     <div class="fixed {attachedFiles.length > 5 ? 'bottom-20' : 'bottom-35'} left-1/2 transform -translate-x-1/2">
-        <button 
-            class="btn btn-primary px-16 py-8 text-3xl font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105" 
-            disabled={isSubmitDisabled}
-            onclick={handleSubmit}
-        >
-            Start a quiz 
-        </button>
+        <StartQuizButton 
+            {attachedFiles}
+            {inputText}
+            {selectedDifficulty}
+            {questionCount}
+        />
     </div>
 </main>
