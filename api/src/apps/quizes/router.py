@@ -27,6 +27,7 @@ from .ai import (
     make_quiz_patch_model,
     quizer_agent,
     QuizerDeps,
+    materials_to_ai_docs,
 )
 
 quizes_router = APIRouter(prefix="/quizes", tags=["quizes"])
@@ -67,6 +68,17 @@ async def create_quiz(
     except Exception as e:
         ...
         # raise HTTPException(status_code=401, detail=f"Unauthorized: {e}")
+
+    for material_id in dto.material_ids:
+        material = await admin_pb.collection("materials").get_one(material_id)
+        if not material:
+            raise HTTPException(
+                status_code=404, detail=f"Material not found: {material_id}"
+            )
+        if material.get("user") != user_id:
+            raise HTTPException(
+                status_code=401, detail=f"Unauthorized: material not owned by user"
+            )
 
     # CREATE QUIZ
     quiz = await admin_pb.collection("quizes").create(
@@ -115,11 +127,15 @@ async def _generate_quiz_task(
     materials = quiz.get("expand", {}).get("materials", [])
     quiz_items = quiz.get("expand", {}).get("quizItems_via_quiz", [])
     quiz_items = sorted(
-        filter(lambda i: i.get("status") == "blank", quiz_items),
-        key=lambda x: x.get("order", 0),
+        quiz_items,
+        key=lambda qi: qi.get("order", 0),
     )
 
-    limit = min(limit, len(quiz_items))
+    prev_quiz_items = [qi for qi in quiz_items if qi.get("status") == "final"]
+    blank_quiz_items = [qi for qi in quiz_items if qi.get("status") == "blank"]
+
+    limit = min(limit, len(blank_quiz_items))
+    quiz_items = blank_quiz_items[:limit]
 
     # Mark as "generating"
     for qi in quiz_items[:limit]:
@@ -133,12 +149,17 @@ async def _generate_quiz_task(
 
     # Prepare request to LLM
     q = quiz.get("query", "")
+    materials_docs = await materials_to_ai_docs(http, materials)
     try:
         with langfuse_client.start_as_current_span(name="quiz-patch") as span:
             res = await quizer_agent.run(
-                user_prompt=q,
+                user_prompt=[q, *materials_docs],
                 deps=QuizerDeps(
-                    admin_pb=admin_pb, quiz=quiz, materials=materials, http=http
+                    admin_pb=admin_pb,
+                    quiz=quiz,
+                    prev_quiz_items=prev_quiz_items,
+                    materials=materials,
+                    http=http,
                 ),
                 output_type=make_quiz_patch_model(limit),
             )
@@ -148,17 +169,16 @@ async def _generate_quiz_task(
             )
     except Exception as e:
         logging.exception("Agent run failed for quiz %s: %s", quiz_id, e)
-        # можно вернуть items в "failed"
-        # for qi in quiz_items[:limit]:
-        #     try:
-        #         await admin_pb.collection("quizItems").update(
-        #             qi.get("id", ""), {"status": "failed"}
-        #         )
-        #     except Exception:
-        #         pass
+        for qi in quiz_items[:limit]:
+            try:
+                await admin_pb.collection("quizItems").update(
+                    qi.get("id", ""), {"status": "failed"}
+                )
+            except Exception:
+                pass
         return
 
-    patch = res.output  # QuizPatch_{n}
+    patch = res.output
 
     # Update items with final data
     upd = {}

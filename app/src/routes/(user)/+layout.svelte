@@ -33,7 +33,6 @@
 			userLoad!.expand = {} as UserExpand;
 			userStore.user = userLoad!;
 
-			await uiStore.loadState();
 			userStore.setLoaded();
 		});
 	});

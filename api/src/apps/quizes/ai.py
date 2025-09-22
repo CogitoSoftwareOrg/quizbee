@@ -1,21 +1,14 @@
+import json
 from dataclasses import dataclass
 import logging
 import httpx
-from langfuse.api import Model
 from pocketbase.models.dtos import Record
-from pydantic_ai import (
-    Agent,
-    RunContext,
-    StructuredDict,
-)
+from pydantic_ai import Agent, RunContext
 from pocketbase import PocketBase
-from typing import Annotated, Any
+from typing import Annotated
 from pydantic import BaseModel, Field, create_model
 from pydantic_ai.messages import (
-    ModelMessage,
-    SystemPromptPart,
-    UserPromptPart,
-    ModelRequest,
+    DocumentUrl,
 )
 
 from src.lib.clients import langfuse_client
@@ -28,6 +21,7 @@ class QuizerDeps:
     http: httpx.AsyncClient
     admin_pb: PocketBase
     quiz: Record
+    prev_quiz_items: list[Record]
     materials: list[Record]
 
 
@@ -100,65 +94,37 @@ def make_quiz_patch_model(n_items: int):
 
 QUIZER_LLM = LLMS.GEMINI_2_5_FLASH_LITE
 
-
-async def build_langfuse_messages(
-    ctx: RunContext[QuizerDeps],
-    messages: list[ModelMessage],
-) -> list[ModelMessage]:
-    materials = await load_materials_from_records(ctx.deps.http, ctx.deps.materials)
-    materials = materials or "<no materials>"
-    chat = langfuse_client.get_prompt(
-        "create_quiz_patch", label=settings.env, type="chat"
-    ).compile(
-        materials=materials,
-    )
-    parts = []
-    for chat_msg in chat:
-        if chat_msg["role"] == "system":  # pyright: ignore[reportGeneralTypeIssues]
-            parts.append(
-                SystemPromptPart(
-                    content=chat_msg[
-                        "content"
-                    ]  # pyright: ignore[reportGeneralTypeIssues]
-                )
-            )
-        else:
-            parts.append(
-                UserPromptPart(
-                    content=chat_msg[
-                        "content"
-                    ]  # pyright: ignore[reportGeneralTypeIssues]
-                )
-            )
-
-    return [ModelRequest(parts=parts)] + messages
-
-
 quizer_agent = Agent(
     model=QUIZER_LLM,
     deps_type=QuizerDeps,
     instrument=True,
-    history_processors=[build_langfuse_messages],
     output_type=QuizPatch,
     retries=3,
 )
 
 
-async def load_materials_from_records(
-    http: httpx.AsyncClient, records: list[Record]
-) -> str:
-    contents = []
+@quizer_agent.system_prompt()
+async def system_prompt(ctx: RunContext[QuizerDeps]) -> str:
+    prev_quiz_items = ctx.deps.prev_quiz_items
+    prev_questions = [qi.get("question") for qi in prev_quiz_items]
+    prompt = langfuse_client.get_prompt("create_quiz", label=settings.env).compile(
+        prev_quiz_items=json.dumps(prev_questions)
+    )
+    return prompt
+
+
+async def materials_to_ai_docs(
+    http: httpx.AsyncClient, records: list[Record], force_download: bool = False
+) -> list[DocumentUrl]:
+    urls = []
     for m in records:
         mid = m.get("id")
         col = m.get("collectionName")
         fname = m.get("file")
         url = f"{settings.pb_url}/api/files/{col}/{mid}/{fname}"
-        resp = await http.get(url)
-        resp.raise_for_status()
-        contents.append(resp.text)
-    materials = "\n\n".join(contents)
+        urls.append(url)
+        # resp = await http.get(url)
+        # resp.raise_for_status()
+        # contents.append(resp.text)
 
-    # if len(ENCODERS[QUIZER_LLM].encode(materials)) > 200_000:
-    #     materials = materials[:100_000]
-
-    return materials
+    return [DocumentUrl(url=url, force_download=force_download) for url in urls]
