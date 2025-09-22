@@ -34,6 +34,7 @@ quizes_router = APIRouter(prefix="/quizes", tags=["quizes"])
 
 
 class CreateQuizDto(BaseModel):
+    number_of_questions: int = Field(default=10, ge=1, le=50)
     material_ids: list[str] = Field(default=[])
     with_attempt: bool = Field(default=True)
     query: str = Field(default="")
@@ -86,6 +87,7 @@ async def create_quiz(
             "author": user_id,
             "query": dto.query,
             "materials": dto.material_ids,  # pyright: ignore[reportArgumentType]
+            "itemsLimit": dto.number_of_questions,  # pyright: ignore[reportArgumentType]
         }
     )
 

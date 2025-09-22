@@ -42,7 +42,9 @@
       const createQuizPayload = {
         query: inputText,
         material_ids: selectedMaterialIds,
-        with_attempt: true
+        with_attempt: true,
+        number_of_questions: questionCount,
+        difficulty: selectedDifficulty,
       };
 
       const createResponse = await fetch(`${computeApiUrl()}/quizes`, {
@@ -63,7 +65,7 @@
       const { quiz_id: quizId, quiz_attempt_id: quizAttemptsId } = await createResponse.json();
       console.log('Quiz created:', quizId, 'Attempt created:', quizAttemptsId);
 
-      // Обновляем настройки квиза с учетом выбранного количества вопросов
+      
       const updateQuizPayload = {
         limit: questionCount, 
       };
@@ -99,17 +101,13 @@
     }
   }
 
-  function handleSubmit() {
-    
-    
-    sendQuizCreation();
-  }
+ 
 </script>
 
 <button 
   class="btn btn-primary px-16 py-8 text-3xl font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105" 
   disabled={isSubmitDisabled || isLoading}
-  onclick={handleSubmit}
+  onclick={sendQuizCreation}
 >
   {#if isLoading}
     <span class="loading loading-spinner loading-md mr-2"></span>
