@@ -71,7 +71,7 @@ def create_app():
         allow_origin_regex=allow_origin_regex,
         allow_methods=["GET", "POST", "DELETE", "OPTIONS", "PATCH"],
         allow_credentials=True,
-        allow_headers=["Authorization", "Content-Type"],
+        allow_headers=["*"],
         # expose_headers=["Mcp-Session-Id"], # Only for stateful mode
     )
 
