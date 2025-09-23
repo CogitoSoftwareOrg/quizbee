@@ -1,15 +1,8 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
-	import { uploadMaterial, deleteMaterial } from '$lib/api/upload-delete-materials';
-
-	type AttachedFile = {
-		file?: File;
-		previewUrl: string | null;
-		materialId?: string;
-		name: string;
-		isUploading?: boolean;
-		uploadError?: string;
-	};
+	import { uploadMaterial, deleteMaterial } from '$lib/apps/materials/upload-delete-materials';
+	import type { AttachedFile } from '$lib/types/AttachedFile';
+	
 
 	interface Props {
 		inputText?: string;

@@ -1,5 +1,5 @@
 <script lang="ts">
-	export let value: number = 10;
+	let { value = $bindable(10) }: { value: number } = $props();
 </script>
 
 <div class="flex gap-13 items-center justify-center">

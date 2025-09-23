@@ -4,22 +4,62 @@
     import { userStore } from '$lib/apps/users/user.svelte';
     import { materialsStore } from '$lib/apps/materials/materials.svelte';
     import { onMount } from 'svelte';
+    import type { AttachedFile } from '$lib/types/AttachedFile';
+
 
     interface Props {
-        onQuizSelect?: (quiz: { query: string; materials?: string[] }) => void;
+        inputText: string;
+        attachedFiles: AttachedFile[];
     }
 
-    let { onQuizSelect }: Props = $props();
+    let { inputText = $bindable(), attachedFiles = $bindable() }: Props = $props();
 
     let quizIds = $state<string[]>([]);
 
+    /**
+     * Создает AttachedFile объект из material ID без реального файла
+     */
+    function createAttachedFileFromMaterial(materialId: string, materialTitle: string): AttachedFile {
+        // Извлекаем расширение из названия файла
+        const extension = materialTitle.split('.').pop()?.toLowerCase() || '';
+        
+        // Проверяем, является ли файл изображением по расширению
+        const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'];
+        const isImage = imageExtensions.includes(extension);
+        
+        return {
+            materialId: materialId,
+            name: materialTitle,
+            previewUrl: isImage ? null : null, // Для восстановленных файлов не показываем превью
+            isUploading: false,
+            uploadError: undefined
+        };
+    }
+
     // Функция для обработки клика по квизу
-    function handleQuizClick(quiz: any) {
-        if (onQuizSelect && quiz.query) {
-            onQuizSelect({
-                query: quiz.query,
-                materials: quiz.materials || []
-            });
+    async function handleQuizClick(quiz: any) {
+        // Устанавливаем текст
+        if (quiz.query) {
+            inputText = quiz.query;
+        }
+        
+        // Восстанавливаем файлы из материалов
+        if (quiz.materials && quiz.materials.length > 0) {
+            const restoredFiles: AttachedFile[] = [];
+            
+            for (const materialId of quiz.materials) {
+                // Пытаемся найти материал в локальном сторе
+                const material = materialsStore.materials.find(m => m.id === materialId);
+                
+                if (material && material.title) {
+                    restoredFiles.push(createAttachedFileFromMaterial(materialId, material.title));
+                }
+            }
+            
+            attachedFiles = restoredFiles;
+        } else {
+            // Если материалов нет, очищаем прикрепленные файлы
+            attachedFiles = [];
         }
     }
 

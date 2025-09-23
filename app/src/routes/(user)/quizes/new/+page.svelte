@@ -4,85 +4,15 @@
     import QuestionNumberSelector from './QuestionNumberSelector.svelte';
     import StartQuizButton from './StartQuizButton.svelte';
     import PreviousQuizes from './PreviousQuizes.svelte';
-    import { materialsStore } from '$lib/apps/materials/materials.svelte';
-    import { pb } from '$lib/pb';
-    // import { computeApiUrl } from '$lib/api/compute-url';
+    import type { AttachedFile } from '$lib/types/AttachedFile';
 
-    type AttachedFile = {
-		file?: File;
-		previewUrl: string | null;
-		materialId?: string;
-		material?: import('$lib/pb/pocketbase-types').MaterialsResponse;
-		name: string;
-		uploadPromise?: Promise<import('$lib/pb/pocketbase-types').MaterialsResponse>;
-		isUploading?: boolean;
-		uploadError?: string;
-	};
+
+   
 
     let attachedFiles = $state<AttachedFile[]>([]);
     let selectedDifficulty = $state('intermediate');
     let questionCount = $state(10);
     let inputText = $state('');
-
-    /**
-     * Создает AttachedFile объект из material ID без реального файла
-     */
-    function createAttachedFileFromMaterial(materialId: string, materialTitle: string): AttachedFile {
-        // Извлекаем расширение из названия файла
-        const extension = materialTitle.split('.').pop()?.toLowerCase() || '';
-        
-        // Проверяем, является ли файл изображением по расширению
-        const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'];
-        const isImage = imageExtensions.includes(extension);
-        
-        return {
-            materialId: materialId,
-            name: materialTitle,
-            previewUrl: isImage ? null : null, // Для восстановленных файлов не показываем превью
-            isUploading: false,
-            uploadError: undefined
-        };
-    }
-
-    /**
-     * Обработчик выбора предыдущего квиза
-     */
-    async function handleQuizSelect(data: { query: string; materials?: string[] }) {
-        // Устанавливаем текст
-        inputText = data.query;
-        
-        // Восстанавливаем файлы из материалов
-        if (data.materials && data.materials.length > 0) {
-            const restoredFiles: AttachedFile[] = [];
-            
-            for (const materialId of data.materials) {
-                // Пытаемся найти материал в локальном сторе
-                const material = materialsStore.materials.find(m => m.id === materialId);
-                
-                if (material && material.title) {
-                    restoredFiles.push(createAttachedFileFromMaterial(materialId, material.title));
-                } else {
-                    // Если материала нет в локальном сторе, пытаемся загрузить его
-                    try {
-                        const fetchedMaterial = await pb!.collection('materials').getOne(materialId);
-                        
-                        if (fetchedMaterial && fetchedMaterial.title) {
-                            restoredFiles.push(createAttachedFileFromMaterial(materialId, fetchedMaterial.title));
-                        }
-                    } catch (error) {
-                        console.error('Failed to fetch material:', materialId, error);
-                        // Создаем файл с ID в качестве имени, если не удалось загрузить
-                        restoredFiles.push(createAttachedFileFromMaterial(materialId, `Material ${materialId}`));
-                    }
-                }
-            }
-            
-            attachedFiles = restoredFiles;
-        } else {
-            // Если материалов нет, очищаем прикрепленные файлы
-            attachedFiles = [];
-        }
-    }
 
 
 </script>
@@ -102,19 +32,23 @@
     }
 </style>
 
-<main class="relative h-screen max-h-screen overflow-hidden overscroll-none flex">
-    <!-- Левая колонка с историей квизов -->
-    <PreviousQuizes onQuizSelect={handleQuizSelect} />
+
+<main class="relative h-screen flex">
     
-    <!-- Основная область контента -->
-    <div class="flex-1 relative">
-        <!-- Заголовок фиксированный сверху -->
-        <div class="fixed top-16 left-1/2 transform -translate-x-1/2 z-10" style="left: calc(50% + 160px);">
-            <h1 class="text-5xl font-bold text-center">New Quiz</h1>
+    <PreviousQuizes 
+        bind:inputText
+        bind:attachedFiles
+    />
+    
+    
+    <div class="flex-1 relative py-16 px-8 overflow-y-auto">
+        
+        <div class="text-center mb-12">
+            <h1 class="text-5xl font-bold">New Quiz</h1>
         </div>
     
-    <!-- Секция с описанием и FileInput -->
-    <div class="fixed top-46 left-1/2 transform -translate-x-1/2 w-full max-w-6xl px-8 z-10" style="left: calc(50% + 160px); width: calc(100% - 320px); max-width: calc(1536px - 320px);">
+    
+    <div class="max-w-7xl mx-auto">
         <div class="text-center">
             <div class="flex items-center justify-center gap-2">
                 <h2 class="text-4xl font-semibold mb-1">Describe your quiz</h2>
@@ -141,16 +75,16 @@ Feel free to attach presentations, PDFs, images, and more—we support a wide ra
                 </div>
             </div>
         </div>
-        <div class="flex justify-center mt-4">
+        <div class="flex justify-center mt-4 mb-12">
             <div class="w-full max-w-4xl">
                 <FileInput bind:attachedFiles bind:inputText />      
             </div>
         </div>
         
-        <!-- Контейнер для размещения секций на одном уровне -->
-        <div class="flex justify-center {attachedFiles.length > 5 ? 'mt-14' : 'mt-28'}">
+        
+        <div class="flex justify-center mb-16">
             <div class="flex flex-col lg:flex-row lg:gap-16 xl:gap-24 items-center lg:items-start">
-                <!-- Выбор уровня сложности -->
+                
                 <div class="text-center">
                     <div class="flex items-center justify-center gap-2">
                         <h2 class="text-2xl font-semibold mb-6">Choose difficulty level</h2>
@@ -178,7 +112,7 @@ Feel free to attach presentations, PDFs, images, and more—we support a wide ra
                     <DifficultySelector bind:selectedDifficulty />
                 </div>
 
-                <!-- Выбор количества вопросов -->
+                
                 <div class="text-center mt-10 lg:mt-0">
                     <div class="flex items-center justify-center gap-2">
                         <h2 class="text-2xl font-semibold mb-6">Choose number of questions</h2>
@@ -206,16 +140,16 @@ Feel free to attach presentations, PDFs, images, and more—we support a wide ra
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Кнопка создать квиз внизу -->
-    <div class="fixed {attachedFiles.length > 5 ? 'bottom-20' : 'bottom-35'} left-1/2 transform -translate-x-1/2" style="left: calc(50% + 160px);">
-        <StartQuizButton 
-            {attachedFiles}
-            {inputText}
-            {selectedDifficulty}
-            {questionCount}
-        />
+        
+        <div class="flex justify-center">
+            <StartQuizButton 
+                {attachedFiles}
+                {inputText}
+                {selectedDifficulty}
+                {questionCount}
+            />
+        </div>
     </div>
     </div>
 </main>
