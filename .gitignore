@@ -3,6 +3,7 @@
 **/.vscode
 
 **/.env
+**/.env.production
 
 pb/pb_data
 meilisearch/data

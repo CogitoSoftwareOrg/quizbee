@@ -39,7 +39,7 @@ class CreateQuizDto(BaseModel):
     query: str = Field(default="")
 
 
-@quizes_router.post("/")
+@quizes_router.post("")
 async def create_quiz(
     admin_pb: AdminPB,
     request: Request,

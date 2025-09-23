@@ -33,9 +33,7 @@ async def lifespan(app: FastAPI):
 
 
 def create_app():
-    app = FastAPI(
-        lifespan=lifespan, dependencies=[Depends(ensure_admin_pb)], prefix="/api"
-    )
+    app = FastAPI(lifespan=lifespan, dependencies=[Depends(ensure_admin_pb)])
 
     app.include_router(quizes_router)
 
@@ -51,7 +49,6 @@ def create_app():
             "http://127.0.0.1:4321",
         ]
     elif settings.env == "preview":
-        allow_origin_regex = r"^https://\\d+\\.(?:prod-app|app|web)\\.growplex\\.dev$"
         pr = settings.pr_id
         assert pr is not None
         allowed_origins = [
@@ -69,7 +66,7 @@ def create_app():
         CORSMiddleware,
         allow_origins=allowed_origins,
         allow_origin_regex=allow_origin_regex,
-        allow_methods=["GET", "POST", "DELETE", "OPTIONS", "PATCH"],
+        allow_methods=["GET", "POST", "OPTIONS", "PATCH", "PUT"],
         allow_credentials=True,
         allow_headers=["*"],
         # expose_headers=["Mcp-Session-Id"], # Only for stateful mode
