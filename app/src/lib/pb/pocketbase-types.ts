@@ -99,7 +99,7 @@ export type SuperusersRecord = {
 
 export type MaterialsRecord = {
 	created?: IsoDateString
-	file?: string
+	file: string
 	id: string
 	title?: string
 	updated?: IsoDateString
@@ -110,6 +110,12 @@ export enum MessagesRoleOptions {
 	"user" = "user",
 	"ai" = "ai",
 }
+
+export enum MessagesStatusOptions {
+	"streaming" = "streaming",
+	"final" = "final",
+	"onClient" = "onClient",
+}
 export type MessagesRecord<Tmetadata = unknown> = {
 	content?: string
 	created?: IsoDateString
@@ -117,6 +123,7 @@ export type MessagesRecord<Tmetadata = unknown> = {
 	metadata?: null | Tmetadata
 	quizAttempt?: RecordIdString
 	role?: MessagesRoleOptions
+	status?: MessagesStatusOptions
 	tokens?: number
 	updated?: IsoDateString
 }

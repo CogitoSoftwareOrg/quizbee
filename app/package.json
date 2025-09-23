@@ -28,6 +28,7 @@
 		"@tailwindcss/forms": "^0.5.9",
 		"@tailwindcss/typography": "^0.5.15",
 		"@tailwindcss/vite": "^4.0.0",
+		"@types/luxon": "^3.7.1",
 		"@types/node": "^22",
 		"@vitest/browser": "^3.2.3",
 		"daisyui": "^5.1.12",
@@ -67,5 +68,6 @@
 		"nanoid": "^5.1.5",
 		"pocketbase": "^0.26.2",
 		"zod": "^4.1.9"
-	}
+	},
+	"packageManager": "pnpm@10.17.1+sha512.17c560fca4867ae9473a3899ad84a88334914f379be46d455cbf92e5cf4b39d34985d452d2583baf19967fa76cb5c17bc9e245529d0b98745721aa7200ecaf7a"
 }
