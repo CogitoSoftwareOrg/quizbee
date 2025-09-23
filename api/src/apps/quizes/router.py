@@ -2,6 +2,7 @@ from pocketbase import PocketBase, FileUpload
 from fastapi import (
     APIRouter,
     BackgroundTasks,
+    Depends,
     Form,
     Request,
     Query,
@@ -17,6 +18,8 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field
 
+from apps.auth.middleware import auth_user, User
+from apps.billing.middleware import load_subscription
 from lib.clients.http import HTTPAsyncClient
 from src.apps.messages import pb_to_ai
 from src.lib.settings import settings
@@ -30,7 +33,11 @@ from .ai import (
     materials_to_ai_docs,
 )
 
-quizes_router = APIRouter(prefix="/quizes", tags=["quizes"])
+quizes_router = APIRouter(
+    prefix="/quizes",
+    tags=["quizes"],
+    dependencies=[Depends(auth_user), Depends(load_subscription)],
+)
 
 
 class CreateQuizDto(BaseModel):
@@ -42,32 +49,13 @@ class CreateQuizDto(BaseModel):
 @quizes_router.post("")
 async def create_quiz(
     admin_pb: AdminPB,
-    request: Request,
+    user: User,
     dto: CreateQuizDto,
 ):
     if not dto.material_ids and not dto.query:
         raise HTTPException(status_code=400, detail="Material IDs or query is required")
 
-    # AUTH
-    pb_token = request.cookies.get("pb_token")
-    if not pb_token:
-        raise HTTPException(status_code=401, detail=f"Unauthorized: no pb_token")
-    try:
-        pb = PocketBase(settings.pb_url)
-        pb._inners.auth.set_user({"token": pb_token, "record": {}})
-        user = (await pb.collection("users").auth.refresh()).get("record", {})
-    except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Unauthorized: {e}")
-
-    # SUBSCRIPTION
     user_id = user.get("id", "")
-    try:
-        subscription = await admin_pb.collection("subscriptions").get_first(
-            options={"params": {"filter": f"user = '{user_id}'"}},
-        )
-    except Exception as e:
-        ...
-        # raise HTTPException(status_code=401, detail=f"Unauthorized: {e}")
 
     for material_id in dto.material_ids:
         material = await admin_pb.collection("materials").get_one(material_id)
