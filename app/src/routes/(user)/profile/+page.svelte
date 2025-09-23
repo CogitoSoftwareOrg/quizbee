@@ -209,7 +209,7 @@
 			<h4 class="text-center font-semibold">Manage your subscription with Stripe</h4>
 
 			<div class="flex justify-center">
-				<Button class="mx-auto" color="secondary" wide>Manage Subscription</Button>
+				<Button class="mx-auto" wide>Manage Subscription</Button>
 			</div>
 		</div>
 
