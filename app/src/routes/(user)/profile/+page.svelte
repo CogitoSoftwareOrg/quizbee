@@ -4,7 +4,8 @@
 
 	import { pb } from '$lib/pb';
 	import { userStore } from '$lib/apps/users/user.svelte';
-	import Man from '$lib/assets/images/Man.jpg';
+	import Button from '$lib/ui/Button.svelte';
+	import { goto } from '$app/navigation';
 
 	const user = $derived(userStore.user);
 	const avatar = $derived(user?.avatar ? pb!.files.getURL(user, user.avatar) : null);
@@ -20,8 +21,8 @@
 	);
 
 	// Edit state
+	let nameValue = $derived(user?.name || '');
 	let editingName = $state(false);
-	let nameValue = $state(user?.name || '');
 	let savingName = $state(false);
 	let nameError = $state('');
 
@@ -98,6 +99,11 @@
 			default:
 				return 'badge-accent';
 		}
+	}
+
+	function logout() {
+		pb!.authStore.clear();
+		goto('/sign-in');
 	}
 </script>
 
@@ -197,6 +203,19 @@
 					{/if}
 				</div>
 			</div>
+		</div>
+
+		<div class="mt-3 space-y-2">
+			<h4 class="text-center font-semibold">Manage your subscription with Stripe</h4>
+
+			<div class="flex justify-center">
+				<Button class="mx-auto" color="secondary" wide>Manage Subscription</Button>
+			</div>
+		</div>
+
+		<!-- Logout Button -->
+		<div class="mt-20 flex justify-center">
+			<Button onclick={logout} color="error" style="soft" wide>Logout</Button>
 		</div>
 	</div>
 </div>

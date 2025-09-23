@@ -1,24 +1,22 @@
 <script lang="ts">
-	import { Bot, ChevronsDown } from 'lucide-svelte';
+	import { ChevronsDown } from 'lucide-svelte';
 	import { fade } from 'svelte/transition';
 
 	import Button from '$lib/ui/Button.svelte';
-
-	import Message from './Message.svelte';
 	import { scrollToBottom } from '$lib/actions/scroll-to-bottom';
 	import type { MessagesResponse } from '$lib/pb';
 
 	import type { Sender } from './types';
+	import Message from './Message.svelte';
 
 	interface Props {
 		className: string;
 		messages: MessagesResponse[];
-		isWaitingAnswer: boolean;
 		userSender: Sender;
 		assistantSender: Sender;
 	}
 
-	const { className, messages, isWaitingAnswer, userSender, assistantSender }: Props = $props();
+	const { className, messages, userSender, assistantSender }: Props = $props();
 
 	let messagesContainer: HTMLElement | null = $state(null);
 	let showScrollButton = $state(false);
@@ -52,9 +50,6 @@
 				{@const sender = msg.role === 'user' ? userSender : assistantSender}
 				<Message {msg} {incoming} {sender} />
 			{/each}
-			{#if isWaitingAnswer}
-				<div class="text-base-content/50 text-left text-sm">Generating...</div>
-			{/if}
 		{/if}
 
 		{#if showScrollButton}
