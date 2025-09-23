@@ -7,9 +7,6 @@ from pydantic_ai import Agent, RunContext
 from pocketbase import PocketBase
 from typing import Annotated
 from pydantic import BaseModel, Field, create_model
-from pydantic_ai.messages import (
-    DocumentUrl,
-)
 
 from src.lib.clients import langfuse_client
 from src.lib.config import LLMS
@@ -111,20 +108,3 @@ async def system_prompt(ctx: RunContext[QuizerDeps]) -> str:
         prev_quiz_items=json.dumps(prev_questions)
     )
     return prompt
-
-
-async def materials_to_ai_docs(
-    http: httpx.AsyncClient, records: list[Record], force_download: bool = False
-) -> list[DocumentUrl]:
-    urls = []
-    for m in records:
-        mid = m.get("id")
-        col = m.get("collectionName")
-        fname = m.get("file")
-        url = f"{settings.pb_url}/api/files/{col}/{mid}/{fname}"
-        urls.append(url)
-        # resp = await http.get(url)
-        # resp.raise_for_status()
-        # contents.append(resp.text)
-
-    return [DocumentUrl(url=url, force_download=force_download) for url in urls]

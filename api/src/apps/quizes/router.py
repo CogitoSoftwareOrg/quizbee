@@ -1,42 +1,31 @@
-from pocketbase import PocketBase, FileUpload
 from fastapi import (
     APIRouter,
     BackgroundTasks,
     Depends,
-    Form,
-    Request,
-    Query,
     HTTPException,
-    File,
-    UploadFile,
     status,
 )
-from fastapi.responses import StreamingResponse, JSONResponse
-import json
+from fastapi.responses import JSONResponse
 import logging
 from typing import Annotated
 
 from pydantic import BaseModel, Field
 
-from apps.auth.middleware import auth_user, User
-from apps.billing.middleware import load_subscription
+from apps.auth import User
+from apps.materials import user_owns_materials, materials_to_ai_docs
 from lib.clients.http import HTTPAsyncClient
-from src.apps.messages import pb_to_ai
-from src.lib.settings import settings
 from src.lib.clients import AdminPB, langfuse_client
 
 from .ai import (
-    QuizPatch,
     make_quiz_patch_model,
     quizer_agent,
     QuizerDeps,
-    materials_to_ai_docs,
 )
 
 quizes_router = APIRouter(
     prefix="/quizes",
     tags=["quizes"],
-    dependencies=[Depends(auth_user), Depends(load_subscription)],
+    dependencies=[],
 )
 
 
@@ -46,7 +35,7 @@ class CreateQuizDto(BaseModel):
     query: str = Field(default="")
 
 
-@quizes_router.post("")
+@quizes_router.post("", dependencies=[Depends(user_owns_materials)])
 async def create_quiz(
     admin_pb: AdminPB,
     user: User,
@@ -56,17 +45,6 @@ async def create_quiz(
         raise HTTPException(status_code=400, detail="Material IDs or query is required")
 
     user_id = user.get("id", "")
-
-    for material_id in dto.material_ids:
-        material = await admin_pb.collection("materials").get_one(material_id)
-        if not material:
-            raise HTTPException(
-                status_code=404, detail=f"Material not found: {material_id}"
-            )
-        if material.get("user") != user_id:
-            raise HTTPException(
-                status_code=401, detail=f"Unauthorized: material not owned by user"
-            )
 
     # CREATE QUIZ
     quiz = await admin_pb.collection("quizes").create(
@@ -215,18 +193,8 @@ async def generate_quiz_items(
     quiz_id: str,
     dto: GenerateQuizItems,
     background: BackgroundTasks,
-    request: Request,
+    user: User,
 ):
-    pb_token = request.cookies.get("pb_token")
-    if not pb_token:
-        raise HTTPException(status_code=401, detail=f"Unauthorized: no pb_token")
-    try:
-        pb = PocketBase(settings.pb_url)
-        pb._inners.auth.set_user({"token": pb_token, "record": {}})
-        user = (await pb.collection("users").auth.refresh()).get("record", {})
-    except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Unauthorized: {e}")
-
     # SUBSCRIPTION
     user_id = user.get("id", "")
 

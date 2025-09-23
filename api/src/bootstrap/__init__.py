@@ -6,6 +6,8 @@ from starlette.middleware.cors import CORSMiddleware
 from mcp.server.fastmcp import FastMCP
 import httpx
 
+from apps.auth.middleware import auth_user
+from apps.billing.middleware import load_subscription
 from src.apps.quizes import quizes_router
 from src.lib.clients.pb import ensure_admin_pb, init_admin_pb
 from src.lib.settings import settings
@@ -33,7 +35,14 @@ async def lifespan(app: FastAPI):
 
 
 def create_app():
-    app = FastAPI(lifespan=lifespan, dependencies=[Depends(ensure_admin_pb)])
+    app = FastAPI(
+        lifespan=lifespan,
+        dependencies=[
+            Depends(ensure_admin_pb),
+            Depends(auth_user),
+            Depends(load_subscription),
+        ],
+    )
 
     app.include_router(quizes_router)
 
