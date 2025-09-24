@@ -4,7 +4,7 @@
     import QuestionNumberSelector from './QuestionNumberSelector.svelte';
     import StartQuizButton from './StartQuizButton.svelte';
     import PreviousQuizes from './PreviousQuizes.svelte';
-    import type { AttachedFile } from '$lib/types/AttachedFile';
+    import type { AttachedFile } from '$lib/types/attached-file';
 
 
    

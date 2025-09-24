@@ -4,7 +4,7 @@
     import { userStore } from '$lib/apps/users/user.svelte';
     import { materialsStore } from '$lib/apps/materials/materials.svelte';
     import { onMount } from 'svelte';
-    import type { AttachedFile } from '$lib/types/AttachedFile';
+    import type { AttachedFile } from '$lib/types/attached-file';
 
 
     interface Props {

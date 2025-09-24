@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import { uploadMaterial, deleteMaterial } from '$lib/apps/materials/upload-delete-materials';
-	import type { AttachedFile } from '$lib/types/AttachedFile';
+	import type { AttachedFile } from '$lib/types/attached-file';
 	
 
 	interface Props {
@@ -256,11 +256,10 @@
 </script>
 
 <div 
-	class="flex flex-col gap-2.5 w-full max-w-3xl mx-auto font-sans transition-colors duration-200 rounded-lg p-2"
-	class:bg-blue-50={isDragging}
-	class:border-2={isDragging}
-	class:border-dashed={isDragging}
-	class:border-blue-500={isDragging}
+	class={[
+		"flex flex-col gap-2.5 w-full max-w-3xl mx-auto font-sans transition-colors duration-200 rounded-lg p-2",
+		isDragging && "bg-blue-50 border-2 border-dashed border-blue-500"
+	]}
 	ondragover={handleDragOver}
 	ondragleave={handleDragLeave}
 	ondrop={handleDrop}
