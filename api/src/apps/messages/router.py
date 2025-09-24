@@ -4,7 +4,7 @@ from fastapi.responses import StreamingResponse
 
 from apps.billing import Subscription
 from apps.materials.utils import materials_to_ai_docs
-from lib.clients import AdminPB
+from lib.clients import AdminPB, langfuse_client
 from lib.utils import sse
 from apps.auth import User
 
@@ -85,26 +85,31 @@ async def sse_messages(
             quiz_items=quiz_items,
         )
 
-        async with explainer_agent.run_stream(
-            [query, *ai_docs],
-            message_history=history,
-            deps=deps,
-            # event_stream_handler=event_stream_handler,
-        ) as run:
-            i = 0
-            async for text in run.stream_text(delta=True):
-                i += 1
-                content += text
-                yield sse(
-                    "chunk", json.dumps({"text": text, "msg_id": ai_msg_id, "i": i})
-                )
-
-            await admin_pb.collection("messages").update(
-                ai_msg_id,
-                {
-                    "content": content,
-                    "status": "final",
-                },
+        with langfuse_client.start_as_current_span(name="explainer-agent") as span:
+            async with explainer_agent.run_stream(
+                [query, *ai_docs],
+                message_history=history,
+                deps=deps,
+                # event_stream_handler=event_stream_handler,
+            ) as run:
+                i = 0
+                async for text in run.stream_text(delta=True):
+                    i += 1
+                    content += text
+                    yield sse(
+                        "chunk", json.dumps({"text": text, "msg_id": ai_msg_id, "i": i})
+                    )
+            span.update_trace(
+                user_id=user.get("id", ""),
+                session_id=quiz_attempt.get("id", ""),
             )
+        await admin_pb.collection("messages").update(
+            ai_msg_id,
+            {
+                "content": content,
+                "status": "final",
+            },
+        )
+        yield sse("done", json.dumps({}))
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
