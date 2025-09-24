@@ -19,26 +19,17 @@ def pb_to_ai(pb_messages: list[Record]) -> list[ModelMessage]:
     ai: list[ModelMessage] = []
 
     for pb_message in pb_messages:
-        name = pb_message.get("sentBy")
+        # name = pb_message.get("sentBy")
         role = pb_message.get("role")
         meta = pb_message.get("metadata", {})
         content = (pb_message.get("content", "")).strip()
 
         logging.info(f"PB Message: {role} {content} {meta}")
 
-        if role in ("user", "guest", "admin"):
+        if role == "user":
             if content:
                 ai.append(ModelRequest(parts=[UserPromptPart(content=f"{content}")]))
-        elif role == "system":
-            if content:
-                ai.append(ModelRequest(parts=[SystemPromptPart(content=f"{content}")]))
-
-        elif role == "assistant":
-            # if current_request and current_request.parts:
-            #     ai.append(current_request)
-            # current_request = None
-
-            # CREARE RESPONSE WITH TOOL CALLS AND TEXT
+        elif role == "ai":
             parts = []
             for tc in meta.get("tool_calls", []):
                 parts.append(
@@ -48,7 +39,6 @@ def pb_to_ai(pb_messages: list[Record]) -> list[ModelMessage]:
                         tool_call_id=tc.get("tool_call_id"),
                     )
                 )
-
             if parts:
                 ai.append(ModelResponse(parts=parts))
 

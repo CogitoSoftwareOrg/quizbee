@@ -1,4 +1,4 @@
-import httpx
+
 from pocketbase.models.dtos import Record
 from pydantic_ai.messages import (
     DocumentUrl,
@@ -8,7 +8,6 @@ from lib.settings import settings
 
 
 async def materials_to_ai_docs(
-    http: httpx.AsyncClient,
     records: list[Record],
     force_download=settings.env == "local",
 ) -> list[DocumentUrl]:
