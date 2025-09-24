@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { Info } from 'lucide-svelte';
+	// explanations rendered in QuizAnswersList
 
 	import Button from '$lib/ui/Button.svelte';
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte.js';
@@ -73,7 +73,7 @@
 
 			{#if item && quiz && quizAttempt}
 				<QuizAnswersList
-					class="relative mt-6 flex-1"
+					class="relative mt-6 flex-1 overflow-y-auto"
 					{answers}
 					{quizItems}
 					{quizDecisions}
@@ -85,31 +85,9 @@
 			{/if}
 
 			{#if itemDecision}
-				{#each answers as answer, index}
-					{#if answers[index]?.explanation}
-						<div
-							class={[
-								'mt-3 rounded-xl border p-4',
-								index === itemDecision?.answerIndex
-									? 'border-info/50 bg-info/10'
-									: 'border-base-300 bg-base-200'
-							]}
-						>
-							<div class="flex items-start gap-2">
-								<Info class="mt-0.5" size={18} />
-								<div class="flex-1">
-									<p class="text-sm opacity-80">{answer.explanation}</p>
-								</div>
-							</div>
-						</div>
-					{/if}
-				{/each}
-			{/if}
-
-			{#if itemDecision}
-				<div class="mt-6 flex justify-end gap-2">
-					<Button color="neutral" style="soft">Manage Quiz</Button>
-					<Button color="info" style="soft">Explain More</Button>
+				<div class="mt-6 flex gap-2">
+					<Button class="flex-1" color="neutral" style="soft">Manage Quiz</Button>
+					<Button class="flex-1" color="info" style="soft">Explain More</Button>
 				</div>
 			{/if}
 		</div>

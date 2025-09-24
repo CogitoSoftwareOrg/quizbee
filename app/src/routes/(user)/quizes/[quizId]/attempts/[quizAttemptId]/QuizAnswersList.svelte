@@ -10,6 +10,7 @@
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
 	import type { Answer } from '$lib/apps/quizes/types';
 	import { computeApiUrl } from '$lib/api/compute-url';
+	import { Info } from 'lucide-svelte';
 
 	interface Props {
 		class?: ClassValue;
@@ -44,9 +45,9 @@
 
 <div class={[className]}>
 	{#if item.status === 'final'}
-		<ul class={['grid gap-3']}>
+		<ul class={['flex flex-col gap-6 px-12']}>
 			{#each answers as answer, index}
-				<li>
+				<li class={['space-y-2']}>
 					<button
 						class={[
 							'border-base-300 bg-base-200 hover:border-primary/50 focus-visible:ring-primary/60 group w-full rounded-xl border text-left shadow-sm transition hover:shadow-md focus-visible:outline-none focus-visible:ring-2',
@@ -94,12 +95,9 @@
 								class={[
 									'inline-flex h-8 w-8 items-center justify-center rounded-full border font-semibold',
 									itemDecision?.answerIndex === index
-										? 'border-primary text-primary'
-										: 'border-base-300 text-base-content/70',
-									itemDecision && answer.correct ? 'border-success text-success' : '',
-									itemDecision?.answerIndex === index && !answer.correct
 										? 'border-error text-error'
-										: ''
+										: 'border-base-300 text-base-content/70',
+									itemDecision && answer.correct ? 'border-success text-success' : ''
 								]}>{optionLabel(index)}</span
 							>
 							<div class="flex-1">
@@ -116,6 +114,28 @@
 							{/if}
 						</div>
 					</button>
+					{#if itemDecision}
+						{#if answers[index]?.explanation}
+							<div
+								class={[
+									'rounded-xl border p-4 shadow-sm',
+									index === itemDecision?.answerIndex && !answer.correct
+										? 'border-error/50 bg-error/10'
+										: answer.correct
+											? 'border-success/50 bg-success/10'
+											: 'border-base-300 bg-base-200'
+								]}
+							>
+								<div class="mb-1 flex items-center gap-2">
+									<Info class="mt-0.5" size={18} />
+									<span class="text-xs font-semibold uppercase tracking-wide opacity-60"
+										>Explanation</span
+									>
+								</div>
+								<p class="text-sm opacity-80">{answer.explanation}</p>
+							</div>
+						{/if}
+					{/if}
 				</li>
 			{/each}
 		</ul>

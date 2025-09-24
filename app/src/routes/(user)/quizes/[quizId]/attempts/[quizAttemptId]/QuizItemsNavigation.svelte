@@ -22,35 +22,44 @@
 		u.searchParams.set('order', String(clamped));
 		goto(u, { replaceState: clamped !== idx, keepFocus: true, noScroll: true });
 	}
+
+	function gotoFinal() {
+		const u = new URL(page.url);
+		goto(`${u.pathname}/feedback`, { replaceState: false, keepFocus: true, noScroll: true });
+	}
 </script>
 
-<div class="pointer-events-none absolute left-0 top-1/2 z-10 hidden -translate-y-1/2 md:block">
+<div class="pointer-events-none absolute -left-2 top-1/2 z-10 hidden -translate-y-1/2 md:block">
 	<Button
 		class="pointer-events-auto"
 		color="neutral"
-		style="ghost"
+		style="outline"
 		circle
 		size="xl"
 		onclick={() => {
 			gotoItem(order - 1);
 		}}
 	>
-		<ChevronLeft size={32} />
+		<ChevronLeft size={42} />
 	</Button>
 </div>
 
-<div class="pointer-events-none absolute right-0 top-1/2 z-10 hidden -translate-y-1/2 md:block">
+<div class="pointer-events-none absolute -right-2 top-1/2 z-10 hidden -translate-y-1/2 md:block">
 	<Button
 		class="pointer-events-auto"
 		color="neutral"
-		style="ghost"
+		style="outline"
 		circle
 		size="xl"
 		onclick={() => {
 			if (!itemDecision) return;
+			if (order + 1 === quizItems.length) {
+				gotoFinal();
+				return;
+			}
 			gotoItem(order + 1);
 		}}
 	>
-		<ChevronRight size={32} />
+		<ChevronRight size={42} />
 	</Button>
 </div>
