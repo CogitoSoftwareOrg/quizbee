@@ -16,13 +16,9 @@ Subscription = Annotated[Record, Depends(get_subscription)]
 
 async def load_subscription(request: Request, admin_pb: AdminPB, user: User):
     user_id = user.get("id")
-    subscription = None
-    try:
-        subscription = await admin_pb.collection("subscriptions").get_first(
-            options={"params": {"filter": f"user = '{user_id}'"}},
-        )
-    except Exception as e:
-        ...
+    subscription = await admin_pb.collection("subscriptions").get_first(
+        options={"params": {"filter": f"user = '{user_id}'"}},
+    )
     request.state.subscription = subscription
 
 

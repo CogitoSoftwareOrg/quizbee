@@ -8,10 +8,11 @@
 	import { pb } from '$lib/pb';
 	import { computeApiUrl } from '$lib/api/compute-url';
 	import Messages from '$lib/apps/messages/Messages.svelte';
-	import { messagesStore } from '$lib/apps/messages/messages.svelte.js';
+	import { messagesStore } from '$lib/apps/messages/stores/messages.svelte.js';
 	import { userStore } from '$lib/apps/users/user.svelte';
 	import type { Sender } from '$lib/apps/messages/types';
-	import { Bot } from 'lucide-svelte';
+	import MessageField from '$lib/apps/messages/MessageField.svelte';
+	import SendMessage from '$lib/apps/messages/SendMessage.svelte';
 
 	type Answer = {
 		content: string;
@@ -26,8 +27,6 @@
 
 	const {} = $props();
 
-	// MESSAGES
-	const messages = $derived(messagesStore.messages);
 	const userSender = $derived(userStore.sender);
 	const assistantSender: Sender = $derived({
 		role: 'ai',
@@ -64,6 +63,17 @@
 	});
 	const item = $derived(quizItems.find((i) => i.order === order) || null);
 	const answers = $derived((item?.answers as Answer[]) || []);
+
+	// MESSAGES
+	const messages = $derived(
+		messagesStore.messages.filter((m) => {
+			const meta = m.metadata as { itemId: string };
+			const itemId = meta?.itemId;
+			return itemId === item?.id;
+		})
+	);
+
+	let query = $state('');
 
 	function gotoItem(idx: number) {
 		const max = quizItems.length ? quizItems.length - 1 : 0;
@@ -131,22 +141,21 @@
 			{/each}
 		</ul>
 
-		{#if itemDecision}
-			<div>
-				<button
-					class="btn"
-					onclick={() => {
-						gotoItem(order - 1);
-					}}>Previous</button
-				>
-				<button
-					class="btn"
-					onclick={() => {
-						gotoItem(order + 1);
-					}}>Next</button
-				>
-			</div>
-		{/if}
+		<div>
+			<button
+				class="btn"
+				onclick={() => {
+					gotoItem(order - 1);
+				}}>Previous</button
+			>
+			<button
+				class="btn"
+				onclick={() => {
+					if (!itemDecision) return;
+					gotoItem(order + 1);
+				}}>Next</button
+			>
+		</div>
 	</main>
 
 	<aside class="h-full flex-1">
@@ -157,9 +166,19 @@
 				</p>
 			</div>
 		{:else}
-			<div>
-				<Messages {messages} {userSender} {assistantSender} />
-				
+			<div class="flex h-full flex-col">
+				<main class="w-full flex-1 overflow-hidden">
+					<Messages class="flex-1" {messages} {userSender} {assistantSender} />
+				</main>
+
+				{#if item && quizAttempt}
+					<footer>
+						<MessageField bind:inputText={query} {item} attempt={quizAttempt} sender={userSender} />
+						<div class="flex justify-end">
+							<SendMessage {item} attempt={quizAttempt} sender={userSender} inputText={query} />
+						</div>
+					</footer>
+				{/if}
 			</div>
 		{/if}
 	</aside>

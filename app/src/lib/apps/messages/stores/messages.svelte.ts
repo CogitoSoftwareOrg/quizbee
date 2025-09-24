@@ -3,7 +3,7 @@ import { pb } from '$lib/pb';
 import type { Collections, MessagesResponse } from '$lib/pb/pocketbase-types';
 import { nanoid } from '$lib/utils/nanoid';
 
-import type { Sender } from './types';
+import type { Sender } from '../types';
 
 class MessagesStore {
 	_loaded = $state(false);
@@ -17,8 +17,7 @@ class MessagesStore {
 		return this._messages;
 	}
 	set messages(messages: MessagesResponse[]) {
-		const sortedMessages = messages.toSorted((a, b) => b.created.localeCompare(a.created));
-		this._messages = sortedMessages;
+		this._messages = messages;
 	}
 
 	async load(quizAttemptId: string) {
@@ -30,7 +29,7 @@ class MessagesStore {
 		this._loaded = true;
 	}
 
-	async sendMessage(sender: Sender, attemptId: string, content: string) {
+	async sendMessage(sender: Sender, content: string, attemptId: string, itemId: string) {
 		const clientMsg: MessagesResponse = {
 			collectionId: 'messages',
 			collectionName: 'messages' as Collections,
@@ -39,15 +38,15 @@ class MessagesStore {
 			created: new Date().toISOString(),
 			tokens: 0,
 			updated: new Date().toISOString(),
-			metadata: {},
+			metadata: { itemId },
 			quizAttempt: attemptId,
 			role: sender.role as MessagesResponse['role'],
-			status: 'client' as MessagesResponse['status']
+			status: 'onClient' as MessagesResponse['status']
 		};
 		this.messages.push(clientMsg);
 
 		const es = new EventSource(
-			`${computeApiUrl()}/messages/sse?q=${encodeURIComponent(content)}&attempt=${attemptId}`,
+			`${computeApiUrl()}/messages/sse?q=${encodeURIComponent(content)}&attempt=${attemptId}&item=${itemId}`,
 			{
 				withCredentials: true
 			}
@@ -57,18 +56,16 @@ class MessagesStore {
 			// const list = this.messagesMap.get(roomId);
 			// if (!list) return;
 
-			const idx = this._messages.findIndex((m) => m.id === data.msg_id);
-			if (idx < 0) return;
-			const msg = this._messages[idx];
-
-			if (msg.status !== 'streaming') return;
+			const msg = { ...this._messages.find((m) => m.id === data.msg_id) } as MessagesResponse;
+			if (!msg || msg.status !== 'streaming') return;
 
 			// const nextI = data.i ?? ((msg as any)._last_i ?? 0) + 1;
 			// if ((msg as any)._last_i && nextI <= (msg as any)._last_i) return;
 			// (msg as any)._last_i = nextI;
 
 			msg.content = (msg.content || '') + data.text;
-			this._messages[idx] = msg;
+			const newMessages = this._messages.map((m) => (m.id === msg.id ? msg : m));
+			this._messages = newMessages;
 		});
 		es.addEventListener('error', (e) => {
 			console.error(e);
@@ -86,7 +83,9 @@ class MessagesStore {
 				const message = e.record;
 				switch (e.action) {
 					case 'create': {
-						const idx = this._messages.findIndex((m) => m.id === message.id);
+						const idx = this._messages.findIndex(
+							(m) => m.content === message.content && m.status === 'onClient'
+						);
 						if (idx >= 0) {
 							this._messages[idx] = message;
 						} else {

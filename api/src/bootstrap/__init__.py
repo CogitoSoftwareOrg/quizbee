@@ -8,9 +8,10 @@ import httpx
 
 from apps.auth.middleware import auth_user
 from apps.billing.middleware import load_subscription
-from src.apps.quizes import quizes_router
-from src.lib.clients.pb import ensure_admin_pb, init_admin_pb
-from src.lib.settings import settings
+from apps.messages import messages_router
+from apps.quizes import quizes_router
+from lib.clients.pb import ensure_admin_pb, init_admin_pb
+from lib.settings import settings
 
 mcp = FastMCP("MCP", stateless_http=True)
 
@@ -18,7 +19,7 @@ mcp = FastMCP("MCP", stateless_http=True)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # INIT LOGIC
-    logging.info("Starting Growplex API server")
+    logging.info("Starting Quizbee API server")
 
     app.state.http = httpx.AsyncClient()
     init_admin_pb(app)
@@ -29,7 +30,7 @@ async def lifespan(app: FastAPI):
         yield
 
     # CLEANUP LOGIC
-    logging.info("Shutting down Growplex API server")
+    logging.info("Shutting down Quizbee API server")
     # await app.state.meili_client.aclose()
     await app.state.http.aclose()
 
@@ -45,6 +46,7 @@ def create_app():
     )
 
     app.include_router(quizes_router)
+    app.include_router(messages_router)
 
     # CORS: allow credentials from specific app origins (including PR subdomains)
     allowed_origins: list[str] = []

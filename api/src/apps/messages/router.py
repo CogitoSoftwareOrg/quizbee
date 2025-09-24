@@ -2,10 +2,11 @@ import json
 from fastapi import APIRouter, Query, HTTPException
 from fastapi.responses import StreamingResponse
 
+from apps.billing import Subscription
 from apps.materials.utils import materials_to_ai_docs
-from src.lib.clients import AdminPB
-from src.lib.utils import sse
-from src.apps.auth import User
+from lib.clients import AdminPB
+from lib.utils import sse
+from apps.auth import User
 
 from .pb_to_ai import pb_to_ai
 from .ai import ExplainerDeps, explainer_agent
@@ -13,12 +14,14 @@ from .ai import ExplainerDeps, explainer_agent
 messages_router = APIRouter(prefix="/messages", tags=["messages"], dependencies=[])
 
 
-@messages_router.get("/see")
-async def see_messages(
+@messages_router.get("/sse")
+async def sse_messages(
     admin_pb: AdminPB,
     user: User,
+    subscription: Subscription,
     query: str = Query(alias="q"),
     attempt_id: str = Query(alias="attempt"),
+    item_id: str = Query(alias="item"),
 ):
     if not query:
         raise HTTPException(status_code=400, detail="No query provided")
@@ -56,7 +59,7 @@ async def see_messages(
             "content": query,
             "role": "user",
             "status": "final",
-            "metadata": {},
+            "metadata": {"itemId": item_id},
         }
     )
     user_msg_id = user_msg.get("id", "")
@@ -67,7 +70,7 @@ async def see_messages(
             "content": "",
             "role": "ai",
             "status": "streaming",
-            "metadata": {},
+            "metadata": {"itemId": item_id},
         }
     )
     ai_msg_id = ai_msg.get("id", "")
@@ -95,5 +98,13 @@ async def see_messages(
                 yield sse(
                     "chunk", json.dumps({"text": text, "msg_id": ai_msg_id, "i": i})
                 )
+
+            await admin_pb.collection("messages").update(
+                ai_msg_id,
+                {
+                    "content": content,
+                    "status": "final",
+                },
+            )
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
