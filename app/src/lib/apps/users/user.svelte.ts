@@ -3,11 +3,8 @@ import type { AuthRecord } from 'pocketbase';
 import { pb } from '$lib/pb';
 import type { UsersResponse } from '$lib/pb/pocketbase-types';
 import type { UserExpand } from '$lib/pb/expands';
-
-// import Man from '$lib/assets/Man.jpg';
-// import { settingsProvider } from './settings.svelte';
-// import type { Sender } from '../chats/types';
-
+import type { Sender } from '$lib/apps/messages/types';
+import Man from '$lib/assets/images/Man.jpg';
 class UserStore {
 	_loaded = $state(false);
 
@@ -27,12 +24,12 @@ class UserStore {
 		this._user = user;
 	}
 
-	// sender: Sender = $derived({
-	// 	id: this.user?.id || '',
-	// 	avatar: this.user?.avatar ? pb.files.getURL(this.user, this.user.avatar) : Man,
-	// 	name: this.user?.name || 'Name',
-	// 	role: this.user?.guest ? 'guest' : 'admin'
-	// });
+	sender: Sender = $derived({
+		id: this.user?.id || '',
+		avatar: this.user?.avatar ? pb?.files.getURL(this.user, this.user.avatar) || Man : Man,
+		name: this.user?.name || 'Name',
+		role: 'user'
+	});
 
 	async subscribe(userId: string) {
 		return pb!.collection('users').subscribe(userId, (e) => {

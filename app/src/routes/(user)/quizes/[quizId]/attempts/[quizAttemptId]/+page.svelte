@@ -1,29 +1,26 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { afterNavigate, goto } from '$app/navigation';
+	// explanations rendered in QuizAnswersList
 
 	import Button from '$lib/ui/Button.svelte';
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte.js';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte.js';
-	import { pb } from '$lib/pb';
-	import { computeApiUrl } from '$lib/api/compute-url';
+	import type { Decision } from '$lib/apps/quiz-attempts/types';
+	import type { Answer } from '$lib/apps/quizes/types';
 
-	type Answer = {
-		content: string;
-		correct: boolean;
-		explanation: string;
-	};
-	type Decision = {
-		itemId: string;
-		answerIndex: number;
-		correct: boolean;
-	};
+	import AIChat from './AIChat.svelte';
+	import QuizItemsNavigation from './QuizItemsNavigation.svelte';
+	import QuizAnswersList from './QuizAnswersList.svelte';
+	import { messagesStore } from '$lib/apps/messages/stores/messages.svelte';
+	import type { Sender } from '$lib/apps/messages/types';
+	import { userStore } from '$lib/apps/users/user.svelte';
 
 	const {} = $props();
 
+	// QUIZ ATTEMPT
 	const quizAttemptId = $derived(page.params.quizAttemptId);
 	const quizAttempt = $derived(
-		quizAttemptsStore.quizAttempts.find((qa) => qa.id === quizAttemptId)
+		quizAttemptsStore.quizAttempts.find((qa) => qa.id === quizAttemptId) || null
 	);
 
 	const quizDecisions = $derived((quizAttempt?.choices as Decision[]) || []);
@@ -33,10 +30,6 @@
 		quiz?.expand.quizItems_via_quiz?.toSorted((a, b) => a.order - b.order) || []
 	);
 	let itemDecision = $derived(quizDecisions.find((d) => d.itemId === item?.id) || null);
-
-	const readyItemsWithoutDecisions = $derived(
-		quizItems.filter((i) => !quizDecisions.some((d) => d.itemId === i.id) && i.status === 'final')
-	);
 
 	const order = $derived.by(() => {
 		const orderStr = page.url.searchParams.get('order');
@@ -49,97 +42,64 @@
 	const item = $derived(quizItems.find((i) => i.order === order) || null);
 	const answers = $derived((item?.answers as Answer[]) || []);
 
-	function gotoItem(idx: number) {
-		const max = quizItems.length ? quizItems.length - 1 : 0;
-		const clamped = Math.max(0, Math.min(idx, max));
-		const u = new URL(page.url);
-		u.searchParams.set('order', String(clamped));
-		goto(u, { replaceState: clamped !== idx, keepFocus: true, noScroll: true });
-	}
+	// Messages
+	const messages = $derived(
+		messagesStore.messages.filter((m) => {
+			const meta = m.metadata as { itemId: string };
+			const itemId = meta?.itemId;
+			return itemId === item?.id;
+		})
+	);
+
+	const userSender = $derived(userStore.sender);
+	const assistantSender: Sender = $derived({
+		role: 'ai',
+		id: 'ai',
+		avatar: '',
+		name: 'Assistant'
+	});
 </script>
 
-<div class="flex">
-	<main class="flex-1">
-		<p class="text-lg font-bold">
-			{item?.question || 'Loading...'}
-		</p>
-		<ul class="space-y-2">
-			{#each answers as answer, index}
-				<li
-					class={[
-						'w-fit',
-						itemDecision && answer.correct ? 'bg-primary/50' : '',
-						itemDecision?.answerIndex === index && !answer.correct ? 'bg-error/50' : ''
-					]}
-				>
-					<Button
-						color="neutral"
-						style="outline"
-						onclick={async () => {
-							if (itemDecision) return;
-							itemDecision = {
-								itemId: item!.id,
-								answerIndex: index,
-								correct: answer.correct
-							};
-							if (readyItemsWithoutDecisions.length <= 2) {
-								const r2 = await fetch(`${computeApiUrl()}/quizes/${quiz!.id}`, {
-									method: 'PATCH',
-									body: JSON.stringify({
-										limit: 2
-									}),
-									headers: {
-										'Content-Type': 'application/json'
-									},
-									credentials: 'include'
-								});
-								if (!r2.ok) {
-									console.error(await r2.text());
-									return;
-								}
-								console.log(await r2.json());
-							}
-
-							await pb!.collection('quizAttempts').update(quizAttemptId!, {
-								choices: [...quizDecisions, itemDecision]
-							});
-						}}
-					>
-						<p></p>
-						{answer.content}
-					</Button>
-					{#if itemDecision}
-						<p class="text-center text-sm text-gray-500">{answer.explanation}</p>
-					{/if}
-				</li>
-			{/each}
-		</ul>
-
-		{#if itemDecision}
-			<div>
-				<button
-					class="btn"
-					onclick={() => {
-						gotoItem(order - 1);
-					}}>Previous</button
-				>
-				<button
-					class="btn"
-					onclick={() => {
-						gotoItem(order + 1);
-					}}>Next</button
-				>
-			</div>
-		{/if}
-	</main>
-
-	<aside class="flex flex-1 items-center justify-center">
-		{#if itemDecision}
-			<div>
-				<p class="text-2xl font-bold">
-					{itemDecision.correct ? 'Correct' : 'Incorrect'}
+<div class="flex h-full">
+	<main class="border-base-200 relative flex-1 border-r">
+		<div class="mx-auto flex h-full max-w-3xl flex-col p-2">
+			<div class="flex items-start justify-between gap-4">
+				<p class="text-2xl font-bold leading-snug">
+					{item?.question || 'Loading...'}
 				</p>
 			</div>
-		{/if}
-	</aside>
+
+			<QuizItemsNavigation {quizItems} {order} {itemDecision} />
+
+			{#if item && quiz && quizAttempt}
+				<QuizAnswersList
+					class="relative mt-6 flex-1 overflow-y-auto"
+					{answers}
+					{quizItems}
+					{quizDecisions}
+					{quiz}
+					{item}
+					{quizAttempt}
+					{itemDecision}
+				/>
+			{/if}
+
+			{#if itemDecision}
+				<div class="mt-6 flex gap-2">
+					<Button class="flex-1" color="neutral" style="soft">Manage Quiz</Button>
+					<Button class="flex-1" color="info" style="soft">Explain More</Button>
+				</div>
+			{/if}
+		</div>
+	</main>
+
+	<AIChat
+		class="h-full flex-1 px-2"
+		{item}
+		{quizAttempt}
+		{itemDecision}
+		{messages}
+		{userSender}
+		{assistantSender}
+	/>
 </div>

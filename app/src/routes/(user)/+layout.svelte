@@ -109,7 +109,7 @@
 				<ThemeController />
 			</header>
 
-			<div class="h-full flex-1 overflow-auto p-2 sm:p-3">
+			<div class="h-full flex-1 overflow-auto sm:p-3">
 				{@render children?.()}
 			</div>
 		</main>
