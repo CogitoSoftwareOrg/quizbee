@@ -8,6 +8,7 @@
 	import type { MessagesResponse } from '$lib/pb';
 
 	import type { Sender } from './types';
+	import { Bot } from 'lucide-svelte';
 
 	interface Props {
 		class?: ClassValue;
@@ -39,7 +40,11 @@
 	<div class={incoming ? 'chat chat-start' : 'chat chat-end'}>
 		<div class="chat-image avatar">
 			<div class="size-10 overflow-hidden rounded-full">
-				<img alt={msg.role} src={sender?.avatar || Man} class="h-full w-full object-cover" />
+				{#if sender.role === 'ai'}
+					<Bot class="h-full w-full object-cover" />
+				{:else}
+					<img alt={msg.role} src={sender.avatar || Man} class="h-full w-full object-cover" />
+				{/if}
 			</div>
 		</div>
 

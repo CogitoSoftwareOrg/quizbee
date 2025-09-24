@@ -7,6 +7,11 @@
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte.js';
 	import { pb } from '$lib/pb';
 	import { computeApiUrl } from '$lib/api/compute-url';
+	import Messages from '$lib/apps/messages/Messages.svelte';
+	import { messagesStore } from '$lib/apps/messages/messages.svelte.js';
+	import { userStore } from '$lib/apps/users/user.svelte';
+	import type { Sender } from '$lib/apps/messages/types';
+	import { Bot } from 'lucide-svelte';
 
 	type Answer = {
 		content: string;
@@ -21,6 +26,17 @@
 
 	const {} = $props();
 
+	// MESSAGES
+	const messages = $derived(messagesStore.messages);
+	const userSender = $derived(userStore.sender);
+	const assistantSender: Sender = $derived({
+		role: 'ai',
+		id: 'ai',
+		avatar: '',
+		name: 'Assistant'
+	});
+
+	// QUIZ ATTEMPT
 	const quizAttemptId = $derived(page.params.quizAttemptId);
 	const quizAttempt = $derived(
 		quizAttemptsStore.quizAttempts.find((qa) => qa.id === quizAttemptId)
@@ -58,7 +74,7 @@
 	}
 </script>
 
-<div class="flex">
+<div class="flex h-full">
 	<main class="flex-1">
 		<p class="text-lg font-bold">
 			{item?.question || 'Loading...'}
@@ -133,12 +149,17 @@
 		{/if}
 	</main>
 
-	<aside class="flex flex-1 items-center justify-center">
-		{#if itemDecision}
-			<div>
-				<p class="text-2xl font-bold">
-					{itemDecision.correct ? 'Correct' : 'Incorrect'}
+	<aside class="h-full flex-1">
+		{#if !itemDecision}
+			<div class="flex h-full items-center justify-center">
+				<p class="mx-12 px-6 text-center text-2xl font-bold">
+					You need to answer the question before interacting with the AI :3
 				</p>
+			</div>
+		{:else}
+			<div>
+				<Messages {messages} {userSender} {assistantSender} />
+				
 			</div>
 		{/if}
 	</aside>

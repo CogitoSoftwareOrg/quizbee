@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { ChevronsDown } from 'lucide-svelte';
+	import type { ClassValue } from 'svelte/elements';
 	import { fade } from 'svelte/transition';
 
 	import Button from '$lib/ui/Button.svelte';
@@ -10,13 +11,13 @@
 	import Message from './Message.svelte';
 
 	interface Props {
-		className: string;
 		messages: MessagesResponse[];
 		userSender: Sender;
 		assistantSender: Sender;
+		class?: ClassValue;
 	}
 
-	const { className, messages, userSender, assistantSender }: Props = $props();
+	const { class: className, messages, userSender, assistantSender }: Props = $props();
 
 	let messagesContainer: HTMLElement | null = $state(null);
 	let showScrollButton = $state(false);
