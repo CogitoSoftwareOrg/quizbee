@@ -17,7 +17,10 @@
 </script>
 
 <a
-	class={['border-base-200 flex cursor-pointer items-center gap-2 border-t p-1', className]}
+	class={[
+		'border-base-200 flex cursor-pointer items-center justify-center gap-2 border-t p-1',
+		className
+	]}
 	href="/profile"
 >
 	<div class="border-base-300 size-10 overflow-hidden rounded-full">
