@@ -61,8 +61,8 @@
 </script>
 
 <div class="flex h-full">
-	<main class="relative flex-1 px-4">
-		<div class="mx-auto h-full max-w-3xl p-4">
+	<main class="border-base-200 relative flex-1 border-r">
+		<div class="mx-auto flex h-full max-w-3xl flex-col p-2">
 			<div class="flex items-start justify-between gap-4">
 				<p class="text-2xl font-bold leading-snug">
 					{item?.question || 'Loading...'}
@@ -73,7 +73,7 @@
 
 			{#if item && quiz && quizAttempt}
 				<QuizAnswersList
-					class="relative mt-6 "
+					class="relative mt-6 flex-1"
 					{answers}
 					{quizItems}
 					{quizDecisions}
@@ -106,10 +106,12 @@
 				{/each}
 			{/if}
 
-			<div class="mt-6 flex justify-end gap-2">
-				<Button color="neutral" style="soft">Manage Quiz</Button>
-				<Button color="info" style="soft">Explain More</Button>
-			</div>
+			{#if itemDecision}
+				<div class="mt-6 flex justify-end gap-2">
+					<Button color="neutral" style="soft">Manage Quiz</Button>
+					<Button color="info" style="soft">Explain More</Button>
+				</div>
+			{/if}
 		</div>
 	</main>
 

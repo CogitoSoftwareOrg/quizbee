@@ -24,7 +24,7 @@
 	}
 </script>
 
-<div class="pointer-events-none absolute -left-6 top-1/2 z-10 hidden -translate-y-1/2 md:block">
+<div class="pointer-events-none absolute left-0 top-1/2 z-10 hidden -translate-y-1/2 md:block">
 	<Button
 		class="pointer-events-auto"
 		color="neutral"
@@ -38,7 +38,8 @@
 		<ChevronLeft size={32} />
 	</Button>
 </div>
-<div class="pointer-events-none absolute -right-12 top-1/2 z-10 hidden -translate-y-1/2 md:block">
+
+<div class="pointer-events-none absolute right-0 top-1/2 z-10 hidden -translate-y-1/2 md:block">
 	<Button
 		class="pointer-events-auto"
 		color="neutral"

@@ -84,7 +84,7 @@
 		</aside>
 
 		<main class="flex h-full flex-1 flex-col">
-			<header class="border-base-200 flex items-center justify-between border-b px-3 py-3">
+			<header class="border-base-200 flex items-center justify-between border-b px-3 py-1">
 				<div class="flex items-center gap-2">
 					<label class="swap swap-rotate">
 						<input
@@ -104,7 +104,7 @@
 				<ThemeController />
 			</header>
 
-			<div class="h-full flex-1 overflow-auto p-2 sm:p-3">
+			<div class="h-full flex-1 overflow-auto sm:p-3">
 				{@render children?.()}
 			</div>
 		</main>
