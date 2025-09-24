@@ -115,7 +115,7 @@ async def _generate_quiz_task(
 
     # Prepare request to LLM
     q = quiz.get("query", "")
-    materials_docs = await materials_to_ai_docs(http, materials)
+    materials_docs = await materials_to_ai_docs(materials)
     try:
         with langfuse_client.start_as_current_span(name="quiz-patch") as span:
             res = await quizer_agent.run(

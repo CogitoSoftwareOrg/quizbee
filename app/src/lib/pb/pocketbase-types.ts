@@ -180,9 +180,10 @@ export enum SubscriptionsStatusOptions {
 	"unpaid" = "unpaid",
 }
 
-export enum SubscriptionsTarifOptions {
+export enum SubscriptionsTariffOptions {
 	"plus" = "plus",
 	"pro" = "pro",
+	"free" = "free",
 }
 export type SubscriptionsRecord = {
 	created?: IsoDateString
@@ -195,7 +196,7 @@ export type SubscriptionsRecord = {
 	status?: SubscriptionsStatusOptions
 	stripeCustomer?: string
 	stripeSubscription?: string
-	tarif?: SubscriptionsTarifOptions
+	tariff?: SubscriptionsTariffOptions
 	updated?: IsoDateString
 	user?: RecordIdString
 }
