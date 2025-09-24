@@ -14,9 +14,13 @@ dependencies = [
     "pydantic>=2.11.9",
     "pydantic-ai>=1.0.8",
     "pydantic-settings>=2.10.1",
+    "regex>=2025.9.18",
     "starlette>=0.48.0",
     "tiktoken>=0.11.0",
     "uvicorn>=0.35.0",
+    "PyMuPDF>=1.26.4",
+    "Pillow>=11.3.0"
+
 ]
 
 [tool.hatch.build.targets.wheel]
