@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { Search, ChevronRight, ChevronLeft } from 'lucide-svelte';
 
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
@@ -8,7 +9,6 @@
 	import Input from '$lib/ui/Input.svelte';
 	import type { Answer } from '$lib/apps/quizes/types';
 	import type { QuizItemsResponse } from '$lib/pb';
-	import { Search, ChevronRight } from 'lucide-svelte';
 
 	const quizAttemptId = $derived(page.params.quizAttemptId);
 	const quizAttempt = $derived(
@@ -63,9 +63,13 @@
 			<p class="text-center font-semibold">We are giving your feedback...</p>
 		</div>
 	{:else if quiz}
-		<div class="mx-auto flex h-full min-h-0 w-full max-w-3xl flex-1 flex-col gap-6 px-3">
+		<div class="relative mx-auto flex h-full min-h-0 w-full max-w-3xl flex-1 flex-col gap-6 px-3">
+			<Button color="neutral" style="ghost" href={`/home`} class=" absolute left-0 top-0 flex">
+				<ChevronLeft /> Back to home
+			</Button>
+
 			<section class="text-center">
-				<h1 class="text-3xl font-bold leading-tight">{quiz.title || 'Quiz'}</h1>
+				<h1 class="text-2xl font-bold leading-tight">{quiz.title || 'Quiz'}</h1>
 				<p class="mt-1 text-sm opacity-70">Score: {correctCount} / {quizItems.length}</p>
 
 				<div class="mt-4 space-y-2">
@@ -105,21 +109,21 @@
 					<p class="py-6 text-center opacity-70">Nothing found</p>
 				{:else}
 					<ul class="flex flex-1 flex-col gap-2 overflow-y-auto pr-1">
-						{#each filteredItems as item}
+						{#each filteredItems as item, index}
 							{@const d = findDecision(item.id)}
 							<li>
 								<a
-									class="hover:bg-base-200 group flex items-center justify-between gap-3 rounded-lg border p-3 no-underline shadow-sm transition hover:no-underline focus:no-underline"
+									class="hover:bg-base-200 border-base-300 group flex items-center justify-between gap-3 rounded-lg border p-3 no-underline shadow-sm transition hover:no-underline focus:no-underline"
 									href={`/quizes/${quiz.id}/attempts/${quizAttempt.id}?order=${item.order}`}
 								>
 									<p
 										class="text-base-content/80 group-hover:text-base-content flex-1 leading-relaxed"
 									>
-										{item.question}
+										{index + 1}. {item.question}
 									</p>
 									<div class="flex items-center gap-3">
 										{#if d}
-											<span class={['badge', d.correct ? 'badge-success' : 'badge-error']}>
+											<span class={['badge', d.correct ? 'badge-success' : 'badge-neutral']}>
 												{d.correct ? 'Correct' : 'Incorrect'}
 											</span>
 										{/if}
