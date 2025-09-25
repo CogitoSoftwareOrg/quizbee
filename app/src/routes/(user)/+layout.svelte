@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { PanelRightOpen, PanelRightClose } from 'lucide-svelte';
 	import { page } from '$app/state';
 
 	import { userStore } from '$lib/apps/users/user.svelte';
@@ -9,17 +8,15 @@
 	import type { UserExpand } from '$lib/pb/expands.js';
 	import Honey from '$lib/assets/icons/honey.svg';
 
-	import ThemeController from '$lib/features/ThemeController.svelte';
 	import ProfileRow from '$lib/apps/users/ProfileRow.svelte';
 	import { uiStore } from '$lib/apps/users/ui.svelte';
 
 	import SidebarNavigation from './SidebarNavigation.svelte';
-	
+	import GlobalHeader from './GlobalHeader.svelte';
 
 	const { data, children } = $props();
 
 	const user = $derived(userStore.user);
-	const isNewQuizPage = $derived(page.url.pathname === '/quizes/new');
 
 	// wait for user to be loaded
 	$effect(() => {
@@ -53,11 +50,6 @@
 			quizesStore.unsubscribe();
 		};
 	});
-
-	function getTitle() {
-		const t = page.url.pathname.split('/').at(1);
-		return `${t?.charAt(0).toUpperCase()}${t?.slice(1)}`;
-	}
 </script>
 
 {#await data.userLoadPromise}
@@ -86,28 +78,7 @@
 		</aside>
 
 		<main class="flex h-full flex-1 flex-col">
-			<header class={[
-				'flex items-center justify-between px-3 py-3',
-				isNewQuizPage ? '' : 'border-base-200 border-b'
-			]}>
-				<div class="flex items-center gap-2">
-					<label class="swap swap-rotate">
-						<input
-							class="hidden"
-							type="checkbox"
-							checked={uiStore.globalSidebarOpen}
-							onchange={() => {
-								uiStore.toggleGlobalSidebar();
-							}}
-						/>
-						<PanelRightOpen class="swap-on text-neutral-500" size={24} />
-						<PanelRightClose class="swap-off text-neutral-500" size={24} />
-					</label>
-					<h1 class="hidden text-sm font-semibold sm:block">{getTitle()}</h1>
-				</div>
-
-				<ThemeController />
-			</header>
+			<GlobalHeader />
 
 			<div class="h-full flex-1 overflow-auto sm:p-3">
 				{@render children?.()}

@@ -27,10 +27,6 @@ async def _generate_feedback_task(admin_pb: AdminPB, attempt_id: str):
     quiz = quiz_attempt.get("expand", {}).get("quiz", {})
     quiz_items = quiz.get("expand", {}).get("quizItems_via_quiz", [])
 
-    logging.info(
-        f"Quiz attempt: {quiz_attempt}, Quiz: {quiz}, quiz items: {quiz_items}"
-    )
-
     materials = quiz.get("expand", {}).get("materials_via_quiz", [])
     ai_docs = await materials_to_ai_docs(materials)
 

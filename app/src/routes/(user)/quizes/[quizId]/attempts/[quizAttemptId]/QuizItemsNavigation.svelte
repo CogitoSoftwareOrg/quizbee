@@ -44,7 +44,7 @@
 	<Button
 		class="pointer-events-auto"
 		color="neutral"
-		style="outline"
+		style="ghost"
 		circle
 		size="xl"
 		onclick={() => {
@@ -55,23 +55,25 @@
 	</Button>
 </div>
 
-<div class="pointer-events-none absolute -right-2 top-1/2 z-10 hidden -translate-y-1/2 md:block">
-	<Button
-		class="pointer-events-auto"
-		color="neutral"
-		style="outline"
-		circle
-		size="xl"
-		onclick={async () => {
-			if (!itemDecision) return;
-			if (order + 1 === quizItems.length) {
-				await createFeedback();
-				gotoFinal();
-				return;
-			}
-			gotoItem(order + 1);
-		}}
-	>
-		<ChevronRight size={42} />
-	</Button>
-</div>
+{#if itemDecision}
+	<div class="pointer-events-none absolute -right-2 top-1/2 z-10 hidden -translate-y-1/2 md:block">
+		<Button
+			class="pointer-events-auto"
+			color="neutral"
+			style="ghost"
+			circle
+			size="xl"
+			onclick={async () => {
+				if (!itemDecision) return;
+				if (order + 1 === quizItems.length) {
+					await createFeedback();
+					gotoFinal();
+					return;
+				}
+				gotoItem(order + 1);
+			}}
+		>
+			<ChevronRight size={42} />
+		</Button>
+	</div>
+{/if}
