@@ -187,63 +187,7 @@ async def _generate_quiz_task(
 
 
 class GenerateQuizItems(BaseModel):
-    limit: Annotated[int, Field(default=2, ge=2, le=5)]  
-
-
-class TokensInfo(BaseModel):
-    messages_limit: int = Field(default=0)
-    messages_usage: int = Field(default=0)
-    messages_remaining: int = Field(default=0)
-    has_subscription: bool = Field(default=False)
-
-
-@quizes_router.get("/tokens")
-async def check_amount_of_tokens(
-    admin_pb: AdminPB,
-    request: Request,
-) -> TokensInfo:
-    """
-    Проверяет количество доступных токенов пользователя
-    """
-    # AUTH
-    pb_token = request.cookies.get("pb_token")
-    if not pb_token:
-        raise HTTPException(status_code=401, detail="Unauthorized: no pb_token")
-    
-    try:
-        pb = PocketBase(settings.pb_url)
-        pb._inners.auth.set_user({"token": pb_token, "record": {}})
-        user = (await pb.collection("users").auth.refresh()).get("record", {})
-    except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Unauthorized: {e}")
-
-    user_id = user.get("id", "")
-    
-    # Get subscription info
-    try:
-        subscription = await admin_pb.collection("subscriptions").get_first(
-            options={"params": {"filter": f"user = '{user_id}'"}},
-        )
-        
-        messages_limit = int(subscription.get("messagesLimit", 0))
-        messages_usage = int(subscription.get("messagesUsage", 0))
-        messages_remaining = max(0, messages_limit - messages_usage)
-        
-        return TokensInfo(
-            messages_limit=messages_limit,
-            messages_usage=messages_usage,
-            messages_remaining=messages_remaining,
-            has_subscription=True,
-        )
-        
-    except Exception as e:
-        # Пользователь без подписки
-        return TokensInfo(
-            messages_limit=0,
-            messages_usage=0,
-            messages_remaining=0,
-            has_subscription=False,
-        )
+    limit: Annotated[int, Field(default=2, ge=2, le=5)]
 
 
 @quizes_router.patch("/{quiz_id}")
