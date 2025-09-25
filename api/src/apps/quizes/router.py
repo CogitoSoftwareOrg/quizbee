@@ -11,10 +11,11 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field
 
-from apps.auth import User
+from apps.auth import User, auth_user
+from apps.billing import load_subscription
 from apps.materials import user_owns_materials, materials_to_ai_docs
 from lib.clients.http import HTTPAsyncClient
-from src.lib.clients import AdminPB, langfuse_client
+from lib.clients import AdminPB, langfuse_client
 
 from .ai import (
     make_quiz_patch_model,
@@ -25,7 +26,7 @@ from .ai import (
 quizes_router = APIRouter(
     prefix="/quizes",
     tags=["quizes"],
-    dependencies=[],
+    dependencies=[Depends(auth_user), Depends(load_subscription)],
 )
 
 
@@ -37,7 +38,12 @@ class CreateQuizDto(BaseModel):
     difficulty: str = Field(default="intermediate")
 
 
-@quizes_router.post("", dependencies=[Depends(user_owns_materials)])
+@quizes_router.post(
+    "",
+    dependencies=[
+        Depends(user_owns_materials),
+    ],
+)
 async def create_quiz(
     admin_pb: AdminPB,
     user: User,

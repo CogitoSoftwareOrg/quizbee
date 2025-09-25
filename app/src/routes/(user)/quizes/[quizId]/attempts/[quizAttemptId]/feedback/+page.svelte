@@ -10,6 +10,13 @@
 	import type { Answer } from '$lib/apps/quizes/types';
 	import type { QuizItemsResponse } from '$lib/pb';
 
+	type Feedback = {
+		quiz_title: string;
+		overview: string;
+		problem_topics: string[];
+		uncovered_topics: string[];
+	};
+
 	const quizAttemptId = $derived(page.params.quizAttemptId);
 	const quizAttempt = $derived(
 		quizAttemptsStore.quizAttempts.find((qa) => qa.id === quizAttemptId) || null
@@ -22,6 +29,8 @@
 	const quizItems = $derived(
 		quiz?.expand.quizItems_via_quiz?.toSorted((a, b) => a.order - b.order) || []
 	);
+
+	const feedback = $derived(quizAttempt?.feedback as Feedback | undefined);
 
 	function findDecision(itemId: string): Decision | undefined {
 		return quizDecisions.find((d) => d.itemId === itemId);
@@ -56,15 +65,15 @@
 	});
 </script>
 
-<div class="mx-auto flex h-full min-h-0 max-w-3xl flex-1 flex-col gap-6 p-1">
-	{#if !quizAttempt?.feedback}
+<div class="relative mx-auto flex h-full min-h-0 max-w-3xl flex-1 flex-col gap-6 p-1">
+	{#if !feedback}
 		<div class="flex flex-col items-center justify-center gap-4">
 			<p class="loading loading-spinner loading-xl"></p>
 			<p class="text-center font-semibold">We are giving your feedback...</p>
 		</div>
-	{:else if quiz}
+	{:else if quiz && feedback}
 		<div class="flex w-full flex-col gap-6 px-3">
-			<Button color="neutral" style="ghost" href={`/home`} class=" absolute left-0 top-0 flex">
+			<Button color="neutral" style="ghost" href={`/home`} class="absolute left-0 top-0 flex">
 				<ChevronLeft /> Back to home
 			</Button>
 
@@ -74,20 +83,30 @@
 
 				<div class="mt-4 space-y-2">
 					<p class="opacity-80">
-						Your results are ready. Below is the list of questions marked as correct or incorrect.
+						{feedback.overview}
 					</p>
 					<p class="opacity-70">
 						Pay attention to the highlighted topics — they will help you improve.
 					</p>
 				</div>
 
-				<div class="mt-3 flex flex-wrap justify-center gap-2">
-					<span class="badge">algorithms</span>
-					<span class="badge">data structures</span>
-					<span class="badge">syntax</span>
-					<span class="badge">optimization</span>
-					<span class="badge">terminology</span>
-				</div>
+				{#if feedback.problem_topics.length > 0}
+					<div class="mt-3 flex flex-wrap justify-center gap-2">
+						<p class="opacity-70">Problem topics:</p>
+						{#each feedback.problem_topics as topic}
+							<span class="badge badge-outline badge-error">{topic}</span>
+						{/each}
+					</div>
+				{/if}
+
+				{#if feedback.uncovered_topics.length > 0}
+					<div class="mt-3 flex flex-wrap justify-center gap-2">
+						<p class="opacity-70">Uncovered topics:</p>
+						{#each feedback.uncovered_topics as topic}
+							<span class="badge badge-outline badge-info">{topic}</span>
+						{/each}
+					</div>
+				{/if}
 			</section>
 		</div>
 	{/if}

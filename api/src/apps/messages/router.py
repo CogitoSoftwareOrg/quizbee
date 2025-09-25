@@ -1,8 +1,9 @@
 import json
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Depends, Query, HTTPException
 from fastapi.responses import StreamingResponse
 
-from apps.billing import Subscription
+from apps.auth import auth_user
+from apps.billing import Subscription, load_subscription
 from apps.materials.utils import materials_to_ai_docs
 from lib.clients import AdminPB, langfuse_client
 from lib.utils import sse
@@ -11,7 +12,14 @@ from apps.auth import User
 from .pb_to_ai import pb_to_ai
 from .ai import ExplainerDeps, explainer_agent
 
-messages_router = APIRouter(prefix="/messages", tags=["messages"], dependencies=[])
+messages_router = APIRouter(
+    prefix="/messages",
+    tags=["messages"],
+    dependencies=[
+        Depends(auth_user),
+        Depends(load_subscription),
+    ],
+)
 
 
 @messages_router.get("/sse")

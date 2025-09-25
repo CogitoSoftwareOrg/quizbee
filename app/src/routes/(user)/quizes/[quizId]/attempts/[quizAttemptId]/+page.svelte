@@ -69,7 +69,9 @@
 				</p>
 			</div>
 
-			<QuizItemsNavigation {quizItems} {order} {itemDecision} />
+			{#if item && quiz && quizAttempt}
+				<QuizItemsNavigation {quizAttempt} {quizItems} {order} {itemDecision} />
+			{/if}
 
 			{#if item && quiz && quizAttempt}
 				<QuizAnswersList
