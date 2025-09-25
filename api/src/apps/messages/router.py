@@ -45,6 +45,9 @@ async def sse_messages(
     quiz = quiz_attempt.get("expand", {}).get("quiz", {})
     quiz_items = quiz.get("expand", {}).get("quizItems_via_quiz", [])
     materials = quiz.get("expand", {}).get("materials_via_quiz", [])
+
+    current_item = [item for item in quiz_items if item.get("id") == item_id][0]
+
     ai_docs = await materials_to_ai_docs(materials)
 
     # GUARD
@@ -83,6 +86,7 @@ async def sse_messages(
             quiz_attempt=quiz_attempt,
             quiz=quiz,
             quiz_items=quiz_items,
+            current_item=current_item,
         )
 
         with langfuse_client.start_as_current_span(name="explainer-agent") as span:

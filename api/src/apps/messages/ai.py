@@ -35,6 +35,7 @@ class ExplainerDeps:
     quiz_attempt: Record
     quiz: Record
     quiz_items: list[Record]
+    current_item: Record
 
 
 EXPLAINER_LLM = LLMS.GROK_4_FAST
@@ -43,8 +44,14 @@ EXPLAINER_LLM = LLMS.GROK_4_FAST
 def inject_system_prompt(
     ctx: RunContext[ExplainerDeps], messages: list[ModelMessage]
 ) -> list[ModelMessage]:
+    current_item = ctx.deps.current_item
+    question = current_item.get("question", "")
+    answers = current_item.get("answers", "")
+
     sys_part = SystemPromptPart(
-        content=langfuse_client.get_prompt("explain_quiz", label=settings.env).compile()
+        content=langfuse_client.get_prompt("explain_quiz", label=settings.env).compile(
+            question=question, answers=answers
+        )
     )
 
     for msg in messages:
