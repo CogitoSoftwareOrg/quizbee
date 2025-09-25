@@ -80,7 +80,7 @@
 					{quiz}
 					{item}
 					{quizAttempt}
-					{itemDecision}
+					bind:itemDecision
 				/>
 			{/if}
 

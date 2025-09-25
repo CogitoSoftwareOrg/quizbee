@@ -39,14 +39,18 @@ async def sse_messages(
     quiz_attempt = await admin_pb.collection("quizAttempts").get_one(
         attempt_id,
         options={
-            "params": {"expand": "quiz,quizItems_via_quiz,quiz.materials_via_quiz"}
+            "params": {"expand": "quiz,quiz.quizItems_via_quiz,quiz.materials_via_quiz"}
         },
     )
+    choices = quiz_attempt.get("choices", [])
     quiz = quiz_attempt.get("expand", {}).get("quiz", {})
     quiz_items = quiz.get("expand", {}).get("quizItems_via_quiz", [])
     materials = quiz.get("expand", {}).get("materials_via_quiz", [])
 
     current_item = [item for item in quiz_items if item.get("id") == item_id][0]
+    current_decision = [
+        decision for decision in choices if decision.get("itemId") == item_id
+    ][0]
 
     ai_docs = await materials_to_ai_docs(materials)
 
@@ -87,6 +91,7 @@ async def sse_messages(
             quiz=quiz,
             quiz_items=quiz_items,
             current_item=current_item,
+            current_decision=current_decision,
         )
 
         with langfuse_client.start_as_current_span(name="explainer-agent") as span:
