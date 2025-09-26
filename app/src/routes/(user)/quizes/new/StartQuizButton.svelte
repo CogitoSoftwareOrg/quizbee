@@ -85,7 +85,7 @@
 			const updateResult = await updateResponse.json();
 			console.log('Quiz settings updated:', updateResult);
 
-			// uiStore.setGlobalSidebarOpen(false);
+			uiStore.setGlobalSidebarOpen(false);
 			await goto(`/quizes/${quizId}/attempts/${quizAttemptsId}`);
 
 			return true;
