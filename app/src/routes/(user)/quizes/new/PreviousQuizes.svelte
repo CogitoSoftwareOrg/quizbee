@@ -10,8 +10,6 @@
 
 	let { inputText = $bindable(), attachedFiles = $bindable() }: Props = $props();
 
-	let quizIds = $state<string[]>([]);
-
 	/**
 	 * Создает AttachedFile объект из material ID без реального файла
 	 */
@@ -35,9 +33,8 @@
 	// Функция для обработки клика по квизу
 	async function handleQuizClick(quiz: any) {
 		// Устанавливаем текст
-		if (quiz.query) {
-			inputText = quiz.query;
-		}
+
+		inputText = quiz.query || '';
 
 		// Восстанавливаем файлы из материалов
 		if (quiz.materials && quiz.materials.length > 0) {
@@ -58,53 +55,6 @@
 			attachedFiles = [];
 		}
 	}
-
-	// Функция для форматирования времени
-	function formatRelativeTime(dateString: string): string {
-		const date = new Date(dateString);
-		const now = new Date();
-		const diffMs = now.getTime() - date.getTime();
-		const diffMinutes = Math.floor(diffMs / (1000 * 60));
-		const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-		const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-		const diffWeeks = Math.floor(diffDays / 7);
-
-		if (diffMinutes < 60) {
-			return diffMinutes <= 1 ? 'just now' : `${diffMinutes} minutes ago`;
-		} else if (diffHours < 24) {
-			return diffHours === 1 ? '1 hour ago' : `${diffHours} hours ago`;
-		} else if (diffDays < 7) {
-			return diffDays === 1 ? '1 day ago' : `${diffDays} days ago`;
-		} else {
-			return diffWeeks === 1 ? '1 week ago' : `${diffWeeks} weeks ago`;
-		}
-	}
-
-	// Функция для определения цвета бейджа на основе результата
-	function getScoreColors(score: number): { bg: string; text: string } {
-		if (score >= 80) return { bg: 'bg-green-100', text: 'text-green-800' };
-		if (score >= 60) return { bg: 'bg-yellow-100', text: 'text-yellow-800' };
-		return { bg: 'bg-red-100', text: 'text-red-800' };
-	}
-
-	// Функция для получения строки сложности
-	function getDifficultyString(difficulty: string): string {
-		const diffMap: Record<string, string> = {
-			beginner: 'Beginner',
-			intermediate: 'Intermediate',
-			expert: 'Expert'
-		};
-		return diffMap[difficulty] || difficulty;
-	}
-
-	// Восстанавливаем объекты квизов по их ID
-	const foundQuizes = $derived(
-		// Фильтруем основной массив тестов из стора
-		quizesStore.quizes.filter((quiz) =>
-			// Оставляем только те тесты, чей ID есть в нашем массиве `quizIds`
-			quizIds.includes(quiz.id)
-		)
-	);
 </script>
 
 <div class="h-full w-80 flex-shrink-0 overflow-y-auto border-r border-gray-200 bg-gray-50">
@@ -113,13 +63,13 @@
 
 		<!-- Динамическая история квизов из store -->
 		<div class="space-y-3">
-			{#if foundQuizes.length === 0}
+			{#if quizesStore.quizes.length === 0}
 				<div class="mt-8 text-center text-gray-500">
 					<p class="text-sm">No previous quizes yet</p>
 					<p class="mt-1 text-xs">Create your first quiz!</p>
 				</div>
 			{:else}
-				{#each foundQuizes as quiz}
+				{#each quizesStore.quizes as quiz}
 					<div
 						class="cursor-pointer rounded-lg border border-gray-100 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
 						onclick={() => handleQuizClick(quiz)}
