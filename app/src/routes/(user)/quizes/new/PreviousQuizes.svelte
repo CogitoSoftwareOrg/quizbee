@@ -57,43 +57,40 @@
 	}
 </script>
 
-<div class="h-full w-80 flex-shrink-0 overflow-y-auto border-r border-gray-200 bg-gray-50">
+<div class="border-base-200 h-full w-80 flex-shrink-0 overflow-y-auto border-r">
 	<div class="p-6">
-		<h2 class="mb-4 text-center text-xl font-bold text-gray-800">Previous quizes</h2>
+		<h2 class="mb-4 text-center text-xl font-bold">Previous quizes</h2>
 
 		<!-- Динамическая история квизов из store -->
 		<div class="space-y-3">
 			{#if quizesStore.quizes.length === 0}
-				<div class="mt-8 text-center text-gray-500">
+				<div class="mt-8 text-center">
 					<p class="text-sm">No previous quizes yet</p>
 					<p class="mt-1 text-xs">Create your first quiz!</p>
 				</div>
 			{:else}
 				{#each quizesStore.quizes as quiz}
 					<div
-						class="cursor-pointer rounded-lg border border-gray-100 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
+						class="border-base-200 cursor-pointer rounded-lg border p-4 shadow-sm transition-shadow hover:shadow-md"
 						onclick={() => handleQuizClick(quiz)}
 						onkeydown={(e) => e.key === 'Enter' && handleQuizClick(quiz)}
 						role="button"
 						tabindex="0"
 					>
-						<h3
-							class="mb-1 truncate font-medium text-gray-900"
-							title={quiz.title || `Quiz ${quiz.id}`}
-						>
+						<h3 class="mb-1 truncate font-medium" title={quiz.title || `Quiz ${quiz.id}`}>
 							{quiz.title || `Quiz ${quiz.id}`}
 						</h3>
-						<p class="mb-2 text-sm text-gray-500">
+						<p class="mb-2 text-sm">
 							Quiz ID: {quiz.id}
 						</p>
 						{#if quiz.query}
-							<p class="mb-1 text-xs text-blue-600">
+							<p class="text-primary mb-1 text-xs">
 								<span class="font-medium">Query:</span>
 								{quiz.query}
 							</p>
 						{/if}
 						{#if quiz.materials && quiz.materials.length > 0}
-							<p class="text-xs text-green-600">
+							<p class="text-success text-xs">
 								<span class="font-medium">Materials:</span>
 								{quiz.materials.length} file(s)
 							</p>
