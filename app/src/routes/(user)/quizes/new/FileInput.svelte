@@ -14,6 +14,23 @@
 		return result;
 	}
 
+	function processFiles(files: File[]) {
+		for (const file of files) {
+			const attachedFile: AttachedFile = {
+				file,
+				previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
+				name: file.name,
+				isUploading: true,
+				uploadError: undefined,
+				materialId: generateId(),
+				fromPreviousQuiz: false,
+			};
+
+			attachedFiles = [...attachedFiles, attachedFile];
+			uploadFileAsync(attachedFile);
+		}
+	}
+
 	interface Props {
 		inputText?: string;
 		attachedFiles?: AttachedFile[];
@@ -25,6 +42,7 @@
 
 	let inputElement: HTMLInputElement;
 	let isDragging = $state(false);
+	let previousAttachedFiles = attachedFiles;
 
 	// Реактивно отслеживаем материалы в store и обновляем статус загрузки
 	$effect(() => {
@@ -45,6 +63,19 @@
 		});
 	});
 
+	// Эффект для удаления файлов когда attachedFiles становится пустым
+	$effect(() => {
+		if (attachedFiles.length === 0 && previousAttachedFiles.length > 0) {
+			// Удаляем все файлы, которые были в предыдущем состоянии
+			for (let i = 0; i < previousAttachedFiles.length; i++) {
+				const fileToRemove = previousAttachedFiles[i];
+				removeFile(i, previousAttachedFiles);
+			}
+		}
+		return () => {
+			previousAttachedFiles = attachedFiles;
+		};
+	});
 
 
 	function openFileDialog() {
@@ -54,25 +85,7 @@
 	async function handleFileChange(event: Event) {
 		const target = event.target as HTMLInputElement;
 		if (target.files) {
-			const newFiles = Array.from(target.files);
-			
-			// Добавляем все файлы в UI сразу и запускаем загрузку асинхронно
-			for (const file of newFiles) {
-				const attachedFile: AttachedFile = {
-					file,
-					previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
-					name: file.name,
-					isUploading: true,
-					uploadError: undefined,
-					materialId: generateId(),
-				};
-
-				// Добавляем файл в UI сразу (с индикатором загрузки)
-				attachedFiles = [...attachedFiles, attachedFile];
-
-				// Запускаем загрузку асинхронно без ожидания
-				uploadFileAsync(attachedFile);
-			}
+			processFiles(Array.from(target.files));
 		}
 	}
 
@@ -130,7 +143,7 @@
 
 	
 
-	async function removeFile(index: number) {
+	async function removeFile(index: number, attachedFiles: AttachedFile[]) {
 		const fileToRemove = attachedFiles[index];
 		
 		// Освобождаем URL превью если есть
@@ -139,7 +152,7 @@
 		}
 		
 		// Удаляем материал с сервера если он был загружен
-		if (fileToRemove.materialId) {
+		if (fileToRemove.materialId && !fileToRemove.fromPreviousQuiz) {
 			try {
 				
 				pb!.collection('materials').delete(fileToRemove.materialId);
@@ -166,24 +179,7 @@
 			event.preventDefault(); // Предотвращаем вставку текста
 
 			const files = imageItems.map(item => item.getAsFile()).filter(file => file !== null) as File[];
-			
-			// Добавляем все файлы в UI сразу и запускаем загрузку асинхронно
-			for (const file of files) {
-				const attachedFile: AttachedFile = {
-					file,
-					previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
-					name: file.name,
-					isUploading: true,
-					uploadError: undefined,
-					materialId: generateId(),
-				};
-
-				// Добавляем файл в UI сразу (с индикатором загрузки)
-				attachedFiles = [...attachedFiles, attachedFile];
-
-				// Запускаем загрузку асинхронно без ожидания
-				uploadFileAsync(attachedFile);
-			}
+			processFiles(files);
 		}
 	}
 
@@ -203,25 +199,7 @@
 
 		const files = event.dataTransfer?.files;
 		if (files) {
-			const newFiles = Array.from(files);
-			
-			// Добавляем все файлы в UI сразу и запускаем загрузку асинхронно
-			for (const file of newFiles) {
-				const attachedFile: AttachedFile = {
-					file,
-					previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
-					name: file.name,
-					isUploading: true,
-					uploadError: undefined,
-					materialId: generateId(),
-				};
-
-				// Добавляем файл в UI сразу (с индикатором загрузки)
-				attachedFiles = [...attachedFiles, attachedFile];
-
-				// Запускаем загрузку асинхронно без ожидания
-				uploadFileAsync(attachedFile);
-			}
+			processFiles(Array.from(files));
 		}
 	}
 
@@ -357,7 +335,7 @@
 						</div>
 					{/if}
 					
-					<button onclick={() => removeFile(index)} class="absolute top-1 right-1 bg-base-content/50 text-base-100 border-none rounded-full w-5 h-5 flex items-center justify-center cursor-pointer text-sm leading-none opacity-0 transition-opacity group-hover:opacity-100" aria-label="Remove file"
+					<button onclick={() => removeFile(index, attachedFiles)} class="absolute top-1 right-1 bg-base-content/50 text-base-100 border-none rounded-full w-5 h-5 flex items-center justify-center cursor-pointer text-sm leading-none opacity-0 transition-opacity group-hover:opacity-100" aria-label="Remove file"
 						>&times;</button
 					>
 				</div>

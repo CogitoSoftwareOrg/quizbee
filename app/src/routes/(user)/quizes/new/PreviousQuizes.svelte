@@ -32,7 +32,8 @@
             name: materialTitle,
             previewUrl: isImage ? null : null, // Для восстановленных файлов не показываем превью
             isUploading: false,
-            uploadError: undefined
+            uploadError: undefined,
+            fromPreviousQuiz: true,
         };
     }
 

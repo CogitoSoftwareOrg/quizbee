@@ -8,6 +8,7 @@ type AttachedFile = {
 		isUploading?: boolean;
 		uploadError?: string;
         tokens?: number;
+		fromPreviousQuiz?: boolean;
 	};
 
 export type { AttachedFile };

@@ -16,6 +16,8 @@
     let inputText = $state('');
 
 
+
+
 </script>
 
 <svelte:head>
@@ -94,6 +96,13 @@ Feel free to attach presentations, PDFs, images, and more—we support a wide ra
                 {selectedDifficulty}
                 {questionCount}
             />
+            <button
+                type="button"
+                class="ml-4 btn btn-outline btn-secondary"
+                onclick={() => { inputText = ''; attachedFiles = []; }}
+            >
+                Clear
+            </button>
         </div>
     </div>
     </div>
