@@ -4,6 +4,7 @@
     import QuestionNumberSelector from './QuestionNumberSelector.svelte';
     import StartQuizButton from './StartQuizButton.svelte';
     import PreviousQuizes from './PreviousQuizes.svelte';
+    import InfoIcon from '$lib/ui/InfoIcon.svelte';
     import type { AttachedFile } from '$lib/types/attached-file';
 
 
@@ -21,19 +22,8 @@
     <title>New Quiz</title>
 </svelte:head>
 
-<style>
-    :global(*) {
-        scrollbar-width: none !important;
-        -ms-overflow-style: none !important;
-    }
-    
-    :global(*::-webkit-scrollbar) {
-        display: none !important;
-    }
-</style>
 
-
-<main class="relative h-screen flex">
+<main class="relative h-full flex">
     
     <PreviousQuizes 
         bind:inputText
@@ -56,22 +46,7 @@
                  data-tip="Describe your quiz in detail below, or simply attach files and we'll base the questions on their content. For the best results, do both!
 
 Feel free to attach presentations, PDFs, images, and more—we support a wide range of file types. For the most accurate questions, a few focused documents are more effective than many large ones." >
-                    <svg 
-                        xmlns="http://www.w3.org/2000/svg" 
-                        width="28" 
-                        height="28" 
-                        viewBox="0 0 24 24" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        stroke-width="2" 
-                        stroke-linecap="round" 
-                        stroke-linejoin="round" 
-                        class="text-gray-500 cursor-pointer transition-colors duration-200 hover:text-gray-700"
-                    >
-                        <circle cx="12" cy="12" r="10"/>
-                        <path d="M12 16v-4"/>
-                        <path d="M12 8h.01"/>
-                    </svg>
+                    <InfoIcon />
                 </div>
             </div>
         </div>
@@ -91,22 +66,7 @@ Feel free to attach presentations, PDFs, images, and more—we support a wide ra
                         <div class="tooltip tooltip-bottom -mt-6 [&:before]:text-lg [&:before]:px-6 [&:before]:py-3 [&:before]:max-w-md [&:before]:whitespace-pre-line [&:before]:text-left" data-tip="Choose your level based on your knowledge of the topic. Beginner gives you simple, basic questions, while Expert challenges you with tricky, thought-provoking ones.
 
         And don't worry, if you feel that the questions are too hard or too easy you can adjust the difficulty during the quiz!" >
-                            <svg 
-                                xmlns="http://www.w3.org/2000/svg" 
-                                width="28" 
-                                height="28" 
-                                viewBox="0 0 24 24" 
-                                fill="none" 
-                                stroke="currentColor" 
-                                stroke-width="2" 
-                                stroke-linecap="round" 
-                                stroke-linejoin="round" 
-                                class="text-gray-500 cursor-pointer transition-colors duration-200 hover:text-gray-700"
-                            >
-                                <circle cx="12" cy="12" r="10"/>
-                                <path d="M12 16v-4"/>
-                                <path d="M12 8h.01"/>
-                            </svg>
+                            <InfoIcon />
                         </div>
                     </div>
                     <DifficultySelector bind:selectedDifficulty />
@@ -118,22 +78,7 @@ Feel free to attach presentations, PDFs, images, and more—we support a wide ra
                         <h2 class="text-2xl font-semibold mb-6">Choose number of questions</h2>
                         <div class="tooltip tooltip-bottom -mt-6 [&:before]:text-lg [&:before]:px-6 [&:before]:py-3 [&:before]:max-w-md [&:before]:whitespace-pre-line [&:before]:text-left"
                          data-tip="Each quiz question is a single-choice question with four answer options." >
-                            <svg 
-                                xmlns="http://www.w3.org/2000/svg" 
-                                width="28" 
-                                height="28" 
-                                viewBox="0 0 24 24" 
-                                fill="none" 
-                                stroke="currentColor" 
-                                stroke-width="2" 
-                                stroke-linecap="round" 
-                                stroke-linejoin="round" 
-                                class="text-gray-500 cursor-pointer transition-colors duration-200 hover:text-gray-700"
-                            >
-                                <circle cx="12" cy="12" r="10"/>
-                                <path d="M12 16v-4"/>
-                                <path d="M12 8h.01"/>
-                            </svg>
+                            <InfoIcon />
                         </div>
                     </div>
                     <QuestionNumberSelector bind:value={questionCount} />

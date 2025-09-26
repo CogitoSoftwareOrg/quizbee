@@ -39,9 +39,9 @@
     // Функция для обработки клика по квизу
     async function handleQuizClick(quiz: any) {
         // Устанавливаем текст
-        if (quiz.query) {
-            inputText = quiz.query;
-        }
+        
+        inputText = quiz.query ? quiz.query : '';
+       
         
         // Восстанавливаем файлы из материалов
         if (quiz.materials && quiz.materials.length > 0) {
@@ -86,9 +86,9 @@
 
     // Функция для определения цвета бейджа на основе результата
     function getScoreColors(score: number): { bg: string; text: string } {
-        if (score >= 80) return { bg: 'bg-green-100', text: 'text-green-800' };
-        if (score >= 60) return { bg: 'bg-yellow-100', text: 'text-yellow-800' };
-        return { bg: 'bg-red-100', text: 'text-red-800' };
+        if (score >= 80) return { bg: 'bg-success/10', text: 'text-success' };
+        if (score >= 60) return { bg: 'bg-warning/10', text: 'text-warning' };
+        return { bg: 'bg-error/10', text: 'text-error' };
     }
 
     // Функция для получения строки сложности
@@ -110,66 +110,55 @@
         )
     );
 
-    onMount(() => {
-        // Подписываемся на обновления квизов если пользователь авторизован
-        if (userStore.user?.id) {
-            quizAttemptsStore.subscribe(userStore.user.id);
-            materialsStore.subscribe(userStore.user.id);
-        }
-
-        // Используем $effect для реакции на изменения в хранилище
-        $effect(() => {
-            // Получаем массив попыток из хранилища
-            const attempts = quizAttemptsStore.quizAttempts;
-            
-            // Извлекаем ID тестов (предполагая, что поле называется 'quiz')
-            // Используем Set для получения только уникальных ID
-            const uniqueQuizIds = new Set(attempts.map(attempt => attempt.quiz));
-            
-            quizIds = [...uniqueQuizIds];
-        });
+   
+    $effect(() => {
+        // Получаем массив попыток из хранилища
+        const attempts = quizAttemptsStore.quizAttempts;
         
-        return () => {
-            // Отписываемся при размонтировании компонента
-            quizAttemptsStore.unsubscribe();
-            materialsStore.unsubscribe();
-        };
+        // Извлекаем ID тестов (предполагая, что поле называется 'quiz')
+        // Используем Set для получения только уникальных ID
+        const uniqueQuizIds = new Set(attempts.map(attempt => attempt.quiz));
+        
+        quizIds = [...uniqueQuizIds];
+    
+    
+      
     });
 </script>
 
-<div class="w-80 bg-gray-50 border-r border-gray-200 h-full overflow-y-auto flex-shrink-0">
+<div class="w-80 bg-base-100 border-r border-base-300 h-full overflow-y-auto flex-shrink-0">
     <div class="p-6">
-        <h2 class="text-center text-xl font-bold mb-4 text-gray-800">Previous quizes</h2>
+        <h2 class="text-center text-xl font-bold mb-4 text-base-content">Previous quizes</h2>
         
         <!-- Динамическая история квизов из store -->
         <div class="space-y-3">
             {#if foundQuizes.length === 0}
-                <div class="text-center text-gray-500 mt-8">
+                <div class="text-center text-base-content/60 mt-8">
                     <p class="text-sm">No previous quizes yet</p>
                     <p class="text-xs mt-1">Create your first quiz!</p>
                 </div>
             {:else}
                 {#each foundQuizes as quiz}
                     <div 
-                        class="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
+                        class="card card-body card-compact bg-base-100 hover:shadow-md transition-shadow cursor-pointer hover:bg-base-200"
                         onclick={() => handleQuizClick(quiz)}
                         onkeydown={(e) => e.key === 'Enter' && handleQuizClick(quiz)}
                         role="button"
                         tabindex="0"
                     >
-                        <h3 class="font-medium text-gray-900 mb-1 truncate" title="{quiz.title || `Quiz ${quiz.id}`}">
+                        <h3 class="font-medium text-base-content mb-1 truncate" title="{quiz.title || `Quiz ${quiz.id}`}">
                             {quiz.title || `Quiz ${quiz.id}`}
                         </h3>
-                        <p class="text-sm text-gray-500 mb-2">
+                        <p class="text-sm text-base-content/60 mb-2">
                             Quiz ID: {quiz.id}
                         </p>
                         {#if quiz.query}
-                            <p class="text-xs text-blue-600 mb-1">
+                            <p class="text-xs text-primary mb-1">
                                 <span class="font-medium">Query:</span> {quiz.query}
                             </p>
                         {/if}
                         {#if quiz.materials && quiz.materials.length > 0}
-                            <p class="text-xs text-green-600">
+                            <p class="text-xs text-success">
                                 <span class="font-medium">Materials:</span> {quiz.materials.length} file(s)
                             </p>
                         {/if}

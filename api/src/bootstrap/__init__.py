@@ -10,6 +10,7 @@ from apps.auth.middleware import auth_user
 from apps.billing.middleware import load_subscription
 from apps.messages import messages_router
 from apps.quizes import quizes_router
+from apps.materials import materials_router
 from lib.clients.pb import ensure_admin_pb, init_admin_pb
 from lib.settings import settings
 
@@ -47,6 +48,7 @@ def create_app():
 
     app.include_router(quizes_router)
     app.include_router(messages_router)
+    app.include_router(materials_router)
 
     # CORS: allow credentials from specific app origins (including PR subdomains)
     allowed_origins: list[str] = []

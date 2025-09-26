@@ -1,8 +1,18 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
-	import { uploadMaterial, deleteMaterial } from '$lib/apps/materials/upload-delete-materials';
+	import { computeApiUrl } from '$lib/api/compute-url';
+	import { materialsStore } from '$lib/apps/materials/materials.svelte';
 	import type { AttachedFile } from '$lib/types/attached-file';
 	
+	
+	function generateId(): string {
+		const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+		let result = '';
+		for (let i = 0; i < 15; i++) {
+			result += chars.charAt(Math.floor(Math.random() * chars.length));
+		}
+		return result;
+	}
 
 	interface Props {
 		inputText?: string;
@@ -16,57 +26,26 @@
 	let inputElement: HTMLInputElement;
 	let isDragging = $state(false);
 
-	/**
-	 * Создает AttachedFile объект и автоматически начинает загрузку на PocketBase
-	 * Возвращает promise который резолвится в materialId после успешной загрузки
-	 */
-	async function createAttachedFileWithUpload(file: File): Promise<{ attachedFile: AttachedFile; materialIdPromise: Promise<string> }> {
-		const attachedFile: AttachedFile = $state({
-			file,
-			previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
-			name: file.name,
-			isUploading: true,
-			uploadError: undefined,
-			materialId: undefined,
-			
-		});
-
-		// Создаем promise для загрузки
-		const materialIdPromise = (async (): Promise<string> => {
-			try {
-				const material = await uploadMaterial(attachedFile.file!, attachedFile.name);
+	// Реактивно отслеживаем материалы в store и обновляем статус загрузки
+	$effect(() => {
+		const materials = materialsStore.materials;
+		
+		// Проходим по всем прикрепленным файлам и проверяем их статус
+		attachedFiles.forEach((attachedFile) => {
+			if (attachedFile.isUploading && attachedFile.materialId) {
+				// Ищем материал в store по ID
+				const foundMaterial = materials.find(material => material.id === attachedFile.materialId);
 				
-				// Проверяем, что получили material.id
-				if (!material.id) {
-					throw new Error('Material ID not received from PocketBase');
+				if (foundMaterial) {
+					// Материал найден в store - обновляем статус
+					attachedFile.isUploading = false;
+					console.log(`Material ${attachedFile.name} found in store, setting isUploading to false`);
 				}
-				
-				// Обновляем состояние после успешной загрузки и получения ID
-				attachedFile.materialId = material.id;
-				attachedFile.isUploading = false;
-				
-				return material.id;
-			} catch (error) {
-				// Обрабатываем ошибку - удаляем файл из UI
-				console.error('Failed to upload file:', attachedFile.name, error);
-				
-				// Находим индекс файла в массиве и удаляем его
-				const fileIndex = attachedFiles.indexOf(attachedFile);
-				if (fileIndex !== -1) {
-					// Освобождаем URL превью если есть
-					if (attachedFile.previewUrl) {
-						URL.revokeObjectURL(attachedFile.previewUrl);
-					}
-					attachedFiles.splice(fileIndex, 1);
-					attachedFiles = attachedFiles;
-				}
-				
-				throw error;
 			}
-		})();
+		});
+	});
 
-		return { attachedFile, materialIdPromise };
-	}
+
 
 	function openFileDialog() {
 		inputElement.click();
@@ -77,21 +56,74 @@
 		if (target.files) {
 			const newFiles = Array.from(target.files);
 			
-			// Обрабатываем файлы последовательно, чтобы избежать auto-cancellation в PocketBase
+			// Добавляем все файлы в UI сразу и запускаем загрузку асинхронно
 			for (const file of newFiles) {
-				const { attachedFile, materialIdPromise } = await createAttachedFileWithUpload(file);
-				
+				const attachedFile: AttachedFile = {
+					file,
+					previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
+					name: file.name,
+					isUploading: true,
+					uploadError: undefined,
+					materialId: generateId(),
+				};
+
 				// Добавляем файл в UI сразу (с индикатором загрузки)
 				attachedFiles = [...attachedFiles, attachedFile];
-				
-				// Ждем завершения загрузки текущего файла перед переходом к следующему
-				try {
-					const materialId = await materialIdPromise;
-					console.log(`File ${file.name} uploaded successfully with ID: ${materialId}`);
-				} catch (error) {
-					console.error(`Failed to upload file ${file.name}:`, error);
-					// Ошибка уже обработана в createAttachedFileWithUpload (файл удален из UI)
+
+				// Запускаем загрузку асинхронно без ожидания
+				uploadFileAsync(attachedFile);
+			}
+		}
+	}
+
+	// Асинхронная загрузка файла без блокировки UI
+	async function uploadFileAsync(attachedFile: AttachedFile) {
+		try {
+			const formData = new FormData();
+			formData.append('file', attachedFile.file!);
+			formData.append('title', attachedFile.name);
+			formData.append('material_id', attachedFile.materialId!);
+
+			const response = await fetch(`${computeApiUrl()}/materials/upload`, {
+				method: 'POST',
+				body: formData,
+				credentials: 'include',
+			});
+
+			if (!response.ok) {
+				const errorText = await response.text();
+				throw new Error(`Failed to upload material: ${errorText}`);
+			}
+
+			const material = await response.json();
+			
+			// Проверяем, что получили material.id
+			if (!material.id) {
+				throw new Error('Material ID not received from API');
+			}
+			
+			// Обновляем materialId после успешной загрузки
+			// isUploading будет автоматически обновлен через реактивность когда материал появится в store
+			attachedFile.materialId = material.id;
+			
+			// Добавляем информацию о токенах если есть
+			if (material.tokens) {
+				attachedFile.tokens = material.tokens;
+			}
+			
+			console.log(`File ${attachedFile.name} uploaded successfully with ID: ${material.id}`);
+		} catch (error) {
+			console.error('Failed to upload file:', attachedFile.name, error);
+			
+			// Находим индекс файла в массиве и удаляем его
+			const fileIndex = attachedFiles.indexOf(attachedFile);
+			if (fileIndex !== -1) {
+				// Освобождаем URL превью если есть
+				if (attachedFile.previewUrl) {
+					URL.revokeObjectURL(attachedFile.previewUrl);
 				}
+				attachedFiles.splice(fileIndex, 1);
+				attachedFiles = attachedFiles;
 			}
 		}
 	}
@@ -109,7 +141,15 @@
 		// Удаляем материал с сервера если он был загружен
 		if (fileToRemove.materialId) {
 			try {
-				await deleteMaterial(fileToRemove.materialId);
+				const response = await fetch(`${computeApiUrl()}/materials/${fileToRemove.materialId}`, {
+					method: 'DELETE',
+					credentials: 'include',
+				});
+
+				if (!response.ok) {
+					const errorText = await response.text();
+					throw new Error(`Failed to delete material: ${errorText}`);
+				}
 			} catch (error) {
 				console.error('Failed to delete material from server:', error);
 				// Не блокируем удаление из UI даже если не удалось удалить с сервера
@@ -133,21 +173,22 @@
 
 			const files = imageItems.map(item => item.getAsFile()).filter(file => file !== null) as File[];
 			
-			// Обрабатываем файлы последовательно, чтобы избежать auto-cancellation в PocketBase
+			// Добавляем все файлы в UI сразу и запускаем загрузку асинхронно
 			for (const file of files) {
-				const { attachedFile, materialIdPromise } = await createAttachedFileWithUpload(file);
-				
+				const attachedFile: AttachedFile = {
+					file,
+					previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
+					name: file.name,
+					isUploading: true,
+					uploadError: undefined,
+					materialId: generateId(),
+				};
+
 				// Добавляем файл в UI сразу (с индикатором загрузки)
 				attachedFiles = [...attachedFiles, attachedFile];
-				
-				// Ждем завершения загрузки текущего файла перед переходом к следующему
-				try {
-					const materialId = await materialIdPromise;
-					console.log(`Pasted file ${file.name} uploaded successfully with ID: ${materialId}`);
-				} catch (error) {
-					console.error(`Failed to upload pasted file ${file.name}:`, error);
-					// Ошибка уже обработана в createAttachedFileWithUpload (файл удален из UI)
-				}
+
+				// Запускаем загрузку асинхронно без ожидания
+				uploadFileAsync(attachedFile);
 			}
 		}
 	}
@@ -170,21 +211,22 @@
 		if (files) {
 			const newFiles = Array.from(files);
 			
-			// Обрабатываем файлы последовательно, чтобы избежать auto-cancellation в PocketBase
+			// Добавляем все файлы в UI сразу и запускаем загрузку асинхронно
 			for (const file of newFiles) {
-				const { attachedFile, materialIdPromise } = await createAttachedFileWithUpload(file);
-				
+				const attachedFile: AttachedFile = {
+					file,
+					previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
+					name: file.name,
+					isUploading: true,
+					uploadError: undefined,
+					materialId: generateId(),
+				};
+
 				// Добавляем файл в UI сразу (с индикатором загрузки)
 				attachedFiles = [...attachedFiles, attachedFile];
-				
-				// Ждем завершения загрузки текущего файла перед переходом к следующему
-				try {
-					const materialId = await materialIdPromise;
-					console.log(`Dropped file ${file.name} uploaded successfully with ID: ${materialId}`);
-				} catch (error) {
-					console.error(`Failed to upload dropped file ${file.name}:`, error);
-					// Ошибка уже обработана в createAttachedFileWithUpload (файл удален из UI)
-				}
+
+				// Запускаем загрузку асинхронно без ожидания
+				uploadFileAsync(attachedFile);
 			}
 		}
 	}
@@ -258,7 +300,7 @@
 <div 
 	class={[
 		"flex flex-col gap-2.5 w-full max-w-3xl mx-auto font-sans transition-colors duration-200 rounded-lg p-2",
-		isDragging && "bg-blue-50 border-2 border-dashed border-blue-500"
+		isDragging && "bg-primary/10 border-2 border-dashed border-primary"
 	]}
 	ondragover={handleDragOver}
 	ondragleave={handleDragLeave}
@@ -267,8 +309,8 @@
 	tabindex="0"
 	aria-label="Drop files here or click to upload"
 >
-	<div class="flex items-center border border-gray-300 rounded-3xl px-4 py-4 bg-gray-50 transition-colors duration-200 focus-within:border-gray-400">
-		<button onclick={openFileDialog} class="bg-transparent border-none cursor-pointer p-0 mr-2 flex items-center text-gray-600 hover:text-gray-800" aria-label="Attach files">
+	<div class="flex items-center border border-base-300 rounded-3xl px-4 py-4 bg-base-300 transition-colors duration-200 focus-within:border-base-content/40">
+		<button onclick={openFileDialog} class="bg-transparent border-none cursor-pointer p-0 mr-2 flex items-center text-base-content/60 hover:text-base-content" aria-label="Attach files">
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
 				width="24"
@@ -304,11 +346,11 @@
 	{#if attachedFiles.length > 0}
 		<div class="grid grid-cols-5 gap-4 px-3">
 			{#each attachedFiles as attachedFile, index}
-				<div class="group relative w-full aspect-square rounded-lg overflow-hidden bg-gray-200">
+				<div class="group relative w-full aspect-square rounded-lg overflow-hidden bg-base-300">
 					{#if attachedFile.previewUrl}
 						<img src={attachedFile.previewUrl} alt={attachedFile.name} class="w-full h-full object-cover" />
 					{:else}
-						<div class="flex flex-col items-center w-full h-full p-2 text-center text-gray-600">
+						<div class="flex flex-col items-center w-full h-full p-2 text-center text-base-content/60">
 							<img src="/file-format-icons/{getFileIcon(attachedFile.name)}.svg" alt="File icon" class="w-10 h-10 mb-1" />
 							<span class="text-[14px] break-words break-all line-clamp-3 leading-tight h-24 flex items-center" title={attachedFile.name}>{truncateFileName(attachedFile.name)}</span>
 						</div>
@@ -316,12 +358,12 @@
 					
 					<!-- Индикатор загрузки -->
 					{#if attachedFile.isUploading}
-						<div class="absolute inset-0 bg-black/50 flex items-center justify-center">
-							<div class="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+						<div class="absolute inset-0 bg-base-content/50 flex items-center justify-center">
+							<div class="w-8 h-8 border-4 border-base-100 border-t-transparent rounded-full animate-spin"></div>
 						</div>
 					{/if}
 					
-					<button onclick={() => removeFile(index)} class="absolute top-1 right-1 bg-black/50 text-white border-none rounded-full w-5 h-5 flex items-center justify-center cursor-pointer text-sm leading-none opacity-0 transition-opacity group-hover:opacity-100" aria-label="Remove file"
+					<button onclick={() => removeFile(index)} class="absolute top-1 right-1 bg-base-content/50 text-base-100 border-none rounded-full w-5 h-5 flex items-center justify-center cursor-pointer text-sm leading-none opacity-0 transition-opacity group-hover:opacity-100" aria-label="Remove file"
 						>&times;</button
 					>
 				</div>
