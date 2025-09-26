@@ -72,7 +72,7 @@
 				{/if}
 			</a>
 
-			<SidebarNavigation />
+			<SidebarNavigation class="flex min-h-0 flex-1" />
 
 			<ProfileRow />
 		</aside>

@@ -40,20 +40,22 @@
 	}
 </script>
 
-<div class="pointer-events-none absolute -left-2 top-1/2 z-10 hidden -translate-y-1/2 md:block">
-	<Button
-		class="pointer-events-auto"
-		color="neutral"
-		style="ghost"
-		circle
-		size="xl"
-		onclick={() => {
-			gotoItem(order - 1);
-		}}
-	>
-		<ChevronLeft size={42} />
-	</Button>
-</div>
+{#if order > 0}
+	<div class="pointer-events-none absolute -left-2 top-1/2 z-10 hidden -translate-y-1/2 md:block">
+		<Button
+			class="pointer-events-auto"
+			color="neutral"
+			style="ghost"
+			circle
+			size="xl"
+			onclick={() => {
+				gotoItem(order - 1);
+			}}
+		>
+			<ChevronLeft size={42} />
+		</Button>
+	</div>
+{/if}
 
 {#if itemDecision}
 	<div class="pointer-events-none absolute -right-2 top-1/2 z-10 hidden -translate-y-1/2 md:block">
