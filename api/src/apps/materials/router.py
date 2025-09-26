@@ -1,4 +1,5 @@
 from fastapi import APIRouter, File, UploadFile, HTTPException, Form, Depends, BackgroundTasks
+from pocketbase import FileUpload
 from fastapi.responses import JSONResponse
 from .tokens_calculation import count_pdf_tokens
 from apps.auth import User
@@ -55,7 +56,7 @@ async def upload_material(
             'id': material_id,
             'title': title,
             'user': user.get("id"),
-            'file': (file.filename, file_bytes, file.content_type),
+            'file': FileUpload((file.filename, file_bytes)),
             'status': 'uploaded',
 
         }
@@ -93,41 +94,19 @@ async def upload_material(
         )
 
 
-@materials_router.delete("/{material_id}")
-async def delete_material(
-    material_id: str,
-    admin_pb: AdminPB,
-    user: User
-):
-    """
-    Удаляет материал из PocketBase с проверкой прав доступа.
-    """
-    try:
-        # Проверяем, что материал существует и принадлежит пользователю
-        material = await admin_pb.collection("materials").get_one(material_id)
-        
-        if material.get("user") != user.get("id"):
-            raise HTTPException(
-                status_code=403,
-                detail="У вас нет прав для удаления этого материала"
-            )
-        
-        # Удаляем материал
-        await admin_pb.collection("materials").delete(material_id)
-        
-     
-        
-        return JSONResponse(content={
-            "success": True,
-            "message": f"Материал '{material.get('title', 'Без названия')}' успешно удален"
-        })
-        
-    except HTTPException:
-       
-        raise
-    except Exception as e:
-        print(f"Ошибка при удалении материала {material_id}: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Ошибка при удалении материала: {str(e)}"
-        )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

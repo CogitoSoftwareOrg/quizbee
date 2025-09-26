@@ -3,7 +3,7 @@
 	import { computeApiUrl } from '$lib/api/compute-url';
 	import { materialsStore } from '$lib/apps/materials/materials.svelte';
 	import type { AttachedFile } from '$lib/types/attached-file';
-	
+	import { pb } from '$lib/pb';
 	
 	function generateId(): string {
 		const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -141,15 +141,9 @@
 		// Удаляем материал с сервера если он был загружен
 		if (fileToRemove.materialId) {
 			try {
-				const response = await fetch(`${computeApiUrl()}/materials/${fileToRemove.materialId}`, {
-					method: 'DELETE',
-					credentials: 'include',
-				});
+				
+				pb!.collection('materials').delete(fileToRemove.materialId);
 
-				if (!response.ok) {
-					const errorText = await response.text();
-					throw new Error(`Failed to delete material: ${errorText}`);
-				}
 			} catch (error) {
 				console.error('Failed to delete material from server:', error);
 				// Не блокируем удаление из UI даже если не удалось удалить с сервера
