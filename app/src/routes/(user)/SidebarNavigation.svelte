@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { House, ChartBar, CreditCard, Plus } from 'lucide-svelte';
+	import { House, ChartBar, CreditCard, Plus, History } from 'lucide-svelte';
 	import { uiStore } from '$lib/apps/users/ui.svelte';
 	import type { ClassValue } from 'svelte/elements';
 	import Button from '$lib/ui/Button.svelte';
@@ -13,13 +13,19 @@
 
 	const navItems = [
 		{
-			name: 'home',
+			name: '/home',
 			label: 'Home',
 			href: '/home',
 			icon: House
+		},
+		{
+			name: '/quizes',
+			label: 'History',
+			href: '/quizes',
+			icon: History
 		}
 		// {
-		// 	name: 'analytics',
+		// 	name: '/analytics',
 		// 	label: 'Analytics',
 		// 	href: '/analytics',
 		// 	icon: ChartBar
@@ -27,10 +33,11 @@
 	];
 
 	const attemptingQuiz = $derived(
-		/quizes\/[0-9a-zA-Z]+\/attempts\/[0-9a-zA-Z]+/.test(page.url.pathname)
+		/quizes\/[0-9a-zA-Z]+\/attempts\/[0-9a-zA-Z]+/.test(page.url.pathname) &&
+			!page.url.pathname.includes('/feedback')
 	);
 
-	const active = $derived(page.url.pathname.split('/').at(1) || 'home');
+	const active = $derived(page.url.pathname);
 
 	function linkClass(name: string) {
 		const base = 'btn btn-block w-full justify-start rounded-lg btn-ghost text-nowrap';
