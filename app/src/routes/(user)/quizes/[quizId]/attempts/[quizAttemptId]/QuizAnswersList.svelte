@@ -85,8 +85,9 @@
 								console.log(await r2.json());
 							}
 
+							const newDecisions = [...quizDecisions, itemDecision];
 							await pb!.collection('quizAttempts').update(quizAttempt!.id, {
-								choices: [...quizDecisions, itemDecision]
+								choices: newDecisions
 							});
 						}}
 					>

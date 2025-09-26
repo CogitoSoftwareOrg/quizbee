@@ -1,9 +1,6 @@
 <script lang="ts">
-	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
-	import { userStore } from '$lib/apps/users/user.svelte';
 	import { materialsStore } from '$lib/apps/materials/materials.svelte';
-	import { onMount } from 'svelte';
 	import type { AttachedFile } from '$lib/types/attached-file';
 
 	interface Props {
@@ -108,32 +105,6 @@
 			quizIds.includes(quiz.id)
 		)
 	);
-
-	onMount(() => {
-		// Подписываемся на обновления квизов если пользователь авторизован
-		if (userStore.user?.id) {
-			quizAttemptsStore.subscribe(userStore.user.id);
-			materialsStore.subscribe(userStore.user.id);
-		}
-
-		// Используем $effect для реакции на изменения в хранилище
-		$effect(() => {
-			// Получаем массив попыток из хранилища
-			const attempts = quizAttemptsStore.quizAttempts;
-
-			// Извлекаем ID тестов (предполагая, что поле называется 'quiz')
-			// Используем Set для получения только уникальных ID
-			const uniqueQuizIds = new Set(attempts.map((attempt) => attempt.quiz));
-
-			quizIds = [...uniqueQuizIds];
-		});
-
-		return () => {
-			// Отписываемся при размонтировании компонента
-			quizAttemptsStore.unsubscribe();
-			materialsStore.unsubscribe();
-		};
-	});
 </script>
 
 <div class="h-full w-80 flex-shrink-0 overflow-y-auto border-r border-gray-200 bg-gray-50">

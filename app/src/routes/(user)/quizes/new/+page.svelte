@@ -127,14 +127,3 @@ Feel free to attach presentations, PDFs, images, and more—we support a wide ra
 		</div>
 	</div>
 </main>
-
-<style>
-	:global(*) {
-		scrollbar-width: none !important;
-		-ms-overflow-style: none !important;
-	}
-
-	:global(*::-webkit-scrollbar) {
-		display: none !important;
-	}
-</style>

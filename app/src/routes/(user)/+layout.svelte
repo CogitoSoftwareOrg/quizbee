@@ -1,56 +1,17 @@
 <script lang="ts">
-	import { page } from '$app/state';
+    import Honey from '$lib/assets/icons/honey.svg';
 
-	import { userStore } from '$lib/apps/users/user.svelte';
-	import { materialsStore } from '$lib/apps/materials/materials.svelte.js';
-	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte.js';
-	import { quizesStore } from '$lib/apps/quizes/quizes.svelte.js';
-	import type { UserExpand } from '$lib/pb/expands.js';
-	import Honey from '$lib/assets/icons/honey.svg';
+    import ProfileRow from '$lib/apps/users/ProfileRow.svelte';
+    import { uiStore } from '$lib/apps/users/ui.svelte';
 
-	import ProfileRow from '$lib/apps/users/ProfileRow.svelte';
-	import { uiStore } from '$lib/apps/users/ui.svelte';
+    import SidebarNavigation from './SidebarNavigation.svelte';
+    import GlobalHeader from './GlobalHeader.svelte';
+		import SubscribeUser from './SubscribeUser.svelte';
 
-	import SidebarNavigation from './SidebarNavigation.svelte';
-	import GlobalHeader from './GlobalHeader.svelte';
-
-	const { data, children } = $props();
-
-	const user = $derived(userStore.user);
-
-	// wait for user to be loaded
-	$effect(() => {
-		data.userLoadPromise.then(async (userLoad) => {
-			const materials = userLoad?.expand.materials_via_user || [];
-			const quizAttempts = userLoad?.expand.quizAttempts_via_user || [];
-			const quizes = userLoad?.expand.quizes_via_author || [];
-
-			materialsStore.materials = materials;
-			quizAttemptsStore.quizAttempts = quizAttempts;
-			quizesStore.quizes = quizes;
-
-			userLoad!.expand = {} as UserExpand;
-			userStore.user = userLoad!;
-
-			userStore.setLoaded();
-		});
-	});
-
-	$effect(() => {
-		if (!user) return;
-		userStore.subscribe(user.id);
-		materialsStore.subscribe(user.id);
-		quizAttemptsStore.subscribe(user.id);
-		quizesStore.subscribe(user.id);
-
-		return () => {
-			userStore.unsubscribe(user.id);
-			materialsStore.unsubscribe();
-			quizAttemptsStore.unsubscribe();
-			quizesStore.unsubscribe();
-		};
-	});
+    const { data, children } = $props();
 </script>
+
+<SubscribeUser userLoadPromise={data.userLoadPromise} />
 
 {#await data.userLoadPromise}
 	<div class="flex h-screen items-center justify-center">

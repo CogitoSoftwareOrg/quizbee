@@ -89,7 +89,20 @@
 			{#if itemDecision}
 				<div class="mt-6 flex gap-2">
 					<Button class="flex-1" color="neutral" style="soft">Manage Quiz</Button>
-					<Button class="flex-1" color="info" style="soft">Explain More</Button>
+					<Button
+						onclick={async () => {
+							if (!quizAttempt?.id || !item?.id) return;
+							messagesStore.sendMessage(
+								userSender,
+								'Explain this question',
+								quizAttempt.id,
+								item.id
+							);
+						}}
+						class="flex-1"
+						color="info"
+						style="soft">Explain More</Button
+					>
 				</div>
 			{/if}
 		</div>

@@ -13,7 +13,8 @@
 	const isNewQuizPage = $derived(page.url.pathname === '/quizes/new');
 
 	const attemptingQuiz = $derived(
-		/quizes\/[0-9a-zA-Z]+\/attempts\/[0-9a-zA-Z]+/.test(page.url.pathname)
+		/quizes\/[0-9a-zA-Z]+\/attempts\/[0-9a-zA-Z]+/.test(page.url.pathname) &&
+			!page.url.pathname.includes('/feedback')
 	);
 
 	const quiz = $derived(quizesStore.quizes.find((q) => q.id === page.params.quizId));
@@ -26,6 +27,15 @@
 		quiz?.expand.quizItems_via_quiz?.toSorted((a, b) => a.order - b.order) || []
 	);
 
+	const order = $derived.by(() => {
+		const orderStr = page.url.searchParams.get('order');
+		let order = orderStr ? parseInt(orderStr) : 0;
+		const maxIdx = quizItems.length - 1;
+		if (order < 0) order = 0;
+		if (order > maxIdx) order = maxIdx;
+		return order;
+	});
+	const currentItem = $derived(quizItems.find((qi) => qi.order === order));
 	const itemToAnswer = $derived(
 		quizItems.find((qi) => !quizDecisions.some((d) => d.itemId === qi.id))
 	);
@@ -85,7 +95,7 @@
 									? 'error'
 									: 'neutral'}
 							href={`/quizes/${quiz?.id}/attempts/${quizAttempt?.id}?order=${quizItem.order}`}
-							style="outline"
+							style={currentItem?.id === quizItem.id ? 'solid' : 'outline'}
 							size="sm"
 							circle
 						>

@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { House, ChartBar, CreditCard } from 'lucide-svelte';
+	import { House, ChartBar, CreditCard, Plus } from 'lucide-svelte';
 	import { uiStore } from '$lib/apps/users/ui.svelte';
 	import type { ClassValue } from 'svelte/elements';
+	import Button from '$lib/ui/Button.svelte';
 
 	interface Props {
 		class?: ClassValue;
@@ -16,19 +17,13 @@
 			label: 'Home',
 			href: '/home',
 			icon: House
-		},
-		{
-			name: 'analytics',
-			label: 'Analytics',
-			href: '/analytics',
-			icon: ChartBar
-		},
-		{
-			name: 'billing',
-			label: 'Billing',
-			href: '/billing',
-			icon: CreditCard
 		}
+		// {
+		// 	name: 'analytics',
+		// 	label: 'Analytics',
+		// 	href: '/analytics',
+		// 	icon: ChartBar
+		// }
 	];
 
 	const attemptingQuiz = $derived(
@@ -52,6 +47,12 @@
 	{#if !attemptingQuiz}
 		{#if uiStore.globalSidebarOpen}
 			<ul class="menu menu-vertical w-full gap-1 px-2 pb-2">
+				<div class="flex w-full flex-col items-center gap-2 py-2">
+					<Button block size="sm" style="solid" href="/quizes/new">
+						<Plus size={20} /> New Quiz
+					</Button>
+				</div>
+
 				{#each navItems as item}
 					<li class="w-full">
 						<a href={item.href} class={['text-left', linkClass(item.name)]}>
@@ -63,6 +64,12 @@
 			</ul>
 		{:else}
 			<div class="flex w-full flex-col items-center gap-2 py-2">
+				<div class="flex w-full flex-col items-center gap-2 py-2">
+					<Button circle href="/quizes/new">
+						<Plus size={20} />
+					</Button>
+				</div>
+
 				{#each navItems as item}
 					<a href={item.href} class={iconClass(item.name)} title={item.label}>
 						<item.icon size={20} />
