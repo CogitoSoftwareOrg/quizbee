@@ -53,19 +53,19 @@
 	]}
 >
 	<div class="flex items-center gap-2">
+		<label class="swap swap-rotate">
+			<input
+				class="hidden"
+				type="checkbox"
+				checked={uiStore.globalSidebarOpen}
+				onchange={() => {
+					uiStore.toggleGlobalSidebar();
+				}}
+			/>
+			<PanelRightOpen class="swap-on text-neutral-500" size={24} />
+			<PanelRightClose class="swap-off text-neutral-500" size={24} />
+		</label>
 		{#if !attemptingQuiz}
-			<label class="swap swap-rotate">
-				<input
-					class="hidden"
-					type="checkbox"
-					checked={uiStore.globalSidebarOpen}
-					onchange={() => {
-						uiStore.toggleGlobalSidebar();
-					}}
-				/>
-				<PanelRightOpen class="swap-on text-neutral-500" size={24} />
-				<PanelRightClose class="swap-off text-neutral-500" size={24} />
-			</label>
 			<h1 class="hidden font-semibold sm:block">{getTitle()}</h1>
 		{:else if attemptingQuiz}
 			{#if quizAttempt?.feedback}

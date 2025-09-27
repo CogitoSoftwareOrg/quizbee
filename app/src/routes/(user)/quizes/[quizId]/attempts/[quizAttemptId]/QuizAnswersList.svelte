@@ -34,10 +34,6 @@
 		itemDecision = $bindable(null)
 	}: Props = $props();
 
-	const readyItemsWithoutDecisions = $derived(
-		quizItems.filter((i) => !quizDecisions.some((d) => d.itemId === i.id) && i.status === 'final')
-	);
-
 	function optionLabel(idx: number): string {
 		return String.fromCharCode(65 + idx);
 	}

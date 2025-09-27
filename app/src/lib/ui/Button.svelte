@@ -4,6 +4,7 @@
 
 	interface Props {
 		class?: ClassValue;
+		styles?: string;
 		onclick?: (e: MouseEvent) => void;
 		href?: string;
 		color?:
@@ -33,6 +34,7 @@
 		children,
 		color = 'primary',
 		style = 'solid',
+		styles = '',
 		size = 'md',
 		type = 'button',
 		disabled = false,
@@ -75,6 +77,7 @@
 
 {#if href}
 	<a
+		style={styles}
 		{href}
 		class={[
 			'btn',
@@ -94,6 +97,7 @@
 	</a>
 {:else}
 	<button
+		style={styles}
 		{type}
 		{onclick}
 		{disabled}
