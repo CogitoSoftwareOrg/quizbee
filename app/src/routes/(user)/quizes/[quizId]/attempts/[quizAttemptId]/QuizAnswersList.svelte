@@ -10,7 +10,7 @@
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
 	import type { Answer } from '$lib/apps/quizes/types';
 	import { computeApiUrl } from '$lib/api/compute-url';
-	import { Info } from 'lucide-svelte';
+	import { ChevronDown, ChevronRight, Info } from 'lucide-svelte';
 
 	interface Props {
 		class?: ClassValue;
@@ -37,52 +37,101 @@
 	function optionLabel(idx: number): string {
 		return String.fromCharCode(65 + idx);
 	}
+
+	let expandedAnswers = $state<Record<number, boolean>>({});
+
+	function setExpanded(index: number, expanded: boolean) {
+		expandedAnswers = { ...expandedAnswers, [index]: expanded };
+	}
+
+	function toggleExpanded(index: number) {
+		setExpanded(index, !isExpanded(index));
+	}
+
+	function isExpanded(index: number): boolean {
+		return !!expandedAnswers[index];
+	}
+
+	let lastDecisionKey = $state<string | null>(null);
+
+	$effect(() => {
+		if (!itemDecision) {
+			lastDecisionKey = null;
+			expandedAnswers = {};
+			return;
+		}
+
+		const decisionKey = `${itemDecision.itemId ?? item?.id}:${itemDecision.answerIndex}`;
+		if (decisionKey === lastDecisionKey) return;
+		lastDecisionKey = decisionKey;
+
+		const nextExpanded: Record<number, boolean> = {};
+		answers.forEach((answer, idx) => {
+			nextExpanded[idx] = answer.correct || idx === itemDecision!.answerIndex;
+		});
+
+		expandedAnswers = nextExpanded;
+	});
 </script>
 
 <div class={[className]}>
 	{#if item.status === 'final'}
 		<ul class={['flex flex-col gap-6 px-12']}>
 			{#each answers as answer, index}
-				<li class={['space-y-2']}>
-					<button
+				<li>
+					<article
 						class={[
-							'border-base-300 bg-base-200 hover:border-primary/50 focus-visible:ring-primary/60 group w-full rounded-xl border text-left shadow-sm transition hover:shadow-md focus-visible:outline-none focus-visible:ring-2',
+							'border-base-300 bg-base-200 focus-within:ring-primary/60 group w-full overflow-hidden rounded-2xl border text-left shadow-sm transition focus-within:outline-none focus-within:ring-2',
+							!itemDecision ? 'hover:border-primary/50 hover:shadow-md' : '',
 							itemDecision && answer.correct
-								? 'ring-success/60 bg-success/10 border-success/40 ring-2'
+								? 'border-success/40 bg-success/10 ring-success/60 ring-2'
 								: '',
 							itemDecision?.answerIndex === index && !answer.correct
-								? 'ring-error/60 bg-error/10 border-error/40 ring-2'
-								: '',
-							!itemDecision ? 'hover:bg-base-300' : ''
+								? 'border-error/40 bg-error/10 ring-error/60 ring-2'
+								: ''
 						]}
-						onclick={async () => {
-							if (itemDecision) return;
-							itemDecision = {
-								itemId: item!.id,
-								answerIndex: index,
-								correct: answer.correct
-							};
-							const newDecisions = [...quizDecisions, itemDecision];
-							await pb!.collection('quizAttempts').update(quizAttempt!.id, {
-								choices: newDecisions
-							});
-						}}
+						data-expanded={itemDecision ? String(isExpanded(index)) : undefined}
 					>
-						<div class="flex items-start gap-3 p-4">
+						<button
+							type="button"
+							class="focus-visible:ring-primary/60 flex w-full items-start gap-3 p-4 text-left transition focus-visible:outline-none focus-visible:ring-2"
+							onclick={async () => {
+								if (!itemDecision) {
+									itemDecision = {
+										itemId: item!.id,
+										answerIndex: index,
+										correct: answer.correct
+									};
+									const newDecisions = [...quizDecisions, itemDecision];
+									await pb!.collection('quizAttempts').update(quizAttempt!.id, {
+										choices: newDecisions
+									});
+									return;
+								}
+
+								if (!answers[index]?.explanation) return;
+								toggleExpanded(index);
+							}}
+						>
 							<span
 								class={[
-									'inline-flex h-8 w-8 items-center justify-center rounded-full border font-semibold',
+									'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border font-semibold transition',
 									itemDecision?.answerIndex === index
 										? 'border-error text-error'
 										: 'border-base-300 text-base-content/70',
 									itemDecision && answer.correct ? 'border-success text-success' : ''
 								]}>{optionLabel(index)}</span
 							>
+							{#if isExpanded(index)}
+								<ChevronDown size={28} />
+							{:else}
+								<ChevronRight size={28} />
+							{/if}
 							<div class="flex-1">
 								<p class="leading-relaxed">{answer.content}</p>
 							</div>
 							{#if itemDecision}
-								<div class="ml-2">
+								<div class="ml-2 shrink-0">
 									{#if answer.correct}
 										<span class="badge badge-success">Correct</span>
 									{:else if itemDecision?.answerIndex === index}
@@ -90,30 +139,37 @@
 									{/if}
 								</div>
 							{/if}
-						</div>
-					</button>
-					{#if itemDecision}
-						{#if answers[index]?.explanation}
+						</button>
+
+						{#if itemDecision && answers[index]?.explanation}
 							<div
-								class={[
-									'rounded-xl border p-4 shadow-sm',
-									index === itemDecision?.answerIndex && !answer.correct
-										? 'border-error/50 bg-error/10'
-										: answer.correct
-											? 'border-success/50 bg-success/10'
-											: 'border-base-300 bg-base-200'
-								]}
+								class="grid transition-[grid-template-rows] duration-200 ease-out"
+								style={`grid-template-rows: ${isExpanded(index) ? '1fr' : '0fr'}`}
 							>
-								<div class="mb-1 flex items-center gap-2">
-									<Info class="mt-0.5" size={18} />
-									<span class="text-xs font-semibold uppercase tracking-wide opacity-60"
-										>Explanation</span
-									>
+								<div
+									class={[
+										'overflow-hidden border-t p-4',
+										itemDecision?.answerIndex === index && !answer.correct
+											? 'border-error/40 bg-error/10'
+											: answer.correct
+												? 'border-success/40 bg-success/10'
+												: 'border-base-300/60 bg-base-200/80'
+									]}
+									aria-hidden={!isExpanded(index)}
+								>
+									<div class="flex items-start gap-3">
+										<Info class="mt-0.5 shrink-0" size={18} />
+										<div class="space-y-1">
+											<p class="text-xs font-semibold uppercase tracking-wide opacity-60">
+												Explanation
+											</p>
+											<p class="text-sm leading-relaxed opacity-80">{answer.explanation}</p>
+										</div>
+									</div>
 								</div>
-								<p class="text-sm opacity-80">{answer.explanation}</p>
 							</div>
 						{/if}
-					{/if}
+					</article>
 				</li>
 			{/each}
 		</ul>

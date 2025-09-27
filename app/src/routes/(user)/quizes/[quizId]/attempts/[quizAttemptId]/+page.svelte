@@ -89,8 +89,8 @@
 		{/if}
 
 		<div class="relative mx-auto flex h-full max-w-3xl flex-col p-2">
-			<div class="flex items-start justify-between gap-4">
-				<p class="text-2xl font-bold leading-snug">
+			<div class="flex items-start justify-between gap-4 px-3">
+				<p class="text-center text-2xl font-bold leading-snug">
 					{item?.question || 'Loading...'}
 				</p>
 			</div>

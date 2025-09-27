@@ -52,7 +52,7 @@
 		!isNewQuizPage && 'border-base-200 border-b'
 	]}
 >
-	<div class="flex items-center gap-2">
+	<div class="flex items-center gap-4">
 		<label class="swap swap-rotate">
 			<input
 				class="hidden"
@@ -70,6 +70,7 @@
 		{:else if attemptingQuiz}
 			{#if quizAttempt?.feedback}
 				<Button
+					class="underline"
 					color="neutral"
 					style="ghost"
 					href={`/quizes/${quiz?.id}/attempts/${quizAttempt?.id}/feedback`}
@@ -79,7 +80,7 @@
 			{/if}
 
 			{#if quiz?.title}
-				<div class="text-sm font-semibold">{quiz.title}</div>
+				<div class="hidden text-sm font-semibold">{quiz.title}</div>
 			{/if}
 
 			<ul class="flex flex-1 flex-wrap items-center gap-2">

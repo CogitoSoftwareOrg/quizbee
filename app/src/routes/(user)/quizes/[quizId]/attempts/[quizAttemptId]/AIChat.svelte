@@ -39,7 +39,7 @@
 	<header class="border-base-200 flex items-center justify-between border-b px-3 py-2">
 		<h2 class="text-sm font-semibold uppercase tracking-wide">AI Chat</h2>
 		<Button style="ghost" circle color="neutral" onclick={() => (open = false)}>
-			<X size={24} />
+			<X size={36} />
 		</Button>
 	</header>
 

@@ -60,7 +60,12 @@
 		</div>
 	{:else if quiz && feedback}
 		<div class="flex w-full flex-col gap-6 px-3">
-			<Button color="neutral" style="ghost" href={`/home`} class="absolute left-0 top-0 flex">
+			<Button
+				color="neutral"
+				style="ghost"
+				href={`/home`}
+				class="absolute left-0 top-0 flex underline"
+			>
 				<ChevronLeft /> Back to home
 			</Button>
 
