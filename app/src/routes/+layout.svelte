@@ -16,7 +16,12 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
-	<link rel="preload" as="font" href="/fonts/Roboto-VariableFont.ttf" type="font/ttf"/>
+	<link
+		rel="preload"
+		as="font"
+		href="/fonts/League_Spartan/LeagueSpartan-VariableFont_wght.ttf"
+		type="font/ttf"
+	/>
 </svelte:head>
 
 <PortalHost />

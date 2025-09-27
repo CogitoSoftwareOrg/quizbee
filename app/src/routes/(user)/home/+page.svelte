@@ -129,7 +129,7 @@
 	</section>
 
 	<section
-		class="from-primary/70 via-primary/30 to-secondary/70 text-primary-content rounded-3xl bg-gradient-to-r p-8 shadow-xl"
+		class="from-primary/70 via-primary/50 to-secondary/70 text-primary-content rounded-3xl bg-gradient-to-r p-8 shadow-xl"
 	>
 		<div class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
 			<div class="max-w-2xl space-y-4">
@@ -185,7 +185,7 @@
 					</p>
 					<div class="mt-4 flex items-center gap-2 text-sm">
 						<span class="badge badge-success">{latestAttemptSummary.correctCount} correct</span>
-						<span class="badge badge-outline">{latestAttemptSummary.totalCount} total</span>
+						<span class="badge badge-info">{latestAttemptSummary.totalCount} total</span>
 					</div>
 					{#if latestAttemptSummary.score !== null}
 						<p class="text-primary-content/80 mt-3 text-lg font-semibold">

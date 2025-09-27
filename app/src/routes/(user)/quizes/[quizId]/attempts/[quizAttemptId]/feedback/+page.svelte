@@ -142,7 +142,7 @@
 							</p>
 							<div class="flex items-center gap-3">
 								{#if d}
-									<span class={['badge', d.correct ? 'badge-success' : 'badge-neutral']}>
+									<span class={['badge', d.correct ? 'badge-success' : 'badge-error']}>
 										{d.correct ? 'Correct' : 'Incorrect'}
 									</span>
 								{/if}

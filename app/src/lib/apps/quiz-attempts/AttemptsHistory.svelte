@@ -174,14 +174,8 @@
 									</div>
 								</div>
 								<div class="flex flex-wrap items-center gap-2">
-									<span class="badge badge-success">
-										{item.correctCount} correct
-									</span>
-									<span class="badge badge-error">
-										{incorrectCount} incorrect
-									</span>
-									<span class="badge badge-outline">
-										{item.totalCount} total
+									<span class="badge badge-primary badge-lg">
+										{item.correctCount} / {item.totalCount}
 									</span>
 								</div>
 							</div>

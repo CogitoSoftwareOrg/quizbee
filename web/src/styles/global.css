@@ -7,30 +7,84 @@
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
 @plugin "daisyui/theme" {
-  name: "cupcake";
+  name: "QUIZBEE_LIGHT";
   default: false;
-  /* --color-primary: var(--color-lime-600); */
-  /* --color-secondary: var(--color-amber-600); */
-  /* --color-neutral-content: var(--color-slate-200); */
-  /* --color-neutral: var(--color-gray-700); */
+  prefersdark: false;
+  color-scheme: "light";
+  --color-base-100: oklch(100% 0 0);
+  --color-base-200: oklch(98.462% 0.001 247.838);
+  --color-base-300: oklch(92.462% 0.001 247.838);
+  --color-base-content: oklch(20% 0 0);
+  --color-primary: oklch(92% 0.12 95.746);
+  --color-primary-content: oklch(49% 0.265 301.924);
+  --color-secondary: oklch(90% 0.076 319.62);
+  --color-secondary-content: oklch(51% 0.222 16.935);
+  --color-accent: oklch(90% 0.093 164.15);
+  --color-accent-content: oklch(50% 0.118 165.612);
+  --color-neutral: oklch(55% 0.046 257.417);
+  --color-neutral-content: oklch(92% 0.013 255.508);
+  --color-info: oklch(86% 0.127 207.078);
+  --color-info-content: oklch(52% 0.105 223.128);
+  --color-success: oklch(87% 0.15 154.449);
+  --color-success-content: oklch(52% 0.154 150.069);
+  --color-warning: oklch(83% 0.128 66.29);
+  --color-warning-content: oklch(55% 0.195 38.402);
+  --color-error: oklch(80% 0.114 19.571);
+  --color-error-content: oklch(50% 0.213 27.518);
+  --radius-selector: 1rem;
+  --radius-field: 2rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 2px;
+  --depth: 0;
+  --noise: 0;
 }
 
 @plugin "daisyui/theme" {
-  name: "halloween";
-  default: true;
-  /* --color-primary: var(--color-lime-500); */
-  /* --color-secondary: var(--color-yellow-500); */
-  /* --color-neutral-content: var(--color-slate-200); */
-  /* --color-neutral: var(--color-slate-500); */
+  name: "QUIZBEE_DARK";
+  default: false;
+  prefersdark: false;
+  color-scheme: "dark";
+  --color-base-100: oklch(21% 0.006 285.885);
+  --color-base-200: oklch(20% 0.019 237.69);
+  --color-base-300: oklch(18% 0.019 237.69);
+  --color-base-content: oklch(87% 0.01 258.338);
+  --color-primary: oklch(87% 0.169 91.605);
+  --color-primary-content: oklch(14.94% 0.031 39.947);
+  --color-secondary: oklch(74% 0.238 322.16);
+  --color-secondary-content: oklch(14.507% 0.035 2.72);
+  --color-accent: oklch(81% 0.111 293.571);
+  --color-accent-content: oklch(14.258% 0.033 299.844);
+  --color-neutral: oklch(55% 0.027 264.364);
+  --color-neutral-content: oklch(92% 0.013 255.508);
+  --color-info: oklch(85.559% 0.085 206.015);
+  --color-info-content: oklch(17.111% 0.017 206.015);
+  --color-success: oklch(85.56% 0.085 144.778);
+  --color-success-content: oklch(17.112% 0.017 144.778);
+  --color-warning: oklch(85.569% 0.084 74.427);
+  --color-warning-content: oklch(17.113% 0.016 74.427);
+  --color-error: oklch(85.511% 0.078 16.886);
+  --color-error-content: oklch(17.102% 0.015 16.886);
+  --radius-selector: 1rem;
+  --radius-field: 2rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 2px;
+  --depth: 0;
+  --noise: 0;
 }
 
 @font-face {
-  font-family: "Roboto";
-  src: url("/fonts/Roboto-VariableFont.ttf") format("truetype");
+  font-family: "LV";
+  src: url("/fonts/League_Spartan/LeagueSpartan-VariableFont_wght.ttf")
+    format("truetype");
   font-weight: 100 900; /* если variable */
   font-style: normal;
   font-display: swap;
 }
 :root {
-  --font-sans: "Roboto", system-ui, sans-serif;
+  font-size: 18px;
+  --font-sans: "LV", system-ui, sans-serif;
 }

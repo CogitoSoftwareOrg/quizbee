@@ -66,25 +66,6 @@
 								answerIndex: index,
 								correct: answer.correct
 							};
-							if (readyItemsWithoutDecisions.length <= 2) {
-								const r2 = await fetch(`${computeApiUrl()}/quizes/${quiz!.id}`, {
-									method: 'PATCH',
-									body: JSON.stringify({
-										limit: 2
-									}),
-									headers: {
-										'Content-Type': 'application/json'
-									},
-									credentials: 'include'
-								});
-								if (!r2.ok) {
-									console.error(await r2.text());
-									return;
-								}
-
-								console.log(await r2.json());
-							}
-
 							const newDecisions = [...quizDecisions, itemDecision];
 							await pb!.collection('quizAttempts').update(quizAttempt!.id, {
 								choices: newDecisions

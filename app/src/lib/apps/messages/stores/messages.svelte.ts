@@ -46,7 +46,7 @@ class MessagesStore {
 		this.messages.push(clientMsg);
 
 		const es = new EventSource(
-			`${computeApiUrl()}/messages/sse?q=${encodeURIComponent(content)}&attempt=${attemptId}&item=${itemId}`,
+			`${computeApiUrl()}messages/sse?q=${encodeURIComponent(content)}&attempt=${attemptId}&item=${itemId}`,
 			{
 				withCredentials: true
 			}

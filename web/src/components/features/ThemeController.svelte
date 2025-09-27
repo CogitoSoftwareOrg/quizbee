@@ -1,6 +1,6 @@
 <script module>
-  const LIGHT_THEME = "cupcake";
-  const DARK_THEME = "halloween";
+  const LIGHT_THEME = "QUIZBEE_LIGHT";
+  const DARK_THEME = "QUIZBEE_DARK";
 
   let selectedDark = $state(false);
 </script>
