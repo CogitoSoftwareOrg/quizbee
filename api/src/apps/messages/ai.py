@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import logging
 import json
 from collections.abc import AsyncIterable
+from typing import Any
 from pydantic import BaseModel
 from pydantic_ai import (
     Agent,
@@ -35,6 +36,8 @@ class ExplainerDeps:
     quiz_attempt: Record
     quiz: Record
     quiz_items: list[Record]
+    current_item: Record
+    current_decision: Any
 
 
 EXPLAINER_LLM = LLMS.GROK_4_FAST
@@ -43,8 +46,15 @@ EXPLAINER_LLM = LLMS.GROK_4_FAST
 def inject_system_prompt(
     ctx: RunContext[ExplainerDeps], messages: list[ModelMessage]
 ) -> list[ModelMessage]:
+    current_item = ctx.deps.current_item
+    decision = ctx.deps.current_decision
+    question = current_item.get("question", "")
+    answers = current_item.get("answers", "")
+
     sys_part = SystemPromptPart(
-        content=langfuse_client.get_prompt("explain_quiz", label=settings.env).compile()
+        content=langfuse_client.get_prompt("explain_quiz", label=settings.env).compile(
+            question=question, answers=answers, decision=decision
+        )
     )
 
     for msg in messages:

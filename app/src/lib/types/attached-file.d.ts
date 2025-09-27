@@ -1,4 +1,3 @@
-
 // это тип для прикрепленного файла при создании нового квиза
 type AttachedFile = {
 		file?: File;
@@ -7,7 +6,7 @@ type AttachedFile = {
 		name: string;
 		isUploading?: boolean;
 		uploadError?: string;
-        tokens?: number;
+    tokens?: number;
 		fromPreviousQuiz?: boolean;
 	};
 

@@ -46,5 +46,5 @@
 	grow
 	{onkeydown}
 	placeholder="Type your message…"
-	rows={1}
+	rows={0}
 ></TextArea>

@@ -1,64 +1,17 @@
 <script lang="ts">
-	import { PanelRightOpen, PanelRightClose } from 'lucide-svelte';
-	import { page } from '$app/state';
+    import Honey from '$lib/assets/icons/honey.svg';
 
-	import { userStore } from '$lib/apps/users/user.svelte';
-	import { materialsStore } from '$lib/apps/materials/materials.svelte.js';
-	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte.js';
-	import { quizesStore } from '$lib/apps/quizes/quizes.svelte.js';
-	import type { UserExpand } from '$lib/pb/expands.js';
-	import Honey from '$lib/assets/icons/honey.svg';
+    import ProfileRow from '$lib/apps/users/ProfileRow.svelte';
+    import { uiStore } from '$lib/apps/users/ui.svelte';
 
-	import ThemeController from '$lib/features/ThemeController.svelte';
-	import ProfileRow from '$lib/apps/users/ProfileRow.svelte';
-	import { uiStore } from '$lib/apps/users/ui.svelte';
+    import SidebarNavigation from './SidebarNavigation.svelte';
+    import GlobalHeader from './GlobalHeader.svelte';
+		import SubscribeUser from './SubscribeUser.svelte';
 
-	import SidebarNavigation from './SidebarNavigation.svelte';
-	
-
-	const { data, children } = $props();
-
-	const user = $derived(userStore.user);
-	const isNewQuizPage = $derived(page.url.pathname === '/quizes/new');
-
-	// wait for user to be loaded
-	$effect(() => {
-		data.userLoadPromise.then(async (userLoad) => {
-			const materials = userLoad?.expand.materials_via_user || [];
-			const quizAttempts = userLoad?.expand.quizAttempts_via_user || [];
-			const quizes = userLoad?.expand.quizes_via_author || [];
-
-			materialsStore.materials = materials;
-			quizAttemptsStore.quizAttempts = quizAttempts;
-			quizesStore.quizes = quizes;
-
-			userLoad!.expand = {} as UserExpand;
-			userStore.user = userLoad!;
-
-			userStore.setLoaded();
-		});
-	});
-
-	$effect(() => {
-		if (!user) return;
-		userStore.subscribe(user.id);
-		materialsStore.subscribe(user.id);
-		quizAttemptsStore.subscribe(user.id);
-		quizesStore.subscribe(user.id);
-
-		return () => {
-			userStore.unsubscribe(user.id);
-			materialsStore.unsubscribe();
-			quizAttemptsStore.unsubscribe();
-			quizesStore.unsubscribe();
-		};
-	});
-
-	function getTitle() {
-		const t = page.url.pathname.split('/').at(1);
-		return `${t?.charAt(0).toUpperCase()}${t?.slice(1)}`;
-	}
+    const { data, children } = $props();
 </script>
+
+<SubscribeUser userLoadPromise={data.userLoadPromise} />
 
 {#await data.userLoadPromise}
 	<div class="flex h-screen items-center justify-center">
@@ -80,34 +33,13 @@
 				{/if}
 			</a>
 
-			<SidebarNavigation />
+			<SidebarNavigation class="flex min-h-0 flex-1" />
 
 			<ProfileRow />
 		</aside>
 
 		<main class="flex h-full flex-1 flex-col">
-			<header class={[
-				'flex items-center justify-between px-3 py-3',
-				isNewQuizPage ? '' : 'border-base-200 border-b'
-			]}>
-				<div class="flex items-center gap-2">
-					<label class="swap swap-rotate">
-						<input
-							class="hidden"
-							type="checkbox"
-							checked={uiStore.globalSidebarOpen}
-							onchange={() => {
-								uiStore.toggleGlobalSidebar();
-							}}
-						/>
-						<PanelRightOpen class="swap-on text-neutral-500" size={24} />
-						<PanelRightClose class="swap-off text-neutral-500" size={24} />
-					</label>
-					<h1 class="hidden text-sm font-semibold sm:block">{getTitle()}</h1>
-				</div>
-
-				<ThemeController />
-			</header>
+			<GlobalHeader />
 
 			<div class="h-full flex-1 overflow-auto sm:p-3">
 				{@render children?.()}

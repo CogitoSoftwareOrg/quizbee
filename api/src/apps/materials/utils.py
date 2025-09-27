@@ -1,7 +1,7 @@
 
 from pocketbase.models.dtos import Record
 from pydantic_ai.messages import (
-    DocumentUrl,
+    DocumentUrl, ImageUrl
 )
 
 from lib.settings import settings

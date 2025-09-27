@@ -14,16 +14,11 @@
     let selectedDifficulty = $state('intermediate');
     let questionCount = $state(10);
     let inputText = $state('');
-
-
-
-
 </script>
 
 <svelte:head>
-    <title>New Quiz</title>
+	<title>New Quiz</title>
 </svelte:head>
-
 
 <main class="relative h-full flex">
     

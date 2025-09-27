@@ -11,12 +11,14 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field
 
-from apps.auth import User
+from apps.auth import User, auth_user
+from apps.billing import load_subscription
 from apps.materials import user_owns_materials, materials_to_ai_docs
 from lib.clients.http import HTTPAsyncClient
-from src.lib.clients import AdminPB, langfuse_client
+from lib.clients import AdminPB, langfuse_client
 
 from .ai import (
+    event_stream_handler,
     make_quiz_patch_model,
     quizer_agent,
     QuizerDeps,
@@ -25,7 +27,7 @@ from .ai import (
 quizes_router = APIRouter(
     prefix="/quizes",
     tags=["quizes"],
-    dependencies=[],
+    dependencies=[Depends(auth_user), Depends(load_subscription)],
 )
 
 
@@ -37,7 +39,12 @@ class CreateQuizDto(BaseModel):
     difficulty: str = Field(default="intermediate")
 
 
-@quizes_router.post("", dependencies=[Depends(user_owns_materials)])
+@quizes_router.post(
+    "",
+    dependencies=[
+        Depends(user_owns_materials),
+    ],
+)
 async def create_quiz(
     admin_pb: AdminPB,
     user: User,
@@ -107,6 +114,8 @@ async def _generate_quiz_task(
     limit = min(limit, len(blank_quiz_items))
     quiz_items = blank_quiz_items[:limit]
 
+    quiz_items_ids = [qi.get("id", "") for qi in quiz_items]
+
     # Mark as "generating"
     for qi in quiz_items[:limit]:
         try:
@@ -122,8 +131,13 @@ async def _generate_quiz_task(
     materials_docs = await materials_to_ai_docs(materials)
     try:
         with langfuse_client.start_as_current_span(name="quiz-patch") as span:
-            res = await quizer_agent.run(
-                user_prompt=[q, *materials_docs],
+            span.update_trace(
+                user_id=user_id,
+                session_id=quiz_id,
+            )
+
+            async with quizer_agent.run_stream(
+                [q, *materials_docs],
                 deps=QuizerDeps(
                     admin_pb=admin_pb,
                     quiz=quiz,
@@ -132,11 +146,48 @@ async def _generate_quiz_task(
                     http=http,
                 ),
                 output_type=make_quiz_patch_model(limit),
-            )
-            span.update_trace(
-                user_id=user_id,
-                session_id=quiz_id,
-            )
+                event_stream_handler=event_stream_handler,
+            ) as result:
+                seen = 0
+                async for partial in result.stream_output():
+                    items = partial.quiz_items or []
+                    if len(items) > 0:
+                        for qi_id, qi in zip(
+                            quiz_items_ids[seen : len(items)], items[seen:]
+                        ):
+                            answers = [
+                                {
+                                    "content": wa.answer,
+                                    "explanation": wa.explanation,
+                                    "correct": False,
+                                }
+                                for wa in qi.wrong_answers
+                            ] + [
+                                {
+                                    "content": qi.right_answer.answer,
+                                    "explanation": qi.right_answer.explanation,
+                                    "correct": True,
+                                }
+                            ]
+                            try:
+                                upd = await admin_pb.collection("quizItems").update(
+                                    qi_id,
+                                    {
+                                        "answers": answers,  # pyright: ignore[reportArgumentType]
+                                        "question": qi.question,
+                                        "status": "final",
+                                    },
+                                )
+                                # HARD TRIGGER OF SUBSCRIPTION, IMPROVE TO SUBSCRIBE QUIZ ITEMS LATER
+                                await admin_pb.collection("quizes").update(
+                                    quiz_id,
+                                    {"updated": upd.get("updated", "")},
+                                )
+                            except Exception as e:
+                                logging.exception("Failed to finalize %s: %s", qi_id, e)
+
+                        seen = len(items)
+
     except Exception as e:
         logging.exception("Agent run failed for quiz %s: %s", quiz_id, e)
         for qi in quiz_items[:limit]:
@@ -148,46 +199,9 @@ async def _generate_quiz_task(
                 pass
         return
 
-    patch = res.output
-
-    # Update items with final data
-    upd = {}
-    for qi, patch_qi in zip(quiz_items[:limit], patch.quiz_items):
-        answers = [
-            {
-                "content": wa.answer,
-                "explanation": wa.explanation,
-                "correct": False,
-            }
-            for wa in patch_qi.wrong_answers
-        ] + [
-            {
-                "content": patch_qi.right_answer.answer,
-                "explanation": patch_qi.right_answer.explanation,
-                "correct": True,
-            }
-        ]
-        try:
-            upd = await admin_pb.collection("quizItems").update(
-                qi.get("id", ""),
-                {
-                    "answers": answers,  # pyright: ignore[reportArgumentType]
-                    "question": patch_qi.question,
-                    "status": "final",
-                },
-            )
-        except Exception as e:
-            logging.exception("Failed to finalize %s: %s", qi.get("id"), e)
-
-    # HARD TRIGGER OF SUBSCRIPTION, IMPROVE TO SUBSCRIBE QUIZ ITEMS LATER
-    await admin_pb.collection("quizes").update(
-        quiz_id,
-        {"updated": upd.get("updated", "")},
-    )
-
 
 class GenerateQuizItems(BaseModel):
-    limit: Annotated[int, Field(default=2, ge=2, le=5)]
+    limit: Annotated[int, Field(default=50, ge=2, le=50)]
 
 
 @quizes_router.patch("/{quiz_id}")

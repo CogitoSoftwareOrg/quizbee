@@ -1,8 +1,9 @@
 import json
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Depends, Query, HTTPException
 from fastapi.responses import StreamingResponse
 
-from apps.billing import Subscription
+from apps.auth import auth_user
+from apps.billing import Subscription, load_subscription
 from apps.materials.utils import materials_to_ai_docs
 from lib.clients import AdminPB, langfuse_client
 from lib.utils import sse
@@ -11,7 +12,14 @@ from apps.auth import User
 from .pb_to_ai import pb_to_ai
 from .ai import ExplainerDeps, explainer_agent
 
-messages_router = APIRouter(prefix="/messages", tags=["messages"], dependencies=[])
+messages_router = APIRouter(
+    prefix="/messages",
+    tags=["messages"],
+    dependencies=[
+        Depends(auth_user),
+        Depends(load_subscription),
+    ],
+)
 
 
 @messages_router.get("/sse")
@@ -39,12 +47,19 @@ async def sse_messages(
     quiz_attempt = await admin_pb.collection("quizAttempts").get_one(
         attempt_id,
         options={
-            "params": {"expand": "quiz,quizItems_via_quiz,quiz.materials_via_quiz"}
+            "params": {"expand": "quiz,quiz.quizItems_via_quiz,quiz.materials_via_quiz"}
         },
     )
+    choices = quiz_attempt.get("choices", [])
     quiz = quiz_attempt.get("expand", {}).get("quiz", {})
     quiz_items = quiz.get("expand", {}).get("quizItems_via_quiz", [])
     materials = quiz.get("expand", {}).get("materials_via_quiz", [])
+
+    current_item = [item for item in quiz_items if item.get("id") == item_id][0]
+    current_decision = [
+        decision for decision in choices if decision.get("itemId") == item_id
+    ][0]
+
     ai_docs = await materials_to_ai_docs(materials)
 
     # GUARD
@@ -83,6 +98,8 @@ async def sse_messages(
             quiz_attempt=quiz_attempt,
             quiz=quiz,
             quiz_items=quiz_items,
+            current_item=current_item,
+            current_decision=current_decision,
         )
 
         with langfuse_client.start_as_current_span(name="explainer-agent") as span:

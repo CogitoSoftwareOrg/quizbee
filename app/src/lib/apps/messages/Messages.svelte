@@ -9,15 +9,25 @@
 
 	import type { Sender } from './types';
 	import Message from './Message.svelte';
+	import ExplainMore from './ExplainMore.svelte';
 
 	interface Props {
+		quizAttemptId: string;
+		itemId: string;
 		messages: MessagesResponse[];
 		userSender: Sender;
 		assistantSender: Sender;
 		class?: ClassValue;
 	}
 
-	const { class: className, messages, userSender, assistantSender }: Props = $props();
+	const {
+		class: className,
+		messages,
+		userSender,
+		assistantSender,
+		quizAttemptId,
+		itemId
+	}: Props = $props();
 
 	let messagesContainer: HTMLElement | null = $state(null);
 	let showScrollButton = $state(false);
@@ -44,6 +54,9 @@
 			<div class="flex h-full flex-col items-center justify-center text-center">
 				<div class="mb-4 text-6xl">💬</div>
 				<p class="text-base-content/70 text-lg font-medium">No messages yet, waiting...</p>
+				<div class="mt-6">
+					<ExplainMore sender={userSender} {quizAttemptId} {itemId} />
+				</div>
 			</div>
 		{:else}
 			{#each messages as msg (msg)}
