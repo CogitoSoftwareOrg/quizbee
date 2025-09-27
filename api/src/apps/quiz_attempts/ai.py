@@ -16,7 +16,7 @@ class FeedbackerDeps:
     quiz_attempt: Record
 
 
-class Feedback(BaseModel):
+class Additional(BaseModel):
     quiz_title: Annotated[
         str,
         Field(
@@ -24,6 +24,16 @@ class Feedback(BaseModel):
             description="The title of the quiz.",
         ),
     ]
+    quiz_slug: Annotated[
+        str,
+        Field(
+            title="Quiz Slug",
+            description="The slug of the quiz.",
+        ),
+    ]
+
+
+class Feedback(BaseModel):
     overview: Annotated[
         str,
         Field(
@@ -47,13 +57,18 @@ class Feedback(BaseModel):
     ]
 
 
+class FeedbackerOutput(BaseModel):
+    feedback: Feedback
+    additional: Additional
+
+
 FEEDBACKER_LLM = LLMS.GROK_4_FAST
 
 feedbacker_agent = Agent(
     model=FEEDBACKER_LLM,
     deps_type=FeedbackerDeps,
     instrument=True,
-    output_type=Feedback,
+    output_type=FeedbackerOutput,
     retries=3,
 )
 

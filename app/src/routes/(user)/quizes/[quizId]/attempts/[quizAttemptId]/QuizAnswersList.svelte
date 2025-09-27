@@ -75,7 +75,7 @@
 </script>
 
 <div class={[className]}>
-	{#if item.status === 'final'}
+	{#if item.status === 'final' || item.status === 'generated'}
 		<ul class={['flex flex-col gap-6 px-12']}>
 			{#each answers as answer, index}
 				<li>
@@ -90,7 +90,6 @@
 								? 'border-error/40 bg-error/10 ring-error/60 ring-2'
 								: ''
 						]}
-						data-expanded={itemDecision ? String(isExpanded(index)) : undefined}
 					>
 						<button
 							type="button"
@@ -103,9 +102,14 @@
 										correct: answer.correct
 									};
 									const newDecisions = [...quizDecisions, itemDecision];
-									await pb!.collection('quizAttempts').update(quizAttempt!.id, {
-										choices: newDecisions
-									});
+									await Promise.all([
+										pb!.collection('quizAttempts').update(quizAttempt!.id, {
+											choices: newDecisions
+										}),
+										pb!.collection('quizItems').update(item!.id, {
+											status: 'final'
+										})
+									]);
 									return;
 								}
 

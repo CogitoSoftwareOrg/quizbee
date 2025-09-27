@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import (
     APIRouter,
     BackgroundTasks,
@@ -32,6 +33,7 @@ quizes_router = APIRouter(
 
 
 class CreateQuizDto(BaseModel):
+    quiz_id: str = Field(default="")
     number_of_questions: int = Field(default=10, ge=1, le=50)
     material_ids: list[str] = Field(default=[])
     with_attempt: bool = Field(default=True)
@@ -63,6 +65,8 @@ async def create_quiz(
             "materials": dto.material_ids,  # pyright: ignore[reportArgumentType]
             "itemsLimit": dto.number_of_questions,  # pyright: ignore[reportArgumentType]
             "difficulty": dto.difficulty,
+            "generation": 0,
+            "status": "creating",
         }
     )
 
@@ -92,6 +96,7 @@ async def _generate_quiz_task(
     user_id: str,
     quiz_id: str,
     limit: int,
+    generation: int,
 ):
     quiz = await admin_pb.collection("quizes").get_one(
         quiz_id,
@@ -109,16 +114,18 @@ async def _generate_quiz_task(
     )
 
     prev_quiz_items = [qi for qi in quiz_items if qi.get("status") == "final"]
-    blank_quiz_items = [qi for qi in quiz_items if qi.get("status") == "blank"]
+    future_quiz_items = [qi for qi in quiz_items if qi.get("status") != "final"]
 
-    limit = min(limit, len(blank_quiz_items))
-    quiz_items = blank_quiz_items[:limit]
+    limit = min(limit, len(future_quiz_items))
+    quiz_items = future_quiz_items[:limit]  # ALL not final quiz items for now!
 
     quiz_items_ids = [qi.get("id", "") for qi in quiz_items]
 
     # Mark as "generating"
     for qi in quiz_items[:limit]:
         try:
+            if qi.get("status") in ("generating", "final"):
+                continue
             await admin_pb.collection("quizItems").update(
                 qi.get("id", ""),
                 {"status": "generating"},
@@ -155,6 +162,13 @@ async def _generate_quiz_task(
                         for qi_id, qi in zip(
                             quiz_items_ids[seen : len(items)], items[seen:]
                         ):
+                            await _ensure_same_generation(admin_pb, quiz_id, generation)
+                            qi_db = await admin_pb.collection("quizItems").get_one(
+                                qi_id
+                            )
+                            if qi_db.get("status") == "final":
+                                continue
+
                             answers = [
                                 {
                                     "content": wa.answer,
@@ -175,7 +189,7 @@ async def _generate_quiz_task(
                                     {
                                         "answers": answers,  # pyright: ignore[reportArgumentType]
                                         "question": qi.question,
-                                        "status": "final",
+                                        "status": "generated",
                                     },
                                 )
                                 # HARD TRIGGER OF SUBSCRIPTION, IMPROVE TO SUBSCRIBE QUIZ ITEMS LATER
@@ -187,6 +201,10 @@ async def _generate_quiz_task(
                                 logging.exception("Failed to finalize %s: %s", qi_id, e)
 
                         seen = len(items)
+
+    except asyncio.CancelledError:
+        # cooperative cancellation — quietly exit
+        return
 
     except Exception as e:
         logging.exception("Agent run failed for quiz %s: %s", quiz_id, e)
@@ -224,12 +242,24 @@ async def generate_quiz_items(
     if not quiz_items:
         raise HTTPException(status_code=404, detail="Quiz items not found")
 
+    generation = quiz.get("generation", 0) + 1
+    await admin_pb.collection("quizes").update(
+        quiz_id,
+        {"generation": generation},
+    )
+
     # Generate
     background.add_task(
-        _generate_quiz_task, http, admin_pb, user_id, quiz_id, dto.limit
+        _generate_quiz_task, http, admin_pb, user_id, quiz_id, dto.limit, generation
     )
 
     return JSONResponse(
         content={"scheduled": True, "quiz_id": quiz_id, "limit": dto.limit},
         status_code=status.HTTP_202_ACCEPTED,
     )
+
+
+async def _ensure_same_generation(admin_pb: AdminPB, quiz_id: str, expected: int):
+    gen = (await admin_pb.collection("quizes").get_one(quiz_id)).get("generation", 0)
+    if gen != expected:
+        raise asyncio.CancelledError

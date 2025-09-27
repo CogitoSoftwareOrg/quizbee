@@ -99,7 +99,7 @@ export type SuperusersRecord = {
 
 export type MaterialsRecord = {
 	created?: IsoDateString
-	file: string
+	file?: string
 	id: string
 	title?: string
 	updated?: IsoDateString
@@ -143,6 +143,7 @@ export enum QuizItemsStatusOptions {
 	"generating" = "generating",
 	"blank" = "blank",
 	"failed" = "failed",
+	"generated" = "generated",
 }
 export type QuizItemsRecord<Tanswers = unknown> = {
 	answers?: null | Tanswers
@@ -155,13 +156,27 @@ export type QuizItemsRecord<Tanswers = unknown> = {
 	updated?: IsoDateString
 }
 
+export enum QuizesDifficultyOptions {
+	"beginner" = "beginner",
+	"intermediate" = "intermediate",
+	"expert" = "expert",
+}
+
+export enum QuizesStatusOptions {
+	"draft" = "draft",
+	"creating" = "creating",
+	"final" = "final",
+}
 export type QuizesRecord = {
 	author?: RecordIdString
 	created?: IsoDateString
+	difficulty?: QuizesDifficultyOptions
+	generation?: number
 	id: string
 	itemsLimit?: number
 	materials?: RecordIdString[]
 	query?: string
+	status?: QuizesStatusOptions
 	title?: string
 	updated?: IsoDateString
 }

@@ -76,14 +76,12 @@
 					class="bg-primary flex-1 cursor-pointer rounded-2xl p-2 text-center text-2xl font-semibold"
 					onclick={() => (chatOpen = !chatOpen)}
 				>
-					<Bot class="mb-3 -rotate-90 text-black" />
 					<span
 						class="block select-none whitespace-nowrap tracking-widest text-black"
 						style="writing-mode: vertical-rl; transform: rotate(180deg);"
 					>
 						AI Chat
 					</span>
-					<Bot class="mt-3 -rotate-90 text-black" />
 				</button>
 			</div>
 		{/if}

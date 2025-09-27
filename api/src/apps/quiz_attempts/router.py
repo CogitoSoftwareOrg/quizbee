@@ -47,16 +47,17 @@ async def _generate_feedback_task(admin_pb: AdminPB, attempt_id: str):
     await admin_pb.collection("quizAttempts").update(
         attempt_id,
         {
-            "feedback": feedback.output.model_dump_json(),
+            "feedback": feedback.output.feedback.model_dump_json(),
         },
     )
 
-    # Update quiz title if not set
-    title = quiz.get("title")
-    if not title:
+    # Update quiz with adds if not final
+    status = quiz.get("status")
+    if status != "final":
+        adds = feedback.output.additional
         await admin_pb.collection("quizes").update(
             quiz.get("id"),
-            {"title": feedback.output.quiz_title},
+            {"title": adds.quiz_title, "status": "final"},
         )
 
 
