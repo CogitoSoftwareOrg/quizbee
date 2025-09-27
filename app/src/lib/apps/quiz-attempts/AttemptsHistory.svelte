@@ -34,19 +34,6 @@
 
 	const { class: className = '', quizAttempts, quizes, materials }: Props = $props();
 
-	function ensureAnswersArray(answers: unknown): Answer[] {
-		if (!answers) return [];
-		if (typeof answers === 'string') {
-			try {
-				const parsed = JSON.parse(answers);
-				return Array.isArray(parsed) ? (parsed as Answer[]) : [];
-			} catch (error) {
-				return [];
-			}
-		}
-		return (answers as Answer[]) || [];
-	}
-
 	function formatDateTime(value: string): string {
 		if (!value) return '';
 		try {
@@ -72,10 +59,9 @@
 				const correctCount = decisions.filter((decision) => decision.correct).length;
 
 				const quizItems = (quiz.expand?.quizItems_via_quiz || []) as QuizItemsResponse[];
-				const answerTexts = quizItems.flatMap((item) => {
-					const answers = ensureAnswersArray(item.answers);
-					return answers.map((answer) => answer.content || '');
-				});
+				const answerTexts = quizItems
+					.flatMap((item) => item.answers as Answer[])
+					.map((a) => a.content || '');
 
 				const materialTitles = quiz.materials
 					.map((id) => materialMap.get(id))
@@ -98,15 +84,6 @@
 	});
 
 	let searchQuery = $state('');
-
-	// Дублируем history 100 раз для тестирования интерфейса
-	// const testHistory = $derived.by(() => {
-	// 	let arr: HistoryPoint[] = [];
-	// 	for (let i = 0; i < 100; i++) {
-	// 		arr = arr.concat(history);
-	// 	}
-	// 	return arr;
-	// });
 
 	const filteredHistory = $derived.by(() => {
 		const search = searchQuery.trim().toLowerCase();
@@ -153,7 +130,7 @@
 			</div>
 		{:else}
 			<!-- Make only the history list scrollable -->
-			<ul class="grid flex-1 gap-4 overflow-y-auto py-4 pr-1">
+			<ul class="grid gap-4 overflow-y-auto py-4 pr-1">
 				{#each filteredHistory as item}
 					{@const incorrectCount = item.totalCount - item.correctCount}
 					<li>

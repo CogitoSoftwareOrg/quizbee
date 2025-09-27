@@ -66,7 +66,7 @@
 				<PanelRightOpen class="swap-on text-neutral-500" size={24} />
 				<PanelRightClose class="swap-off text-neutral-500" size={24} />
 			</label>
-			<h1 class="hidden text-sm font-semibold sm:block">{getTitle()}</h1>
+			<h1 class="hidden font-semibold sm:block">{getTitle()}</h1>
 		{:else if attemptingQuiz}
 			{#if quizAttempt?.feedback}
 				<Button

@@ -36,19 +36,6 @@
 		return quizDecisions.find((d) => d.itemId === itemId);
 	}
 
-	function ensureAnswersArray(answers: unknown): Answer[] {
-		if (!answers) return [];
-		if (typeof answers === 'string') {
-			try {
-				const parsed = JSON.parse(answers);
-				return Array.isArray(parsed) ? (parsed as Answer[]) : [];
-			} catch (e) {
-				return [];
-			}
-		}
-		return (answers as Answer[]) || [];
-	}
-
 	let searchQuery = $state('');
 	let filteredItems: QuizItemsResponse[] = $state([]);
 	$effect(() => {
@@ -58,7 +45,7 @@
 			? items.filter((item) => {
 					const question = (item.question || '').toLowerCase();
 					if (question.includes(q)) return true;
-					const answers = ensureAnswersArray(item.answers);
+					const answers = item.answers as Answer[];
 					return answers.some((a) => (a.content || '').toLowerCase().includes(q));
 				})
 			: items;
