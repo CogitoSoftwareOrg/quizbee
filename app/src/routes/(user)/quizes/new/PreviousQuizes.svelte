@@ -22,7 +22,6 @@
 	function createAttachedFileFromMaterial(materialId: string, materialTitle: string): AttachedFile {
 		// Извлекаем расширение из названия файла
 		const extension = materialTitle.split('.').pop()?.toLowerCase() || '';
-
 		// Проверяем, является ли файл изображением по расширению
 		const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'];
 		const isImage = imageExtensions.includes(extension);
@@ -41,6 +40,7 @@
 		// Устанавливаем текст
 
 		inputText = quiz.query || '';
+
 
 		// Восстанавливаем файлы из материалов
 		if (quiz.materials && quiz.materials.length > 0) {

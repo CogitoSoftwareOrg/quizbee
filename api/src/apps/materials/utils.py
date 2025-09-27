@@ -23,3 +23,10 @@ async def materials_to_ai_docs(
         # contents.append(resp.text)
 
     return [DocumentUrl(url=url, force_download=force_download) for url in urls]
+
+
+
+
+
+
+
