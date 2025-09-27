@@ -14,6 +14,7 @@
 	import { messagesStore } from '$lib/apps/messages/stores/messages.svelte';
 	import type { Sender } from '$lib/apps/messages/types';
 	import { userStore } from '$lib/apps/users/user.svelte';
+	import { Bot } from 'lucide-svelte';
 
 	const {} = $props();
 
@@ -58,18 +59,45 @@
 		avatar: '',
 		name: 'Assistant'
 	});
+
+	let chatOpen = $state(false);
+	const mainColumnWidth = $derived(chatOpen ? '50%' : '100%');
+	const chatColumnWidth = $derived(chatOpen ? '50%' : '0%');
 </script>
 
-<div class="flex h-full">
-	<main class="border-base-200 relative flex-1 border-r">
-		<div class="mx-auto flex h-full max-w-3xl flex-col p-2">
-			<div class="flex items-start justify-between gap-4">
-				<p class="text-2xl font-bold leading-snug">
+<div class="flex h-full overflow-hidden">
+	<main
+		class="border-base-200 relative h-full min-w-0 flex-shrink-0 border-r transition-[width] duration-300 ease-out"
+		style:width={mainColumnWidth}
+	>
+		{#if !chatOpen}
+			<div class="absolute -right-3 top-1/2 -translate-y-1/2">
+				<button
+					class="bg-primary flex-1 cursor-pointer rounded-2xl p-2 text-center text-2xl font-semibold"
+					onclick={() => (chatOpen = !chatOpen)}
+				>
+					<Bot class="mb-3 -rotate-90 text-black" />
+					<span
+						class="block select-none whitespace-nowrap tracking-widest text-black"
+						style="writing-mode: vertical-rl; transform: rotate(180deg);"
+					>
+						AI Chat
+					</span>
+					<Bot class="mt-3 -rotate-90 text-black" />
+				</button>
+			</div>
+		{/if}
+
+		<div class="relative mx-auto flex h-full max-w-3xl flex-col p-2">
+			<div class="flex items-start justify-between gap-4 px-3">
+				<p class="text-center text-2xl font-bold leading-snug">
 					{item?.question || 'Loading...'}
 				</p>
 			</div>
 
-			<QuizItemsNavigation {quizItems} {order} {itemDecision} />
+			{#if item && quiz && quizAttempt}
+				<QuizItemsNavigation {quizAttempt} {quizItems} {order} {itemDecision} />
+			{/if}
 
 			{#if item && quiz && quizAttempt}
 				<QuizAnswersList
@@ -80,26 +108,32 @@
 					{quiz}
 					{item}
 					{quizAttempt}
-					{itemDecision}
+					bind:itemDecision
 				/>
 			{/if}
 
 			{#if itemDecision}
 				<div class="mt-6 flex gap-2">
 					<Button class="flex-1" color="neutral" style="soft">Manage Quiz</Button>
-					<Button class="flex-1" color="info" style="soft">Explain More</Button>
 				</div>
 			{/if}
 		</div>
 	</main>
 
-	<AIChat
-		class="h-full flex-1 px-2"
-		{item}
-		{quizAttempt}
-		{itemDecision}
-		{messages}
-		{userSender}
-		{assistantSender}
-	/>
+	<div
+		class="h-full min-w-0 flex-shrink-0 overflow-hidden transition-[width] duration-300 ease-out"
+		style:pointer-events={!chatOpen ? 'none' : 'auto'}
+		style:width={chatColumnWidth}
+	>
+		<AIChat
+			class="flex h-full flex-col px-2"
+			{item}
+			{quizAttempt}
+			{itemDecision}
+			{messages}
+			{userSender}
+			{assistantSender}
+			bind:open={chatOpen}
+		/>
+	</div>
 </div>

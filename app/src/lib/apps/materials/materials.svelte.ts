@@ -2,7 +2,7 @@ import { pb } from '$lib/pb';
 import type { MaterialsResponse } from '$lib/pb/pocketbase-types';
 
 class MaterialsStore {
-	_materials: MaterialsResponse[] = $state([]);
+	private _materials: MaterialsResponse[] = $state([]);
 
 	get materials() {
 		return this._materials;
@@ -19,14 +19,14 @@ class MaterialsStore {
 				const material = e.record;
 				switch (e.action) {
 					case 'create':
-						this.materials.unshift(material);
+						this._materials.unshift(material);
 						break;
 					case 'update':
-						this.materials =
-							this.materials?.map((m) => (m.id === material.id ? material : m)) || [];
+						this._materials =
+							this._materials?.map((m) => (m.id === material.id ? material : m)) || [];
 						break;
 					case 'delete':
-						this.materials = this.materials?.filter((m) => m.id !== material.id) || [];
+						this._materials = this._materials?.filter((m) => m.id !== material.id) || [];
 						break;
 				}
 			},
