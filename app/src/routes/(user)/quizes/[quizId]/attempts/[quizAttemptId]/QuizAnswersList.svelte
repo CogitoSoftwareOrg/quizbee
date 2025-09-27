@@ -122,10 +122,12 @@
 									itemDecision && answer.correct ? 'border-success text-success' : ''
 								]}>{optionLabel(index)}</span
 							>
-							{#if isExpanded(index)}
-								<ChevronDown size={28} />
-							{:else}
-								<ChevronRight size={28} />
+							{#if itemDecision}
+								{#if isExpanded(index)}
+									<ChevronDown size={28} />
+								{:else}
+									<ChevronRight size={28} />
+								{/if}
 							{/if}
 							<div class="flex-1">
 								<p class="leading-relaxed">{answer.content}</p>
