@@ -100,7 +100,7 @@ def make_quiz_patch_model(n_items: int):
     )
 
 
-QUIZER_LLM = LLMS.GEMINI_2_5_FLASH_LITE
+QUIZER_LLM = LLMS.GPT_5_MINI
 
 quizer_agent = Agent(
     model=QUIZER_LLM,

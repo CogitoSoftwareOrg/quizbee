@@ -129,7 +129,6 @@ async def _generate_quiz_task(
     # Prepare request to LLM
     q = quiz.get("query", "")
     materials_docs = await materials_to_ai_docs(materials)
-    upd = {}
     try:
         with langfuse_client.start_as_current_span(name="quiz-patch") as span:
             span.update_trace(
@@ -152,7 +151,6 @@ async def _generate_quiz_task(
                 seen = 0
                 async for partial in result.stream_output():
                     items = partial.quiz_items or []
-                    logging.info(f"Items: {len(items)}")
                     if len(items) > 0:
                         for qi_id, qi in zip(
                             quiz_items_ids[seen : len(items)], items[seen:]
@@ -180,6 +178,11 @@ async def _generate_quiz_task(
                                         "status": "final",
                                     },
                                 )
+                                # HARD TRIGGER OF SUBSCRIPTION, IMPROVE TO SUBSCRIBE QUIZ ITEMS LATER
+                                await admin_pb.collection("quizes").update(
+                                    quiz_id,
+                                    {"updated": upd.get("updated", "")},
+                                )
                             except Exception as e:
                                 logging.exception("Failed to finalize %s: %s", qi_id, e)
 
@@ -195,12 +198,6 @@ async def _generate_quiz_task(
             except Exception:
                 pass
         return
-
-    # HARD TRIGGER OF SUBSCRIPTION, IMPROVE TO SUBSCRIBE QUIZ ITEMS LATER
-    await admin_pb.collection("quizes").update(
-        quiz_id,
-        {"updated": upd.get("updated", "")},
-    )
 
 
 class GenerateQuizItems(BaseModel):

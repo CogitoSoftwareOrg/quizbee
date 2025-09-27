@@ -123,7 +123,7 @@
 
 <div class="mx-auto flex min-h-full w-full max-w-6xl flex-col gap-10 px-6 py-10">
 	<section class="flex justify-center">
-		<Button size="xl" style="solid" href="/quizes/new" class="self-start md:self-center">
+		<Button wide size="xl" style="solid" href="/quizes/new" class="self-start md:self-center">
 			<Plus size={24} /> Start New Quiz
 		</Button>
 	</section>

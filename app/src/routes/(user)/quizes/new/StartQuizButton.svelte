@@ -45,7 +45,7 @@
 				difficulty: selectedDifficulty.toLowerCase()
 			};
 
-			const createResponse = await fetch(`${computeApiUrl()}/quizes`, {
+			const createResponse = await fetch(`${computeApiUrl()}quizes`, {
 				method: 'POST',
 				body: JSON.stringify(createQuizPayload),
 				headers: {
@@ -67,7 +67,7 @@
 				limit: 50 // for now just gurantee total number of questions
 			};
 
-			const updateResponse = await fetch(`${computeApiUrl()}/quizes/${quizId}`, {
+			const updateResponse = await fetch(`${computeApiUrl()}quizes/${quizId}`, {
 				method: 'PATCH',
 				body: JSON.stringify(updateQuizPayload),
 				headers: {

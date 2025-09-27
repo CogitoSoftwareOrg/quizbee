@@ -31,7 +31,7 @@
 	}
 
 	async function createFeedback() {
-		const response = await fetch(`${computeApiUrl()}/quiz_attempts/${quizAttempt.id}`, {
+		const response = await fetch(`${computeApiUrl()}quiz_attempts/${quizAttempt.id}`, {
 			method: 'PUT',
 			credentials: 'include'
 		});
