@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { House, Plus, Settings } from 'lucide-svelte';
+
 	import Logo from '$lib/assets/icons/bee1.svg';
 
 	import ProfileRow from '$lib/apps/users/ProfileRow.svelte';
@@ -22,8 +24,9 @@
 	<div class="flex h-dvh w-full overflow-hidden">
 		<aside
 			class={[
-				'bg-base-100 border-base-200 z-10 flex h-full shrink-0 flex-col border-r pt-4 transition-all duration-300 ease-in-out',
-				uiStore.globalSidebarOpen ? 'w-56' : 'w-14'
+				'bg-base-100 border-base-200 z-10 h-full shrink-0 flex-col border-r pt-4 transition-all duration-300 ease-in-out',
+				uiStore.globalSidebarOpen ? 'w-56' : 'w-14',
+				'hidden sm:flex'
 			]}
 		>
 			<a href="/home" class="relative mb-4 flex select-none items-center justify-center gap-1">
@@ -44,6 +47,18 @@
 			<div class="h-full flex-1 overflow-auto sm:p-3">
 				{@render children?.()}
 			</div>
+
+			<footer class="dock dock-sm sm:hidden">
+				<a href="/home">
+					<House />
+				</a>
+				<a href="/quizes/new">
+					<Plus />
+				</a>
+				<a href="/profile">
+					<Settings />
+				</a>
+			</footer>
 		</main>
 	</div>
 {:catch error}
