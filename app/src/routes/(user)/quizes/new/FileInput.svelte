@@ -4,6 +4,7 @@
 	import { materialsStore } from '$lib/apps/materials/materials.svelte';
 	import type { AttachedFile } from '$lib/types/attached-file';
 	import { pb } from '$lib/pb';
+	import { file } from 'zod';
 	
 	function generateId(): string {
 		const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -23,7 +24,7 @@
 				isUploading: true,
 				uploadError: undefined,
 				materialId: generateId(),
-				fromPreviousQuiz: false,
+				
 			};
 
 			attachedFiles = [...attachedFiles, attachedFile];
@@ -34,11 +35,13 @@
 	interface Props {
 		inputText?: string;
 		attachedFiles?: AttachedFile[];
+		quizTemplateId: string;
 	}
 
-
 	
-	let { inputText = $bindable(''), attachedFiles = $bindable([]) }: Props = $props();
+
+
+	let { inputText = $bindable(), attachedFiles = $bindable([]), quizTemplateId = $bindable() }: Props = $props();
 
 	let inputElement: HTMLInputElement;
 	let isDragging = $state(false);
@@ -63,19 +66,6 @@
 		});
 	});
 
-	// Эффект для удаления файлов когда attachedFiles становится пустым
-	$effect(() => {
-		if (attachedFiles.length === 0 && previousAttachedFiles.length > 0) {
-			// Удаляем все файлы, которые были в предыдущем состоянии
-			for (let i = 0; i < previousAttachedFiles.length; i++) {
-				const fileToRemove = previousAttachedFiles[i];
-				removeFile(i, previousAttachedFiles);
-			}
-		}
-		return () => {
-			previousAttachedFiles = attachedFiles;
-		};
-	});
 
 
 	function openFileDialog() {
@@ -125,6 +115,22 @@
 			}
 			
 			console.log(`File ${attachedFile.name} uploaded successfully with ID: ${material.id}`);
+
+			try {
+				// Добавляем проверку прямо здесь
+				if (!quizTemplateId) {
+					console.error('quizTemplateId is missing, cannot attach material.');
+					// Можно просто прервать выполнение или уведомить пользователя
+					return; 
+				}
+
+				const quiz = await pb!.collection('quizes').getOne(quizTemplateId);
+				const updatedMaterials = [...(quiz.materials || []), material.id];
+				await pb!.collection('quizes').update(quizTemplateId, { materials: updatedMaterials });
+				console.log(`Material ${material.id} attached to quiz ${quizTemplateId}`);
+			} catch (error) {
+				console.error('Failed to attach material to quiz:', error);
+				}		
 		} catch (error) {
 			console.error('Failed to upload file:', attachedFile.name, error);
 			
@@ -151,17 +157,12 @@
 			URL.revokeObjectURL(fileToRemove.previewUrl);
 		}
 		
-		// Удаляем материал с сервера если он был загружен
-		if (fileToRemove.materialId && !fileToRemove.fromPreviousQuiz) {
-			try {
-				
-				pb!.collection('materials').delete(fileToRemove.materialId);
-
-			} catch (error) {
-				console.error('Failed to delete material from server:', error);
-				// Не блокируем удаление из UI даже если не удалось удалить с сервера
-			}
+		const material = await pb!.collection('materials').getOne(fileToRemove.materialId);
+		if ((material as any).status !== 'used') {
+			await pb!.collection('materials').delete(fileToRemove.materialId);
 		}
+	
+		
 		
 		// Удаляем из списка
 		attachedFiles.splice(index, 1);

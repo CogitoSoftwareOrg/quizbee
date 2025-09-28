@@ -3,18 +3,24 @@
 	import { materialsStore } from '$lib/apps/materials/materials.svelte';
 	import type { AttachedFile } from '$lib/types/attached-file';
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte';
+	import { generateId } from '$lib/utils/generate-id';
+		import { pb } from '$lib/pb';
 
 	interface Props {
 		inputText: string;
 		attachedFiles: AttachedFile[];
+		quizTemplateId: string;
+		selectedDifficulty: string;
+        questionCount: number;
+		isDraft: boolean;
 	}
 
-	let { inputText = $bindable(), attachedFiles = $bindable() }: Props = $props();
+	let {quizTemplateId = $bindable(), inputText = $bindable(), attachedFiles = $bindable(), selectedDifficulty = $bindable(), questionCount = $bindable(), isDraft = $bindable()}: Props = $props();
 
-	const attemptQuizes = $derived(quizAttemptsStore.quizAttempts.filter((qa) => qa.feedback));
-	const quizes = $derived(
-		quizesStore.quizes.filter((q) => attemptQuizes.some((a) => a.quiz === q.id))
-	);
+	const previousQuizes = $derived(quizesStore.quizes.filter((q: any) => q.status !== 'draft'));
+	
+
+
 
 	/**
 	 * Создает AttachedFile объект из material ID без реального файла
@@ -37,6 +43,9 @@
 
 	// Функция для обработки клика по квизу
 	async function handleQuizClick(quiz: any) {
+		// Устанавливаем quizTemplateId
+		quizTemplateId = quiz.id;
+
 		// Устанавливаем текст
 
 		inputText = quiz.query || '';
@@ -69,15 +78,15 @@
 
 		<!-- Динамическая история квизов из store -->
 		<div class="space-y-3">
-			{#if quizes.length === 0}
+			{#if previousQuizes.length === 0}
 				<div class="mt-8 text-center">
 					<p class="text-sm">No previous quizes yet</p>
 					<p class="mt-1 text-xs">Create your first quiz!</p>
 				</div>
 			{:else}
-				{#each quizes as quiz}
+				{#each previousQuizes as quiz}
 					<div
-						class="border-base-200 cursor-pointer rounded-lg border p-4 shadow-sm transition-shadow hover:shadow-md"
+						class="border-base-200 cursor-pointer rounded-lg border p-4 shadow-sm transition-shadow hover:shadow-md {quiz.id === quizTemplateId ? 'bg-yellow-200' : ''}"
 						onclick={() => handleQuizClick(quiz)}
 						onkeydown={(e) => e.key === 'Enter' && handleQuizClick(quiz)}
 						role="button"

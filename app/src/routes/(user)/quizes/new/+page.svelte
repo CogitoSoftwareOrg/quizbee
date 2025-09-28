@@ -4,16 +4,31 @@
     import QuestionNumberSelector from './QuestionNumberSelector.svelte';
     import StartQuizButton from './StartQuizButton.svelte';
     import PreviousQuizes from './PreviousQuizes.svelte';
+    import Drafts from './Drafts.svelte';
     import InfoIcon from '$lib/ui/InfoIcon.svelte';
     import type { AttachedFile } from '$lib/types/attached-file';
+	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
+	import { pb } from '$lib/pb';
+	import { generateId } from '$lib/utils/generate-id';
 
 
-   
 
+    let quizTemplateId = $state<string>('');
+
+    let title = $state<string>('');
     let attachedFiles = $state<AttachedFile[]>([]);
     let selectedDifficulty = $state('intermediate');
     let questionCount = $state(10);
     let inputText = $state('');
+
+
+
+    let isDraft = $derived(quizesStore.quizes.find(q => q.id === quizTemplateId)?.status==='draft');
+
+
+
+	
+   
 </script>
 
 <svelte:head>
@@ -22,10 +37,27 @@
 
 <main class="relative h-full flex">
     
-    <PreviousQuizes 
-        bind:inputText
-        bind:attachedFiles
-    />
+    <div class="flex flex-row-reverse">
+        <Drafts
+            bind:title
+            bind:quizTemplateId
+            bind:inputText
+            bind:attachedFiles
+            bind:selectedDifficulty
+            bind:questionCount
+            bind:isDraft
+        />
+        
+        <PreviousQuizes 
+            bind:quizTemplateId
+            bind:inputText
+            bind:attachedFiles
+            bind:selectedDifficulty
+            bind:questionCount
+          
+			bind:isDraft
+        />
+    </div>
     
     
     <div class="flex-1 relative py-16 px-8 overflow-y-auto">
@@ -49,7 +81,7 @@ Feel free to attach presentations, PDFs, images, and more—we support a wide ra
         </div>
         <div class="flex justify-center mt-4 mb-12">
             <div class="w-full max-w-4xl">
-                <FileInput bind:attachedFiles bind:inputText />      
+                <FileInput bind:attachedFiles bind:inputText bind:quizTemplateId />      
             </div>
         </div>
         
@@ -91,13 +123,7 @@ Feel free to attach presentations, PDFs, images, and more—we support a wide ra
                 {selectedDifficulty}
                 {questionCount}
             />
-            <button
-                type="button"
-                class="ml-4 btn btn-outline btn-secondary"
-                onclick={() => { inputText = ''; attachedFiles = []; }}
-            >
-                Clear
-            </button>
+            
         </div>
     </div>
     </div>
