@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     pr_id: int | None = Field(default=None)
     redis_prefix: str = Field(default="")
 
+    app_url: str = Field(default="http://localhost:5173", alias="PUBLIC_APP_URL")
+
     pb_url: str = Field(default="http://localhost:8090")
     pb_email: str = Field(default="admin@admin.com")
     pb_password: str = Field(default="admin")
@@ -45,6 +47,7 @@ class Settings(BaseSettings):
 
     # Stripe configuration
     stripe_api_key: str = Field(default="key")
+    stripe_webhook_secret: str = Field(default="key")
 
     @model_validator(mode="after")
     def derive_pr_id(self) -> "Settings":

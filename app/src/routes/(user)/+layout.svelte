@@ -9,11 +9,12 @@
 	import SidebarNavigation from './SidebarNavigation.svelte';
 	import GlobalHeader from './GlobalHeader.svelte';
 	import SubscribeUser from './SubscribeUser.svelte';
+	import Button from '$lib/ui/Button.svelte';
 
 	const { data, children } = $props();
 </script>
 
-<SubscribeUser userLoadPromise={data.userLoadPromise} />
+<SubscribeUser />
 
 {#await data.userLoadPromise}
 	<div class="flex h-screen items-center justify-center">
@@ -24,7 +25,7 @@
 	<div class="flex h-dvh w-full overflow-hidden">
 		<aside
 			class={[
-				'bg-base-100 border-base-200 z-10 h-full shrink-0 flex-col border-r pt-4 transition-all duration-300 ease-in-out',
+				'bg-base-100 border-base-200 z-10 h-full shrink-0 flex-col border-r pt-2 transition-all duration-300 ease-in-out',
 				uiStore.globalSidebarOpen ? 'w-56' : 'w-14',
 				'hidden sm:flex'
 			]}
@@ -52,9 +53,11 @@
 				<a href="/home">
 					<House />
 				</a>
-				<a href="/quizes/new">
-					<Plus />
-				</a>
+				<div>
+					<Button size="lg" href="/quizes/new" circle>
+						<Plus size={32} />
+					</Button>
+				</div>
 				<a href="/profile">
 					<Settings />
 				</a>

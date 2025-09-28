@@ -9,6 +9,7 @@
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte';
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
+	import { fly } from 'svelte/transition';
 
 	const isNewQuizPage = $derived(page.url.pathname === '/quizes/new');
 
@@ -58,7 +59,10 @@
 			<Menu class="size-6 text-neutral-500" />
 		</button>
 		<!-- Desktop Sidebar Toggle -->
-		<button class="hidden w-fit items-center sm:flex" onclick={() => uiStore.toggleGlobalSidebar()}>
+		<button
+			class="hidden w-fit cursor-pointer items-center sm:flex"
+			onclick={() => uiStore.toggleGlobalSidebar()}
+		>
 			{#if uiStore.globalSidebarOpen}
 				<PanelRightOpen class="size-6 text-neutral-500" />
 			{:else}

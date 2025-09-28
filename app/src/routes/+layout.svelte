@@ -11,11 +11,11 @@
 
 	let { children } = $props();
 
-	afterNavigate(() => {
-		posthog.capture('page_view', {
-			path: page.url.pathname
-		});
-	});
+	// afterNavigate(() => {
+	// 	posthog.capture('page_view', {
+	// 		path: page.url.pathname
+	// 	});
+	// });
 </script>
 
 <svelte:head>
