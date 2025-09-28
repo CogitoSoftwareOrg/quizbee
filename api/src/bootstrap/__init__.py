@@ -65,14 +65,14 @@ def create_app():
         pr = settings.pr_id
         assert pr is not None
         allowed_origins = [
-            f"https://{pr}-app-quizbee.cogitosoftware.nl",
-            f"https://{pr}-web-quizbee.cogitosoftware.nl",
+            f"https://{pr}-app.quizbee.academy",
+            f"https://{pr}-web.quizbee.academy",
         ]
     elif settings.env == "production":
         # Production/base
         allowed_origins = [
-            "https://app-quizbee.cogitosoftware.nl",
-            "https://web-quizbee.cogitosoftware.nl",
+            "https://app.quizbee.academy",
+            "https://web.quizbee.academy",
         ]
 
     app.add_middleware(
