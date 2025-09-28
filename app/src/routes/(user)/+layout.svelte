@@ -1,14 +1,14 @@
 <script lang="ts">
-    import Honey from '$lib/assets/icons/honey.svg';
+	import Logo from '$lib/assets/icons/bee1.svg';
 
-    import ProfileRow from '$lib/apps/users/ProfileRow.svelte';
-    import { uiStore } from '$lib/apps/users/ui.svelte';
+	import ProfileRow from '$lib/apps/users/ProfileRow.svelte';
+	import { uiStore } from '$lib/apps/users/ui.svelte';
 
-    import SidebarNavigation from './SidebarNavigation.svelte';
-    import GlobalHeader from './GlobalHeader.svelte';
-		import SubscribeUser from './SubscribeUser.svelte';
+	import SidebarNavigation from './SidebarNavigation.svelte';
+	import GlobalHeader from './GlobalHeader.svelte';
+	import SubscribeUser from './SubscribeUser.svelte';
 
-    const { data, children } = $props();
+	const { data, children } = $props();
 </script>
 
 <SubscribeUser userLoadPromise={data.userLoadPromise} />
@@ -26,10 +26,10 @@
 				uiStore.globalSidebarOpen ? 'w-56' : 'w-14'
 			]}
 		>
-			<a href="/home" class="relative mb-4 flex select-none items-center justify-center gap-2 px-2">
-				<img src={Honey} alt="Quizbee" class="bg-primary/20 size-8 rounded" />
+			<a href="/home" class="relative mb-4 flex select-none items-center justify-center gap-1">
+				<img src={Logo} alt="Quizbee" class="bg-primary/10 size-12 rounded-full" />
 				{#if uiStore.globalSidebarOpen}
-					<p class="text-primary text-xl font-semibold">Quizbee</p>
+					<p class="text-primary text-3xl font-semibold">Quizbee</p>
 				{/if}
 			</a>
 

@@ -6,6 +6,7 @@ from starlette.middleware.cors import CORSMiddleware
 from mcp.server.fastmcp import FastMCP
 import httpx
 
+from apps.billing import billing_router
 from apps.quiz_attempts import quiz_attempts_router
 from apps.messages import messages_router
 from apps.quizes import quizes_router
@@ -43,6 +44,7 @@ def create_app():
         ],
     )
 
+    app.include_router(billing_router)
     app.include_router(quizes_router)
     app.include_router(messages_router)
     app.include_router(materials_router)

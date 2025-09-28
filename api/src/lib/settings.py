@@ -43,6 +43,9 @@ class Settings(BaseSettings):
     tg_token: str = Field(default="key")
     tg_id: str = Field(default="key")
 
+    # Stripe configuration
+    stripe_api_key: str = Field(default="key")
+
     @model_validator(mode="after")
     def derive_pr_id(self) -> "Settings":
         if self.env == "preview" and self.coolify_url is not None:
