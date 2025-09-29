@@ -5,6 +5,20 @@ onRecordCreate((e) => {
   if (e.record.get("itemsLimit") === 0) {
     e.record.set("itemsLimit", 10);
   }
+  if (!e.record.get("status")) {
+    e.record.set("status", "draft");
+  }
+  if (!e.record.get("difficulty")) {
+    e.record.set("difficulty", "intermediate");
+  }
+
+  e.record.set("dynamicConfig", {
+    adds: [],
+    moreOnTopic: [],
+    lessOnTopic: [],
+    extraBeginner: [],
+    extraExpert: [],
+  });
 
   e.next();
 
@@ -15,7 +29,6 @@ onRecordCreate((e) => {
       const item = new Record(col);
       item.set("quiz", e.record.id);
       item.set("order", i);
-      item.set("status", "blank");
       txApp.save(item);
     }
   });

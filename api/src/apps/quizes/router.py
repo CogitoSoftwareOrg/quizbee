@@ -15,10 +15,10 @@ from pydantic import BaseModel, Field
 from apps.auth import User, auth_user
 from apps.billing import load_subscription
 from apps.materials import user_owns_materials, materials_to_ai_docs
-from lib.clients.http import HTTPAsyncClient
 from lib.clients import AdminPB, langfuse_client
 
 from .ai import (
+    DynamicConfig,
     event_stream_handler,
     make_quiz_patch_model,
     quizer_agent,
@@ -91,7 +91,6 @@ async def create_quiz(
 
 # GENERATE QUIZ ITEMS TASK
 async def _generate_quiz_task(
-    http: HTTPAsyncClient,
     admin_pb: AdminPB,
     user_id: str,
     quiz_id: str,
@@ -134,6 +133,7 @@ async def _generate_quiz_task(
             logging.exception("Failed to set generating for %s: %s", qi.get("id"), e)
 
     # Prepare request to LLM
+    dynamic_config = DynamicConfig(**quiz.get("dynamicConfig", {}))
     q = quiz.get("query", "")
     materials_docs = await materials_to_ai_docs(materials)
     try:
@@ -146,11 +146,10 @@ async def _generate_quiz_task(
             async with quizer_agent.run_stream(
                 [q, *materials_docs],
                 deps=QuizerDeps(
-                    admin_pb=admin_pb,
                     quiz=quiz,
                     prev_quiz_items=prev_quiz_items,
                     materials=materials,
-                    http=http,
+                    dynamic_config=dynamic_config,
                 ),
                 output_type=make_quiz_patch_model(limit),
                 event_stream_handler=event_stream_handler,
@@ -219,7 +218,6 @@ class GenerateQuizItems(BaseModel):
 
 @quizes_router.patch("/{quiz_id}")
 async def generate_quiz_items(
-    http: HTTPAsyncClient,
     admin_pb: AdminPB,
     quiz_id: str,
     dto: GenerateQuizItems,
@@ -245,7 +243,7 @@ async def generate_quiz_items(
 
     # Generate
     background.add_task(
-        _generate_quiz_task, http, admin_pb, user_id, quiz_id, dto.limit, generation
+        _generate_quiz_task, admin_pb, user_id, quiz_id, dto.limit, generation
     )
 
     return JSONResponse(

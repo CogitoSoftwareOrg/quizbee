@@ -1,10 +1,8 @@
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import logging
-import httpx
 from pocketbase.models.dtos import Record
 from pydantic_ai import Agent, RunContext
-from pocketbase import PocketBase
 from typing import Annotated, AsyncIterable
 from pydantic import BaseModel, Field, create_model
 from pydantic_ai.messages import (
@@ -25,10 +23,18 @@ from src.lib.settings import settings
 
 
 @dataclass
+class DynamicConfig:
+    adds: list[str] = field(default_factory=list)
+    moreOnTopic: list[str] = field(default_factory=list)
+    lessOnTopic: list[str] = field(default_factory=list)
+    extraBeginner: list[str] = field(default_factory=list)
+    extraExpert: list[str] = field(default_factory=list)
+
+
+@dataclass
 class QuizerDeps:
-    http: httpx.AsyncClient
-    admin_pb: PocketBase
     quiz: Record
+    dynamic_config: DynamicConfig
     prev_quiz_items: list[Record]
     materials: list[Record]
 
@@ -40,7 +46,9 @@ class WrongAnswer(BaseModel):
     explanation: Annotated[
         str,
         Field(
-            title="Wrong Answer Explanation", description="Why this answer is wrong."
+            title="Wrong Answer Explanation",
+            description="Why this answer is wrong.",
+            min_length=10,
         ),
     ]
 
@@ -52,7 +60,9 @@ class RightAnswer(BaseModel):
     explanation: Annotated[
         str,
         Field(
-            title="Right Answer Explanation", description="Why this answer is correct."
+            title="Right Answer Explanation",
+            description="Why this answer is correct.",
+            min_length=10,
         ),
     ]
 
@@ -112,12 +122,63 @@ quizer_agent = Agent(
 
 
 @quizer_agent.system_prompt()
-async def system_prompt(ctx: RunContext[QuizerDeps]) -> str:
+async def create_base(ctx: RunContext[QuizerDeps]) -> str:
     prev_quiz_items = ctx.deps.prev_quiz_items
     prev_questions = [qi.get("question") for qi in prev_quiz_items]
-    prompt = langfuse_client.get_prompt("create_quiz", label=settings.env).compile(
-        prev_quiz_items=json.dumps(prev_questions)
+
+    adds = "\n".join(ctx.deps.dynamic_config.adds)
+
+    prompt = langfuse_client.get_prompt(
+        "quizer/create_base", label=settings.env
+    ).compile(
+        prev_quiz_items=json.dumps(prev_questions),
+        adds=adds,
     )
+    return prompt
+
+
+@quizer_agent.system_prompt()
+async def difficulty(ctx: RunContext[QuizerDeps]) -> str:
+    difficulty = ctx.deps.quiz.get("difficulty")  # beginner, intermediate, expert
+    prompt = langfuse_client.get_prompt(
+        f"quizer/{difficulty}", label=settings.env
+    ).compile()
+
+    extra_beginner = "\n".join(ctx.deps.dynamic_config.extraBeginner)
+    if len(extra_beginner) > 0:
+        extra_beginner_prompt = langfuse_client.get_prompt(
+            f"quizer/extra_beginner", label=settings.env
+        ).compile(questions=extra_beginner)
+        prompt += extra_beginner_prompt
+
+    extra_expert = "\n".join(ctx.deps.dynamic_config.extraExpert)
+    if len(extra_expert) > 0:
+        extra_expert_prompt = langfuse_client.get_prompt(
+            f"quizer/extra_expert", label=settings.env
+        ).compile(questions=extra_expert)
+        prompt += extra_expert_prompt
+
+    return prompt
+
+
+@quizer_agent.system_prompt()
+async def topic(ctx: RunContext[QuizerDeps]) -> str:
+    prompt = ""
+
+    more_on_topic = "\n".join(ctx.deps.dynamic_config.moreOnTopic)
+    if len(more_on_topic) > 0:
+        more_on_topic_prompt = langfuse_client.get_prompt(
+            f"quizer/more_on_topic", label=settings.env
+        ).compile(questions=more_on_topic)
+        prompt += more_on_topic_prompt
+
+    less_on_topic = "\n".join(ctx.deps.dynamic_config.lessOnTopic)
+    if len(less_on_topic) > 0:
+        less_on_topic_prompt = langfuse_client.get_prompt(
+            f"quizer/less_on_topic", label=settings.env
+        ).compile(questions=less_on_topic)
+        prompt += less_on_topic_prompt
+
     return prompt
 
 
@@ -125,8 +186,6 @@ async def event_stream_handler(
     ctx: RunContext[QuizerDeps],
     event_stream: AsyncIterable[AgentStreamEvent],
 ):
-    pb = ctx.deps.admin_pb
-
     async for event in event_stream:
         if isinstance(event, PartStartEvent):
             logging.info(f"[Request] Starting part {event.index}: {event.part!r}")
