@@ -184,18 +184,13 @@ async def _generate_quiz_task(
                                 }
                             ]
                             try:
-                                upd = await admin_pb.collection("quizItems").update(
+                                await admin_pb.collection("quizItems").update(
                                     qi_id,
                                     {
                                         "answers": answers,  # pyright: ignore[reportArgumentType]
                                         "question": qi.question,
                                         "status": "generated",
                                     },
-                                )
-                                # HARD TRIGGER OF SUBSCRIPTION, IMPROVE TO SUBSCRIBE QUIZ ITEMS LATER
-                                await admin_pb.collection("quizes").update(
-                                    quiz_id,
-                                    {"updated": upd.get("updated", "")},
                                 )
                             except Exception as e:
                                 logging.exception("Failed to finalize %s: %s", qi_id, e)

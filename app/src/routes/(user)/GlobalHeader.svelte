@@ -10,6 +10,7 @@
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte';
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
 	import { fly } from 'svelte/transition';
+	import { quizItemsStore } from '$lib/apps/quizes/quizItems.svelte';
 
 	const isNewQuizPage = $derived(page.url.pathname === '/quizes/new');
 
@@ -24,9 +25,7 @@
 	);
 
 	const quizDecisions = $derived((quizAttempt?.choices as Decision[]) || []);
-	const quizItems = $derived(
-		quiz?.expand.quizItems_via_quiz?.toSorted((a, b) => a.order - b.order) || []
-	);
+	const quizItems = $derived(quizItemsStore.quizItemsMap.get(quiz?.id || '') || []);
 
 	const order = $derived.by(() => {
 		const orderStr = page.url.searchParams.get('order');

@@ -7,14 +7,15 @@
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte.js';
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
 	import type { Answer } from '$lib/apps/quizes/types';
+	import type { Sender } from '$lib/apps/messages/types';
+	import { messagesStore } from '$lib/apps/messages/stores/messages.svelte';
+	import { userStore } from '$lib/apps/users/user.svelte';
+	import { patchApi } from '$lib/api/call-api';
 
 	import AIChat from './AIChat.svelte';
 	import QuizItemsNavigation from './QuizItemsNavigation.svelte';
 	import QuizAnswersList from './QuizAnswersList.svelte';
-	import { messagesStore } from '$lib/apps/messages/stores/messages.svelte';
-	import type { Sender } from '$lib/apps/messages/types';
-	import { userStore } from '$lib/apps/users/user.svelte';
-	import { Bot } from 'lucide-svelte';
+	import { quizItemsStore } from '$lib/apps/quizes/quizItems.svelte';
 
 	const {} = $props();
 
@@ -27,9 +28,7 @@
 	const quizDecisions = $derived((quizAttempt?.choices as Decision[]) || []);
 
 	const quiz = $derived(quizesStore.quizes.find((q) => q.id === quizAttempt?.quiz));
-	const quizItems = $derived(
-		quiz?.expand.quizItems_via_quiz?.toSorted((a, b) => a.order - b.order) || []
-	);
+	const quizItems = $derived(quizItemsStore.quizItemsMap.get(quiz?.id || '') || []);
 	let itemDecision = $derived(quizDecisions.find((d) => d.itemId === item?.id) || null);
 
 	const order = $derived.by(() => {
@@ -112,7 +111,18 @@
 
 			{#if itemDecision}
 				<div class="mt-6 flex gap-2">
-					<Button class="flex-1" color="neutral" style="soft">Manage Quiz</Button>
+					<Button
+						onclick={async () => {
+							const result = await patchApi(`quizes/${quiz?.id}`, {
+								limit: 50 // for now just gurantee total number of questions
+							});
+
+							console.log('Quiz settings updated:', result);
+						}}
+						class="flex-1"
+						color="neutral"
+						style="soft">Manage Quiz</Button
+					>
 				</div>
 			{/if}
 		</div>

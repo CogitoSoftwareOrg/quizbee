@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { computeApiUrl } from '$lib/api/compute-url';
+	import { patchApi, postApi } from '$lib/api/call-api';
 	import { uiStore } from '$lib/apps/users/ui.svelte';
 
 	type AttachedFile = {
@@ -37,52 +37,20 @@
 				.filter((file) => file.materialId)
 				.map((file) => file.materialId!);
 
-			const createQuizPayload = {
+			const { quiz_id: quizId, quiz_attempt_id: quizAttemptsId } = await postApi('quizes', {
 				query: inputText,
 				material_ids: selectedMaterialIds,
 				with_attempt: true,
 				number_of_questions: questionCount,
 				difficulty: selectedDifficulty.toLowerCase()
-			};
-
-			const createResponse = await fetch(`${computeApiUrl()}quizes`, {
-				method: 'POST',
-				body: JSON.stringify(createQuizPayload),
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				credentials: 'include'
 			});
 
-			if (!createResponse.ok) {
-				const errorText = await createResponse.text();
-				console.error('Failed to create quiz:', errorText);
-				return false;
-			}
-
-			const { quiz_id: quizId, quiz_attempt_id: quizAttemptsId } = await createResponse.json();
 			console.log('Quiz created:', quizId, 'Attempt created:', quizAttemptsId);
 
-			const updateQuizPayload = {
+			const updateResult = await patchApi(`quizes/${quizId}`, {
 				limit: 50 // for now just gurantee total number of questions
-			};
-
-			const updateResponse = await fetch(`${computeApiUrl()}quizes/${quizId}`, {
-				method: 'PATCH',
-				body: JSON.stringify(updateQuizPayload),
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				credentials: 'include'
 			});
 
-			if (!updateResponse.ok) {
-				const errorText = await updateResponse.text();
-				console.error('Failed to update quiz settings:', errorText);
-				return false;
-			}
-
-			const updateResult = await updateResponse.json();
 			console.log('Quiz settings updated:', updateResult);
 
 			uiStore.setGlobalSidebarOpen(false);

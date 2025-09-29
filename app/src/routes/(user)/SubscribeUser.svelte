@@ -2,6 +2,7 @@
 	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
 	import { materialsStore } from '$lib/apps/materials/materials.svelte';
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte';
+	import { quizItemsStore } from '$lib/apps/quizes/quizItems.svelte';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
 	import { userStore } from '$lib/apps/users/user.svelte';
 
@@ -16,12 +17,14 @@
 		materialsStore.subscribe(userId);
 		quizAttemptsStore.subscribe(userId);
 		quizesStore.subscribe(userId);
+		quizItemsStore.subscribe(userId);
 
 		return () => {
 			userStore.unsubscribe(userId);
 			materialsStore.unsubscribe();
 			quizAttemptsStore.unsubscribe();
 			quizesStore.unsubscribe();
+			quizItemsStore.unsubscribe();
 		};
 	});
 
