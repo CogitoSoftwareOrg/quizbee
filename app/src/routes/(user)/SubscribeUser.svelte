@@ -1,10 +1,12 @@
 <script lang="ts">
+	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
 	import { materialsStore } from '$lib/apps/materials/materials.svelte';
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
 	import { userStore } from '$lib/apps/users/user.svelte';
 
 	const user = $derived(userStore.user);
+	const sub = $derived(subscriptionStore.subscription);
 
 	$effect(() => {
 		const userId = user?.id;
@@ -20,6 +22,17 @@
 			materialsStore.unsubscribe();
 			quizAttemptsStore.unsubscribe();
 			quizesStore.unsubscribe();
+		};
+	});
+
+	$effect(() => {
+		const subId = sub?.id;
+		if (!subId) return;
+
+		subscriptionStore.subscribe(subId);
+
+		return () => {
+			subscriptionStore.unsubscribe(subId);
 		};
 	});
 </script>
