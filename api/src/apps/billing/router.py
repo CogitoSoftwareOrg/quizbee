@@ -6,18 +6,12 @@ from starlette.responses import JSONResponse
 from apps.auth import auth_user, User
 from lib.clients import AdminPB, stripe_client
 from lib.settings import settings
+from lib.config import STRIPE_PRICES_MAP
 
 from .utils import stripe_subscription_to_pb
 from .middleware import load_subscription, Subscription
 
 billing_router = APIRouter(prefix="/billing", tags=["billing"])
-
-stripe_prices_map = {
-    "plus_monthly": "price_1SCFmCPuRQMxFFQtHOEmHUWv",
-    "pro_monthly": "price_1SCG2hPuRQMxFFQtaYLDDgDp",
-    "plus_yearly": "price_1SCFnmPuRQMxFFQtwZF7VUHz",
-    "pro_yearly": "price_1SCG4pPuRQMxFFQtMZ0bhmYW",
-}
 
 
 @billing_router.post("/stripe/webhook", status_code=200)
@@ -115,7 +109,7 @@ async def create_stripe_checkout(
         )
         return JSONResponse(content={"url": portal.url})
 
-    price_id = stripe_prices_map.get(dto.price)
+    price_id = STRIPE_PRICES_MAP.get(dto.price)
     if not price_id:
         raise HTTPException(status_code=400, detail="Invalid price label")
 

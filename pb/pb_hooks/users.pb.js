@@ -10,12 +10,6 @@ onRecordCreate((e) => {
     const col = txApp.findCollectionByNameOrId("subscriptions");
     const record = new Record(col);
     record.set("user", e.record.id);
-    record.set("status", "active");
-    record.set("tariff", "free");
-
-    // DAILY USAGE
-    record.set("quizItemsLimit", 20);
-    record.set("messagesLimit", 10);
     txApp.save(record);
   });
 
@@ -45,12 +39,3 @@ onRecordDelete((e) => {
 
   // after deletion
 }, "users");
-
-cronAdd("free_users_daily_reset", "0 0 * * *", () => {
-  const subs = $app.findRecordsByFilter("subscriptions", "tariff = 'free'");
-  subs.forEach((s) => {
-    s.set("quizItemsUsage", 0);
-    s.set("messagesUsage", 0);
-    $app.save(s);
-  });
-});

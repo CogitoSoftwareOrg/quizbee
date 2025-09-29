@@ -8,6 +8,7 @@ import { materialsStore } from '$lib/apps/materials/materials.svelte';
 import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte';
 import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
 import { userStore } from '$lib/apps/users/user.svelte';
+import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
 
 const EXPAND = [
 	'subscriptions_via_user',
@@ -29,6 +30,7 @@ export async function load({ depends }) {
 		})
 		.then((res) => {
 			const user = res.record as UsersResponse<unknown, UserExpand>;
+			const subscription = user.expand.subscriptions_via_user?.[0] || null;
 			const materials = user.expand.materials_via_user || [];
 			const quizAttempts = user.expand.quizAttempts_via_user || [];
 			const quizes = user.expand.quizes_via_author || [];
@@ -36,6 +38,7 @@ export async function load({ depends }) {
 			materialsStore.materials = materials;
 			quizAttemptsStore.quizAttempts = quizAttempts;
 			quizesStore.quizes = quizes;
+			subscriptionStore.subscription = subscription;
 
 			user.expand = {} as UserExpand;
 			userStore.user = user;
