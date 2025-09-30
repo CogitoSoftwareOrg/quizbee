@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { onDestroy } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { computeApiUrl } from '$lib/api/compute-url';
 	import { materialsStore } from '$lib/apps/materials/materials.svelte';
 	import type { AttachedFile } from '$lib/types/attached-file';
 	import { pb } from '$lib/pb';
-
+	import type { MaterialsResponse } from '$lib/pb/pocketbase-types';
 	function generateId(): string {
 		const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
 		let result = '';
@@ -22,8 +22,7 @@
 				name: file.name,
 				isUploading: true,
 				uploadError: undefined,
-				materialId: generateId(),
-				fromPreviousQuiz: false
+				materialId: generateId()
 			};
 
 			attachedFiles = [...attachedFiles, attachedFile];
@@ -34,13 +33,23 @@
 	interface Props {
 		inputText?: string;
 		attachedFiles?: AttachedFile[];
+		quizTemplateId?: string;
 	}
 
-	let { inputText = $bindable(''), attachedFiles = $bindable([]) }: Props = $props();
+	let {
+		inputText = $bindable(''),
+		attachedFiles = $bindable([]),
+		quizTemplateId = $bindable('')
+	}: Props = $props();
 
 	let inputElement: HTMLInputElement;
 	let isDragging = $state(false);
 	let previousAttachedFiles = attachedFiles;
+	let isMaterialsListOpen = $state(false);
+	let searchQuery = $state('');
+
+	let buttonElement = $state<HTMLButtonElement>();
+	let menuElement = $state<HTMLDivElement>();
 
 	// Реактивно отслеживаем материалы в store и обновляем статус загрузки
 	$effect(() => {
@@ -59,20 +68,6 @@
 				}
 			}
 		});
-	});
-
-	// Эффект для удаления файлов когда attachedFiles становится пустым
-	$effect(() => {
-		if (attachedFiles.length === 0 && previousAttachedFiles.length > 0) {
-			// Удаляем все файлы, которые были в предыдущем состоянии
-			for (let i = 0; i < previousAttachedFiles.length; i++) {
-				const fileToRemove = previousAttachedFiles[i];
-				removeFile(i, previousAttachedFiles);
-			}
-		}
-		return () => {
-			previousAttachedFiles = attachedFiles;
-		};
 	});
 
 	function openFileDialog() {
@@ -122,6 +117,22 @@
 			}
 
 			console.log(`File ${attachedFile.name} uploaded successfully with ID: ${material.id}`);
+
+			try {
+				// Добавляем проверку прямо здесь
+				if (!quizTemplateId) {
+					console.error('quizTemplateId is missing, cannot attach material.');
+					// Можно просто прервать выполнение или уведомить пользователя
+					return;
+				}
+
+				const quiz = await pb!.collection('quizes').getOne(quizTemplateId);
+				const updatedMaterials = [...(quiz.materials || []), material.id];
+				await pb!.collection('quizes').update(quizTemplateId, { materials: updatedMaterials });
+				console.log(`Material ${material.id} attached to quiz ${quizTemplateId}`);
+			} catch (error) {
+				console.error('Failed to attach material to quiz:', error);
+			}
 		} catch (error) {
 			console.error('Failed to upload file:', attachedFile.name, error);
 
@@ -138,6 +149,28 @@
 		}
 	}
 
+	async function addExistingMaterial(material: MaterialsResponse) {
+		const attachedFile: AttachedFile = {
+			name: material.title,
+			isUploading: false,
+			materialId: material.id,
+			previewUrl:
+				material.file && /\.(jpg|jpeg|png|gif|webp)$/i.test(material.file) ? material.file : null
+		};
+
+		attachedFiles = [...attachedFiles, attachedFile];
+
+		if (quizTemplateId) {
+			try {
+				const quiz = await pb!.collection('quizes').getOne(quizTemplateId);
+				const updatedMaterials = [...(quiz.materials || []), material.id];
+				await pb!.collection('quizes').update(quizTemplateId, { materials: updatedMaterials });
+				console.log(`Material ${material.id} attached to quiz ${quizTemplateId}`);
+			} catch (error) {
+				console.error('Failed to attach material to quiz:', error);
+			}
+		}
+	}
 	async function removeFile(index: number, attachedFiles: AttachedFile[]) {
 		const fileToRemove = attachedFiles[index];
 
@@ -146,13 +179,29 @@
 			URL.revokeObjectURL(fileToRemove.previewUrl);
 		}
 
-		// Удаляем материал с сервера если он был загружен
-		if (fileToRemove.materialId && !fileToRemove.fromPreviousQuiz) {
+		// Открепляем материал от квиза
+		if (quizTemplateId) {
 			try {
-				pb!.collection('materials').delete(fileToRemove.materialId);
+				const quiz = await pb!.collection('quizes').getOne(quizTemplateId);
+				const updatedMaterials = (quiz.materials || []).filter(
+					(id: string) => id !== fileToRemove.materialId
+				);
+				await pb!.collection('quizes').update(quizTemplateId, { materials: updatedMaterials });
+				console.log(`Material ${fileToRemove.materialId} detached from quiz ${quizTemplateId}`);
 			} catch (error) {
-				console.error('Failed to delete material from server:', error);
-				// Не блокируем удаление из UI даже если не удалось удалить с сервера
+				console.error('Failed to detach material from quiz:', error);
+			}
+		}
+
+		// Удаляем материал с сервера если он не используется
+		if (fileToRemove.materialId) {
+			try {
+				const material = await pb!.collection('materials').getOne(fileToRemove.materialId);
+				if ((material as any).status !== 'used') {
+					await pb!.collection('materials').delete(fileToRemove.materialId);
+				}
+			} catch (error) {
+				console.error('Failed to delete material:', error);
 			}
 		}
 
@@ -160,7 +209,6 @@
 		attachedFiles.splice(index, 1);
 		attachedFiles = attachedFiles;
 	}
-
 	async function handlePaste(event: ClipboardEvent) {
 		const clipboardData = event.clipboardData;
 		if (!clipboardData) return;
@@ -244,7 +292,23 @@
 		return filename.substring(0, maxLength - 3) + '...';
 	}
 
+	function handleClickOutside(event: MouseEvent) {
+		if (
+			menuElement &&
+			!menuElement.contains(event.target as Node) &&
+			buttonElement &&
+			!buttonElement.contains(event.target as Node)
+		) {
+			isMaterialsListOpen = false;
+		}
+	}
+
+	onMount(() => {
+		document.addEventListener('click', handleClickOutside);
+	});
+
 	onDestroy(() => {
+		document.removeEventListener('click', handleClickOutside);
 		// Освобождаем все URL превью
 		attachedFiles.forEach((attachedFile) => {
 			if (attachedFile.previewUrl) {
@@ -270,10 +334,11 @@
 	aria-label="Drop files here or click to upload"
 >
 	<div
-		class="border-base-300 bg-base-300 focus-within:border-base-content/40 flex items-center rounded-3xl border px-4 py-4 transition-colors duration-200"
+		class="border-base-300 bg-base-300 focus-within:border-base-content/40 relative flex items-center rounded-3xl border px-4 py-4 transition-colors duration-200"
 	>
 		<button
-			onclick={openFileDialog}
+			bind:this={buttonElement}
+			onclick={() => (isMaterialsListOpen = !isMaterialsListOpen)}
 			class="text-base-content/60 hover:text-base-content mr-2 flex cursor-pointer items-center border-none bg-transparent p-0"
 			aria-label="Attach files"
 		>
@@ -293,6 +358,76 @@
 				/></svg
 			>
 		</button>
+		{#if isMaterialsListOpen}
+			<div
+				bind:this={menuElement}
+				class="bg-base-100 border-base-300 w-75 absolute left-8 top-10 z-10 max-h-screen rounded-lg border shadow-lg"
+			>
+				<div class="p-2">
+					<button
+						onclick={() => {
+							openFileDialog();
+							isMaterialsListOpen = false;
+						}}
+						class="btn btn-warning flex w-full items-center gap-2 text-left text-lg"
+					>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="16"
+							height="16"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="3"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							class="lucide lucide-plus"><path d="M12 5v14M5 12h14" /></svg
+						>
+						<span class="mt-1">Add Files from PC</span>
+					</button>
+				</div>
+				<div class="border-base-300 border-t p-2">
+					<div class="text-base-content/70 mb-2 text-center text-lg font-medium">
+						Previous Materials
+					</div>
+					<div class="relative">
+						<input
+							bind:value={searchQuery}
+							placeholder="Search materials..."
+							class="border-base-300 focus:border-primary w-full rounded border py-1 pl-8 pr-2 text-sm focus:outline-none"
+						/>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="16"
+							height="16"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							class="text-base-content/60 lucide lucide-search absolute left-2 top-1/2 -translate-y-1/2 transform"
+							><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg
+						>
+					</div>
+					<div class="max-h-67 mt-2 overflow-y-auto">
+						{#each materialsStore.materials.filter((m) => m.title
+								.toLowerCase()
+								.includes(searchQuery.toLowerCase())) as material}
+							<button
+								class="hover:bg-primary w-full cursor-pointer p-2 text-left transition-colors duration-200"
+								onclick={() => {
+									addExistingMaterial(material);
+									isMaterialsListOpen = false;
+								}}
+							>
+								{truncateFileName(material.title, 34)}
+							</button>
+						{/each}
+					</div>
+				</div>
+			</div>
+		{/if}
 		<textarea
 			placeholder="Write a prompt for your quiz and attach relevant material"
 			bind:value={inputText}

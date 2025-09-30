@@ -33,9 +33,7 @@
 		isLoading = true;
 
 		try {
-			const selectedMaterialIds = attachedFiles
-				.filter((file) => file.materialId)
-				.map((file) => file.materialId!);
+			const selectedMaterialIds = attachedFiles.map((file) => file.materialId!);
 
 			const { quiz_id: quizId, quiz_attempt_id: quizAttemptsId } = await postApi('quizes', {
 				query: inputText,
