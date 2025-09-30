@@ -7,7 +7,7 @@
 
 	import favicon from '$lib/assets/icons/bee1.svg';
 	import PortalHost from '$lib/actions/PortalHost.svelte';
-	import posthog from 'posthog-js';
+	// import posthog from 'posthog-js';
 
 	let { children } = $props();
 

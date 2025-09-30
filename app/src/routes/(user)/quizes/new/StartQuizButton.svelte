@@ -1,27 +1,17 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { patchApi, postApi } from '$lib/api/call-api';
+	import { postApi } from '$lib/api/call-api';
 	import { uiStore } from '$lib/apps/users/ui.svelte';
-
-	type AttachedFile = {
-		file?: File;
-		previewUrl: string | null;
-		materialId?: string;
-		material?: import('$lib/pb/pocketbase-types').MaterialsResponse;
-		name: string;
-		uploadPromise?: Promise<import('$lib/pb/pocketbase-types').MaterialsResponse>;
-		isUploading?: boolean;
-		uploadError?: string;
-	};
+	import type { AttachedFile } from '$lib/types/attached-file';
+	import { pb } from '$lib/pb';
 
 	interface Props {
+		quizTemplateId: string;
 		attachedFiles: AttachedFile[];
 		inputText: string;
-		selectedDifficulty: string;
-		questionCount: number;
 	}
 
-	let { attachedFiles, inputText, selectedDifficulty, questionCount }: Props = $props();
+	let { quizTemplateId, attachedFiles, inputText }: Props = $props();
 
 	const hasFiles = $derived(attachedFiles.length > 0);
 	const hasText = $derived(inputText.trim().length > 0);
@@ -33,23 +23,19 @@
 		isLoading = true;
 
 		try {
-			const selectedMaterialIds = attachedFiles.map((file) => file.materialId!);
+			for (const attachedFile of attachedFiles) {
+				const material = await pb!.collection('materials').getOne(attachedFile.materialId);
+				if (material.status !== 'used') {
+					pb!.collection('materials').update(attachedFile.materialId, { status: 'used' });
+				}
+			}
 
 			const { quiz_id: quizId, quiz_attempt_id: quizAttemptsId } = await postApi('quizes', {
-				query: inputText,
-				material_ids: selectedMaterialIds,
-				with_attempt: true,
-				number_of_questions: questionCount,
-				difficulty: selectedDifficulty.toLowerCase()
+				quiz_id: quizTemplateId,
+				with_attempt: true
 			});
 
 			console.log('Quiz created:', quizId, 'Attempt created:', quizAttemptsId);
-
-			const updateResult = await patchApi(`quizes/${quizId}`, {
-				limit: 50 // for now just gurantee total number of questions
-			});
-
-			console.log('Quiz settings updated:', updateResult);
 
 			uiStore.setGlobalSidebarOpen(false);
 			await goto(`/quizes/${quizId}/attempts/${quizAttemptsId}`);
@@ -65,12 +51,12 @@
 </script>
 
 <button
-	class="btn btn-primary transform rounded-2xl px-16 py-8 text-3xl font-bold shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl"
+	class="btn transform rounded-2xl px-16 py-8 text-3xl font-bold shadow-lg transition-all duration-200 btn-primary hover:scale-105 hover:shadow-xl"
 	disabled={isSubmitDisabled || isLoading}
 	onclick={sendQuizCreation}
 >
 	{#if isLoading}
-		<span class="loading loading-spinner loading-md mr-2"></span>
+		<span class="loading mr-2 loading-md loading-spinner"></span>
 		Creating quiz...
 	{:else}
 		Start a quiz
