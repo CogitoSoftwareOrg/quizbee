@@ -1,3 +1,5 @@
+import asyncio
+import logging
 from fastapi import (
     APIRouter,
     File,
@@ -9,14 +11,14 @@ from fastapi import (
 )
 from pocketbase import FileUpload
 from fastapi.responses import JSONResponse
-from .tokens_calculation import count_pdf_tokens
+from .tokens_calculation import count_pdf_tokens, count_text_tokens
 from apps.auth import User
 from apps.auth import User, auth_user
 from lib.clients import AdminPB
-import asyncio
 
-materials_router = APIRouter(prefix="/materials", tags=["materials"],
-                             dependencies=[Depends(auth_user)])
+materials_router = APIRouter(
+    prefix="/materials", tags=["materials"], dependencies=[Depends(auth_user)]
+)
 
 
 @materials_router.post("/upload")
@@ -28,60 +30,54 @@ async def upload_material(
     material_id: str = Form(...),
 ):
     """
-    Загружает материал в PocketBase с автоматическим подсчетом токенов для PDF файлов.
+    Uploads material to PocketBase with automatic token counting for PDF files.
     """
+    file_bytes = await file.read()
+    file_size_mb = len(file_bytes) / (1024 * 1024)
+    max_size_mb = 30
+
+    dto = {
+        "id": material_id,
+        "title": title,
+        "user": user.get("id"),
+        "bytes": len(file_bytes),
+        "status": "uploaded",
+        "kind": "simple",
+    }
+
     try:
-        # Читаем содержимое файла
-        file_bytes = await file.read()
-
-        # Проверяем размер файла (лимит 30MB)
-        file_size_mb = len(file_bytes) / (1024 * 1024)  # размер в мегабайтах
-        max_size_mb = 30
-
         if file_size_mb > max_size_mb:
-            # Файл слишком большой - создаем пустой объект со статусом 'too big'
-            material_data = {
-                "id": material_id,
-                "title": title,
-                "user": user.get("id"),
-                "status": "too big",
-            }
+            dto["status"] = "too big"
 
-            material = await admin_pb.collection("materials").create(material_data)
+            material = await admin_pb.collection("materials").create(dto)
 
             return JSONResponse(
                 content={
                     "id": material.get("id"),
                     "title": material.get("title"),
                     "filename": file.filename,
-                    "status": "too big",
+                    "status": material.get("status"),
                     "file_size_mb": round(file_size_mb, 2),
                     "max_size_mb": max_size_mb,
                     "success": False,
-                    "message": f"Файл слишком большой ({round(file_size_mb, 2)}MB). Максимальный размер: {max_size_mb}MB",
+                    "message": f"File is too large ({round(file_size_mb, 2)}MB). Maximum size: {max_size_mb}MB",
                 }
             )
 
-        # Файл подходящего размера - обрабатываем как обычно
-        material_data = {
-            "id": material_id,
-            "title": title,
-            "user": user.get("id"),
-            "file": FileUpload((file.filename, file_bytes)),
-            "status": "uploaded",
-        }
-
-        # Автоматически подсчитываем токены для PDF файлов
-        token_count = None
+        dto["file"] = FileUpload((file.filename, file_bytes))
         if file.filename and file.filename.lower().endswith(".pdf"):
             try:
                 token_count = count_pdf_tokens(file_bytes)
-                material_data["tokens"] = token_count
+                dto["tokens"] = token_count
+                dto["kind"] = "complex"
             except Exception as e:
                 print(f"Error while counting tokens for {file.filename}: {e}")
+        else:
+            token_count = count_text_tokens(file_bytes.decode("utf-8"))
+            dto["tokens"] = token_count
+            dto["kind"] = "simple"
 
-        # Создаем материал в PocketBase
-        material = await admin_pb.collection("materials").create(material_data)
+        material = await admin_pb.collection("materials").create(dto)
 
         response_data = {
             "id": material.get("id"),
@@ -90,12 +86,15 @@ async def upload_material(
             "status": "uploaded",
             "file_size_mb": round(file_size_mb, 2),
             "success": True,
-            "message": "Материал успешно загружен",
+            "message": "Material uploaded successfully",
+            "tokens": material.get("tokens"),
+            "kind": material.get("kind"),
         }
 
         return JSONResponse(content=response_data)
 
     except Exception as e:
+        logging.error(f"Error while uploading material: {str(e)}")
         raise HTTPException(
-            status_code=500, detail=f"Ошибка при загрузке материала: {str(e)}"
+            status_code=500, detail=f"Error while uploading material: {str(e)}"
         )
