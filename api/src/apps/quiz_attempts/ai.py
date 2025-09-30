@@ -53,6 +53,7 @@ class Feedback(BaseModel):
         Field(
             title="Problem Topics",
             description="A list of problem topics that the user struggled with.",
+            max_length=3,
         ),
     ]
     uncovered_topics: Annotated[
@@ -60,6 +61,7 @@ class Feedback(BaseModel):
         Field(
             title="Uncovered Topics",
             description="A list of topics that are presented in materials but not covered in the quiz.",
+            max_length=3,
         ),
     ]
 
