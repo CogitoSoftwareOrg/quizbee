@@ -147,7 +147,7 @@ Feel free to attach presentations, PDFs, images, and more—we support a wide ra
 			</div>
 
 			<div class="flex justify-center">
-				<StartQuizButton {attachedFiles} {inputText} {selectedDifficulty} {questionCount} />
+				<StartQuizButton {quizTemplateId} {attachedFiles} {inputText} {selectedDifficulty} {questionCount} />
 			</div>
 		</div>
 	</div>

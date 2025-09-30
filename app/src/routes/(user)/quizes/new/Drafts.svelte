@@ -8,6 +8,7 @@
 	import { untrack } from 'svelte';
 	import { onMount } from 'svelte';
 	import PreviousQuizes from './PreviousQuizes.svelte';
+	import { debounce } from '$lib/utils/debouce';
 
 	function generateUniqueTitle(baseTitle: string, existingTitles: string[]): string {
 		let title = baseTitle;
@@ -87,38 +88,24 @@
 
 	// Автоматическое обновление количества вопросов в PB
 	$effect(() => {
-		if (
-			!untrack(() => isAddingDraft) &&
-			untrack(() => isDraft) &&
-			untrack(() => quizTemplateId) &&
-			questionCount
-		) {
-			pb!.collection('quizes').update(
-				untrack(() => quizTemplateId),
-				{ itemsLimit: questionCount }
-			);
-		}
+		const limit = questionCount;
+		untrack(() => {
+			if (!isAddingDraft && isDraft && quizTemplateId && limit) {
+				pb!.collection('quizes').update(quizTemplateId, { itemsLimit: limit });
+			}
+		});
 	});
 
-	let debounceTimeout: ReturnType<typeof setTimeout> | undefined;
-
+	const debounceUpdateQuery = debounce((q: string) => {
+		pb!.collection('quizes').update(quizTemplateId, { query: q });
+	}, 750);
 	$effect(() => {
-		if (
-			!untrack(() => isAddingDraft) &&
-			untrack(() => isDraft) &&
-			untrack(() => quizTemplateId) &&
-			inputText
-		) {
-			if (debounceTimeout) {
-				clearTimeout(debounceTimeout);
+		const q = inputText;
+		untrack(() => {
+			if (!isAddingDraft && isDraft && quizTemplateId && q) {
+				debounceUpdateQuery(q);
 			}
-			debounceTimeout = setTimeout(() => {
-				pb!.collection('quizes').update(
-					untrack(() => quizTemplateId),
-					{ query: inputText }
-				);
-			}, 750);
-		}
+		});
 	});
 
 	$effect(() => {

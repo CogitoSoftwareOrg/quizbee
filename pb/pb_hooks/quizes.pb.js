@@ -1,7 +1,6 @@
 /// <reference path="../pb_data/types.d.ts" />
 
 onRecordCreate((e) => {
-  // before creation
   if (e.record.get("itemsLimit") === 0) {
     e.record.set("itemsLimit", 10);
   }
@@ -22,40 +21,27 @@ onRecordCreate((e) => {
 
   e.next();
 
-  $app.runInTransaction((txApp) => {
-    // do something in the transaction
-    const col = txApp.findCollectionByNameOrId("quizItems");
-    for (let i = 0; i < e.record.get("itemsLimit"); i++) {
-      const item = new Record(col);
-      item.set("quiz", e.record.id);
-      item.set("order", i);
-      txApp.save(item);
-    }
-  });
-
-  // after creation
+  $app.runInTransaction((txApp) => {});
 }, "quizes");
 
 onRecordUpdate((e) => {
-  // before update
-
   e.next();
 
-  $app.runInTransaction((txApp) => {
-    // do something in the transaction
-  });
-
-  // after update
+  if (e.record.get("status") === "preparing") {
+    $app.runInTransaction((txApp) => {
+      const col = txApp.findCollectionByNameOrId("quizItems");
+      for (let i = 0; i < e.record.get("itemsLimit"); i++) {
+        const item = new Record(col);
+        item.set("quiz", e.record.id);
+        item.set("order", i);
+        txApp.save(item);
+      }
+    });
+  }
 }, "quizes");
 
 onRecordDelete((e) => {
-  // before deletion
-
   e.next();
 
-  $app.runInTransaction((txApp) => {
-    // do something in the transaction
-  });
-
-  // after deletion
+  $app.runInTransaction((txApp) => {});
 }, "quizes");

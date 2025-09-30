@@ -36,10 +36,17 @@ async def start_generating_quiz_task(
     )
     materials = quiz.get("expand", {}).get("materials", [])
 
+    await admin_pb.collection("quizes").update(
+        quiz_id,
+        {
+            "status": "preparing",
+        },
+    )
+
     # Load materials context
     contents = []
-    for mid in materials:
-        m = await admin_pb.collection("materials").get_one(mid)
+    for m in materials:
+        mid = m.get("id", "")
         # simple text or image
         if m.get("kind") == "simple":
             f = m.get("file", "")
@@ -67,31 +74,39 @@ async def start_generating_quiz_task(
     contents = ENCODERS[LLMS.GPT_5_MINI].decode(truncated)
 
     # Generate summary
-    part = (
-        await model_request(
-            LLMS.GPT_5_MINI,
-            messages=[
-                ModelRequest(
-                    parts=[
-                        SystemPromptPart(
-                            content="Summarize the following materials context"
-                        ),
-                        UserPromptPart(content=contents),
-                    ]
+    summary = ""
+    if len(contents) > 0:
+        with langfuse_client.start_as_current_span(name="quiz-summary") as span:
+            part = (
+                await model_request(
+                    LLMS.GPT_5_MINI,
+                    messages=[
+                        ModelRequest(
+                            parts=[
+                                SystemPromptPart(
+                                    content="Summarize the following materials context"
+                                ),
+                                UserPromptPart(content=contents),
+                            ]
+                        )
+                    ],
+                    model_settings={
+                        "max_tokens": 8000,
+                        # "temperature": 0.2,
+                        # "top_p": 1.0,
+                    },
                 )
-            ],
-            model_settings={
-                "max_tokens": 8000,
-                # "temperature": 0.2,
-                # "top_p": 1.0,
-            },
-        )
-    ).parts[0]
-    summary = part.content if isinstance(part, TextPart) else ""
+            ).parts[0]
+            span.update_trace(
+                user_id=user_id,
+                session_id=quiz_id,
+            )
+        summary = part.content if isinstance(part, TextPart) else ""
 
     quiz = await admin_pb.collection("quizes").update(
         quiz_id,
         {
+            "status": "creating",
             "summary": summary,
             "materialsContext": FileUpload(
                 ("materialsContext.txt", bytes(contents, "utf-8"))

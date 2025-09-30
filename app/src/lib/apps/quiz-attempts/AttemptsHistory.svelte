@@ -13,6 +13,7 @@
 
 	import type { Decision } from './types';
 	import type { ClassValue } from 'svelte/elements';
+	import { quizItemsStore } from '../quizes/quizItems.svelte';
 	interface HistoryPoint {
 		quizId: string;
 		attemptId: string;
@@ -58,7 +59,7 @@
 				const totalCount = decisions.length;
 				const correctCount = decisions.filter((decision) => decision.correct).length;
 
-				const quizItems = (quiz.expand?.quizItems_via_quiz || []) as QuizItemsResponse[];
+				const quizItems = (quizItemsStore.quizItemsMap.get(quiz.id) || []) as QuizItemsResponse[];
 				const answerTexts = quizItems
 					.flatMap((item) => item.answers as Answer[])
 					.map((a) => a.content || '');
