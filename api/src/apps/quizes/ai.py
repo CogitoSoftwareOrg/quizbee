@@ -10,11 +10,15 @@ from pydantic_ai.messages import (
     FinalResultEvent,
     FunctionToolCallEvent,
     FunctionToolResultEvent,
+    ModelMessage,
+    ModelRequest,
     PartDeltaEvent,
     PartStartEvent,
+    SystemPromptPart,
     TextPartDelta,
     ThinkingPartDelta,
     ToolCallPartDelta,
+    UserPromptPart,
 )
 
 from src.lib.clients import langfuse_client
@@ -37,6 +41,7 @@ class QuizerDeps:
     dynamic_config: DynamicConfig
     prev_quiz_items: list[Record]
     materials: list[Record]
+    materials_context: str
 
 
 class WrongAnswer(BaseModel):
@@ -110,6 +115,97 @@ def make_quiz_patch_model(n_items: int):
     )
 
 
+def inject_request_prompt(
+    ctx: RunContext[QuizerDeps], messages: list[ModelMessage]
+) -> list[ModelMessage]:
+    prev_quiz_items = ctx.deps.prev_quiz_items
+    difficulty = ctx.deps.quiz.get("difficulty")
+    materials_context = ctx.deps.materials_context
+    adds = "\n".join(ctx.deps.dynamic_config.adds)
+    extra_beginner = "\n".join(ctx.deps.dynamic_config.extraBeginner)
+    extra_expert = "\n".join(ctx.deps.dynamic_config.extraExpert)
+    more_on_topic = "\n".join(ctx.deps.dynamic_config.moreOnTopic)
+    less_on_topic = "\n".join(ctx.deps.dynamic_config.lessOnTopic)
+
+    parts = []
+
+    # SYSTEM PARTS
+    parts.append(
+        SystemPromptPart(
+            content=langfuse_client.get_prompt(
+                "quizer/base", label=settings.env
+            ).compile(
+                prev_quiz_items=json.dumps(prev_quiz_items),
+            )
+        )
+    )
+
+    parts.append(
+        SystemPromptPart(
+            content=langfuse_client.get_prompt(
+                f"quizer/{difficulty}", label=settings.env
+            ).compile()
+        )
+    )
+
+    if len(extra_beginner) > 0:
+        parts.append(
+            SystemPromptPart(
+                content=langfuse_client.get_prompt(
+                    "quizer/extra_beginner", label=settings.env
+                ).compile(questions=extra_beginner)
+            )
+        )
+    if len(extra_expert) > 0:
+        parts.append(
+            SystemPromptPart(
+                content=langfuse_client.get_prompt(
+                    "quizer/extra_expert", label=settings.env
+                ).compile(questions=extra_expert)
+            )
+        )
+    if len(more_on_topic) > 0:
+        parts.append(
+            SystemPromptPart(
+                content=langfuse_client.get_prompt(
+                    "quizer/more_on_topic", label=settings.env
+                ).compile(questions=more_on_topic)
+            )
+        )
+    if len(less_on_topic) > 0:
+        parts.append(
+            SystemPromptPart(
+                content=langfuse_client.get_prompt(
+                    "quizer/less_on_topic", label=settings.env
+                ).compile(questions=less_on_topic)
+            )
+        )
+
+    # USER PARTS
+    if materials_context:
+        parts.append(
+            UserPromptPart(
+                content=langfuse_client.get_prompt(
+                    "quizer/materials", label=settings.env
+                ).compile(
+                    materials=materials_context,
+                )
+            )
+        )
+    if len(adds) > 0:
+        parts.append(
+            UserPromptPart(
+                content=langfuse_client.get_prompt(
+                    "quizer/adds", label=settings.env
+                ).compile(
+                    adds=adds,
+                )
+            )
+        )
+
+    return [ModelRequest(parts=parts)] + messages
+
+
 QUIZER_LLM = LLMS.GPT_5_MINI
 
 quizer_agent = Agent(
@@ -117,69 +213,9 @@ quizer_agent = Agent(
     deps_type=QuizerDeps,
     instrument=True,
     output_type=QuizPatch,
+    history_processors=[inject_request_prompt],
     retries=3,
 )
-
-
-@quizer_agent.system_prompt()
-async def create_base(ctx: RunContext[QuizerDeps]) -> str:
-    prev_quiz_items = ctx.deps.prev_quiz_items
-    prev_questions = [qi.get("question") for qi in prev_quiz_items]
-
-    adds = "\n".join(ctx.deps.dynamic_config.adds)
-
-    prompt = langfuse_client.get_prompt(
-        "quizer/create_base", label=settings.env
-    ).compile(
-        prev_quiz_items=json.dumps(prev_questions),
-        adds=adds,
-    )
-    return prompt
-
-
-@quizer_agent.system_prompt()
-async def difficulty(ctx: RunContext[QuizerDeps]) -> str:
-    difficulty = ctx.deps.quiz.get("difficulty")  # beginner, intermediate, expert
-    prompt = langfuse_client.get_prompt(
-        f"quizer/{difficulty}", label=settings.env
-    ).compile()
-
-    extra_beginner = "\n".join(ctx.deps.dynamic_config.extraBeginner)
-    if len(extra_beginner) > 0:
-        extra_beginner_prompt = langfuse_client.get_prompt(
-            f"quizer/extra_beginner", label=settings.env
-        ).compile(questions=extra_beginner)
-        prompt += extra_beginner_prompt
-
-    extra_expert = "\n".join(ctx.deps.dynamic_config.extraExpert)
-    if len(extra_expert) > 0:
-        extra_expert_prompt = langfuse_client.get_prompt(
-            f"quizer/extra_expert", label=settings.env
-        ).compile(questions=extra_expert)
-        prompt += extra_expert_prompt
-
-    return prompt
-
-
-@quizer_agent.system_prompt()
-async def topic(ctx: RunContext[QuizerDeps]) -> str:
-    prompt = ""
-
-    more_on_topic = "\n".join(ctx.deps.dynamic_config.moreOnTopic)
-    if len(more_on_topic) > 0:
-        more_on_topic_prompt = langfuse_client.get_prompt(
-            f"quizer/more_on_topic", label=settings.env
-        ).compile(questions=more_on_topic)
-        prompt += more_on_topic_prompt
-
-    less_on_topic = "\n".join(ctx.deps.dynamic_config.lessOnTopic)
-    if len(less_on_topic) > 0:
-        less_on_topic_prompt = langfuse_client.get_prompt(
-            f"quizer/less_on_topic", label=settings.env
-        ).compile(questions=less_on_topic)
-        prompt += less_on_topic_prompt
-
-    return prompt
 
 
 async def event_stream_handler(

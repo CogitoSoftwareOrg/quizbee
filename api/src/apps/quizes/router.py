@@ -9,13 +9,14 @@ from fastapi import (
 from fastapi.responses import JSONResponse
 import logging
 from typing import Annotated
+import httpx
 
 from pydantic import BaseModel, Field
 
 from apps.auth import User, auth_user
 from apps.billing import load_subscription
-from apps.materials import user_owns_materials, materials_to_ai_docs
-from lib.clients import AdminPB, langfuse_client
+from apps.materials import user_owns_materials, load_materials_context
+from lib.clients import AdminPB, langfuse_client, HTTPAsyncClient
 
 from .ai import (
     DynamicConfig,
@@ -92,6 +93,7 @@ async def create_quiz(
 # GENERATE QUIZ ITEMS TASK
 async def _generate_quiz_task(
     admin_pb: AdminPB,
+    http: httpx.AsyncClient,
     user_id: str,
     quiz_id: str,
     limit: int,
@@ -135,7 +137,13 @@ async def _generate_quiz_task(
     # Prepare request to LLM
     dynamic_config = DynamicConfig(**quiz.get("dynamicConfig", {}))
     q = quiz.get("query", "")
-    materials_docs = await materials_to_ai_docs(materials)
+    materials_context_file = quiz.get("materialsContext", "")
+    if materials_context_file:
+        materials_context = await load_materials_context(
+            http, quiz_id, materials_context_file
+        )
+    else:
+        materials_context = ""
     try:
         with langfuse_client.start_as_current_span(name="quiz-patch") as span:
             span.update_trace(
@@ -144,12 +152,13 @@ async def _generate_quiz_task(
             )
 
             async with quizer_agent.run_stream(
-                [q, *materials_docs],
+                q,
                 deps=QuizerDeps(
                     quiz=quiz,
                     prev_quiz_items=prev_quiz_items,
                     materials=materials,
                     dynamic_config=dynamic_config,
+                    materials_context=materials_context,
                 ),
                 output_type=make_quiz_patch_model(limit),
                 event_stream_handler=event_stream_handler,
@@ -219,6 +228,7 @@ class GenerateQuizItems(BaseModel):
 @quizes_router.patch("/{quiz_id}")
 async def generate_quiz_items(
     admin_pb: AdminPB,
+    http: HTTPAsyncClient,
     quiz_id: str,
     dto: GenerateQuizItems,
     background: BackgroundTasks,
@@ -243,7 +253,7 @@ async def generate_quiz_items(
 
     # Generate
     background.add_task(
-        _generate_quiz_task, admin_pb, user_id, quiz_id, dto.limit, generation
+        _generate_quiz_task, admin_pb, http, user_id, quiz_id, dto.limit, generation
     )
 
     return JSONResponse(
