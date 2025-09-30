@@ -7,6 +7,7 @@
 	import type { QuizAttemptsResponse, QuizItemsResponse } from '$lib/pb';
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
 	import { computeApiUrl } from '$lib/api/compute-url';
+	import { putApi } from '$lib/api/call-api';
 
 	interface Props {
 		quizAttempt: QuizAttemptsResponse;
@@ -31,12 +32,9 @@
 	}
 
 	async function createFeedback() {
-		const response = await fetch(`${computeApiUrl()}quiz_attempts/${quizAttempt.id}`, {
-			method: 'PUT',
-			credentials: 'include'
-		});
-		const data = await response.json();
-		console.log(data);
+		if (!quizAttempt.id || quizAttempt.feedback) return;
+		const res = await putApi(`quiz_attempts/${quizAttempt.id}`, {});
+		console.log(res);
 	}
 </script>
 

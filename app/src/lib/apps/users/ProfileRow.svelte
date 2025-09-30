@@ -6,6 +6,7 @@
 	import Man from '$lib/assets/images/Man.jpg';
 	import { userStore } from '$lib/apps/users/user.svelte';
 	import { uiStore } from '$lib/apps/users/ui.svelte';
+	import { subscriptionStore } from '../billing/subscriptions.svelte';
 
 	interface Props {
 		class?: ClassValue;
@@ -14,6 +15,7 @@
 
 	const user = $derived(userStore.user);
 	const avatar = $derived(user?.avatar ? pb!.files.getURL(user, user.avatar) : Man);
+	const sub = $derived(subscriptionStore.subscription);
 </script>
 
 <a
@@ -30,7 +32,7 @@
 	{#if uiStore.globalSidebarOpen}
 		<div class="flex h-full flex-1 flex-col gap-1">
 			<p class="truncate text-sm font-semibold">{user?.name || user?.email}</p>
-			<p class="badge-primary badge badge-sm font-semibold">:3</p>
+			<p class="badge-primary badge badge-sm font-semibold">{sub?.tariff}</p>
 		</div>
 
 		<div>

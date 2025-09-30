@@ -3,6 +3,12 @@ from typing import Annotated
 from pocketbase.models.dtos import Record
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent, RunContext
+from pydantic_ai.messages import (
+    ModelMessage,
+    ModelRequest,
+    SystemPromptPart,
+    UserPromptPart,
+)
 
 from lib.settings import settings
 from lib.clients.langfuse import langfuse_client
@@ -14,6 +20,7 @@ class FeedbackerDeps:
     quiz: Record
     quiz_items: list[Record]
     quiz_attempt: Record
+    materials_context: str
 
 
 class Additional(BaseModel):
@@ -31,6 +38,15 @@ class Additional(BaseModel):
             description="The slug of the quiz.",
         ),
     ]
+    quiz_tags: Annotated[
+        list[str],
+        Field(
+            title="Quiz Tags",
+            description="The topic tags of the quiz.",
+            min_length=2,
+            max_length=5,
+        ),
+    ]
 
 
 class Feedback(BaseModel):
@@ -46,6 +62,7 @@ class Feedback(BaseModel):
         Field(
             title="Problem Topics",
             description="A list of problem topics that the user struggled with.",
+            max_length=3,
         ),
     ]
     uncovered_topics: Annotated[
@@ -53,6 +70,7 @@ class Feedback(BaseModel):
         Field(
             title="Uncovered Topics",
             description="A list of topics that are presented in materials but not covered in the quiz.",
+            max_length=3,
         ),
     ]
 
@@ -62,19 +80,9 @@ class FeedbackerOutput(BaseModel):
     additional: Additional
 
 
-FEEDBACKER_LLM = LLMS.GROK_4_FAST
-
-feedbacker_agent = Agent(
-    model=FEEDBACKER_LLM,
-    deps_type=FeedbackerDeps,
-    instrument=True,
-    output_type=FeedbackerOutput,
-    retries=3,
-)
-
-
-@feedbacker_agent.system_prompt()
-async def system_prompt(ctx: RunContext[FeedbackerDeps]) -> str:
+def inject_request_prompt(
+    ctx: RunContext[FeedbackerDeps], messages: list[ModelMessage]
+) -> list[ModelMessage]:
     quiz = ctx.deps.quiz
     quiz_attempt = ctx.deps.quiz_attempt
     quiz_items = ctx.deps.quiz_items
@@ -103,10 +111,44 @@ async def system_prompt(ctx: RunContext[FeedbackerDeps]) -> str:
             if qi.get("id") in correct_item_ids
         ]
     )
+    materials_context = ctx.deps.materials_context
 
-    prompt = langfuse_client.get_prompt("create_feedback", label=settings.env).compile(
-        quiz_content=quiz_content,
-        correct_answers=correct_items_content,
-        wrong_answers=wrong_items_content,
+    parts = []
+
+    # SYSTEM PARTS
+    parts.append(
+        SystemPromptPart(
+            content=langfuse_client.get_prompt(
+                "feedbacker/base", label=settings.env
+            ).compile(
+                quiz_content=quiz_content,
+                correct_answers=correct_items_content,
+                wrong_answers=wrong_items_content,
+            )
+        )
     )
-    return prompt
+    # USER PARTS
+    if materials_context:
+        parts.append(
+            UserPromptPart(
+                content=langfuse_client.get_prompt(
+                    "feedbacker/materials", label=settings.env
+                ).compile(
+                    materials=materials_context,
+                )
+            )
+        )
+
+    return [ModelRequest(parts=parts)] + messages
+
+
+FEEDBACKER_LLM = LLMS.GPT_5_MINI
+
+feedbacker_agent = Agent(
+    model=FEEDBACKER_LLM,
+    deps_type=FeedbackerDeps,
+    instrument=True,
+    output_type=FeedbackerOutput,
+    history_processors=[inject_request_prompt],
+    retries=3,
+)

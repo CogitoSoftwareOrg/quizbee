@@ -9,6 +9,7 @@
 	import Input from '$lib/ui/Input.svelte';
 	import type { Answer } from '$lib/apps/quizes/types';
 	import type { QuizItemsResponse } from '$lib/pb';
+	import { quizItemsStore } from '$lib/apps/quizes/quizItems.svelte';
 
 	type Feedback = {
 		quiz_title: string;
@@ -26,9 +27,7 @@
 	const correctCount = $derived(quizDecisions.filter((d) => d.correct).length);
 
 	const quiz = $derived(quizesStore.quizes.find((q) => q.id === quizAttempt?.quiz));
-	const quizItems = $derived(
-		quiz?.expand.quizItems_via_quiz?.toSorted((a, b) => a.order - b.order) || []
-	);
+	const quizItems = $derived(quizItemsStore.quizItemsMap.get(quiz?.id || '') || []);
 
 	const feedback = $derived(quizAttempt?.feedback as Feedback | undefined);
 

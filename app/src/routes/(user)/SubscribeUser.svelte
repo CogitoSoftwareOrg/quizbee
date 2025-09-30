@@ -1,33 +1,41 @@
 <script lang="ts">
+	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
 	import { materialsStore } from '$lib/apps/materials/materials.svelte';
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte';
+	import { quizItemsStore } from '$lib/apps/quizes/quizItems.svelte';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
 	import { userStore } from '$lib/apps/users/user.svelte';
-	import type { UserExpand, UsersResponse } from '$lib/pb';
 
-  interface Props {
-    userLoadPromise: Promise<UsersResponse<unknown, UserExpand> | null>;
-  }
+	const user = $derived(userStore.user);
+	const sub = $derived(subscriptionStore.subscription);
 
-  const { userLoadPromise }: Props = $props();
+	$effect(() => {
+		const userId = user?.id;
+		if (!userId) return;
 
+		userStore.subscribe(userId);
+		materialsStore.subscribe(userId);
+		quizAttemptsStore.subscribe(userId);
+		quizesStore.subscribe(userId);
+		quizItemsStore.subscribe(userId);
 
-  const user = $derived(userStore.user);
+		return () => {
+			userStore.unsubscribe(userId);
+			materialsStore.unsubscribe();
+			quizAttemptsStore.unsubscribe();
+			quizesStore.unsubscribe();
+			quizItemsStore.unsubscribe();
+		};
+	});
 
-    $effect(() => {
-        const userId = user?.id;
-        if (!userId) return;
+	$effect(() => {
+		const subId = sub?.id;
+		if (!subId) return;
 
-        userStore.subscribe(userId);
-        materialsStore.subscribe(userId);
-        quizAttemptsStore.subscribe(userId);
-        quizesStore.subscribe(userId);
+		subscriptionStore.subscribe(subId);
 
-        return () => {
-            userStore.unsubscribe(userId);
-            materialsStore.unsubscribe();
-            quizAttemptsStore.unsubscribe();
-            quizesStore.unsubscribe();
-        };
-    });
+		return () => {
+			subscriptionStore.unsubscribe(subId);
+		};
+	});
 </script>

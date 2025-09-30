@@ -6,11 +6,12 @@ from starlette.middleware.cors import CORSMiddleware
 from mcp.server.fastmcp import FastMCP
 import httpx
 
+from apps.billing import billing_router
 from apps.quiz_attempts import quiz_attempts_router
 from apps.messages import messages_router
 from apps.quizes import quizes_router
 from apps.materials import materials_router
-from lib.clients.pb import ensure_admin_pb, init_admin_pb
+from lib.clients import init_meilisearch, ensure_admin_pb, init_admin_pb
 from lib.settings import settings
 
 mcp = FastMCP("MCP", stateless_http=True)
@@ -23,7 +24,7 @@ async def lifespan(app: FastAPI):
 
     app.state.http = httpx.AsyncClient()
     init_admin_pb(app)
-    # await init_meilisearch(app)
+    await init_meilisearch(app)
 
     async with contextlib.AsyncExitStack() as stack:
         await stack.enter_async_context(mcp.session_manager.run())
@@ -33,6 +34,7 @@ async def lifespan(app: FastAPI):
     logging.info("Shutting down Quizbee API server")
     # await app.state.meili_client.aclose()
     await app.state.http.aclose()
+    await app.state.meilisearch_client.aclose()
 
 
 def create_app():
@@ -43,6 +45,7 @@ def create_app():
         ],
     )
 
+    app.include_router(billing_router)
     app.include_router(quizes_router)
     app.include_router(messages_router)
     app.include_router(materials_router)
@@ -63,14 +66,14 @@ def create_app():
         pr = settings.pr_id
         assert pr is not None
         allowed_origins = [
-            f"https://{pr}-app-quizbee.cogitosoftware.nl",
-            f"https://{pr}-web-quizbee.cogitosoftware.nl",
+            f"https://{pr}-app.quizbee.academy",
+            f"https://{pr}-web.quizbee.academy",
         ]
     elif settings.env == "production":
         # Production/base
         allowed_origins = [
-            "https://app-quizbee.cogitosoftware.nl",
-            "https://web-quizbee.cogitosoftware.nl",
+            "https://app.quizbee.academy",
+            "https://web.quizbee.academy",
         ]
 
     app.add_middleware(

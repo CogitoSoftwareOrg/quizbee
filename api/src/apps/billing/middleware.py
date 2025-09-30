@@ -8,7 +8,7 @@ from apps.auth.middleware import User
 
 
 def get_subscription(request: Request):
-    return request.state.user
+    return request.state.subscription
 
 
 Subscription = Annotated[Record, Depends(get_subscription)]

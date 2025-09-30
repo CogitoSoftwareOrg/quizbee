@@ -3,15 +3,19 @@
 	import '$lib/pb/pb-on-change';
 
 	import { afterNavigate } from '$app/navigation';
+	import { page } from '$app/state';
 
-	import favicon from '$lib/assets/icons/honey.svg';
+	import favicon from '$lib/assets/icons/bee1.svg';
 	import PortalHost from '$lib/actions/PortalHost.svelte';
+	import posthog from 'posthog-js';
 
 	let { children } = $props();
 
-	afterNavigate(() => {
-		console.log('afterNavigate');
-	});
+	// afterNavigate(() => {
+	// 	posthog.capture('page_view', {
+	// 		path: page.url.pathname
+	// 	});
+	// });
 </script>
 
 <svelte:head>

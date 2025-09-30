@@ -11,7 +11,7 @@ export type QuizExpand = {
 };
 
 export type UserExpand = {
-	subscription: SubscriptionsResponse | undefined;
+	subscriptions_via_user: SubscriptionsResponse[] | undefined;
 	materials_via_user: MaterialsResponse[] | undefined;
 	quizAttempts_via_user: QuizAttemptsResponse[] | undefined;
 	quizes_via_author: QuizesResponse<QuizExpand>[] | undefined;

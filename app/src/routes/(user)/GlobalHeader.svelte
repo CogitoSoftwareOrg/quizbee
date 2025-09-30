@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { PanelRightOpen, PanelRightClose, ChevronLeft } from 'lucide-svelte';
+	import { PanelRightOpen, PanelRightClose, ChevronLeft, Menu } from 'lucide-svelte';
 
 	import { uiStore } from '$lib/apps/users/ui.svelte';
 	import ThemeController from '$lib/features/ThemeController.svelte';
@@ -9,6 +9,8 @@
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte';
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
+	import { fly } from 'svelte/transition';
+	import { quizItemsStore } from '$lib/apps/quizes/quizItems.svelte';
 
 	const isNewQuizPage = $derived(page.url.pathname === '/quizes/new');
 
@@ -23,9 +25,7 @@
 	);
 
 	const quizDecisions = $derived((quizAttempt?.choices as Decision[]) || []);
-	const quizItems = $derived(
-		quiz?.expand.quizItems_via_quiz?.toSorted((a, b) => a.order - b.order) || []
-	);
+	const quizItems = $derived(quizItemsStore.quizItemsMap.get(quiz?.id || '') || []);
 
 	const order = $derived.by(() => {
 		const orderStr = page.url.searchParams.get('order');
@@ -48,23 +48,26 @@
 
 <header
 	class={[
-		'flex items-center justify-between px-3 py-3',
+		'flex items-center justify-between px-2 py-2',
 		!isNewQuizPage && 'border-base-200 border-b'
 	]}
 >
-	<div class="flex items-center gap-4">
-		<label class="swap swap-rotate">
-			<input
-				class="hidden"
-				type="checkbox"
-				checked={uiStore.globalSidebarOpen}
-				onchange={() => {
-					uiStore.toggleGlobalSidebar();
-				}}
-			/>
-			<PanelRightOpen class="swap-on text-neutral-500" size={24} />
-			<PanelRightClose class="swap-off text-neutral-500" size={24} />
-		</label>
+	<div class="flex items-center gap-3">
+		<!-- Mobile Sidebar Toggle -->
+		<button class="flex w-fit items-center sm:hidden" onclick={() => uiStore.toggleGlobalSidebar()}>
+			<Menu class="size-6 text-neutral-500" />
+		</button>
+		<!-- Desktop Sidebar Toggle -->
+		<button
+			class="hidden w-fit cursor-pointer items-center sm:flex"
+			onclick={() => uiStore.toggleGlobalSidebar()}
+		>
+			{#if uiStore.globalSidebarOpen}
+				<PanelRightOpen class="size-6 text-neutral-500" />
+			{:else}
+				<PanelRightClose class="size-6 text-neutral-500" />
+			{/if}
+		</button>
 		{#if !attemptingQuiz}
 			<h1 class="hidden font-semibold sm:block">{getTitle()}</h1>
 		{:else if attemptingQuiz}
