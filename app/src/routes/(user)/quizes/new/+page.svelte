@@ -3,17 +3,54 @@
     import DifficultySelector from './DifficultySelector.svelte';
     import QuestionNumberSelector from './QuestionNumberSelector.svelte';
     import StartQuizButton from './StartQuizButton.svelte';
-    import PreviousQuizes from './PreviousQuizes.svelte';
+    
+    import Drafts from './Drafts.svelte';
+     import { untrack } from 'svelte';
     import InfoIcon from '$lib/ui/InfoIcon.svelte';
     import type { AttachedFile } from '$lib/types/attached-file';
+	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
+	import { pb } from '$lib/pb';
+    import { generateId } from '$lib/utils/generate-id';
 
 
-   
 
+    function generateUniqueTitle(baseTitle: string, existingTitles: string[]): string {
+        let title = baseTitle;
+        let counter = 1;
+        while (existingTitles.includes(title)) {
+            title = `${baseTitle} (${counter})`;
+            counter++;
+        }
+        return title;
+    }
+
+    let quizTemplateId = $state<string>('');    let title = $state<string>('');
     let attachedFiles = $state<AttachedFile[]>([]);
     let selectedDifficulty = $state('intermediate');
     let questionCount = $state(10);
     let inputText = $state('');
+
+    let inputElement: HTMLInputElement;
+
+
+
+    let isDraft = $derived(quizesStore.quizes.find(q => q.id === quizTemplateId)?.status==='draft');
+
+
+
+	$effect(() => {
+        if (untrack(() => quizTemplateId) && title.trim()) {
+            pb!.collection('quizes').update(untrack(() => quizTemplateId), { title: title.trim() });
+        }
+    });
+
+    $effect(() => {
+        if (inputElement && title) {
+            inputElement.style.width = '0';
+            inputElement.style.width = inputElement.scrollWidth + 5 + 'px';
+        }
+    });
+   
 </script>
 
 <svelte:head>
@@ -22,16 +59,25 @@
 
 <main class="relative h-full flex">
     
-    <PreviousQuizes 
-        bind:inputText
-        bind:attachedFiles
-    />
-    
-    
-    <div class="flex-1 relative py-16 px-8 overflow-y-auto">
+    <div class="flex">
+        <Drafts
+            bind:title
+            bind:quizTemplateId
+            bind:inputText
+            bind:attachedFiles
+            bind:selectedDifficulty
+            bind:questionCount
+            bind:isDraft
+        />
         
-        <div class="text-center mb-12">
-            <h1 class="text-5xl font-bold">New Quiz</h1>
+       
+    </div>
+    
+    
+    <div class="flex-1 relative py-1 overflow-y-auto">
+        
+        <div class="text-center mb-8">
+            <input bind:value={title} bind:this={inputElement} type="text" placeholder="Type in a title" class="input input-lg rounded-lg text-5xl font-semibold text-center" style="min-width: 350px; min-height: 65px; padding-bottom: 5px;" oninput={(e) => { const target = e.target as HTMLInputElement;target.style.width = '0'; target.style.width = target.scrollWidth +5 + 'px';  }} onblur={() => { if (title.trim() === '') { title = generateUniqueTitle('Untitled', quizesStore.quizes.filter(q => q.status === 'draft').map(q => q.title)); } }} />
         </div>
     
     
@@ -49,7 +95,7 @@ Feel free to attach presentations, PDFs, images, and more—we support a wide ra
         </div>
         <div class="flex justify-center mt-4 mb-12">
             <div class="w-full max-w-4xl">
-                <FileInput bind:attachedFiles bind:inputText />      
+                <FileInput bind:attachedFiles bind:inputText bind:quizTemplateId />      
             </div>
         </div>
         
@@ -91,13 +137,7 @@ Feel free to attach presentations, PDFs, images, and more—we support a wide ra
                 {selectedDifficulty}
                 {questionCount}
             />
-            <button
-                type="button"
-                class="ml-4 btn btn-outline btn-secondary"
-                onclick={() => { inputText = ''; attachedFiles = []; }}
-            >
-                Clear
-            </button>
+            
         </div>
     </div>
     </div>

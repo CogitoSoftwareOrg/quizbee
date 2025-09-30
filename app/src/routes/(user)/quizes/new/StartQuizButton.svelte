@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { computeApiUrl } from '$lib/api/compute-url';
+	import { materialsStore } from '$lib/apps/materials/materials.svelte';
+	import { pb } from '$lib/pb';
 	import { uiStore } from '$lib/apps/users/ui.svelte';
 
 	type AttachedFile = {
@@ -33,10 +35,14 @@
 		isLoading = true;
 
 		try {
+			
 			const selectedMaterialIds = attachedFiles
-				.filter((file) => file.materialId)
 				.map((file) => file.materialId!);
 
+			console.log('Selected material IDs:', selectedMaterialIds);
+			for (const materialId of selectedMaterialIds) {
+				pb!.collection('materials').update(materialId, { status: 'used' });
+			}
 			const createQuizPayload = {
 				query: inputText,
 				material_ids: selectedMaterialIds,
@@ -45,7 +51,7 @@
 				difficulty: selectedDifficulty.toLowerCase()
 			};
 
-			const createResponse = await fetch(`${computeApiUrl()}quizes`, {
+			const createResponse = await fetch(`${computeApiUrl()}/quizes`, {
 				method: 'POST',
 				body: JSON.stringify(createQuizPayload),
 				headers: {
@@ -67,7 +73,7 @@
 				limit: 50 // for now just gurantee total number of questions
 			};
 
-			const updateResponse = await fetch(`${computeApiUrl()}quizes/${quizId}`, {
+			const updateResponse = await fetch(`${computeApiUrl()}/quizes/${quizId}`, {
 				method: 'PATCH',
 				body: JSON.stringify(updateQuizPayload),
 				headers: {

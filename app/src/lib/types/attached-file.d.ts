@@ -2,12 +2,12 @@
 type AttachedFile = {
 		file?: File;
 		previewUrl: string | null;
-		materialId?: string;
+		materialId: string;
 		name: string;
 		isUploading?: boolean;
 		uploadError?: string;
-    tokens?: number;
-		fromPreviousQuiz?: boolean;
+    	tokens?: number;
+		
 	};
 
 export type { AttachedFile };

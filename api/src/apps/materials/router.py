@@ -3,10 +3,12 @@ from pocketbase import FileUpload
 from fastapi.responses import JSONResponse
 from .tokens_calculation import count_pdf_tokens
 from apps.auth import User
+from apps.auth import User, auth_user
 from lib.clients import AdminPB
 import asyncio
 
-materials_router = APIRouter(prefix="/materials", tags=["materials"])
+materials_router = APIRouter(prefix="/materials", tags=["materials"],
+                             dependencies=[Depends(auth_user)])
 
 
 @materials_router.post("/upload")

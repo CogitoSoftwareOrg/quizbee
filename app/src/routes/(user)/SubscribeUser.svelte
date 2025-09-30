@@ -11,22 +11,6 @@
 
   const { userLoadPromise }: Props = $props();
 
-  $effect(() => {
-        userLoadPromise.then(async (userLoad) => {
-            const materials = userLoad?.expand.materials_via_user || [];
-            const quizAttempts = userLoad?.expand.quizAttempts_via_user || [];
-            const quizes = userLoad?.expand.quizes_via_author || [];
-
-            materialsStore.materials = materials;
-            quizAttemptsStore.quizAttempts = quizAttempts;
-            quizesStore.quizes = quizes;
-
-            userLoad!.expand = {} as UserExpand;
-            userStore.user = userLoad!;
-
-            userStore.setLoaded();
-        });
-    });
 
   const user = $derived(userStore.user);
 
