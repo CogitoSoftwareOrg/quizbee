@@ -28,3 +28,10 @@ async def load_materials_context(http: httpx.AsyncClient, quiz_id: str, file_nam
     resp = await http.get(url)
     resp.raise_for_status()
     return resp.text
+
+
+async def load_file_bytes(http: httpx.AsyncClient, col: str, rid: str, file_name: str):
+    url = f"{settings.pb_url}/api/files/{col}/{rid}/{file_name}"
+    resp = await http.get(url)
+    resp.raise_for_status()
+    return resp.content

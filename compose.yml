@@ -56,6 +56,14 @@ services:
       pnpm astro dev --host 0.0.0.0 --port 4321'
     ports:
       - "4321:4321"
+  meilisearch:
+    image: getmeili/meilisearch:latest
+    ports:
+      - "7700:7700"
+    volumes:
+      - ./meilisearch/data:/meili_data
+    env_file:
+      - .env
 
 volumes:
   app_node_modules:
@@ -76,12 +84,3 @@ volumes:
   #     - api/src:/app/src:ro
   #   command: >
   #     sh -lc 'uv run python -m watchfiles --filter python -- "uv run arq -v api.worker.WorkerSettings"'
-
-  # meilisearch:
-  #   image: getmeili/meilisearch:latest
-  #   ports:
-  #     - "7700:7700"
-  #   volumes:
-  #     - meilisearch/data:/meili_data
-  #   env_file:
-  #     - .env

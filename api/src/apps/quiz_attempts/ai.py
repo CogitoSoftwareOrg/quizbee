@@ -38,6 +38,15 @@ class Additional(BaseModel):
             description="The slug of the quiz.",
         ),
     ]
+    quiz_tags: Annotated[
+        list[str],
+        Field(
+            title="Quiz Tags",
+            description="The topic tags of the quiz.",
+            min_length=2,
+            max_length=5,
+        ),
+    ]
 
 
 class Feedback(BaseModel):

@@ -11,7 +11,7 @@ from apps.quiz_attempts import quiz_attempts_router
 from apps.messages import messages_router
 from apps.quizes import quizes_router
 from apps.materials import materials_router
-from lib.clients.pb import ensure_admin_pb, init_admin_pb
+from lib.clients import init_meilisearch, ensure_admin_pb, init_admin_pb
 from lib.settings import settings
 
 mcp = FastMCP("MCP", stateless_http=True)
@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI):
 
     app.state.http = httpx.AsyncClient()
     init_admin_pb(app)
-    # await init_meilisearch(app)
+    await init_meilisearch(app)
 
     async with contextlib.AsyncExitStack() as stack:
         await stack.enter_async_context(mcp.session_manager.run())
@@ -34,6 +34,7 @@ async def lifespan(app: FastAPI):
     logging.info("Shutting down Quizbee API server")
     # await app.state.meili_client.aclose()
     await app.state.http.aclose()
+    await app.state.meilisearch_client.aclose()
 
 
 def create_app():
