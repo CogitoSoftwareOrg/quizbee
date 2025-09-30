@@ -18,6 +18,7 @@ from pydantic_ai.messages import (
     TextPartDelta,
     ThinkingPartDelta,
     ToolCallPartDelta,
+    UserPromptPart,
 )
 from pydantic_ai.messages import ModelMessage, ModelRequest, SystemPromptPart
 from pocketbase.models.dtos import Record
@@ -32,38 +33,43 @@ from src.apps.billing import UsageCollector
 
 @dataclass
 class ExplainerDeps:
-    admin_pb: PocketBase
-    quiz_attempt: Record
-    quiz: Record
-    quiz_items: list[Record]
+    materials_context: str
     current_item: Record
     current_decision: Any
 
 
-EXPLAINER_LLM = LLMS.GROK_4_FAST
+EXPLAINER_LLM = LLMS.GPT_5_MINI
 
 
 def inject_system_prompt(
     ctx: RunContext[ExplainerDeps], messages: list[ModelMessage]
 ) -> list[ModelMessage]:
+    materials_context = ctx.deps.materials_context
     current_item = ctx.deps.current_item
     decision = ctx.deps.current_decision
     question = current_item.get("question", "")
     answers = current_item.get("answers", "")
 
-    sys_part = SystemPromptPart(
-        content=langfuse_client.get_prompt("explain_quiz", label=settings.env).compile(
-            question=question, answers=answers, decision=decision
+    parts = []
+
+    parts.append(
+        SystemPromptPart(
+            content=langfuse_client.get_prompt(
+                "explainer/base", label=settings.env
+            ).compile(question=question, answers=answers, decision=decision)
         )
     )
 
-    for msg in messages:
-        if isinstance(msg, ModelRequest):
-            msg.parts = [p for p in msg.parts if not isinstance(p, SystemPromptPart)]
-            msg.parts.insert(0, sys_part)  # pyright: ignore[reportArgumentType]
-            return messages
+    if len(materials_context) > 0:
+        parts.append(
+            UserPromptPart(
+                content=langfuse_client.get_prompt(
+                    "explainer/materials", label=settings.env
+                ).compile(materials=materials_context)
+            )
+        )
 
-    return [ModelRequest(parts=[sys_part])] + messages
+    return [ModelRequest(parts=parts)] + messages
 
 
 explainer_agent = Agent(

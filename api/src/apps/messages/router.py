@@ -4,8 +4,8 @@ from fastapi.responses import StreamingResponse
 
 from apps.auth import auth_user
 from apps.billing import Subscription, load_subscription
-from apps.materials.utils import materials_to_ai_docs
-from lib.clients import AdminPB, langfuse_client
+from apps.materials.utils import load_materials_context, materials_to_ai_docs
+from lib.clients import AdminPB, HTTPAsyncClient, langfuse_client
 from lib.utils import sse
 from apps.auth import User
 
@@ -25,6 +25,7 @@ messages_router = APIRouter(
 @messages_router.get("/sse")
 async def sse_messages(
     admin_pb: AdminPB,
+    http: HTTPAsyncClient,
     user: User,
     subscription: Subscription,
     query: str = Query(alias="q"),
@@ -60,7 +61,13 @@ async def sse_messages(
         decision for decision in choices if decision.get("itemId") == item_id
     ][0]
 
-    ai_docs = await materials_to_ai_docs(materials)
+    materials_context_file = quiz.get("materialsContext", "")
+    if materials_context_file:
+        materials_context = await load_materials_context(
+            http, quiz.get("id"), materials_context_file
+        )
+    else:
+        materials_context = ""
 
     # GUARD
     if quiz_attempt.get("user") != user.get("id"):
@@ -90,21 +97,26 @@ async def sse_messages(
     )
     ai_msg_id = ai_msg.get("id", "")
 
+    materials_context_file = quiz.get("materialsContext", "")
+    if materials_context_file:
+        materials_context = await load_materials_context(
+            http, quiz.get("id"), materials_context_file
+        )
+    else:
+        materials_context = ""
+
     async def event_generator():
         content = ""
 
         deps = ExplainerDeps(
-            admin_pb=admin_pb,
-            quiz_attempt=quiz_attempt,
-            quiz=quiz,
-            quiz_items=quiz_items,
+            materials_context=materials_context,
             current_item=current_item,
             current_decision=current_decision,
         )
 
         with langfuse_client.start_as_current_span(name="explainer-agent") as span:
             async with explainer_agent.run_stream(
-                [query, *ai_docs],
+                query,
                 message_history=history,
                 deps=deps,
                 # event_stream_handler=event_stream_handler,
