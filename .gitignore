@@ -4,6 +4,9 @@
 
 **/.env
 **/.env.production
+**/.env.development
+**/.env.local
+**/.env.preview
 
 pb/pb_data
 meilisearch/data
