@@ -13,11 +13,14 @@
 		selectedDifficulty: string;
         questionCount: number;
 		isDraft: boolean;
+		searchQuery: string;
+		onQuizSelected?: () => void;
 	}
 
-	let {quizTemplateId = $bindable(), inputText = $bindable(), attachedFiles = $bindable(), selectedDifficulty = $bindable(), questionCount = $bindable(), isDraft = $bindable()}: Props = $props();
+	let {quizTemplateId = $bindable(), inputText = $bindable(), attachedFiles = $bindable(), selectedDifficulty = $bindable(), questionCount = $bindable(), isDraft = $bindable(), searchQuery = $bindable(), onQuizSelected = () => {}}: Props = $props();
 
 	const previousQuizes = $derived(quizesStore.quizes.filter((q: any) => q.status !== 'draft'));
+	const filteredQuizes = $derived(previousQuizes.filter(q => q.title.toLowerCase().includes(searchQuery.toLowerCase()) || (q.query && q.query.toLowerCase().includes(searchQuery.toLowerCase()))));
 	
 
 
@@ -69,43 +72,45 @@
 			// Если материалов нет, очищаем прикрепленные файлы
 			attachedFiles = [];
 		}
+
+		onQuizSelected();
 	}
 </script>
 
 <div class="border-base-200 h-full w-80 flex-shrink-0 overflow-y-auto border-r">
-	<div class="p-6">
-		<h2 class="mb-4 text-center text-xl font-bold">Previous quizes templates</h2>
+	
+		
 
 		<!-- Динамическая история квизов из store -->
 		<div class="space-y-3">
-			{#if previousQuizes.length === 0}
+			{#if filteredQuizes.length === 0}
 				<div class="mt-8 text-center">
 					<p class="text-sm">No previous quizes yet</p>
 					<p class="mt-1 text-xs">Create your first quiz!</p>
 				</div>
 			{:else}
-				{#each previousQuizes as quiz}
+				{#each filteredQuizes as quiz}
 					<div
-						class="border-base-200 cursor-pointer rounded-lg border p-4 shadow-sm transition-shadow hover:shadow-md {quiz.id === quizTemplateId ? 'bg-yellow-200' : ''}"
+						class="border-base-200 cursor-pointer rounded-lg border p-4 shadow-sm transition-shadow hover:shadow-md hover:bg-red-100 }"
 						onclick={() => handleQuizClick(quiz)}
 						onkeydown={(e) => e.key === 'Enter' && handleQuizClick(quiz)}
 						role="button"
 						tabindex="0"
 					>
-						<h3 class="mb-1 truncate font-medium" title={quiz.title || `Quiz ${quiz.id}`}>
+						<h3 class="mb-1 truncate font-medium text-left" title={quiz.title || `Quiz ${quiz.id}`}>
 							{quiz.title || `Quiz ${quiz.id}`}
 						</h3>
-						<p class="mb-2 text-sm">
+						<p class="mb-2 text-sm text-left">
 							Quiz ID: {quiz.id}
 						</p>
 						{#if quiz.query}
-							<p class="text-primary mb-1 text-xs">
+							<p class="text-primary mb-1 text-xs text-left">
 								<span class="font-medium">Query:</span>
 								{quiz.query}
 							</p>
 						{/if}
 						{#if quiz.materials && quiz.materials.length > 0}
-							<p class="text-success text-xs">
+							<p class="text-success text-xs text-left">
 								<span class="font-medium">Materials:</span>
 								{quiz.materials.length} file(s)
 							</p>
@@ -115,4 +120,3 @@
 			{/if}
 		</div>
 	</div>
-</div>

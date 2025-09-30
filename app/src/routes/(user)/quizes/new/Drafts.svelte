@@ -7,8 +7,25 @@
     import { generateId } from '$lib/utils/generate-id';
     import { untrack } from 'svelte';
     import { onMount  } from 'svelte';
-	import { is } from 'zod/locales';
-	import { set } from 'zod';
+    import PreviousQuizes from './PreviousQuizes.svelte';
+
+    function generateUniqueTitle(baseTitle: string, existingTitles: string[]): string {
+        let title = baseTitle;
+        let counter = 1;
+        while (existingTitles.includes(title)) {
+            title = `${baseTitle} (${counter})`;
+            counter++;
+        }
+        return title;
+    }
+
+    function truncateFileName(filename: string, maxLength: number = 50): string {
+        if (filename.length <= maxLength) {
+            return filename;
+        }
+        return filename.substring(0, maxLength - 3) + '...';
+    }
+
 
     
     interface Props {
@@ -35,13 +52,17 @@
 		formData.append('difficulty', selectedDifficulty);
 		formData.append('itemsLimit', questionCount.toString());
 		formData.append('author', pb!.authStore.model?.id || '');
-		formData.append('title', `Draft from ${currentQuiz.title || 'Quiz'}`);
+		const baseTitle = `Draft from ${currentQuiz.title || 'Quiz'}`;
+		const existingTitles = drafts.map(d => d.title);
+		const uniqueTitle = generateUniqueTitle(baseTitle, existingTitles);
+		formData.append('title', uniqueTitle);
 		formData.append('id', newId);
 
         
 
 		pb!.collection('quizes').create(formData);
 		quizTemplateId = newId;
+		title = uniqueTitle;
 	}
 
 	
@@ -51,12 +72,13 @@
     // drafts from store
     const drafts = $derived(quizesStore.quizes.filter((q: any) => q.status === 'draft'));
 
-    // Автоматическое обновление сложности в PB
+    let showModal = $state(false);
+    let searchQuery = $state('');
     let isAddingDraft = false;
     $effect(() => {
             
             if (!untrack(() => isAddingDraft) && untrack(() => isDraft) && untrack(() => quizTemplateId) && selectedDifficulty) {
-                    
+                    console.log('updating difficulty to', selectedDifficulty);
                
                     pb!.collection('quizes').update(untrack(() => quizTemplateId), { difficulty: selectedDifficulty })
                 
@@ -117,6 +139,7 @@
             });
             selectedDifficulty = drafts[0].difficulty;
             questionCount = drafts[0].itemsLimit;
+            title = drafts[0].title;
         }
     });
 
@@ -128,6 +151,7 @@
        });
        selectedDifficulty = draft.difficulty;
        questionCount = draft.itemsLimit;
+       title = draft.title;
     }
 
     async function handleDelete(draft: any) {
@@ -135,11 +159,24 @@
             await pb!.collection('quizes').delete(draft.id);
             quizesStore.quizes = quizesStore.quizes.filter(q => q.id !== draft.id);
             if (quizTemplateId === draft.id) {
-                quizTemplateId = '';
-                inputText = '';
-                attachedFiles = [];
-                selectedDifficulty = 'intermediate';
-                questionCount = 10;
+                if (drafts.length > 0) {
+                    const nextDraft = drafts[0];
+                    quizTemplateId = nextDraft.id;
+                    inputText = nextDraft.query;
+                    attachedFiles = nextDraft.materials.map((materialId: string) => {
+                        return createAttachedFileFromMaterial(materialId, nextDraft.status);
+                    });
+                    selectedDifficulty = nextDraft.difficulty;
+                    questionCount = nextDraft.itemsLimit;
+                    title = nextDraft.title;
+                } else {
+                    quizTemplateId = '';
+                    inputText = '';
+                    attachedFiles = [];
+                    selectedDifficulty = 'intermediate';
+                    questionCount = 10;
+                    title = '';
+                }
             }
         }
     }
@@ -156,7 +193,10 @@
         formData.append('difficulty', 'intermediate');
         formData.append('questionCount', '10');
         formData.append('author', pb!.authStore.model?.id || '');
-        formData.append('title', `Draft ${drafts.length + 1}`);
+        const baseTitle = 'Draft';
+        const existingTitles = drafts.map(d => d.title);
+        const uniqueTitle = generateUniqueTitle(baseTitle, existingTitles);
+        formData.append('title', uniqueTitle);
         formData.append('id', newId);
 
         pb!.collection('quizes').create(formData);
@@ -166,6 +206,7 @@
         attachedFiles = [];
         selectedDifficulty = 'intermediate';
         questionCount = 10;
+        title = uniqueTitle;
         
         setTimeout(() => {
             isAddingDraft = false;
@@ -178,30 +219,59 @@
     }
 </script>
 
-<div class="mb-6">
-    <h2 class="mb-3 text-center text-lg font-semibold">Drafts</h2>
-    <div class="flex justify-center mb-3">
-        <button class="btn btn-primary btn-sm" onclick={addDraft}>Add Draft</button>
+<div class="mb-0">
+    <h2 class="mb-3 mt-0 text-center text-3xl font-semibold">Drafts</h2>
+    <div class="flex justify-center mb-0 mt-0">
+        <button class="btn btn-primary btn-xs" onclick={addDraft}>
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="lucide lucide-plus mr-1"
+        ><path d="M12 5v14M5 12h14"/></svg>
+        <span class="mt-1 text-[0.8rem]">Add Empty Draft</span>
+    </button>
     </div>
-
-    {#if drafts.length === 0}
+    <div class="flex justify-center mb-5 mt-2">
+        <button class="btn btn-secondary btn-xs" onclick={() => showModal = true}>
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-plus mr-1"
+            ><path d="M12 5v14M5 12h14"/></svg>
+            <span class="mt-1 text-[0.8rem]">Create from a Quiz</span>
+        </button>
+    </div>    {#if drafts.length === 0}
         <div class="text-center">
             <p class="text-sm">No drafts yet</p>
             <p class="mt-1 text-xs">Start drafting your quiz and it will appear here.</p>
         </div>
     {:else}
-        <div class="space-y-3">
+        <div class="overflow-y-auto max-h-150 space-y-3">
             {#each drafts as draft}
                 <div
-                    class="relative border-base-200 cursor-pointer rounded-lg border p-3 shadow-sm transition-shadow hover:shadow-md"
+                    class="relative border-base-200 cursor-pointer rounded-lg border p-2 shadow-sm transition-shadow hover:shadow-md"
                     class:bg-yellow-100={draft.id === quizTemplateId}
                     onclick={() => handleDraftClick(draft)}
                     onkeydown={(e) => e.key === 'Enter' && handleDraftClick(draft)}
                     role="button"
                     tabindex="0"
                 >
-                    <div class="mb-1 truncate font-medium" title={draft.title || `Draft ${draft.id}`}>
-                        {draft.title || `Draft ${draft.id}`}
+                    <div class="mb-1 truncate font-medium" >
+                        {truncateFileName(draft.title, 28)}
                     </div>
                     <div class="text-xs text-muted">
                         {#if draft.updated}
@@ -212,7 +282,7 @@
                     </div>
                     {#if drafts.length > 1}
                         <button 
-                            class="absolute top-2 right-2 text-red-500 hover:text-red-700 text-lg" 
+                            class="absolute top-0 right-0 cursor-pointer text-red-500 hover:text-red-700 text-lg" 
                             onclick={(e) => { e.stopPropagation(); handleDelete(draft); }}
                             title="Delete draft"
                         >
@@ -224,3 +294,44 @@
         </div>
     {/if}
 </div>
+
+{#if showModal}
+    <div class="modal modal-open">
+        <div class="modal-box max-w-sm max-h-screen relative items-start">
+            <button class="btn btn-sm btn-circle btn-ghost absolute right-1 top-1 text-xl" onclick={() => showModal = false}>&times;</button>
+            <h3 class="font-bold text-center text-xl">Create draft from a previous quiz</h3>
+            <div class="relative mb-4 mt-4">
+                <input 
+                    bind:value={searchQuery} 
+                    placeholder="Search previous quizes.." 
+                    class="w-full pl-8 pr-2 py-1 border border-base-300 rounded text-sm focus:outline-none focus:border-primary" 
+                />
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="absolute left-2 top-1/2 transform -translate-y-1/2 text-base-content/60 lucide lucide-search"
+                    ><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg
+                >
+            </div>
+            <div class="flex justify-start overflow-y-auto max-h-135">
+                <PreviousQuizes
+                    bind:searchQuery
+                    bind:quizTemplateId
+                    bind:inputText
+                    bind:attachedFiles
+                    bind:selectedDifficulty
+                    bind:questionCount
+                    bind:isDraft
+                    onQuizSelected={() => showModal = false}
+                />
+            </div>
+        </div>
+    </div>
+{/if}
