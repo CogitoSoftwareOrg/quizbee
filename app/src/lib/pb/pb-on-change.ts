@@ -29,8 +29,8 @@ pb!.authStore.onChange((token, record) => {
 
 function setPBCookie() {
 	const host = typeof window !== 'undefined' ? window.location.hostname : '';
-	const isQuizbee = host.endsWith('quizbee.cogitosoftware.nl');
-	const domainAttr = isQuizbee ? 'Domain=.cogitosoftware.nl' : undefined;
+	const isQuizbee = host.endsWith('quizbee.academy');
+	const domainAttr = isQuizbee ? 'Domain=.quizbee.academy' : undefined;
 	const maxAge = 100 * 24 * 60 * 60;
 	document.cookie = [
 		`pb_token=${pb!.authStore.token}`,
