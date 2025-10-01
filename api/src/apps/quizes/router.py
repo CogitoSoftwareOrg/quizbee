@@ -28,7 +28,7 @@ quizes_router = APIRouter(
 
 class CreateQuizDto(BaseModel):
     quiz_id: str = Field(default="")
-    with_attempt: bool = Field(default=True)
+    attempt_id: str | None = Field(default=None)
     # number_of_questions: int = Field(default=10, ge=1, le=50)
     # material_ids: list[str] = Field(default=[])
     # query: str = Field(default="")
@@ -52,30 +52,31 @@ async def create_quiz(
     quiz_id = dto.quiz_id
     limit = 50
 
-    background.add_task(
-        start_generating_quiz_task, admin_pb, http, user_id, quiz_id, limit
-    )
-
-    if dto.with_attempt:
+    attempt_id = dto.attempt_id
+    if not attempt_id:
         quiz_attempt = await admin_pb.collection("quizAttempts").create(
             {
                 "user": user_id,
                 "quiz": quiz_id,
             }
         )
-    else:
-        quiz_attempt = {}
+        attempt_id = quiz_attempt.get("id", "")
+
+    background.add_task(
+        start_generating_quiz_task, admin_pb, http, user_id, attempt_id, quiz_id, limit
+    )
 
     return JSONResponse(
         content={
             "quiz_id": quiz_id,
-            "quiz_attempt_id": quiz_attempt.get("id", ""),
+            "quiz_attempt_id": attempt_id,
         },
         status_code=status.HTTP_202_ACCEPTED,
     )
 
 
 class GenerateQuizItems(BaseModel):
+    attempt_id: str = Field(default="")
     limit: Annotated[int, Field(default=50, ge=2, le=50)]
 
 
@@ -90,7 +91,13 @@ async def generate_quiz_items(
 ):
     # Generate
     background.add_task(
-        generate_quiz_task, admin_pb, http, user.get("id", ""), quiz_id, dto.limit
+        generate_quiz_task,
+        admin_pb,
+        http,
+        user.get("id", ""),
+        dto.attempt_id,
+        quiz_id,
+        dto.limit,
     )
 
     return JSONResponse(

@@ -114,6 +114,7 @@
 					<Button
 						onclick={async () => {
 							const result = await patchApi(`quizes/${quiz?.id}`, {
+								attempt_id: quizAttemptId,
 								limit: 50 // for now just gurantee total number of questions
 							});
 

@@ -31,6 +31,7 @@ async def start_generating_quiz_task(
     admin_pb: AdminPB,
     http: HTTPAsyncClient,
     user_id: str,
+    attempt_id: str,
     quiz_id: str,
     limit: int,
 ):
@@ -74,12 +75,14 @@ async def start_generating_quiz_task(
 
     # Generate summary
     summary = ""
+    prompt_cache_key = f"quiz-{attempt_id}"
     if len(texts) > 0:
         with langfuse_client.start_as_current_span(name="quiz-summary") as span:
-            summary = await summarize_text(texts, f"quiz-{quiz_id}")
+            summary = await summarize_text(texts, prompt_cache_key)
             span.update_trace(
                 user_id=user_id,
-                session_id=quiz_id,
+                session_id=attempt_id,
+                metadata={"prompt_cache_key": prompt_cache_key},
             )
 
     quiz = await admin_pb.collection("quizes").update(
@@ -93,13 +96,14 @@ async def start_generating_quiz_task(
         },
     )
 
-    await generate_quiz_task(admin_pb, http, user_id, quiz_id, limit)
+    await generate_quiz_task(admin_pb, http, user_id, attempt_id, quiz_id, limit)
 
 
 async def generate_quiz_task(
     admin_pb: AdminPB,
     http: HTTPAsyncClient,
     user_id: str,
+    attempt_id: str,
     quiz_id: str,
     limit: int,
 ):
@@ -155,7 +159,7 @@ async def generate_quiz_task(
 
     cancelled = False
     seen = 0
-    prompt_cache_key = f"quiz-{quiz_id}"
+    prompt_cache_key = f"quiz-{attempt_id}"
 
     user_contents = []
     if q:
@@ -237,7 +241,7 @@ async def generate_quiz_task(
 
             span.update_trace(
                 user_id=user_id,
-                session_id=quiz_id,
+                session_id=attempt_id,
                 metadata={
                     "read_cache_input": read_cache_input,
                     "write_cache_input": write_cache_input,

@@ -32,7 +32,6 @@
 
 			const { quiz_id: quizId, quiz_attempt_id: quizAttemptsId } = await postApi('quizes', {
 				quiz_id: quizTemplateId,
-				with_attempt: true
 			});
 
 			console.log('Quiz created:', quizId, 'Attempt created:', quizAttemptsId);
