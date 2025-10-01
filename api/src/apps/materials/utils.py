@@ -25,13 +25,27 @@ async def materials_to_ai_docs(
 
 async def load_materials_context(http: httpx.AsyncClient, quiz_id: str, file_name: str):
     url = f"{settings.pb_url}/api/files/quizes/{quiz_id}/{file_name}"
-    resp = await http.get(url)
-    resp.raise_for_status()
-    return resp.text
+    try:
+        resp = await http.get(url)
+        resp.raise_for_status()
+        return resp.text
+    except httpx.ReadError as e:
+        # Handle connection issues gracefully
+        raise httpx.HTTPError(f"Failed to read materials context from {url}: {e}")
+    except httpx.HTTPStatusError as e:
+        # Handle HTTP errors
+        raise httpx.HTTPError(f"HTTP error loading materials context from {url}: {e}")
 
 
 async def load_file_bytes(http: httpx.AsyncClient, col: str, rid: str, file_name: str):
     url = f"{settings.pb_url}/api/files/{col}/{rid}/{file_name}"
-    resp = await http.get(url)
-    resp.raise_for_status()
-    return resp.content
+    try:
+        resp = await http.get(url)
+        resp.raise_for_status()
+        return resp.content
+    except httpx.ReadError as e:
+        # Handle connection issues gracefully
+        raise httpx.HTTPError(f"Failed to read file bytes from {url}: {e}")
+    except httpx.HTTPStatusError as e:
+        # Handle HTTP errors
+        raise httpx.HTTPError(f"HTTP error loading file bytes from {url}: {e}")

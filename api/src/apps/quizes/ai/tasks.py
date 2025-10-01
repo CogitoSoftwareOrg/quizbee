@@ -1,6 +1,8 @@
 import asyncio
 import base64
+import contextlib
 import logging
+import httpx
 from pocketbase import FileUpload
 from pydantic_ai.direct import model_request
 from pydantic_ai.messages import (
@@ -175,6 +177,10 @@ async def generate_quiz_task(
         )
     else:
         materials_context = ""
+
+    cancelled = False
+    seen = 0
+
     try:
         with langfuse_client.start_as_current_span(name="quiz-patch") as span:
             span.update_trace(
@@ -192,20 +198,20 @@ async def generate_quiz_task(
                     materials_context=materials_context,
                 ),
                 output_type=make_quiz_patch_model(limit),
-                event_stream_handler=event_stream_handler,
+                # event_stream_handler=event_stream_handler,
             ) as result:
-                seen = 0
-                async for partial in result.stream_output():
+                stream = result.stream_output()
+                async for partial in stream:
+                    if not await _same_generation(admin_pb, quiz_id, generation):
+                        cancelled = True
+                        break
+
                     items = partial.quiz_items or []
                     if len(items) > 0:
                         for qi_id, qi in zip(
                             quiz_items_ids[seen : len(items)], items[seen:]
                         ):
-                            await _ensure_same_generation(admin_pb, quiz_id, generation)
-                            qi_db = await admin_pb.collection("quizItems").get_one(
-                                qi_id
-                            )
-                            if qi_db.get("status") == "final":
+                            if await _qi_is_final(admin_pb, qi_id):
                                 continue
 
                             answers = [
@@ -236,14 +242,32 @@ async def generate_quiz_task(
 
                         seen = len(items)
 
-    except asyncio.CancelledError:
-        # cooperative cancellation — quietly exit
-        return
+    except httpx.ReadError as e:
+        if cancelled:
+            logging.info(
+                "Quiz %s stream ended due to graceful cancellation: %s",
+                quiz_id,
+                e,
+            )
+            return
+        raise
+
+    except RuntimeError as e:
+        if cancelled and "asynchronous generator is already running" in str(e):
+            logging.info(
+                "Quiz %s stream ended due to graceful cancellation (generator already running): %s",
+                quiz_id,
+                e,
+            )
+            return
+        raise
 
     except Exception as e:
         logging.exception("Agent run failed for quiz %s: %s", quiz_id, e)
-        for qi in quiz_items[:limit]:
+        for qi in quiz_items[seen:limit]:
             try:
+                # if await _qi_is_final(admin_pb, qi.get("id", "")):
+                # continue
                 await admin_pb.collection("quizItems").update(
                     qi.get("id", ""), {"status": "failed"}
                 )
@@ -252,7 +276,11 @@ async def generate_quiz_task(
         return
 
 
-async def _ensure_same_generation(admin_pb: AdminPB, quiz_id: str, expected: int):
+async def _same_generation(admin_pb: AdminPB, quiz_id: str, expected: int) -> bool:
     gen = (await admin_pb.collection("quizes").get_one(quiz_id)).get("generation", 0)
-    if gen != expected:
-        raise asyncio.CancelledError
+    return gen == expected
+
+
+async def _qi_is_final(admin_pb: AdminPB, qi_id: str) -> bool:
+    qi_db = await admin_pb.collection("quizItems").get_one(qi_id)
+    return qi_db.get("status") == "final"
