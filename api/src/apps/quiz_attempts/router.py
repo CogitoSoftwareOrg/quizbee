@@ -5,7 +5,6 @@ import httpx
 
 from apps.auth import auth_user
 from apps.billing import load_subscription
-from apps.materials.utils import load_materials_context
 from lib.clients import AdminPB, langfuse_client, HTTPAsyncClient
 
 from .ai import FeedbackerDeps, feedbacker_agent
@@ -30,14 +29,6 @@ async def _generate_feedback_task(
     quiz = quiz_attempt.get("expand", {}).get("quiz", {})
     quiz_items = quiz.get("expand", {}).get("quizItems_via_quiz", [])
 
-    materials_context_file = quiz.get("materialsContext", "")
-    if materials_context_file:
-        materials_context = await load_materials_context(
-            http, quiz.get("id"), materials_context_file
-        )
-    else:
-        materials_context = ""
-
     with langfuse_client.start_as_current_span(name="feedbacker-agent") as span:
         feedback = await feedbacker_agent.run(
             "Give me feedback on my quiz attempt",
@@ -45,7 +36,7 @@ async def _generate_feedback_task(
                 quiz=quiz,
                 quiz_items=quiz_items,
                 quiz_attempt=quiz_attempt,
-                materials_context=materials_context,
+                materials_context="",
             ),
         )
         span.update_trace(

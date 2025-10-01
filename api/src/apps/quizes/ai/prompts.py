@@ -16,27 +16,25 @@ def inject_request_prompt(
 ) -> list[ModelMessage]:
     prev_quiz_items = ctx.deps.prev_quiz_items
     difficulty = ctx.deps.quiz.get("difficulty")
-    materials_context = ctx.deps.materials_context
-    adds = "\n".join(ctx.deps.dynamic_config.adds)
     extra_beginner = "\n".join(ctx.deps.dynamic_config.extraBeginner)
     extra_expert = "\n".join(ctx.deps.dynamic_config.extraExpert)
     more_on_topic = "\n".join(ctx.deps.dynamic_config.moreOnTopic)
     less_on_topic = "\n".join(ctx.deps.dynamic_config.lessOnTopic)
 
-    parts = []
+    pre_parts = []
+    post_parts = []
 
-    # SYSTEM PARTS
-    parts.append(
+    # PRE PARTS, SIMMILAR FOR EACH PATCH
+    pre_parts.append(
         SystemPromptPart(
             content=langfuse_client.get_prompt(
                 "quizer/base", label=settings.env
-            ).compile(
-                prev_quiz_items=json.dumps(prev_quiz_items),
-            )
+            ).compile()
         )
     )
 
-    parts.append(
+    # POST PARTS, CAN VARY FOR EACH PATCH
+    post_parts.append(
         SystemPromptPart(
             content=langfuse_client.get_prompt(
                 f"quizer/{difficulty}", label=settings.env
@@ -44,8 +42,17 @@ def inject_request_prompt(
         )
     )
 
+    if len(prev_quiz_items) > 0:
+        post_parts.append(
+            SystemPromptPart(
+                content=langfuse_client.get_prompt(
+                    "quizer/negative_questions", label=settings.env
+                ).compile(questions=prev_quiz_items)
+            )
+        )
+
     if len(extra_beginner) > 0:
-        parts.append(
+        post_parts.append(
             SystemPromptPart(
                 content=langfuse_client.get_prompt(
                     "quizer/extra_beginner", label=settings.env
@@ -53,7 +60,7 @@ def inject_request_prompt(
             )
         )
     if len(extra_expert) > 0:
-        parts.append(
+        post_parts.append(
             SystemPromptPart(
                 content=langfuse_client.get_prompt(
                     "quizer/extra_expert", label=settings.env
@@ -61,7 +68,7 @@ def inject_request_prompt(
             )
         )
     if len(more_on_topic) > 0:
-        parts.append(
+        post_parts.append(
             SystemPromptPart(
                 content=langfuse_client.get_prompt(
                     "quizer/more_on_topic", label=settings.env
@@ -69,7 +76,7 @@ def inject_request_prompt(
             )
         )
     if len(less_on_topic) > 0:
-        parts.append(
+        post_parts.append(
             SystemPromptPart(
                 content=langfuse_client.get_prompt(
                     "quizer/less_on_topic", label=settings.env
@@ -77,26 +84,4 @@ def inject_request_prompt(
             )
         )
 
-    # USER PARTS
-    if materials_context:
-        parts.append(
-            UserPromptPart(
-                content=langfuse_client.get_prompt(
-                    "quizer/materials", label=settings.env
-                ).compile(
-                    materials=materials_context,
-                )
-            )
-        )
-    if len(adds) > 0:
-        parts.append(
-            UserPromptPart(
-                content=langfuse_client.get_prompt(
-                    "quizer/adds", label=settings.env
-                ).compile(
-                    adds=adds,
-                )
-            )
-        )
-
-    return [ModelRequest(parts=parts)] + messages
+    return [ModelRequest(parts=pre_parts)] + messages + [ModelRequest(parts=post_parts)]

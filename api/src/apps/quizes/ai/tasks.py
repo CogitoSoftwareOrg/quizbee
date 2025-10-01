@@ -15,8 +15,12 @@ from lib.clients.http import HTTPAsyncClient
 from lib.clients.pb import AdminPB
 from lib.clients.tiktoken import ENCODERS
 from lib.config import LLMS
-from apps.materials.utils import load_file_bytes, load_materials_context
+from apps.materials.utils import (
+    load_file_text,
+    materials_to_ai_images,
+)
 from lib.clients import langfuse_client
+from lib.utils import summarize_text
 
 from .models import DynamicConfig, QuizerDeps, make_quiz_patch_model
 from .agent import quizer_agent
@@ -46,64 +50,37 @@ async def start_generating_quiz_task(
     )
 
     # Load materials context
-    contents = []
+    texts = []
     for m in materials:
         mid = m.get("id", "")
         # simple text or image
         if m.get("kind") == "simple":
             f = m.get("file", "")
-            content = await load_file_bytes(http, "materials", mid, f)
+            content = await load_file_text(http, "materials", mid, f)
             if f.endswith((".md", ".txt", ".csv", ".json")):
-                content = content.decode("utf-8")
-            elif f.endswith((".png", ".jpg", ".jpeg", ".gif", ".webp")):
-                content = base64.b64encode(content).decode("ascii")
-            contents.append(content)
+                texts.append(content)
+
         elif m.get("kind") == "complex":
             images = m.get("images", [])
             txt = m.get("textFile", "")
             if txt:
-                content = await load_file_bytes(http, "materials", mid, txt)
-                content = content.decode("utf-8")
-                contents.append(content)
-            for image in images:
-                content = await load_file_bytes(http, "materials", mid, image)
-                content = base64.b64encode(content).decode("ascii")
-                contents.append(content)
+                content = await load_file_text(http, "materials", mid, txt)
+                texts.append(content)
 
     # Truncate content somehow
-    tokens = ENCODERS[LLMS.GPT_5_MINI].encode("\n".join(contents))
-    truncated = tokens[:80_000]
-    contents = ENCODERS[LLMS.GPT_5_MINI].decode(truncated)
+    tokens = ENCODERS[LLMS.GPT_5_MINI].encode("\n".join(texts))
+    truncated = tokens[:25_000] + tokens[-25_000:]
+    texts = ENCODERS[LLMS.GPT_5_MINI].decode(truncated)
 
     # Generate summary
     summary = ""
-    if len(contents) > 0:
+    if len(texts) > 0:
         with langfuse_client.start_as_current_span(name="quiz-summary") as span:
-            part = (
-                await model_request(
-                    LLMS.GPT_5_MINI,
-                    messages=[
-                        ModelRequest(
-                            parts=[
-                                SystemPromptPart(
-                                    content="Summarize the following materials context"
-                                ),
-                                UserPromptPart(content=contents),
-                            ]
-                        )
-                    ],
-                    model_settings={
-                        "max_tokens": 8000,
-                        # "temperature": 0.2,
-                        # "top_p": 1.0,
-                    },
-                )
-            ).parts[0]
+            summary = await summarize_text(texts, f"quiz-{quiz_id}")
             span.update_trace(
                 user_id=user_id,
                 session_id=quiz_id,
             )
-        summary = part.content if isinstance(part, TextPart) else ""
 
     quiz = await admin_pb.collection("quizes").update(
         quiz_id,
@@ -111,7 +88,7 @@ async def start_generating_quiz_task(
             "status": "creating",
             "summary": summary,
             "materialsContext": FileUpload(
-                ("materialsContext.txt", bytes(contents, "utf-8"))
+                ("materialsContext.txt", bytes(texts, "utf-8"))
             ),
         },
     )
@@ -170,35 +147,47 @@ async def generate_quiz_task(
     # Prepare request to LLM
     dynamic_config = DynamicConfig(**quiz.get("dynamicConfig", {}))
     q = quiz.get("query", "")
-    materials_context_file = quiz.get("materialsContext", "")
-    if materials_context_file:
-        materials_context = await load_materials_context(
-            http, quiz_id, materials_context_file
-        )
-    else:
-        materials_context = ""
+    summary = quiz.get("summary", "")
+    textMaterials = await load_file_text(
+        http, "quizes", quiz_id, quiz.get("materialsContext", "")
+    )
+    ai_images = await materials_to_ai_images(materials)
 
     cancelled = False
     seen = 0
+    prompt_cache_key = f"quiz-{quiz_id}"
+
+    user_contents = []
+    if q:
+        user_contents.append("User query:")
+        user_contents.append(q)
+    if summary:
+        user_contents.append("Materials summary:")
+        user_contents.append(summary)
+    if textMaterials:
+        user_contents.append("Quiz materials:")
+        user_contents.append(textMaterials)
+    if ai_images:
+        user_contents.append("Quiz materials images:")
+        user_contents.append(*ai_images)
+    if dynamic_config.adds:
+        user_contents.append("Additional instructions:")
+        user_contents.append(*dynamic_config.adds)
 
     try:
         with langfuse_client.start_as_current_span(name="quiz-patch") as span:
-            span.update_trace(
-                user_id=user_id,
-                session_id=quiz_id,
-            )
-
             async with quizer_agent.run_stream(
-                q,
+                user_contents,
                 deps=QuizerDeps(
                     quiz=quiz,
                     prev_quiz_items=prev_quiz_items,
                     materials=materials,
                     dynamic_config=dynamic_config,
-                    materials_context=materials_context,
+                    materials_context="",
                 ),
                 output_type=make_quiz_patch_model(limit),
-                # event_stream_handler=event_stream_handler,
+                event_stream_handler=event_stream_handler,
+                model_settings={"extra_body": {"prompt_cache_key": prompt_cache_key}},
             ) as result:
                 stream = result.stream_output()
                 async for partial in stream:
@@ -242,6 +231,20 @@ async def generate_quiz_task(
 
                         seen = len(items)
 
+            usage = result.usage()
+            read_cache_input = usage.cache_read_tokens
+            write_cache_input = usage.cache_write_tokens
+
+            span.update_trace(
+                user_id=user_id,
+                session_id=quiz_id,
+                metadata={
+                    "read_cache_input": read_cache_input,
+                    "write_cache_input": write_cache_input,
+                    "prompt_cache_key": prompt_cache_key,
+                },
+            )
+
     except httpx.ReadError as e:
         if cancelled:
             logging.info(
@@ -263,6 +266,14 @@ async def generate_quiz_task(
         raise
 
     except Exception as e:
+        if cancelled:
+            logging.info(
+                "Quiz %s stream ended due to graceful cancellation: %s",
+                quiz_id,
+                e,
+            )
+            return
+
         logging.exception("Agent run failed for quiz %s: %s", quiz_id, e)
         for qi in quiz_items[seen:limit]:
             try:

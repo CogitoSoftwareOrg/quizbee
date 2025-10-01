@@ -4,7 +4,7 @@ from fastapi.responses import StreamingResponse
 
 from apps.auth import auth_user
 from apps.billing import Subscription, load_subscription
-from apps.materials.utils import load_materials_context, materials_to_ai_docs
+from apps.materials.utils import load_file_text
 from lib.clients import AdminPB, HTTPAsyncClient, langfuse_client
 from lib.utils import sse
 from apps.auth import User
@@ -61,14 +61,6 @@ async def sse_messages(
         decision for decision in choices if decision.get("itemId") == item_id
     ][0]
 
-    materials_context_file = quiz.get("materialsContext", "")
-    if materials_context_file:
-        materials_context = await load_materials_context(
-            http, quiz.get("id"), materials_context_file
-        )
-    else:
-        materials_context = ""
-
     # GUARD
     if quiz_attempt.get("user") != user.get("id"):
         raise HTTPException(
@@ -97,19 +89,11 @@ async def sse_messages(
     )
     ai_msg_id = ai_msg.get("id", "")
 
-    materials_context_file = quiz.get("materialsContext", "")
-    if materials_context_file:
-        materials_context = await load_materials_context(
-            http, quiz.get("id"), materials_context_file
-        )
-    else:
-        materials_context = ""
-
     async def event_generator():
         content = ""
 
         deps = ExplainerDeps(
-            materials_context=materials_context,
+            materials_context="",
             current_item=current_item,
             current_decision=current_decision,
         )

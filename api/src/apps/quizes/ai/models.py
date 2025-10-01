@@ -84,7 +84,7 @@ def make_quiz_patch_model(n_items: int):
             title="Quiz Items",
             description=f"An array of exactly {n_items} quiz items.",
             # min_length=n_items,
-            max_length=n_items,
+            max_length=n_items + 10,
         ),
     ]
     return create_model(
