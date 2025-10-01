@@ -49,7 +49,8 @@
 <header
 	class={[
 		'flex items-center justify-between px-2 py-2',
-		!isNewQuizPage && 'border-base-200 border-b'
+		//!isNewQuizPage &&
+		'border-base-200 border-b'
 	]}
 >
 	<div class="flex items-center gap-3">
@@ -69,7 +70,7 @@
 			{/if}
 		</button>
 		{#if !attemptingQuiz}
-			<h1 class="hidden font-semibold sm:block">{getTitle()}</h1>
+			<!-- <h1 class="hidden font-semibold sm:block">{getTitle()}</h1> -->
 		{:else if attemptingQuiz}
 			{#if quizAttempt?.feedback}
 				<Button

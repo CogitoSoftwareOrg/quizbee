@@ -10,6 +10,8 @@
 	import { truncateFileName } from '$lib/utils/truncuate-file-name';
 	import { createDraft } from '../new/createDraft';
 	import Modal from '$lib/ui/Modal.svelte';
+	import Button from '$lib/ui/Button.svelte';
+	import { Plus } from 'lucide-svelte';
 
 	interface Props {
 		quizTemplateId: string;
@@ -192,53 +194,35 @@
 	}
 </script>
 
-<div class="w-63 mb-0 flex-col">
-	<h2 class="mb-3 mt-0 text-center text-3xl font-semibold">Drafts</h2>
-	<div class="mb-0 mt-0 flex justify-center">
-		<button class="btn btn-xs btn-primary" onclick={addEmptyDraft}>
-			<svg
-				xmlns="http://www.w3.org/2000/svg"
-				width="16"
-				height="16"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="3"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-				class="lucide lucide-plus mr-1"><path d="M12 5v14M5 12h14" /></svg
-			>
-			<span class="mt-1 text-[0.8rem]">Add Empty Draft</span>
-		</button>
-	</div>
-	<div class="mb-5 mt-2 flex justify-center">
-		<button class="btn btn-xs btn-secondary" onclick={() => (showModal = true)}>
-			<svg
-				xmlns="http://www.w3.org/2000/svg"
-				width="16"
-				height="16"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="3"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-				class="lucide lucide-plus mr-1"><path d="M12 5v14M5 12h14" /></svg
-			>
-			<span class="mt-1 text-[0.8rem]">Create from a Quiz</span>
-		</button>
-	</div>
+<div class="border-base-200 flex w-64 flex-shrink-0 flex-col border-r">
+	<header class="border-base-300 space-y-1 border-b px-4 py-3">
+		<h2 class="mb-4 text-center text-3xl font-semibold">Drafts</h2>
+		<div class="flex justify-center">
+			<Button style="outline" size="sm" block onclick={addEmptyDraft}>
+				<Plus size={20} />
+				<span class="text-lg">Add Empty Draft </span>
+			</Button>
+		</div>
+		<div class="flex justify-center">
+			<Button color="secondary" style="outline" size="sm" block onclick={() => (showModal = true)}>
+				<Plus size={20} />
+				<span class="text-lg">Create from a Quiz</span>
+			</Button>
+		</div>
+	</header>
 	{#if drafts.length === 0}
-		<div class="text-center">
+		<div class="px-4 text-center">
 			<p class="text-sm">No drafts yet</p>
 			<p class="mt-1 text-xs">Start drafting your quiz and it will appear here.</p>
 		</div>
 	{:else}
-		<div class="max-h-150 space-y-3 overflow-y-auto">
+		<div class="max-h-150 mt-2 space-y-3 overflow-y-auto px-4">
 			{#each drafts as draft}
 				<div
-					class="border-base-200 relative cursor-pointer rounded-lg border p-2 shadow-sm transition-shadow hover:shadow-md"
-					class:bg-secondary={draft.id === quizTemplateId}
+					class={[
+						'border-base-200 relative cursor-pointer rounded-lg border p-2 shadow-sm transition-shadow hover:shadow-md',
+						draft.id === quizTemplateId && 'border-primary border-2'
+					]}
 					onclick={() => handleDraftClick(draft)}
 					onkeydown={(e) => e.key === 'Enter' && handleDraftClick(draft)}
 					role="button"

@@ -57,56 +57,56 @@
 	<title>New Quiz</title>
 </svelte:head>
 
-<main class="relative flex h-full">
-	<div class="flex">
-		<Drafts
-			bind:title
-			bind:quizTemplateId
-			bind:inputText
-			bind:attachedFiles
-			bind:selectedDifficulty
-			bind:questionCount
-			bind:isDraft
-		/>
-	</div>
+<main class="relative flex h-full overflow-hidden">
+	<Drafts
+		bind:title
+		bind:quizTemplateId
+		bind:inputText
+		bind:attachedFiles
+		bind:selectedDifficulty
+		bind:questionCount
+		bind:isDraft
+	/>
 
-	<div class="relative flex-1 overflow-y-auto py-1">
-		<div class="mb-8 text-center">
-			<input
-				bind:value={title}
-				bind:this={inputElement}
-				type="text"
-				placeholder="Type in a title"
-				class="input input-lg rounded-lg text-center text-5xl font-semibold"
-				style="min-width: 350px; min-height: 65px; padding-bottom: 5px;"
-				oninput={(e) => {
-					const target = e.target as HTMLInputElement;
-					const originalLength = target.value.length;
-					title = target.value.slice(0, 30);
-					showWarningLength = originalLength > 30;
-					target.style.width = '0';
-					target.style.width = target.scrollWidth + 5 + 'px';
-				}}
-				onblur={() => {
-					if (title.trim() === '') {
-						title = generateUniqueTitle(
-							'Untitled',
-							quizesStore.quizes.filter((q) => q.status === 'draft').map((q) => q.title)
-						);
-					}
-				}}
-			/>
-			{#if showWarningLength}
-				<p class="mt-2 text-center text-red-500">Title is limited to 30 characters.</p>
-			{/if}
-		</div>
+	<div class="relative flex-1 overflow-y-auto overflow-x-hidden">
+		<div class="mx-auto max-w-7xl py-4 sm:px-6 lg:px-8">
+			<!-- Title Section -->
+			<div class="mb-12 text-center">
+				<input
+					bind:value={title}
+					bind:this={inputElement}
+					type="text"
+					placeholder="Type in a title"
+					class="input input-lg w-full max-w-3xl rounded-lg text-center text-3xl font-semibold sm:text-4xl lg:text-5xl"
+					oninput={(e) => {
+						const target = e.target as HTMLInputElement;
+						const originalLength = target.value.length;
+						title = target.value.slice(0, 30);
+						showWarningLength = originalLength > 30;
+						target.style.width = '0';
+						target.style.width =
+							Math.min(target.scrollWidth + 5, target.offsetParent?.clientWidth || 9999) + 'px';
+					}}
+					onblur={() => {
+						if (title.trim() === '') {
+							title = generateUniqueTitle(
+								'Untitled',
+								quizesStore.quizes.filter((q) => q.status === 'draft').map((q) => q.title)
+							);
+						}
+					}}
+				/>
+				{#if showWarningLength}
+					<p class="text-error mt-2 text-center">Title is limited to 30 characters.</p>
+				{/if}
+			</div>
 
-		<div class="mx-auto max-w-7xl">
-			<div class="text-center">
-				<div class="flex items-center justify-center gap-2">
-					<h2 class="mb-1 text-4xl font-semibold">Describe your quiz</h2>
+			<!-- Describe Quiz Section -->
+			<div class="mb-12 text-center">
+				<div class="mb-6 flex items-center justify-center gap-2">
+					<h2 class="text-2xl font-semibold sm:text-3xl lg:text-4xl">Describe your quiz</h2>
 					<div
-						class="tooltip tooltip-bottom -mt-1 [&:before]:max-w-[30rem] [&:before]:px-6 [&:before]:py-3 [&:before]:text-left [&:before]:text-lg [&:before]:whitespace-pre-line"
+						class="tooltip tooltip-bottom [&:before]:max-w-prose [&:before]:text-balance [&:before]:text-base"
 						data-tip="Describe your quiz in detail below, or simply attach files and we'll base the questions on their content. For the best results, do both!
 
 Feel free to attach presentations, PDFs, images, and more—we support a wide range of file types. For the most accurate questions, a few focused documents are more effective than many large ones."
@@ -114,23 +114,25 @@ Feel free to attach presentations, PDFs, images, and more—we support a wide ra
 						<InfoIcon />
 					</div>
 				</div>
-			</div>
-			<div class="mt-4 mb-12 flex justify-center">
-				<div class="w-full max-w-4xl">
+				<div class="mx-auto w-full max-w-4xl">
 					<FileInput bind:attachedFiles bind:inputText bind:quizTemplateId />
 				</div>
 			</div>
 
-			<div class="mb-16 flex justify-center">
-				<div class="flex flex-col items-center lg:flex-row lg:items-start lg:gap-16 xl:gap-24">
-					<div class="text-center">
-						<div class="flex items-center justify-center gap-2">
-							<h2 class="mb-6 text-2xl font-semibold">Choose difficulty level</h2>
+			<!-- Settings Section -->
+			<div class="mb-16">
+				<div
+					class="mx-auto flex max-w-5xl flex-col items-center gap-8 lg:flex-row lg:justify-center lg:gap-16"
+				>
+					<!-- Difficulty -->
+					<div class="w-full text-center lg:w-auto">
+						<div class="mb-6 flex items-center justify-center gap-2">
+							<h2 class="text-xl font-semibold sm:text-2xl">Choose difficulty level</h2>
 							<div
-								class="tooltip tooltip-bottom -mt-6 [&:before]:max-w-md [&:before]:px-6 [&:before]:py-3 [&:before]:text-left [&:before]:text-lg [&:before]:whitespace-pre-line"
+								class="tooltip tooltip-bottom [&:before]:max-w-prose [&:before]:text-balance [&:before]:text-base"
 								data-tip="Choose your level based on your knowledge of the topic. Beginner gives you simple, basic questions, while Expert challenges you with tricky, thought-provoking ones.
 
-        And don't worry, if you feel that the questions are too hard or too easy you can adjust the difficulty during the quiz!"
+And don't worry, if you feel that the questions are too hard or too easy you can adjust the difficulty during the quiz!"
 							>
 								<InfoIcon />
 							</div>
@@ -138,11 +140,12 @@ Feel free to attach presentations, PDFs, images, and more—we support a wide ra
 						<DifficultySelector bind:selectedDifficulty />
 					</div>
 
-					<div class="mt-10 text-center lg:mt-0">
-						<div class="flex items-center justify-center gap-2">
-							<h2 class="mb-6 text-2xl font-semibold">Choose number of questions</h2>
+					<!-- Question Count -->
+					<div class="w-full text-center lg:w-auto">
+						<div class="mb-6 flex items-center justify-center gap-2">
+							<h2 class="text-xl font-semibold sm:text-2xl">Choose number of questions</h2>
 							<div
-								class="tooltip tooltip-bottom -mt-6 [&:before]:max-w-md [&:before]:px-6 [&:before]:py-3 [&:before]:text-left [&:before]:text-lg [&:before]:whitespace-pre-line"
+								class="tooltip tooltip-bottom [&:before]:max-w-prose [&:before]:text-balance [&:before]:text-base"
 								data-tip="Each quiz question is a single-choice question with four answer options."
 							>
 								<InfoIcon />
@@ -153,7 +156,8 @@ Feel free to attach presentations, PDFs, images, and more—we support a wide ra
 				</div>
 			</div>
 
-			<div class="flex justify-center">
+			<!-- Start Button -->
+			<div class="flex justify-center pb-8">
 				<StartQuizButton {quizTemplateId} {attachedFiles} {inputText} />
 			</div>
 		</div>

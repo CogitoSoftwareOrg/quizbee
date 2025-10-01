@@ -291,7 +291,7 @@
 <div
 	class={[
 		'mx-auto flex w-full max-w-3xl flex-col gap-2.5 rounded-lg p-2 font-sans transition-colors duration-200',
-		isDragging && 'border-2 border-dashed border-primary bg-primary/10'
+		isDragging && 'border-primary bg-primary/10 border-2 border-dashed'
 	]}
 	ondragover={handleDragOver}
 	ondragleave={handleDragLeave}
@@ -301,12 +301,12 @@
 	aria-label="Drop files here or click to upload"
 >
 	<div
-		class="relative flex items-center rounded-3xl border border-base-300 bg-base-300 px-4 py-4 transition-colors duration-200 focus-within:border-base-content/40"
+		class="border-base-300 bg-base-300 focus-within:border-base-content/40 relative flex items-center rounded-3xl border px-4 py-4 transition-colors duration-200"
 	>
 		<button
 			bind:this={buttonElement}
 			onclick={() => (isMaterialsListOpen = !isMaterialsListOpen)}
-			class="mr-2 flex cursor-pointer items-center border-none bg-transparent p-0 text-base-content/60 hover:text-base-content"
+			class="text-base-content/60 hover:text-base-content mr-2 flex cursor-pointer items-center border-none bg-transparent p-0"
 			aria-label="Attach files"
 		>
 			<svg
@@ -328,7 +328,7 @@
 		{#if isMaterialsListOpen}
 			<div
 				bind:this={menuElement}
-				class="absolute top-5 left-0 z-10 max-h-screen w-75 rounded-lg border border-base-300 bg-base-100 shadow-lg"
+				class="w-75 border-base-300 bg-base-100 absolute left-0 top-5 z-10 max-h-screen rounded-lg border shadow-lg"
 			>
 				<div class="p-2">
 					<button
@@ -336,7 +336,7 @@
 							openFileDialog();
 							isMaterialsListOpen = false;
 						}}
-						class="btn flex w-full items-center gap-2 text-left text-lg btn-warning"
+						class="btn btn-warning flex w-full items-center gap-2 text-left text-lg"
 					>
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
@@ -353,15 +353,15 @@
 						<span class="mt-1">Add Files from PC</span>
 					</button>
 				</div>
-				<div class="border-t border-base-300 p-2">
-					<div class="mb-2 text-center text-lg font-medium text-base-content/70">
+				<div class="border-base-300 border-t p-2">
+					<div class="text-base-content/70 mb-2 text-center text-lg font-medium">
 						Previous Materials
 					</div>
 					<div class="relative">
 						<input
 							bind:value={searchQuery}
 							placeholder="Search materials..."
-							class="w-full rounded border border-base-300 py-1 pr-2 pl-8 text-sm focus:border-primary focus:outline-none"
+							class="border-base-300 focus:border-primary w-full rounded border py-1 pl-8 pr-2 text-sm focus:outline-none"
 						/>
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
@@ -373,16 +373,16 @@
 							stroke-width="2"
 							stroke-linecap="round"
 							stroke-linejoin="round"
-							class="lucide lucide-search absolute top-1/2 left-2 -translate-y-1/2 transform text-base-content/60"
+							class="lucide lucide-search text-base-content/60 absolute left-2 top-1/2 -translate-y-1/2 transform"
 							><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg
 						>
 					</div>
-					<div class="mt-2 max-h-67 overflow-y-auto">
+					<div class="max-h-67 mt-2 overflow-y-auto">
 						{#each materialsStore.materials.filter((m) => m.title
 								.toLowerCase()
 								.includes(searchQuery.toLowerCase())) as material}
 							<button
-								class="w-full cursor-pointer p-2 text-left transition-colors duration-200 hover:bg-primary"
+								class="hover:bg-primary w-full cursor-pointer p-2 text-left transition-colors duration-200"
 								onclick={() => {
 									addExistingMaterial(material);
 									isMaterialsListOpen = false;
@@ -398,7 +398,7 @@
 		<textarea
 			placeholder="Write a prompt for your quiz and attach relevant material"
 			bind:value={inputText}
-			class="max-h-[7.5rem] min-h-[1.5rem] flex-grow resize-none overflow-y-auto border-none bg-transparent py-1 pl-4 text-lg leading-6 outline-none focus:shadow-none focus:ring-0 focus:outline-none"
+			class="max-h-[7.5rem] min-h-[1.5rem] flex-grow resize-none overflow-y-auto border-none bg-transparent py-1 pl-4 text-lg leading-6 outline-none focus:shadow-none focus:outline-none focus:ring-0"
 			onpaste={handlePaste}
 			rows="1"
 			oninput={handleTextareaResize}
@@ -417,7 +417,7 @@
 	{#if attachedFiles.length > 0}
 		<div class="grid grid-cols-5 gap-4 px-3">
 			{#each attachedFiles as attachedFile, index}
-				<div class="group relative aspect-square w-full overflow-hidden rounded-lg bg-base-300">
+				<div class="bg-base-300 group relative aspect-square w-full overflow-hidden rounded-lg">
 					{#if attachedFile.previewUrl}
 						<img
 							src={attachedFile.previewUrl}
@@ -426,7 +426,7 @@
 						/>
 					{:else}
 						<div
-							class="flex h-full w-full flex-col items-center p-2 text-center text-base-content/60"
+							class="text-base-content/60 flex h-full w-full flex-col items-center p-2 text-center"
 						>
 							<img
 								src="/file-format-icons/{getFileIcon(attachedFile.name)}.svg"
@@ -434,7 +434,7 @@
 								class="mb-1 h-10 w-10"
 							/>
 							<span
-								class="line-clamp-3 flex h-24 items-center text-[14px] leading-tight break-words break-all"
+								class="line-clamp-3 flex h-24 items-center break-words break-all text-[14px] leading-tight"
 								title={attachedFile.name}>{truncateFileName(attachedFile.name)}</span
 							>
 						</div>
@@ -442,16 +442,16 @@
 
 					<!-- Индикатор загрузки -->
 					{#if attachedFile.isUploading}
-						<div class="absolute inset-0 flex items-center justify-center bg-base-content/50">
+						<div class="bg-base-content/50 absolute inset-0 flex items-center justify-center">
 							<div
-								class="h-8 w-8 animate-spin rounded-full border-4 border-base-100 border-t-transparent"
+								class="border-base-100 h-8 w-8 animate-spin rounded-full border-4 border-t-transparent"
 							></div>
 						</div>
 					{/if}
 
 					<button
 						onclick={() => removeFile(index, attachedFiles)}
-						class="absolute top-1 right-1 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full border-none bg-base-content/50 text-sm leading-none text-base-100 opacity-0 transition-opacity group-hover:opacity-100"
+						class="bg-base-content/50 text-base-100 absolute right-1 top-1 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full border-none text-sm leading-none opacity-0 transition-opacity group-hover:opacity-100"
 						aria-label="Remove file">&times;</button
 					>
 				</div>

@@ -63,7 +63,7 @@
 	}
 </script>
 
-<div class="h-full w-80 flex-shrink-0 overflow-y-auto border-r border-base-200">
+<div class="border-base-200 h-full max-w-80 flex-shrink-0 overflow-y-auto border-r">
 	<div class="space-y-3">
 		{#if filteredQuizes.length === 0}
 			<div class="mt-8 text-center">
@@ -73,7 +73,7 @@
 		{:else}
 			{#each filteredQuizes as quiz}
 				<div
-					class="} cursor-pointer rounded-lg border border-base-200 p-4 shadow-sm transition-shadow hover:bg-red-100 hover:shadow-md"
+					class="} border-base-200 cursor-pointer rounded-lg border p-4 shadow-sm transition-shadow hover:bg-red-100 hover:shadow-md"
 					onclick={() => handleQuizClick(quiz)}
 					onkeydown={(e) => e.key === 'Enter' && handleQuizClick(quiz)}
 					role="button"
@@ -86,13 +86,13 @@
 						Quiz ID: {quiz.id}
 					</p>
 					{#if quiz.query}
-						<p class="mb-1 text-left text-xs text-primary">
+						<p class="text-primary mb-1 text-left text-xs">
 							<span class="font-medium">Query:</span>
 							{quiz.query}
 						</p>
 					{/if}
 					{#if quiz.materials && quiz.materials.length > 0}
-						<p class="text-left text-xs text-success">
+						<p class="text-success text-left text-xs">
 							<span class="font-medium">Materials:</span>
 							{quiz.materials.length} file(s)
 						</p>
