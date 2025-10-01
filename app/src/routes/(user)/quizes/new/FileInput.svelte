@@ -1,34 +1,11 @@
 <script lang="ts">
-	import { onDestroy, onMount } from 'svelte';
+	import { onMount } from 'svelte';
 	import { computeApiUrl } from '$lib/api/compute-url';
 	import { materialsStore } from '$lib/apps/materials/materials.svelte';
 	import type { AttachedFile } from '$lib/types/attached-file';
 	import { pb } from '$lib/pb';
 	import type { MaterialsResponse } from '$lib/pb/pocketbase-types';
-	function generateId(): string {
-		const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-		let result = '';
-		for (let i = 0; i < 15; i++) {
-			result += chars.charAt(Math.floor(Math.random() * chars.length));
-		}
-		return result;
-	}
-
-	function processFiles(files: File[]) {
-		for (const file of files) {
-			const attachedFile: AttachedFile = {
-				file,
-				previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
-				name: file.name,
-				isUploading: true,
-				uploadError: undefined,
-				materialId: generateId()
-			};
-
-			attachedFiles = [...attachedFiles, attachedFile];
-			uploadFileAsync(attachedFile);
-		}
-	}
+	import { generateId } from '$lib/utils/generate-id';
 
 	interface Props {
 		inputText?: string;
@@ -44,27 +21,53 @@
 
 	let inputElement: HTMLInputElement;
 	let isDragging = $state(false);
-	let previousAttachedFiles = attachedFiles;
 	let isMaterialsListOpen = $state(false);
 	let searchQuery = $state('');
+	let warningTextInput = $state(false);
 
 	let buttonElement = $state<HTMLButtonElement>();
 	let menuElement = $state<HTMLDivElement>();
 
-	// Реактивно отслеживаем материалы в store и обновляем статус загрузки
-	$effect(() => {
-		const materials = materialsStore.materials;
+	onMount(() => {
+		document.addEventListener('click', handleClickOutside);
 
-		// Проходим по всем прикрепленным файлам и проверяем их статус
+		return () => {
+			document.removeEventListener('click', handleClickOutside);
+
+			// Освобождаем все URL превью
+			attachedFiles.forEach((attachedFile) => {
+				if (attachedFile.previewUrl) {
+					URL.revokeObjectURL(attachedFile.previewUrl);
+				}
+			});
+		};
+	});
+
+	function processFiles(files: File[]) {
+		for (const file of files) {
+			const attachedFile: AttachedFile = {
+				file,
+				previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
+				name: file.name,
+				isUploading: true,
+				materialId: generateId()
+			};
+
+			attachedFiles = [...attachedFiles, attachedFile];
+			uploadFileAsync(attachedFile);
+		}
+	}
+
+	// Для материалов которые сейчас грузим реактивно отслеживаем материалы в store и обновляем статус загрузки
+	$effect(() => {
 		attachedFiles.forEach((attachedFile) => {
 			if (attachedFile.isUploading && attachedFile.materialId) {
-				// Ищем материал в store по ID
-				const foundMaterial = materials.find((material) => material.id === attachedFile.materialId);
+				const foundMaterial = materialsStore.materials.find(
+					(m) => m.id === attachedFile.materialId
+				);
 
 				if (foundMaterial) {
-					// Материал найден в store - обновляем статус
 					attachedFile.isUploading = false;
-					console.log(`Material ${attachedFile.name} found in store, setting isUploading to false`);
 				}
 			}
 		});
@@ -81,7 +84,7 @@
 		}
 	}
 
-	// Асинхронная загрузка файла без блокировки UI
+	// Асинхронная загрузка файла
 	async function uploadFileAsync(attachedFile: AttachedFile) {
 		try {
 			const formData = new FormData();
@@ -102,34 +105,16 @@
 
 			const material = await response.json();
 
-			// Проверяем, что получили material.id
-			if (!material.id) {
-				throw new Error('Material ID not received from API');
-			}
-
-			// Обновляем materialId после успешной загрузки
-			// isUploading будет автоматически обновлен через реактивность когда материал появится в store
 			attachedFile.materialId = material.id;
 
-			// Добавляем информацию о токенах если есть
 			if (material.tokens) {
 				attachedFile.tokens = material.tokens;
 			}
 
-			console.log(`File ${attachedFile.name} uploaded successfully with ID: ${material.id}`);
-
 			try {
-				// Добавляем проверку прямо здесь
-				if (!quizTemplateId) {
-					console.error('quizTemplateId is missing, cannot attach material.');
-					// Можно просто прервать выполнение или уведомить пользователя
-					return;
-				}
-
 				const quiz = await pb!.collection('quizes').getOne(quizTemplateId);
 				const updatedMaterials = [...(quiz.materials || []), material.id];
 				await pb!.collection('quizes').update(quizTemplateId, { materials: updatedMaterials });
-				console.log(`Material ${material.id} attached to quiz ${quizTemplateId}`);
 			} catch (error) {
 				console.error('Failed to attach material to quiz:', error);
 			}
@@ -149,13 +134,16 @@
 		}
 	}
 
+	// Добавление уже существующего материала
 	async function addExistingMaterial(material: MaterialsResponse) {
 		const attachedFile: AttachedFile = {
 			name: material.title,
 			isUploading: false,
 			materialId: material.id,
 			previewUrl:
-				material.file && /\.(jpg|jpeg|png|gif|webp)$/i.test(material.file) ? material.file : null
+				material.file && /\.(jpg|jpeg|png|gif|webp)$/i.test(material.file)
+					? pb!.files.getURL(material, material.file)
+					: null
 		};
 
 		attachedFiles = [...attachedFiles, attachedFile];
@@ -165,21 +153,19 @@
 				const quiz = await pb!.collection('quizes').getOne(quizTemplateId);
 				const updatedMaterials = [...(quiz.materials || []), material.id];
 				await pb!.collection('quizes').update(quizTemplateId, { materials: updatedMaterials });
-				console.log(`Material ${material.id} attached to quiz ${quizTemplateId}`);
 			} catch (error) {
 				console.error('Failed to attach material to quiz:', error);
 			}
 		}
 	}
+
 	async function removeFile(index: number, attachedFiles: AttachedFile[]) {
 		const fileToRemove = attachedFiles[index];
 
-		// Освобождаем URL превью если есть
 		if (fileToRemove.previewUrl) {
 			URL.revokeObjectURL(fileToRemove.previewUrl);
 		}
 
-		// Открепляем материал от квиза
 		if (quizTemplateId) {
 			try {
 				const quiz = await pb!.collection('quizes').getOne(quizTemplateId);
@@ -187,13 +173,11 @@
 					(id: string) => id !== fileToRemove.materialId
 				);
 				await pb!.collection('quizes').update(quizTemplateId, { materials: updatedMaterials });
-				console.log(`Material ${fileToRemove.materialId} detached from quiz ${quizTemplateId}`);
 			} catch (error) {
 				console.error('Failed to detach material from quiz:', error);
 			}
 		}
 
-		// Удаляем материал с сервера если он не используется
 		if (fileToRemove.materialId) {
 			try {
 				const material = await pb!.collection('materials').getOne(fileToRemove.materialId);
@@ -205,10 +189,10 @@
 			}
 		}
 
-		// Удаляем из списка
 		attachedFiles.splice(index, 1);
 		attachedFiles = attachedFiles;
 	}
+
 	async function handlePaste(event: ClipboardEvent) {
 		const clipboardData = event.clipboardData;
 		if (!clipboardData) return;
@@ -217,8 +201,7 @@
 		const imageItems = items.filter((item) => item.type.startsWith('image/'));
 
 		if (imageItems.length > 0) {
-			event.preventDefault(); // Предотвращаем вставку текста
-
+			event.preventDefault();
 			const files = imageItems
 				.map((item) => item.getAsFile())
 				.filter((file) => file !== null) as File[];
@@ -250,16 +233,22 @@
 		const target = event.target as HTMLTextAreaElement;
 		target.style.height = 'auto';
 		const scrollHeight = target.scrollHeight;
-		const maxHeight = 7.5 * 16; // 7.5rem в пикселях (предполагая 16px = 1rem)
+		const maxHeight = 7.5 * 16;
 		target.style.height = Math.min(scrollHeight, maxHeight) + 'px';
+
+		if (target.value.length > 100000) {
+			target.value = target.value.slice(0, 100000);
+			inputText = target.value;
+			warningTextInput = true;
+		} else {
+			warningTextInput = false;
+		}
 	}
 
 	function getFileIcon(filename: string): string {
 		const extension = filename.split('.').pop()?.toLowerCase();
 
-		// Маппинг расширений файлов на иконки
 		const iconMap: Record<string, string> = {
-			// Документы
 			pdf: 'pdf',
 			doc: 'doc',
 			docx: 'doc',
@@ -268,11 +257,6 @@
 			ppt: 'ppt',
 			pptx: 'ppt',
 			txt: 'txt',
-
-			// Архивы
-			zip: 'zip',
-
-			// Код
 			js: 'js',
 			ts: 'js',
 			html: 'html',
@@ -302,29 +286,12 @@
 			isMaterialsListOpen = false;
 		}
 	}
-
-	onMount(() => {
-		document.addEventListener('click', handleClickOutside);
-	});
-
-	onDestroy(() => {
-		document.removeEventListener('click', handleClickOutside);
-		// Освобождаем все URL превью
-		attachedFiles.forEach((attachedFile) => {
-			if (attachedFile.previewUrl) {
-				URL.revokeObjectURL(attachedFile.previewUrl);
-			}
-		});
-
-		// Примечание: Мы НЕ удаляем материалы с сервера при уничтожении компонента,
-		// так как они могут быть использованы в других местах приложения
-	});
 </script>
 
 <div
 	class={[
 		'mx-auto flex w-full max-w-3xl flex-col gap-2.5 rounded-lg p-2 font-sans transition-colors duration-200',
-		isDragging && 'bg-primary/10 border-primary border-2 border-dashed'
+		isDragging && 'border-2 border-dashed border-primary bg-primary/10'
 	]}
 	ondragover={handleDragOver}
 	ondragleave={handleDragLeave}
@@ -334,12 +301,12 @@
 	aria-label="Drop files here or click to upload"
 >
 	<div
-		class="border-base-300 bg-base-300 focus-within:border-base-content/40 relative flex items-center rounded-3xl border px-4 py-4 transition-colors duration-200"
+		class="relative flex items-center rounded-3xl border border-base-300 bg-base-300 px-4 py-4 transition-colors duration-200 focus-within:border-base-content/40"
 	>
 		<button
 			bind:this={buttonElement}
 			onclick={() => (isMaterialsListOpen = !isMaterialsListOpen)}
-			class="text-base-content/60 hover:text-base-content mr-2 flex cursor-pointer items-center border-none bg-transparent p-0"
+			class="mr-2 flex cursor-pointer items-center border-none bg-transparent p-0 text-base-content/60 hover:text-base-content"
 			aria-label="Attach files"
 		>
 			<svg
@@ -361,7 +328,7 @@
 		{#if isMaterialsListOpen}
 			<div
 				bind:this={menuElement}
-				class="bg-base-100 border-base-300 w-75 absolute left-8 top-10 z-10 max-h-screen rounded-lg border shadow-lg"
+				class="absolute top-5 left-0 z-10 max-h-screen w-75 rounded-lg border border-base-300 bg-base-100 shadow-lg"
 			>
 				<div class="p-2">
 					<button
@@ -369,7 +336,7 @@
 							openFileDialog();
 							isMaterialsListOpen = false;
 						}}
-						class="btn btn-warning flex w-full items-center gap-2 text-left text-lg"
+						class="btn flex w-full items-center gap-2 text-left text-lg btn-warning"
 					>
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
@@ -386,15 +353,15 @@
 						<span class="mt-1">Add Files from PC</span>
 					</button>
 				</div>
-				<div class="border-base-300 border-t p-2">
-					<div class="text-base-content/70 mb-2 text-center text-lg font-medium">
+				<div class="border-t border-base-300 p-2">
+					<div class="mb-2 text-center text-lg font-medium text-base-content/70">
 						Previous Materials
 					</div>
 					<div class="relative">
 						<input
 							bind:value={searchQuery}
 							placeholder="Search materials..."
-							class="border-base-300 focus:border-primary w-full rounded border py-1 pl-8 pr-2 text-sm focus:outline-none"
+							class="w-full rounded border border-base-300 py-1 pr-2 pl-8 text-sm focus:border-primary focus:outline-none"
 						/>
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
@@ -406,16 +373,16 @@
 							stroke-width="2"
 							stroke-linecap="round"
 							stroke-linejoin="round"
-							class="text-base-content/60 lucide lucide-search absolute left-2 top-1/2 -translate-y-1/2 transform"
+							class="lucide lucide-search absolute top-1/2 left-2 -translate-y-1/2 transform text-base-content/60"
 							><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg
 						>
 					</div>
-					<div class="max-h-67 mt-2 overflow-y-auto">
+					<div class="mt-2 max-h-67 overflow-y-auto">
 						{#each materialsStore.materials.filter((m) => m.title
 								.toLowerCase()
 								.includes(searchQuery.toLowerCase())) as material}
 							<button
-								class="hover:bg-primary w-full cursor-pointer p-2 text-left transition-colors duration-200"
+								class="w-full cursor-pointer p-2 text-left transition-colors duration-200 hover:bg-primary"
 								onclick={() => {
 									addExistingMaterial(material);
 									isMaterialsListOpen = false;
@@ -431,7 +398,7 @@
 		<textarea
 			placeholder="Write a prompt for your quiz and attach relevant material"
 			bind:value={inputText}
-			class="max-h-[7.5rem] min-h-[1.5rem] flex-grow resize-none overflow-y-auto border-none bg-transparent py-1 pl-4 text-lg leading-6 outline-none focus:shadow-none focus:outline-none focus:ring-0"
+			class="max-h-[7.5rem] min-h-[1.5rem] flex-grow resize-none overflow-y-auto border-none bg-transparent py-1 pl-4 text-lg leading-6 outline-none focus:shadow-none focus:ring-0 focus:outline-none"
 			onpaste={handlePaste}
 			rows="1"
 			oninput={handleTextareaResize}
@@ -444,10 +411,13 @@
 			style="display: none;"
 		/>
 	</div>
+	{#if warningTextInput}
+		<div class="text-md mt-2 text-red-500">Maximum input length is 100.000 symbols.</div>
+	{/if}
 	{#if attachedFiles.length > 0}
 		<div class="grid grid-cols-5 gap-4 px-3">
 			{#each attachedFiles as attachedFile, index}
-				<div class="bg-base-300 group relative aspect-square w-full overflow-hidden rounded-lg">
+				<div class="group relative aspect-square w-full overflow-hidden rounded-lg bg-base-300">
 					{#if attachedFile.previewUrl}
 						<img
 							src={attachedFile.previewUrl}
@@ -456,7 +426,7 @@
 						/>
 					{:else}
 						<div
-							class="text-base-content/60 flex h-full w-full flex-col items-center p-2 text-center"
+							class="flex h-full w-full flex-col items-center p-2 text-center text-base-content/60"
 						>
 							<img
 								src="/file-format-icons/{getFileIcon(attachedFile.name)}.svg"
@@ -464,7 +434,7 @@
 								class="mb-1 h-10 w-10"
 							/>
 							<span
-								class="line-clamp-3 flex h-24 items-center break-words break-all text-[14px] leading-tight"
+								class="line-clamp-3 flex h-24 items-center text-[14px] leading-tight break-words break-all"
 								title={attachedFile.name}>{truncateFileName(attachedFile.name)}</span
 							>
 						</div>
@@ -472,16 +442,16 @@
 
 					<!-- Индикатор загрузки -->
 					{#if attachedFile.isUploading}
-						<div class="bg-base-content/50 absolute inset-0 flex items-center justify-center">
+						<div class="absolute inset-0 flex items-center justify-center bg-base-content/50">
 							<div
-								class="border-base-100 h-8 w-8 animate-spin rounded-full border-4 border-t-transparent"
+								class="h-8 w-8 animate-spin rounded-full border-4 border-base-100 border-t-transparent"
 							></div>
 						</div>
 					{/if}
 
 					<button
 						onclick={() => removeFile(index, attachedFiles)}
-						class="bg-base-content/50 text-base-100 absolute right-1 top-1 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full border-none text-sm leading-none opacity-0 transition-opacity group-hover:opacity-100"
+						class="absolute top-1 right-1 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full border-none bg-base-content/50 text-sm leading-none text-base-100 opacity-0 transition-opacity group-hover:opacity-100"
 						aria-label="Remove file">&times;</button
 					>
 				</div>

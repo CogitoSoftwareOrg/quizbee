@@ -59,7 +59,7 @@ class Settings(BaseSettings):
         if self.env == "preview" and self.pr_id is not None:
             parsed = urlparse(self.pb_url)
             hostname = parsed.hostname or ""
-            self.pb_url = f"https://{self.pr_id}.{hostname}"
+            self.pb_url = f"https://{self.pr_id}-{hostname}"
 
         return self
 
