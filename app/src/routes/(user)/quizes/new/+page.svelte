@@ -3,14 +3,14 @@
 	import DifficultySelector from './DifficultySelector.svelte';
 	import QuestionNumberSelector from './QuestionNumberSelector.svelte';
 	import StartQuizButton from './StartQuizButton.svelte';
+	import { tick } from 'svelte';
+	import { onMount } from 'svelte';
 
 	import Drafts from './Drafts.svelte';
-	import { untrack } from 'svelte';
+
 	import InfoIcon from '$lib/ui/InfoIcon.svelte';
 	import type { AttachedFile } from '$lib/types/attached-file';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
-	import { pb } from '$lib/pb';
-	import { generateId } from '$lib/utils/generate-id';
 
 	function generateUniqueTitle(baseTitle: string, existingTitles: string[]): string {
 		let title = baseTitle;
@@ -30,21 +30,22 @@
 	let inputText = $state('');
 
 	let inputElement: HTMLInputElement;
+	let showWarningLength = $state(false);
 
 	let isDraft = $derived(
 		quizesStore.quizes.find((q) => q.id === quizTemplateId)?.status === 'draft'
 	);
 
 	$effect(() => {
-		if (untrack(() => quizTemplateId) && title.trim()) {
-			pb!.collection('quizes').update(
-				untrack(() => quizTemplateId),
-				{ title: title.trim() }
-			);
+		if (inputElement && title) {
+			inputElement.style.width = '0';
+			inputElement.style.width = inputElement.scrollWidth + 5 + 'px';
 		}
 	});
 
-	$effect(() => {
+	onMount(async () => {
+		await tick();
+
 		if (inputElement && title) {
 			inputElement.style.width = '0';
 			inputElement.style.width = inputElement.scrollWidth + 5 + 'px';
@@ -80,6 +81,9 @@
 				style="min-width: 350px; min-height: 65px; padding-bottom: 5px;"
 				oninput={(e) => {
 					const target = e.target as HTMLInputElement;
+					const originalLength = target.value.length;
+					title = target.value.slice(0, 30);
+					showWarningLength = originalLength > 30;
 					target.style.width = '0';
 					target.style.width = target.scrollWidth + 5 + 'px';
 				}}
@@ -92,6 +96,9 @@
 					}
 				}}
 			/>
+			{#if showWarningLength}
+				<p class="mt-2 text-center text-red-500">Title is limited to 30 characters.</p>
+			{/if}
 		</div>
 
 		<div class="mx-auto max-w-7xl">
@@ -99,7 +106,7 @@
 				<div class="flex items-center justify-center gap-2">
 					<h2 class="mb-1 text-4xl font-semibold">Describe your quiz</h2>
 					<div
-						class="tooltip tooltip-bottom -mt-1 [&:before]:max-w-[30rem] [&:before]:whitespace-pre-line [&:before]:px-6 [&:before]:py-3 [&:before]:text-left [&:before]:text-lg"
+						class="tooltip tooltip-bottom -mt-1 [&:before]:max-w-[30rem] [&:before]:px-6 [&:before]:py-3 [&:before]:text-left [&:before]:text-lg [&:before]:whitespace-pre-line"
 						data-tip="Describe your quiz in detail below, or simply attach files and we'll base the questions on their content. For the best results, do both!
 
 Feel free to attach presentations, PDFs, images, and more—we support a wide range of file types. For the most accurate questions, a few focused documents are more effective than many large ones."
@@ -108,7 +115,7 @@ Feel free to attach presentations, PDFs, images, and more—we support a wide ra
 					</div>
 				</div>
 			</div>
-			<div class="mb-12 mt-4 flex justify-center">
+			<div class="mt-4 mb-12 flex justify-center">
 				<div class="w-full max-w-4xl">
 					<FileInput bind:attachedFiles bind:inputText bind:quizTemplateId />
 				</div>
@@ -120,7 +127,7 @@ Feel free to attach presentations, PDFs, images, and more—we support a wide ra
 						<div class="flex items-center justify-center gap-2">
 							<h2 class="mb-6 text-2xl font-semibold">Choose difficulty level</h2>
 							<div
-								class="tooltip tooltip-bottom -mt-6 [&:before]:max-w-md [&:before]:whitespace-pre-line [&:before]:px-6 [&:before]:py-3 [&:before]:text-left [&:before]:text-lg"
+								class="tooltip tooltip-bottom -mt-6 [&:before]:max-w-md [&:before]:px-6 [&:before]:py-3 [&:before]:text-left [&:before]:text-lg [&:before]:whitespace-pre-line"
 								data-tip="Choose your level based on your knowledge of the topic. Beginner gives you simple, basic questions, while Expert challenges you with tricky, thought-provoking ones.
 
         And don't worry, if you feel that the questions are too hard or too easy you can adjust the difficulty during the quiz!"
@@ -135,7 +142,7 @@ Feel free to attach presentations, PDFs, images, and more—we support a wide ra
 						<div class="flex items-center justify-center gap-2">
 							<h2 class="mb-6 text-2xl font-semibold">Choose number of questions</h2>
 							<div
-								class="tooltip tooltip-bottom -mt-6 [&:before]:max-w-md [&:before]:whitespace-pre-line [&:before]:px-6 [&:before]:py-3 [&:before]:text-left [&:before]:text-lg"
+								class="tooltip tooltip-bottom -mt-6 [&:before]:max-w-md [&:before]:px-6 [&:before]:py-3 [&:before]:text-left [&:before]:text-lg [&:before]:whitespace-pre-line"
 								data-tip="Each quiz question is a single-choice question with four answer options."
 							>
 								<InfoIcon />
@@ -147,7 +154,7 @@ Feel free to attach presentations, PDFs, images, and more—we support a wide ra
 			</div>
 
 			<div class="flex justify-center">
-				<StartQuizButton {quizTemplateId} {attachedFiles} {inputText} {selectedDifficulty} {questionCount} />
+				<StartQuizButton {quizTemplateId} {attachedFiles} {inputText} />
 			</div>
 		</div>
 	</div>

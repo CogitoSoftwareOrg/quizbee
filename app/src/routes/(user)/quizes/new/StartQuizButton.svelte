@@ -2,28 +2,16 @@
 	import { goto } from '$app/navigation';
 	import { postApi } from '$lib/api/call-api';
 	import { uiStore } from '$lib/apps/users/ui.svelte';
-
-	type AttachedFile = {
-		file?: File;
-		previewUrl: string | null;
-		materialId?: string;
-		material?: import('$lib/pb/pocketbase-types').MaterialsResponse;
-		name: string;
-		uploadPromise?: Promise<import('$lib/pb/pocketbase-types').MaterialsResponse>;
-		isUploading?: boolean;
-		uploadError?: string;
-	};
+	import type { AttachedFile } from '$lib/types/attached-file';
+	import { pb } from '$lib/pb';
 
 	interface Props {
 		quizTemplateId: string;
 		attachedFiles: AttachedFile[];
 		inputText: string;
-		selectedDifficulty: string;
-		questionCount: number;
 	}
 
-	let { quizTemplateId, attachedFiles, inputText, selectedDifficulty, questionCount }: Props =
-		$props();
+	let { quizTemplateId, attachedFiles, inputText }: Props = $props();
 
 	const hasFiles = $derived(attachedFiles.length > 0);
 	const hasText = $derived(inputText.trim().length > 0);
@@ -35,15 +23,16 @@
 		isLoading = true;
 
 		try {
-			const selectedMaterialIds = attachedFiles.map((file) => file.materialId!);
+			for (const attachedFile of attachedFiles) {
+				const material = await pb!.collection('materials').getOne(attachedFile.materialId);
+				if (material.status !== 'used') {
+					pb!.collection('materials').update(attachedFile.materialId, { status: 'used' });
+				}
+			}
 
 			const { quiz_id: quizId, quiz_attempt_id: quizAttemptsId } = await postApi('quizes', {
 				quiz_id: quizTemplateId,
 				with_attempt: true
-				// query: inputText,
-				// material_ids: selectedMaterialIds,
-				// number_of_questions: questionCount,
-				// difficulty: selectedDifficulty.toLowerCase()
 			});
 
 			console.log('Quiz created:', quizId, 'Attempt created:', quizAttemptsId);
@@ -67,7 +56,7 @@
 	onclick={sendQuizCreation}
 >
 	{#if isLoading}
-		<span class="loading loading-spinner loading-md mr-2"></span>
+		<span class="loading loading-md loading-spinner mr-2"></span>
 		Creating quiz...
 	{:else}
 		Start a quiz
