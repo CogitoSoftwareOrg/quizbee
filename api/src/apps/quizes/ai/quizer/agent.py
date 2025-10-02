@@ -1,6 +1,6 @@
 import logging
 from collections.abc import AsyncIterable
-from pydantic_ai import Agent, RunContext
+from pydantic_ai import Agent, NativeOutput, PromptedOutput, RunContext
 from pydantic_ai.messages import (
     AgentStreamEvent,
     FinalResultEvent,
@@ -12,18 +12,19 @@ from pydantic_ai.messages import (
     ToolCallPartDelta,
     PartStartEvent,
 )
+from lib.ai import QuizerDeps, QuizerOutput, AgentEnvelope
 from lib.config import LLMS
 
-from .models import QuizerDeps, QuizPatch
 from .prompts import inject_request_prompt
 
 QUIZER_LLM = LLMS.GPT_5_MINI
+
 
 quizer_agent = Agent(
     model=QUIZER_LLM,
     deps_type=QuizerDeps,
     instrument=True,
-    output_type=QuizPatch,
+    output_type=AgentEnvelope,
     history_processors=[inject_request_prompt],
     retries=3,
 )

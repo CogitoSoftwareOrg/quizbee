@@ -1,31 +1,21 @@
-import asyncio
-import base64
-import contextlib
 import logging
 import httpx
 from pocketbase import FileUpload
-from pydantic_ai.direct import model_request
-from pydantic_ai.messages import (
-    ModelRequest,
-    SystemPromptPart,
-    TextPart,
-    UserPromptPart,
+
+from apps.materials.utils import (
+    load_file_text,
 )
+
+from lib.ai.models import QuizerOutput, QuizerDeps, SummarizerOutput, SummarizerDeps
 from lib.clients.http import HTTPAsyncClient
 from lib.clients.pb import AdminPB
 from lib.clients.tiktoken import ENCODERS
 from lib.config import LLMS
-from apps.materials.utils import (
-    load_file_text,
-    materials_to_ai_bytes,
-    materials_to_ai_images,
-)
 from lib.clients import langfuse_client
-from lib.utils import summarize_text
+from lib.utils import cache_key
 
-from .models import DynamicConfig, QuizerDeps
-from .agent import quizer_agent
-from .agent import event_stream_handler
+from .summirizer import summarizer_agent
+from .quizer import quizer_agent, event_stream_handler
 
 
 async def start_generating_quiz_task(
@@ -74,16 +64,36 @@ async def start_generating_quiz_task(
     truncated = tokens[:25_000] + tokens[-25_000:]
     texts = ENCODERS[LLMS.GPT_5_MINI].decode(truncated)
 
-    # Generate summary
     summary = ""
-    prompt_cache_key = f"quiz-{attempt_id}"
+    prompt_cache_key = cache_key(attempt_id)
     if len(texts) > 0:
         with langfuse_client.start_as_current_span(name="quiz-summary") as span:
-            summary = await summarize_text(texts, prompt_cache_key)
+            res = await summarizer_agent.run(
+                deps=SummarizerDeps(
+                    http=http,
+                    quiz=quiz,
+                    materials_context=texts,
+                ),
+                model_settings={"extra_body": {"prompt_cache_key": prompt_cache_key}},
+            )
+
+            if res.output.data.mode != "summary":
+                raise ValueError(f"Unexpected output type: {type(res.output)}")
+
+            summary = res.output.data.summary
+
+            usage = res.usage()
+            read_cache_input = usage.cache_read_tokens
+            write_cache_input = usage.cache_write_tokens
+
             span.update_trace(
                 user_id=user_id,
                 session_id=attempt_id,
-                metadata={"prompt_cache_key": prompt_cache_key},
+                metadata={
+                    "read_cache_input": read_cache_input,
+                    "write_cache_input": write_cache_input,
+                    "prompt_cache_key": prompt_cache_key,
+                },
             )
 
     quiz = await admin_pb.collection("quizes").update(
@@ -107,6 +117,7 @@ async def generate_quiz_task(
     attempt_id: str,
     quiz_id: str,
     limit: int,
+    mode="regenerate",  # or "continue"
 ):
     quiz = await admin_pb.collection("quizes").get_one(
         quiz_id,
@@ -132,11 +143,17 @@ async def generate_quiz_task(
     )
 
     prev_quiz_items = [qi for qi in quiz_items if qi.get("status") == "final"]
-    future_quiz_items = [qi for qi in quiz_items if qi.get("status") != "final"]
+
+    future_quiz_items = []
+    if mode == "regenerate":
+        future_quiz_items = [qi for qi in quiz_items if qi.get("status") != "final"]
+    elif mode == "continue":
+        future_quiz_items = [
+            qi for qi in quiz_items if qi.get("status") in ("final", "generated")
+        ]
 
     limit = min(limit, len(future_quiz_items))
-    quiz_items = future_quiz_items[:limit]  # ALL not final quiz items for now!
-
+    quiz_items = future_quiz_items[:limit]
     quiz_items_ids = [qi.get("id", "") for qi in quiz_items]
 
     # Mark as "generating"
@@ -152,53 +169,31 @@ async def generate_quiz_task(
             logging.exception("Failed to set generating for %s: %s", qi.get("id"), e)
 
     # Prepare request to LLM
-    dynamic_config = DynamicConfig(**quiz.get("dynamicConfig", {}))
-    q = quiz.get("query", "")
-    summary = quiz.get("summary", "")
-    textMaterials = await load_file_text(
-        http, "quizes", quiz_id, quiz.get("materialsContext", "")
-    )
-    ai_bytes = await materials_to_ai_bytes(http, materials)
-
     cancelled = False
     seen = 0
-    prompt_cache_key = f"quiz-{attempt_id}"
-
-    user_contents = []
-    if q:
-        user_contents.append(f"User query:\n{q}")
-    if summary:
-        user_contents.append(f"Materials summary:\n{summary}")
-    if textMaterials:
-        user_contents.append(f"Quiz materials:\n{textMaterials}")
-    if ai_bytes:
-        user_contents.extend(ai_bytes)
-    if dynamic_config.adds:
-        user_contents.append(
-            f"Additional instructions:\n{"\n".join(dynamic_config.adds)}"
-        )
-
+    prompt_cache_key = cache_key(attempt_id)
     try:
         with langfuse_client.start_as_current_span(name="quiz-patch") as span:
             async with quizer_agent.run_stream(
-                user_contents,
                 deps=QuizerDeps(
                     quiz=quiz,
                     prev_quiz_items=prev_quiz_items,
                     materials=materials,
-                    dynamic_config=dynamic_config,
-                    materials_context="",
+                    http=http,
                 ),
                 event_stream_handler=event_stream_handler,
                 model_settings={"extra_body": {"prompt_cache_key": prompt_cache_key}},
             ) as result:
                 stream = result.stream_output()
                 async for partial in stream:
+                    if partial.data.mode != "quiz":
+                        raise ValueError(f"Unexpected output type: {type(partial)}")
+
                     if not await _same_generation(admin_pb, quiz_id, generation):
                         cancelled = True
                         break
 
-                    items = partial.quiz_items or []
+                    items = partial.data.quiz_items or []
                     if len(items) > 0:
                         for qi_id, qi in zip(
                             quiz_items_ids[seen : len(items)], items[seen:]
@@ -208,17 +203,11 @@ async def generate_quiz_task(
 
                             answers = [
                                 {
-                                    "content": wa.answer,
-                                    "explanation": wa.explanation,
-                                    "correct": False,
+                                    "content": a.answer,
+                                    "explanation": a.explanation,
+                                    "correct": a.correct,
                                 }
-                                for wa in qi.wrong_answers
-                            ] + [
-                                {
-                                    "content": qi.right_answer.answer,
-                                    "explanation": qi.right_answer.explanation,
-                                    "correct": True,
-                                }
+                                for a in qi.answers
                             ]
                             try:
                                 await admin_pb.collection("quizItems").update(

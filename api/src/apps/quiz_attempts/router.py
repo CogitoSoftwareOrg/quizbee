@@ -6,6 +6,7 @@ import httpx
 from apps.auth import auth_user
 from apps.billing import load_subscription
 from lib.clients import AdminPB, langfuse_client, HTTPAsyncClient
+from lib.utils import cache_key
 
 from .ai import FeedbackerDeps, feedbacker_agent
 
@@ -26,35 +27,52 @@ async def _generate_feedback_task(
             "params": {"expand": "quiz,quiz.quizItems_via_quiz,quiz.materials_via_quiz"}
         },
     )
+    user_id = quiz_attempt.get("user", "")
+    attempt_id = quiz_attempt.get("id", "")
     quiz = quiz_attempt.get("expand", {}).get("quiz", {})
     quiz_items = quiz.get("expand", {}).get("quizItems_via_quiz", [])
 
+    prompt_cache_key = cache_key(attempt_id)
     with langfuse_client.start_as_current_span(name="feedbacker-agent") as span:
-        feedback = await feedbacker_agent.run(
-            "Give me feedback on my quiz attempt",
+        res = await feedbacker_agent.run(
             deps=FeedbackerDeps(
                 quiz=quiz,
                 quiz_items=quiz_items,
                 quiz_attempt=quiz_attempt,
-                materials_context="",
+                http=http,
             ),
+            model_settings={"extra_body": {"prompt_cache_key": prompt_cache_key}},
         )
+
+        if res.output.data.mode != "feedback":
+            raise ValueError(f"Unexpected output type: {type(res.output)}")
+
+        data = res.output.data
+        usage = res.usage()
+        read_cache_input = usage.cache_read_tokens
+        write_cache_input = usage.cache_write_tokens
+
         span.update_trace(
-            user_id=quiz_attempt.get("user", ""),
-            session_id=quiz_attempt.get("id", ""),
+            user_id=user_id,
+            session_id=attempt_id,
+            metadata={
+                "read_cache_input": read_cache_input,
+                "write_cache_input": write_cache_input,
+                "prompt_cache_key": prompt_cache_key,
+            },
         )
 
     await admin_pb.collection("quizAttempts").update(
         attempt_id,
         {
-            "feedback": feedback.output.feedback.model_dump_json(),
+            "feedback": data.feedback.model_dump_json(),
         },
     )
 
     # Update quiz with adds if not final
     status = quiz.get("status")
     if status != "final":
-        adds = feedback.output.additional
+        adds = data.additional
         await admin_pb.collection("quizes").update(
             quiz.get("id"),
             {"title": adds.quiz_title, "status": "final"},

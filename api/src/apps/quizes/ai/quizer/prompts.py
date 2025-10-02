@@ -1,32 +1,36 @@
-import json
-from datetime import datetime, timezone
+from pydantic_ai import RunContext
 from pydantic_ai.messages import (
     ModelMessage,
     ModelRequest,
     SystemPromptPart,
-    UserPromptPart,
 )
-from pydantic_ai import RunContext
-from .models import QuizerDeps
-from src.lib.clients import langfuse_client
-from src.lib.settings import settings
+
+from lib.clients import langfuse_client
+from lib.settings import settings
+
+from lib.ai import DynamicConfig, QuizerDeps, build_pre_prompt
 
 
-def inject_request_prompt(
+async def inject_request_prompt(
     ctx: RunContext[QuizerDeps], messages: list[ModelMessage]
 ) -> list[ModelMessage]:
+    quiz = ctx.deps.quiz
     prev_quiz_items = ctx.deps.prev_quiz_items
-    difficulty = ctx.deps.quiz.get("difficulty")
-    extra_beginner = "\n".join(ctx.deps.dynamic_config.extraBeginner)
-    extra_expert = "\n".join(ctx.deps.dynamic_config.extraExpert)
-    more_on_topic = "\n".join(ctx.deps.dynamic_config.moreOnTopic)
-    less_on_topic = "\n".join(ctx.deps.dynamic_config.lessOnTopic)
 
-    pre_parts = []
+    dynamic_config = DynamicConfig(**quiz.get("dynamicConfig", {}))
+    difficulty = quiz.get("difficulty")
+
+    extra_beginner = "\n".join(dynamic_config.extraBeginner)
+    extra_expert = "\n".join(dynamic_config.extraExpert)
+    more_on_topic = "\n".join(dynamic_config.moreOnTopic)
+    less_on_topic = "\n".join(dynamic_config.lessOnTopic)
+
+    pre_parts = await build_pre_prompt(ctx.deps.http, ctx.deps.quiz)
+
+    # POST PARTS, CAN VARY FOR EACH PATCH
     post_parts = []
 
-    # PRE PARTS, SIMMILAR FOR EACH PATCH
-    pre_parts.append(
+    post_parts.append(
         SystemPromptPart(
             content=langfuse_client.get_prompt(
                 "quizer/base", label=settings.env
@@ -34,14 +38,14 @@ def inject_request_prompt(
         )
     )
 
-    # POST PARTS, CAN VARY FOR EACH PATCH
-    post_parts.append(
-        SystemPromptPart(
-            content=langfuse_client.get_prompt(
-                f"quizer/{difficulty}", label=settings.env
-            ).compile()
+    if len(dynamic_config.adds) > 0:
+        post_parts.append(
+            SystemPromptPart(
+                content=langfuse_client.get_prompt(
+                    "quizer/adds", label=settings.env
+                ).compile(questions=dynamic_config.adds),
+            )
         )
-    )
 
     if len(prev_quiz_items) > 0:
         post_parts.append(
@@ -51,6 +55,14 @@ def inject_request_prompt(
                 ).compile(questions=prev_quiz_items),
             )
         )
+
+    post_parts.append(
+        SystemPromptPart(
+            content=langfuse_client.get_prompt(
+                f"quizer/{difficulty}", label=settings.env
+            ).compile()
+        )
+    )
 
     if len(extra_beginner) > 0:
         post_parts.append(
