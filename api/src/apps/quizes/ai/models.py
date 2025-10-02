@@ -73,22 +73,22 @@ class QuizItem(BaseModel):
 class QuizPatch(BaseModel):
     quiz_items: Annotated[
         list[QuizItem],
-        Field(title="Quiz Items", description="An array of quiz items."),
+        Field(title="Quiz Items", description="An array of exactly 5 quiz items."),
     ]
 
 
-def make_quiz_patch_model(n_items: int):
-    QuizItemsField = Annotated[
-        list[QuizItem],
-        Field(
-            title="Quiz Items",
-            description=f"An array of exactly {n_items} quiz items.",
-            # min_length=n_items,
-            max_length=n_items + 10,
-        ),
-    ]
-    return create_model(
-        f"QuizPatch_{n_items}",
-        quiz_items=(QuizItemsField, []),
-        __base__=QuizPatch,
-    )
+# def make_quiz_patch_model(n_items: int):
+#     QuizItemsField = Annotated[
+#         list[QuizItem],
+#         Field(
+#             title="Quiz Items",
+#             description=f"An array of exactly {n_items} quiz items.",
+#             # min_length=n_items,
+#             # max_length=n_items,
+#         ),
+#     ]
+#     return create_model(
+#         f"QuizPatch_{n_items}",
+#         quiz_items=(QuizItemsField, []),
+#         __base__=QuizPatch,
+#     )

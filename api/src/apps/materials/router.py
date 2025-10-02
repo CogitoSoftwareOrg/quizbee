@@ -11,6 +11,8 @@ from fastapi import (
 )
 from pocketbase import FileUpload
 from fastapi.responses import JSONResponse
+
+from apps.materials.utils import as_data_url
 from .tokens_calculation import count_pdf_tokens, count_text_tokens
 from apps.auth import User
 from apps.auth import User, auth_user
@@ -64,16 +66,23 @@ async def upload_material(
                 }
             )
 
+        fname = file.filename or ""
         dto["file"] = FileUpload((file.filename, file_bytes))
-        if file.filename and file.filename.lower().endswith(".pdf"):
+        if fname.lower().endswith(".pdf"):
             try:
                 token_count = count_pdf_tokens(file_bytes)
                 dto["tokens"] = token_count
                 dto["kind"] = "complex"
             except Exception as e:
-                print(f"Error while counting tokens for {file.filename}: {e}")
+                print(f"Error while counting tokens for {fname}: {e}")
         else:
-            token_count = count_text_tokens(file_bytes.decode("utf-8"))
+            to_tokenize = (
+                file_bytes.decode("utf-8")
+                if fname.lower().endswith((".txt", ".md", ".csv", ".json"))
+                # else as_data_url(file_bytes, fname)
+                else ""
+            )
+            token_count = count_text_tokens(to_tokenize)
             dto["tokens"] = token_count
             dto["kind"] = "simple"
 

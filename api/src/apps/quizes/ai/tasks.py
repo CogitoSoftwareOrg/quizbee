@@ -17,12 +17,13 @@ from lib.clients.tiktoken import ENCODERS
 from lib.config import LLMS
 from apps.materials.utils import (
     load_file_text,
+    materials_to_ai_bytes,
     materials_to_ai_images,
 )
 from lib.clients import langfuse_client
 from lib.utils import summarize_text
 
-from .models import DynamicConfig, QuizerDeps, make_quiz_patch_model
+from .models import DynamicConfig, QuizerDeps
 from .agent import quizer_agent
 from .agent import event_stream_handler
 
@@ -122,6 +123,8 @@ async def generate_quiz_task(
     )
 
     materials = quiz.get("expand", {}).get("materials", [])
+    logging.info("Materials order: %s", [m.get("id", "") for m in materials])
+
     quiz_items = quiz.get("expand", {}).get("quizItems_via_quiz", [])
     quiz_items = sorted(
         quiz_items,
@@ -155,7 +158,7 @@ async def generate_quiz_task(
     textMaterials = await load_file_text(
         http, "quizes", quiz_id, quiz.get("materialsContext", "")
     )
-    ai_images = await materials_to_ai_images(materials)
+    ai_bytes = await materials_to_ai_bytes(http, materials)
 
     cancelled = False
     seen = 0
@@ -163,20 +166,17 @@ async def generate_quiz_task(
 
     user_contents = []
     if q:
-        user_contents.append("User query:")
-        user_contents.append(q)
+        user_contents.append(f"User query:\n{q}")
     if summary:
-        user_contents.append("Materials summary:")
-        user_contents.append(summary)
+        user_contents.append(f"Materials summary:\n{summary}")
     if textMaterials:
-        user_contents.append("Quiz materials:")
-        user_contents.append(textMaterials)
-    if ai_images:
-        user_contents.append("Quiz materials images:")
-        user_contents.append(*ai_images)
+        user_contents.append(f"Quiz materials:\n{textMaterials}")
+    if ai_bytes:
+        user_contents.extend(ai_bytes)
     if dynamic_config.adds:
-        user_contents.append("Additional instructions:")
-        user_contents.append(*dynamic_config.adds)
+        user_contents.append(
+            f"Additional instructions:\n{"\n".join(dynamic_config.adds)}"
+        )
 
     try:
         with langfuse_client.start_as_current_span(name="quiz-patch") as span:
@@ -189,7 +189,6 @@ async def generate_quiz_task(
                     dynamic_config=dynamic_config,
                     materials_context="",
                 ),
-                output_type=make_quiz_patch_model(limit),
                 event_stream_handler=event_stream_handler,
                 model_settings={"extra_body": {"prompt_cache_key": prompt_cache_key}},
             ) as result:

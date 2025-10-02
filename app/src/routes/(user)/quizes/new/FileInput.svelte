@@ -112,9 +112,9 @@
 			}
 
 			try {
-				const quiz = await pb!.collection('quizes').getOne(quizTemplateId);
-				const updatedMaterials = [...(quiz.materials || []), material.id];
-				await pb!.collection('quizes').update(quizTemplateId, { materials: updatedMaterials });
+				await pb!
+					.collection('quizes')
+					.update(quizTemplateId, { 'materials+': material.id }, { requestKey: material.id });
 			} catch (error) {
 				console.error('Failed to attach material to quiz:', error);
 			}
@@ -150,9 +150,9 @@
 
 		if (quizTemplateId) {
 			try {
-				const quiz = await pb!.collection('quizes').getOne(quizTemplateId);
-				const updatedMaterials = [...(quiz.materials || []), material.id];
-				await pb!.collection('quizes').update(quizTemplateId, { materials: updatedMaterials });
+				await pb!
+					.collection('quizes')
+					.update(quizTemplateId, { 'materials+': material.id }, { requestKey: material.id });
 			} catch (error) {
 				console.error('Failed to attach material to quiz:', error);
 			}
@@ -168,11 +168,13 @@
 
 		if (quizTemplateId) {
 			try {
-				const quiz = await pb!.collection('quizes').getOne(quizTemplateId);
-				const updatedMaterials = (quiz.materials || []).filter(
-					(id: string) => id !== fileToRemove.materialId
-				);
-				await pb!.collection('quizes').update(quizTemplateId, { materials: updatedMaterials });
+				await pb!
+					.collection('quizes')
+					.update(
+						quizTemplateId,
+						{ 'materials-': fileToRemove.materialId },
+						{ requestKey: fileToRemove.materialId }
+					);
 			} catch (error) {
 				console.error('Failed to detach material from quiz:', error);
 			}

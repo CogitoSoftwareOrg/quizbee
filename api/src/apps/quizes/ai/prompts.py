@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timezone
 from pydantic_ai.messages import (
     ModelMessage,
     ModelRequest,
@@ -47,7 +48,7 @@ def inject_request_prompt(
             SystemPromptPart(
                 content=langfuse_client.get_prompt(
                     "quizer/negative_questions", label=settings.env
-                ).compile(questions=prev_quiz_items)
+                ).compile(questions=prev_quiz_items),
             )
         )
 
@@ -56,7 +57,7 @@ def inject_request_prompt(
             SystemPromptPart(
                 content=langfuse_client.get_prompt(
                     "quizer/extra_beginner", label=settings.env
-                ).compile(questions=extra_beginner)
+                ).compile(questions=extra_beginner),
             )
         )
     if len(extra_expert) > 0:
@@ -64,7 +65,7 @@ def inject_request_prompt(
             SystemPromptPart(
                 content=langfuse_client.get_prompt(
                     "quizer/extra_expert", label=settings.env
-                ).compile(questions=extra_expert)
+                ).compile(questions=extra_expert),
             )
         )
     if len(more_on_topic) > 0:
@@ -72,7 +73,7 @@ def inject_request_prompt(
             SystemPromptPart(
                 content=langfuse_client.get_prompt(
                     "quizer/more_on_topic", label=settings.env
-                ).compile(questions=more_on_topic)
+                ).compile(questions=more_on_topic),
             )
         )
     if len(less_on_topic) > 0:
@@ -80,7 +81,7 @@ def inject_request_prompt(
             SystemPromptPart(
                 content=langfuse_client.get_prompt(
                     "quizer/less_on_topic", label=settings.env
-                ).compile(questions=less_on_topic)
+                ).compile(questions=less_on_topic),
             )
         )
 

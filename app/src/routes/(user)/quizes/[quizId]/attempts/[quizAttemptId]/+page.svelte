@@ -62,6 +62,17 @@
 	let chatOpen = $state(false);
 	const mainColumnWidth = $derived(chatOpen ? '50%' : '100%');
 	const chatColumnWidth = $derived(chatOpen ? '50%' : '0%');
+
+	$effect(() => {
+		if (!quizAttempt) return;
+
+		messagesStore.load(quizAttempt.id).then(() => {
+			messagesStore.subscribe(quizAttempt.id);
+		});
+		return () => {
+			messagesStore.unsubscribe();
+		};
+	});
 </script>
 
 <div class="flex h-full overflow-hidden">
@@ -115,7 +126,7 @@
 						onclick={async () => {
 							const result = await patchApi(`quizes/${quiz?.id}`, {
 								attempt_id: quizAttemptId,
-								limit: 50 // for now just gurantee total number of questions
+								limit: 5
 							});
 
 							console.log('Quiz settings updated:', result);

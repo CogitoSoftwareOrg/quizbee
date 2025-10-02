@@ -50,7 +50,7 @@ async def create_quiz(
 ):
     user_id = user.get("id", "")
     quiz_id = dto.quiz_id
-    limit = 50
+    limit = 5
 
     attempt_id = dto.attempt_id
     if not attempt_id:
@@ -77,7 +77,7 @@ async def create_quiz(
 
 class GenerateQuizItems(BaseModel):
     attempt_id: str = Field(default="")
-    limit: Annotated[int, Field(default=50, ge=2, le=50)]
+    limit: Annotated[int, Field(default=5, ge=2, le=50)]
 
 
 @quizes_router.patch("/{quiz_id}")
