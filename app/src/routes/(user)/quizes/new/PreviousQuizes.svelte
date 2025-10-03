@@ -10,7 +10,9 @@
 	import { truncateFileName } from '$lib/utils/truncuate-file-name';
 	import { generateUniqueTitle } from '$lib/utils/generate-unique-title';
 	import { createDraft } from '../new/createDraft';
-	import { set } from 'zod';
+	import { addExistingMaterial } from '../new/addExistingMaterial';
+	import {removeFile} from '../new/removeFile';
+
 
 	interface Props {
 		quizTemplateId: string;
@@ -31,8 +33,9 @@
 		inputText = $bindable(),
 		attachedFiles = $bindable(),
 		selectedDifficulty = $bindable(),
-		questionCount = $bindable(),
 		draftSwitch = $bindable(),
+		questionCount = $bindable(),
+		
 		searchQuery,
 
 		onQuizSelected = () => {}
@@ -48,22 +51,30 @@
 	);
 
 	async function handleQuizClick(quiz: any) {
-		draftSwitch = true;
-		const newDraft = createDraft(quiz.id);
-		quizTemplateId = newDraft.id;
-		title = newDraft.title;
-		inputText = newDraft.inputText;
-		attachedFiles = newDraft.attachedFiles;
-		selectedDifficulty = newDraft.selectedDifficulty;
-		questionCount = newDraft.questionCount;
+		
+		
+		title = quiz.title;
+		inputText = quiz.query;
+		
+		for (const [index, file] of attachedFiles.entries()) {
+			await removeFile(index, attachedFiles, quizTemplateId);
+		}
+		for (const materialId of quiz.materials || []) {
+			console.log('materialId', materialId);
+			const attachedFile = await addExistingMaterial(materialId, quizTemplateId);
+			if (attachedFile) {
+				attachedFiles = [...attachedFiles, attachedFile];
+			}
+		}
+		
+		selectedDifficulty = quiz.selectedDifficulty;
+		questionCount = quiz.itemsLimit;
 		onQuizSelected();
-		setTimeout(() => {
-			draftSwitch = false;
-		}, 0);
+		
 	}
 </script>
 
-<div class="border-base-200 h-full max-w-80 flex-shrink-0 overflow-y-auto border-r">
+<div class="border-base-200 h-full w-full flex-shrink-0 overflow-y-auto border-r">
 	<div class="space-y-3">
 		{#if filteredQuizes.length === 0}
 			<div class="mt-8 text-center">
@@ -82,9 +93,7 @@
 					<h3 class="mb-1 truncate text-left font-medium" title={quiz.title || `Quiz ${quiz.id}`}>
 						{quiz.title || `Quiz ${quiz.id}`}
 					</h3>
-					<p class="mb-2 text-left text-sm">
-						Quiz ID: {quiz.id}
-					</p>
+					
 					{#if quiz.query}
 						<p class="text-primary mb-1 text-left text-xs">
 							<span class="font-medium">Query:</span>
