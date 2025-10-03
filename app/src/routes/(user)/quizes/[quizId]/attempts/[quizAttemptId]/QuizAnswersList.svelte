@@ -11,6 +11,7 @@
 	import type { Answer } from '$lib/apps/quizes/types';
 	import { computeApiUrl } from '$lib/api/compute-url';
 	import { ChevronDown, ChevronRight, Info } from 'lucide-svelte';
+	import { patchApi } from '$lib/api/call-api';
 
 	interface Props {
 		class?: ClassValue;
@@ -33,6 +34,14 @@
 		quizAttempt,
 		itemDecision = $bindable(null)
 	}: Props = $props();
+
+	const readyItems = $derived(
+		quizItems.filter((item) => ['final', 'generated', 'generating'].includes(item.status))
+	);
+	const answeredItemIds = $derived(quizDecisions.map((decision) => decision.itemId));
+	const readyItemsWithoutAnswers = $derived(
+		readyItems.filter((item) => !answeredItemIds.includes(item.id))
+	);
 
 	function optionLabel(idx: number): string {
 		return String.fromCharCode(65 + idx);
@@ -95,6 +104,7 @@
 							type="button"
 							class="focus-visible:ring-primary/60 flex w-full items-start gap-3 p-4 text-left transition focus-visible:outline-none focus-visible:ring-2"
 							onclick={async () => {
+								const toAnswer = readyItemsWithoutAnswers.length;
 								if (!itemDecision) {
 									itemDecision = {
 										itemId: item!.id,
@@ -110,6 +120,16 @@
 											status: 'final'
 										})
 									]);
+
+									if (toAnswer === 1) {
+										const result = await patchApi(`quizes/${quiz?.id}`, {
+											attempt_id: quizAttempt!.id,
+											limit: 5,
+											mode: 'continue'
+										});
+										console.log('Quiz settings updated:', result);
+									}
+
 									return;
 								}
 

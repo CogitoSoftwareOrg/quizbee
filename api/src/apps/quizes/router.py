@@ -5,7 +5,7 @@ from fastapi import (
     status,
 )
 from fastapi.responses import JSONResponse
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
 
@@ -78,6 +78,7 @@ async def create_quiz(
 class GenerateQuizItems(BaseModel):
     attempt_id: str = Field(default="")
     limit: Annotated[int, Field(default=5, ge=2, le=50)]
+    mode: Annotated[Literal["regenerate", "continue"], Field(default="regenerate")]
 
 
 @quizes_router.patch("/{quiz_id}")
@@ -98,6 +99,7 @@ async def generate_quiz_items(
         dto.attempt_id,
         quiz_id,
         dto.limit,
+        dto.mode,
     )
 
     return JSONResponse(

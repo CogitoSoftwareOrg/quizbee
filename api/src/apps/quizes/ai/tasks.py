@@ -149,7 +149,7 @@ async def generate_quiz_task(
         future_quiz_items = [qi for qi in quiz_items if qi.get("status") != "final"]
     elif mode == "continue":
         future_quiz_items = [
-            qi for qi in quiz_items if qi.get("status") in ("final", "generated")
+            qi for qi in quiz_items if qi.get("status") not in ("final", "generated")
         ]
 
     limit = min(limit, len(future_quiz_items))

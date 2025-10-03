@@ -55,7 +55,7 @@ class QuizerOutput(BaseModel):
         Field(
             title="Quiz Items",
             description="An array of exactly 5 quiz items.",
-            min_length=5,
-            max_length=5,
+            # min_length=5,
+            max_length=6,
         ),
     ]
