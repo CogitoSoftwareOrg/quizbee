@@ -3,6 +3,7 @@ from pydantic_ai.messages import (
     ModelMessage,
     ModelRequest,
     SystemPromptPart,
+    UserPromptPart,
 )
 
 from lib.clients import langfuse_client
@@ -20,10 +21,11 @@ async def inject_request_prompt(
     dynamic_config = DynamicConfig(**quiz.get("dynamicConfig", {}))
     difficulty = quiz.get("difficulty")
 
-    extra_beginner = "\n".join(dynamic_config.extraBeginner)
-    extra_expert = "\n".join(dynamic_config.extraExpert)
-    more_on_topic = "\n".join(dynamic_config.moreOnTopic)
-    less_on_topic = "\n".join(dynamic_config.lessOnTopic)
+    extra_beginner = "\n".join(set(dynamic_config.extraBeginner))
+    extra_expert = "\n".join(set(dynamic_config.extraExpert))
+    more_on_topic = "\n".join(set(dynamic_config.moreOnTopic))
+    less_on_topic = "\n".join(set(dynamic_config.lessOnTopic))
+    adds = "\n".join(set(dynamic_config.adds))
 
     pre_parts = await build_pre_prompt(ctx.deps.http, ctx.deps.quiz)
 
@@ -38,12 +40,10 @@ async def inject_request_prompt(
         )
     )
 
-    if len(dynamic_config.adds) > 0:
+    if len(adds) > 0:
         post_parts.append(
-            SystemPromptPart(
-                content=langfuse_client.get_prompt(
-                    "quizer/adds", label=settings.env
-                ).compile(questions=dynamic_config.adds),
+            UserPromptPart(
+                content=f"Additional questions: {adds}",
             )
         )
 

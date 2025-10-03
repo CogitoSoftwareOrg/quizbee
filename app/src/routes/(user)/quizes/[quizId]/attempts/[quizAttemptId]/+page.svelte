@@ -16,6 +16,7 @@
 	import QuizItemsNavigation from './QuizItemsNavigation.svelte';
 	import QuizAnswersList from './QuizAnswersList.svelte';
 	import { quizItemsStore } from '$lib/apps/quizes/quizItems.svelte';
+	import ManageQuiz from './ManageQuiz.svelte';
 
 	const {} = $props();
 
@@ -30,6 +31,8 @@
 	const quiz = $derived(quizesStore.quizes.find((q) => q.id === quizAttempt?.quiz));
 	const quizItems = $derived(quizItemsStore.quizItemsMap.get(quiz?.id || '') || []);
 	let itemDecision = $derived(quizDecisions.find((d) => d.itemId === item?.id) || null);
+
+	const lastFinalItem = $derived(quizItems.filter((i) => i.status === 'final').at(-1));
 
 	const order = $derived.by(() => {
 		const orderStr = page.url.searchParams.get('order');
@@ -120,22 +123,8 @@
 				/>
 			{/if}
 
-			{#if itemDecision}
-				<div class="mt-6 flex gap-2">
-					<Button
-						onclick={async () => {
-							const result = await patchApi(`quizes/${quiz?.id}`, {
-								attempt_id: quizAttemptId,
-								limit: 5
-							});
-
-							console.log('Quiz settings updated:', result);
-						}}
-						class="flex-1"
-						color="neutral"
-						style="soft">Manage Quiz</Button
-					>
-				</div>
+			{#if lastFinalItem?.id === item?.id && item && !item?.managed && itemDecision && quiz && quizAttempt}
+				<ManageQuiz {item} {quiz} {quizAttempt} />
 			{/if}
 		</div>
 	</main>
