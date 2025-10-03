@@ -51,32 +51,31 @@
 	});
 </script>
 
-<div class="relative mx-auto flex flex-1 flex-col gap-6 p-1 pb-20 sm:h-full sm:flex-row sm:pb-1">
+<div
+	class="relative mx-auto flex max-w-7xl flex-1 flex-col gap-6 p-1 pb-20 sm:h-full sm:flex-row sm:pb-1"
+>
 	{#if !feedback}
 		<section class="flex flex-col items-center justify-center gap-4">
 			<p class="loading loading-spinner loading-xl"></p>
 			<p class="text-center font-semibold">We are giving your feedback...</p>
 		</section>
-	{:else if quiz && feedback}
+	{:else if feedback}
 		<section class="flex w-full flex-1 flex-col gap-6 px-3 sm:overflow-y-auto">
 			<div>
 				<Button color="neutral" style="ghost" href={`/home`} class="underline">
 					<ChevronLeft /> Back to home
 				</Button>
-			</div>
-
-			<div>
-				<h1 class="text-center text-2xl font-bold leading-tight">{quiz.title || 'Quiz'}</h1>
+				<h2 class="text-center text-2xl font-bold leading-tight">Feedback</h2>
 				<p class="mt-1 text-center text-sm opacity-70">
 					Score: {correctCount} / {quizItems.length}
 				</p>
+			</div>
 
+			<div>
 				<div class="mt-4 space-y-2">
+					<h3 class="text-lg font-semibold">Overview</h3>
 					<p class="opacity-80">
 						{feedback.overview}
-					</p>
-					<p class="opacity-70">
-						Pay attention to the highlighted topics — they will help you improve.
 					</p>
 				</div>
 
@@ -106,6 +105,12 @@
 	{/if}
 
 	<section class="flex flex-1 flex-col gap-3 sm:min-h-0">
+		{#if quiz}
+			<h1 class="text-center text-2xl font-bold leading-tight">{quiz?.title || 'Quiz'}</h1>
+		{:else}
+			<h1 class="text-center text-2xl font-bold leading-tight">Loading...</h1>
+		{/if}
+
 		<Input
 			class="w-full sm:shrink-0"
 			placeholder="Search by questions and answers"
