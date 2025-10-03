@@ -19,6 +19,11 @@ async def inject_request_prompt(
     prev_quiz_items = ctx.deps.prev_quiz_items
 
     dynamic_config = DynamicConfig(**quiz.get("dynamicConfig", {}))
+    prev_questions = dynamic_config.negativeQuestions + [
+        qi.get("question", "") for qi in prev_quiz_items
+    ]
+    prev_questions = "\n".join(set(prev_questions))
+
     difficulty = quiz.get("difficulty")
 
     extra_beginner = "\n".join(set(dynamic_config.extraBeginner))
@@ -47,12 +52,12 @@ async def inject_request_prompt(
             )
         )
 
-    if len(prev_quiz_items) > 0:
+    if len(prev_questions) > 0:
         post_parts.append(
             SystemPromptPart(
                 content=langfuse_client.get_prompt(
                     "quizer/negative_questions", label=settings.env
-                ).compile(questions=prev_quiz_items),
+                ).compile(questions=prev_questions),
             )
         )
 

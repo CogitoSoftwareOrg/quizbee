@@ -2,7 +2,6 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, Request
 from meilisearch_python_sdk import (
     AsyncClient,
-    AsyncIndex,
 )
 from meilisearch_python_sdk.models.settings import Embedders, OpenAiEmbedder
 
@@ -14,7 +13,7 @@ meiliEmbeddings = {
         source="openAi",
         model=LLMS.TEXT_EMBEDDING_3_SMALL.split(":")[-1],
         api_key=settings.openai_api_key,
-        document_template="Chunk {{doc.title}}: {{doc.content}}",
+        document_template="Summary: {{doc.summary}}",
     ),
 }
 
@@ -38,8 +37,8 @@ async def init_meilisearch(app: FastAPI):
     app.state.meilisearch_client = meilisearch_client
 
 
-def _get_meilisearch_client(request: Request):
+def _get_meilisearch_client(request: Request) -> AsyncClient:
     return request.app.state.meilisearch_client
 
 
-MeilisearchClient = Annotated[AsyncIndex, Depends(_get_meilisearch_client)]
+MeilisearchClient = Annotated[AsyncClient, Depends(_get_meilisearch_client)]

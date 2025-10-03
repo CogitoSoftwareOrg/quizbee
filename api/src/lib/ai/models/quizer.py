@@ -8,6 +8,7 @@ from lib.clients import HTTPAsyncClient
 
 @dataclass
 class DynamicConfig:
+    negativeQuestions: list[str] = field(default_factory=list)
     adds: list[str] = field(default_factory=list)
     moreOnTopic: list[str] = field(default_factory=list)
     lessOnTopic: list[str] = field(default_factory=list)

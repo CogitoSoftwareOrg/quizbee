@@ -1,6 +1,12 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { PanelRightOpen, PanelRightClose, ChevronLeft, Menu } from 'lucide-svelte';
+	import {
+		PanelRightOpen,
+		PanelRightClose,
+		ChevronLeft,
+		Menu,
+		MessageCircleHeart
+	} from 'lucide-svelte';
 
 	import { uiStore } from '$lib/apps/users/ui.svelte';
 	import ThemeController from '$lib/features/ThemeController.svelte';
@@ -113,5 +119,10 @@
 	</div>
 
 	<!-- Always -->
-	<ThemeController />
+	<div class="flex items-center gap-1">
+		<div>
+			<MessageCircleHeart class="hidden size-8 text-black dark:text-white" />
+		</div>
+		<ThemeController />
+	</div>
 </header>

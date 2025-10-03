@@ -17,6 +17,7 @@ onRecordCreate((e) => {
     lessOnTopic: [],
     extraBeginner: [],
     extraExpert: [],
+    negativeQuestions: [],
   });
 
   e.next();

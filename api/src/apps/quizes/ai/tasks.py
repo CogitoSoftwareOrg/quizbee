@@ -1,31 +1,118 @@
+import asyncio
 import logging
 import httpx
+from meilisearch_python_sdk.models.search import Hybrid
 from pocketbase import FileUpload
+from pocketbase.models.dtos import Record
 
 from apps.materials.utils import (
     load_file_text,
 )
 
 from lib.ai.models import QuizerOutput, QuizerDeps, SummarizerOutput, SummarizerDeps
-from lib.clients.http import HTTPAsyncClient
-from lib.clients.pb import AdminPB
-from lib.clients.tiktoken import ENCODERS
+from lib.clients import (
+    HTTPAsyncClient,
+    MeilisearchClient,
+    langfuse_client,
+    AdminPB,
+    ENCODERS,
+)
 from lib.config import LLMS
-from lib.clients import langfuse_client
 from lib.utils import cache_key
 
 from .summirizer import summarizer_agent
 from .quizer import quizer_agent, event_stream_handler
 
 
+async def summary_and_index(
+    admin_pb: AdminPB,
+    http: HTTPAsyncClient,
+    meilisearch_client: MeilisearchClient,
+    user_id: str,
+    attempt_id: str,
+    quiz: Record,
+    texts: str,
+):
+    summary = ""
+    if len(texts) == 0:
+        logging.warning("No texts to summarize and index")
+        return
+
+    summaries_index = meilisearch_client.index("quizSummaries")
+
+    prompt_cache_key = cache_key(attempt_id)
+
+    # SUMMARIZE
+    with langfuse_client.start_as_current_span(name="quiz-summary") as span:
+        res = await summarizer_agent.run(
+            deps=SummarizerDeps(
+                http=http,
+                quiz=quiz,
+                materials_context=texts,
+            ),
+            model_settings={"extra_body": {"prompt_cache_key": prompt_cache_key}},
+        )
+
+        if res.output.data.mode != "summary":
+            raise ValueError(f"Unexpected output type: {type(res.output)}")
+
+        summary = res.output.data.summary
+
+        usage = res.usage()
+        read_cache_input = usage.cache_read_tokens
+        write_cache_input = usage.cache_write_tokens
+
+        span.update_trace(
+            user_id=user_id,
+            session_id=attempt_id,
+            metadata={
+                "read_cache_input": read_cache_input,
+                "write_cache_input": write_cache_input,
+                "prompt_cache_key": prompt_cache_key,
+            },
+        )
+
+    # INDEX SUMMARY
+    index_task = await summaries_index.add_documents(
+        [
+            {
+                "id": quiz.get("id", ""),
+                "summary": summary,
+                "userId": user_id,
+                "quizId": quiz.get("id", ""),
+            }
+        ],
+        primary_key="id",
+    )
+    task = await meilisearch_client.wait_for_task(
+        index_task.task_uid,
+        timeout_in_ms=int(30 * 1000),
+        interval_in_ms=int(0.5 * 1000),
+    )
+
+    if task.status == "succeeded":
+        logging.info("Quiz summary indexed: %s", task)
+        await admin_pb.collection("quizes").update(
+            quiz.get("id", ""),
+            {"summary": summary},
+        )
+    elif task.status == "failed":
+        logging.error("Failed to index quiz summary: %s", task)
+    else:
+        logging.error("Unknown task status: %s", task)
+
+
 async def start_generating_quiz_task(
     admin_pb: AdminPB,
     http: HTTPAsyncClient,
+    meilisearch_client: MeilisearchClient,
     user_id: str,
     attempt_id: str,
     quiz_id: str,
     limit: int,
 ):
+    summaries_index = meilisearch_client.index("quizSummaries")
+
     quiz = await admin_pb.collection("quizes").get_one(
         quiz_id,
         options={
@@ -45,7 +132,6 @@ async def start_generating_quiz_task(
     texts = []
     for m in materials:
         mid = m.get("id", "")
-        # simple text or image
         if m.get("kind") == "simple":
             f = m.get("file", "")
             content = await load_file_text(http, "materials", mid, f)
@@ -58,56 +144,62 @@ async def start_generating_quiz_task(
             if txt:
                 content = await load_file_text(http, "materials", mid, txt)
                 texts.append(content)
+    texts = "\n".join(texts)
 
     # Truncate content somehow
-    tokens = ENCODERS[LLMS.GPT_5_MINI].encode("\n".join(texts))
+    tokens = ENCODERS[LLMS.GPT_5_MINI].encode(texts)
     truncated = tokens[:25_000] + tokens[-25_000:]
+    estimated = tokens[:4000] + tokens[-4000:]
     texts = ENCODERS[LLMS.GPT_5_MINI].decode(truncated)
 
-    summary = ""
-    prompt_cache_key = cache_key(attempt_id)
-    if len(texts) > 0:
-        with langfuse_client.start_as_current_span(name="quiz-summary") as span:
-            res = await summarizer_agent.run(
-                deps=SummarizerDeps(
-                    http=http,
-                    quiz=quiz,
-                    materials_context=texts,
-                ),
-                model_settings={"extra_body": {"prompt_cache_key": prompt_cache_key}},
-            )
-
-            if res.output.data.mode != "summary":
-                raise ValueError(f"Unexpected output type: {type(res.output)}")
-
-            summary = res.output.data.summary
-
-            usage = res.usage()
-            read_cache_input = usage.cache_read_tokens
-            write_cache_input = usage.cache_write_tokens
-
-            span.update_trace(
-                user_id=user_id,
-                session_id=attempt_id,
-                metadata={
-                    "read_cache_input": read_cache_input,
-                    "write_cache_input": write_cache_input,
-                    "prompt_cache_key": prompt_cache_key,
-                },
-            )
+    estimated_summary = ENCODERS[LLMS.GPT_5_MINI].decode(estimated)
+    search_result = await summaries_index.search(
+        query=estimated_summary,
+        hybrid=Hybrid(
+            semantic_ratio=0.75,
+            embedder="quizSummaries-openai",
+        ),
+        filter=[f"userId = {user_id}"],
+        limit=5,
+    )
+    hits = search_result.hits
+    quiz_ids = [hit.get("quizId", "") for hit in hits]
+    questions = []
+    for quiz_id in quiz_ids:
+        quiz = await admin_pb.collection("quizes").get_one(
+            quiz_id,
+            options={
+                "params": {
+                    "expand": "quizItems_via_quiz",
+                }
+            },
+        )
+        items = quiz.get("expand", {}).get("quizItems_via_quiz", [])
+        questions.extend([item.get("question", "") for item in items])
+    questions = questions[:50]
 
     quiz = await admin_pb.collection("quizes").update(
         quiz_id,
         {
             "status": "creating",
-            "summary": summary,
+            "summary": estimated_summary,
             "materialsContext": FileUpload(
                 ("materialsContext.txt", bytes(texts, "utf-8"))
             ),
         },
     )
 
-    await generate_quiz_task(admin_pb, http, user_id, attempt_id, quiz_id, limit)
+    task = asyncio.create_task(
+        summary_and_index(
+            admin_pb, http, meilisearch_client, user_id, attempt_id, quiz, texts
+        )
+    )
+
+    await generate_quiz_task(
+        admin_pb, http, user_id, attempt_id, quiz_id, limit, "regenerate"
+    )
+
+    await task
 
 
 async def generate_quiz_task(
@@ -117,7 +209,7 @@ async def generate_quiz_task(
     attempt_id: str,
     quiz_id: str,
     limit: int,
-    mode="regenerate",  # or "continue"
+    mode: str,
 ):
     quiz = await admin_pb.collection("quizes").get_one(
         quiz_id,
