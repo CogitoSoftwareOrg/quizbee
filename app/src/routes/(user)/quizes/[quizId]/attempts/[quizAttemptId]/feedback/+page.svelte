@@ -51,24 +51,21 @@
 	});
 </script>
 
-<div class="relative mx-auto flex h-full min-h-0 max-w-3xl flex-1 flex-col gap-6 p-1">
+<div class="relative mx-auto flex flex-1 flex-col gap-6 p-1 pb-20 sm:h-full sm:flex-row sm:pb-1">
 	{#if !feedback}
-		<div class="flex flex-col items-center justify-center gap-4">
+		<section class="flex flex-col items-center justify-center gap-4">
 			<p class="loading loading-spinner loading-xl"></p>
 			<p class="text-center font-semibold">We are giving your feedback...</p>
-		</div>
+		</section>
 	{:else if quiz && feedback}
-		<div class="flex w-full flex-col gap-6 px-3">
-			<Button
-				color="neutral"
-				style="ghost"
-				href={`/home`}
-				class="absolute left-0 top-0 flex underline"
-			>
-				<ChevronLeft /> Back to home
-			</Button>
+		<section class="flex w-full flex-1 flex-col gap-6 px-3 sm:overflow-y-auto">
+			<div>
+				<Button color="neutral" style="ghost" href={`/home`} class="underline">
+					<ChevronLeft /> Back to home
+				</Button>
+			</div>
 
-			<section>
+			<div>
 				<h1 class="text-center text-2xl font-bold leading-tight">{quiz.title || 'Quiz'}</h1>
 				<p class="mt-1 text-center text-sm opacity-70">
 					Score: {correctCount} / {quizItems.length}
@@ -104,13 +101,13 @@
 						</div>
 					</div>
 				{/if}
-			</section>
-		</div>
+			</div>
+		</section>
 	{/if}
 
-	<section class="flex min-h-0 flex-1 flex-col gap-3">
+	<section class="flex flex-1 flex-col gap-3 sm:min-h-0">
 		<Input
-			class="w-full"
+			class="w-full sm:shrink-0"
 			placeholder="Search by questions and answers"
 			value={searchQuery}
 			oninput={(e) => {
@@ -126,7 +123,7 @@
 		{#if filteredItems.length === 0}
 			<p class="py-6 text-center opacity-70">Nothing found</p>
 		{:else if quiz && quizAttempt}
-			<ul class="flex flex-1 flex-col gap-2 overflow-y-auto pr-1">
+			<ul class="flex flex-1 flex-col gap-2 pr-1 sm:min-h-0 sm:overflow-y-auto">
 				{#each filteredItems as item, index}
 					{@const d = findDecision(item.id)}
 					<li>
@@ -150,9 +147,9 @@
 				{/each}
 			</ul>
 		{/if}
-	</section>
 
-	<section class="pt-2">
-		<Button block>Share Quiz</Button>
+		<div class="fixed bottom-12 left-0 right-0 z-10 p-4 sm:static sm:p-0">
+			<Button block>Share Quiz</Button>
+		</div>
 	</section>
 </div>

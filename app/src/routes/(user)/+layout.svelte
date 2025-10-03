@@ -45,7 +45,7 @@
 		<main class="flex h-full flex-1 flex-col">
 			<GlobalHeader />
 
-			<div class="h-full flex-1 overflow-auto sm:p-3">
+			<div class="h-full flex-1 overflow-auto pb-12 sm:p-3 sm:pb-3">
 				{@render children?.()}
 			</div>
 
