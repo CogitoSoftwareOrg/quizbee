@@ -68,9 +68,11 @@
 				<ChevronLeft /> Back to home
 			</Button>
 
-			<section class="text-center">
-				<h1 class="text-2xl font-bold leading-tight">{quiz.title || 'Quiz'}</h1>
-				<p class="mt-1 text-sm opacity-70">Score: {correctCount} / {quizItems.length}</p>
+			<section>
+				<h1 class="text-center text-2xl font-bold leading-tight">{quiz.title || 'Quiz'}</h1>
+				<p class="mt-1 text-center text-sm opacity-70">
+					Score: {correctCount} / {quizItems.length}
+				</p>
 
 				<div class="mt-4 space-y-2">
 					<p class="opacity-80">
@@ -82,20 +84,24 @@
 				</div>
 
 				{#if feedback.problem_topics.length > 0}
-					<div class="mt-3 flex flex-wrap justify-center gap-2">
+					<div class="mt-3">
 						<p class="opacity-70">Problem topics:</p>
-						{#each feedback.problem_topics as topic}
-							<span class="badge badge-outline badge-error">{topic}</span>
-						{/each}
+						<div class="flex flex-wrap gap-1">
+							{#each feedback.problem_topics as topic}
+								<span class="badge badge-soft badge-error">{topic}</span>
+							{/each}
+						</div>
 					</div>
 				{/if}
 
 				{#if feedback.uncovered_topics.length > 0}
-					<div class="mt-3 flex flex-wrap justify-center gap-2">
+					<div class="mt-3">
 						<p class="opacity-70">Uncovered topics:</p>
-						{#each feedback.uncovered_topics as topic}
-							<span class="badge badge-outline badge-info">{topic}</span>
-						{/each}
+						<div class="flex flex-wrap gap-1">
+							{#each feedback.uncovered_topics as topic}
+								<span class="badge badge-soft badge-info">{topic}</span>
+							{/each}
+						</div>
 					</div>
 				{/if}
 			</section>
