@@ -60,13 +60,13 @@ async def summary_and_index(
         input_cah = usage.cache_read_tokens
         outp = usage.output_tokens
 
-        input_nc_price = input_nc * LLMSCosts.GPT_5_MINI.input_nc
-        input_cah_price = input_cah * LLMSCosts.GPT_5_MINI.input_cah
-        outp_price = outp * LLMSCosts.GPT_5_MINI.output
+        input_nc_price = round(input_nc * LLMSCosts.GPT_5_MINI.input_nc, 4)
+        input_cah_price = round(input_cah * LLMSCosts.GPT_5_MINI.input_cah, 4)
+        outp_price = round(outp * LLMSCosts.GPT_5_MINI.output, 4)
 
         span.update_trace(
-            input=f"NC: {round(input_nc_price, 3)} + CAH: {round(input_cah_price, 3)} = {round(input_nc_price + input_cah_price, 3)}",
-            output=f"OUTP: {round(outp_price, 3)}",
+            input=f"NC: {input_nc_price} + CAH: {input_cah_price} => {input_nc_price + input_cah_price}",
+            output=f"OUTP: {outp_price} => Total: {input_nc_price + input_cah_price + outp_price}",
             user_id=user_id,
             session_id=attempt_id,
             metadata={

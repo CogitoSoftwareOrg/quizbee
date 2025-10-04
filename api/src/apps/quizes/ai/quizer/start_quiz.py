@@ -78,6 +78,7 @@ async def start_generating_quiz_task(
             semantic_ratio=0.75,
             embedder="quizSummaries",
         ),
+        ranking_score_threshold=0.35,
         filter=[f"userId = {user_id}"],
         limit=5,
     )

@@ -8,7 +8,7 @@ from lib.clients import HTTPAsyncClient
 
 class DynamicConfig(BaseModel):
     negativeQuestions: list[str] = Field(default_factory=list)
-    adds: list[str] = Field(default_factory=list)
+    adds: list[str] = field(default_factory=list)
     moreOnTopic: list[str] = Field(default_factory=list)
     lessOnTopic: list[str] = Field(default_factory=list)
     extraBeginner: list[str] = Field(default_factory=list)
@@ -56,6 +56,6 @@ class QuizerOutput(BaseModel):
             title="Quiz Items",
             description="An array of exactly 5 quiz items.",
             # min_length=5,
-            max_length=6,
+            # max_length=6,
         ),
     ]
