@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 from apps.auth import User, auth_user
 from apps.billing import load_subscription
 from apps.materials import user_owns_materials
-from lib.clients import AdminPB, HTTPAsyncClient
+from lib.clients import AdminPB, HTTPAsyncClient, MeilisearchClient
 
 from .ai import (
     generate_quiz_task,
@@ -44,6 +44,7 @@ class CreateQuizDto(BaseModel):
 async def create_quiz(
     admin_pb: AdminPB,
     http: HTTPAsyncClient,
+    meilisearch_client: MeilisearchClient,
     user: User,
     dto: CreateQuizDto,
     background: BackgroundTasks,
@@ -63,7 +64,14 @@ async def create_quiz(
         attempt_id = quiz_attempt.get("id", "")
 
     background.add_task(
-        start_generating_quiz_task, admin_pb, http, user_id, attempt_id, quiz_id, limit
+        start_generating_quiz_task,
+        admin_pb,
+        http,
+        meilisearch_client,
+        user_id,
+        attempt_id,
+        quiz_id,
+        limit,
     )
 
     return JSONResponse(

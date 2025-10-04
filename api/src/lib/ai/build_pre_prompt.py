@@ -32,8 +32,8 @@ async def build_pre_prompt(
         user_contents.append(f"Quiz materials:\n{text_materials}")
     if ai_bytes:
         user_contents.extend(ai_bytes)
-    if summary:
-        user_contents.append(f"Materials summary:\n{summary}")
+    # if summary:
+    #     user_contents.append(f"Materials summary:\n{summary}")
 
     parts = []
     parts.append(UserPromptPart(content=user_contents))

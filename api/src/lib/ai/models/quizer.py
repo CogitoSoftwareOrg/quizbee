@@ -6,14 +6,13 @@ from pocketbase.models.dtos import Record
 from lib.clients import HTTPAsyncClient
 
 
-@dataclass
-class DynamicConfig:
-    negativeQuestions: list[str] = field(default_factory=list)
-    adds: list[str] = field(default_factory=list)
-    moreOnTopic: list[str] = field(default_factory=list)
-    lessOnTopic: list[str] = field(default_factory=list)
-    extraBeginner: list[str] = field(default_factory=list)
-    extraExpert: list[str] = field(default_factory=list)
+class DynamicConfig(BaseModel):
+    negativeQuestions: list[str] = Field(default_factory=list)
+    adds: list[str] = Field(default_factory=list)
+    moreOnTopic: list[str] = Field(default_factory=list)
+    lessOnTopic: list[str] = Field(default_factory=list)
+    extraBeginner: list[str] = Field(default_factory=list)
+    extraExpert: list[str] = Field(default_factory=list)
 
 
 @dataclass

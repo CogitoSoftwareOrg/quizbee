@@ -1,5 +1,7 @@
 from enum import StrEnum
 
+from pydantic import BaseModel
+
 
 class LLMS(StrEnum):
     # OpenAI
@@ -15,3 +17,17 @@ class LLMS(StrEnum):
 
     # Grok
     GROK_4_FAST = "grok:grok-4-fast"
+
+
+class LLMCosts(BaseModel):
+    input_nc: float
+    input_cah: float
+    output: float
+
+
+class LLMSCosts:
+    GPT_5_MINI = LLMCosts(
+        input_nc=0.00000025,
+        input_cah=0.000000025,
+        output=0.000002,
+    )

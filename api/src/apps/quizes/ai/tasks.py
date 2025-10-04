@@ -1,4 +1,5 @@
 import asyncio
+import json
 import logging
 import httpx
 from meilisearch_python_sdk.models.search import Hybrid
@@ -10,6 +11,7 @@ from apps.materials.utils import (
 )
 
 from lib.ai.models import QuizerOutput, QuizerDeps, SummarizerOutput, SummarizerDeps
+from lib.ai.models.quizer import DynamicConfig
 from lib.clients import (
     HTTPAsyncClient,
     MeilisearchClient,
@@ -18,6 +20,7 @@ from lib.clients import (
     ENCODERS,
 )
 from lib.config import LLMS
+from lib.config.llms import LLMSCosts
 from lib.utils import cache_key
 
 from .summirizer import summarizer_agent
@@ -59,16 +62,24 @@ async def summary_and_index(
         summary = res.output.data.summary
 
         usage = res.usage()
-        read_cache_input = usage.cache_read_tokens
-        write_cache_input = usage.cache_write_tokens
+        input_nc = usage.input_tokens - usage.cache_read_tokens
+        input_cah = usage.cache_read_tokens
+        outp = usage.output_tokens
+
+        input_nc_price = input_nc * LLMSCosts.GPT_5_MINI.input_nc
+        input_cah_price = input_cah * LLMSCosts.GPT_5_MINI.input_cah
+        outp_price = outp * LLMSCosts.GPT_5_MINI.output
 
         span.update_trace(
+            input=f"NC: {round(input_nc_price, 3)} + CAH: {round(input_cah_price, 3)} = {round(input_nc_price + input_cah_price, 3)}",
+            output=f"OUTP: {round(outp_price, 3)}",
             user_id=user_id,
             session_id=attempt_id,
             metadata={
-                "read_cache_input": read_cache_input,
-                "write_cache_input": write_cache_input,
-                "prompt_cache_key": prompt_cache_key,
+                "input_nc_price": input_nc_price,
+                "input_cah_price": input_cah_price,
+                "outp_price": outp_price,
+                "total_price": input_nc_price + input_cah_price + outp_price,
             },
         )
 
@@ -153,11 +164,12 @@ async def start_generating_quiz_task(
     texts = ENCODERS[LLMS.GPT_5_MINI].decode(truncated)
 
     estimated_summary = ENCODERS[LLMS.GPT_5_MINI].decode(estimated)
+    logging.info("Estimated summary: %s", len(estimated_summary))
     search_result = await summaries_index.search(
         query=estimated_summary,
         hybrid=Hybrid(
             semantic_ratio=0.75,
-            embedder="quizSummaries-openai",
+            embedder="quizSummaries",
         ),
         filter=[f"userId = {user_id}"],
         limit=5,
@@ -165,18 +177,22 @@ async def start_generating_quiz_task(
     hits = search_result.hits
     quiz_ids = [hit.get("quizId", "") for hit in hits]
     questions = []
-    for quiz_id in quiz_ids:
-        quiz = await admin_pb.collection("quizes").get_one(
-            quiz_id,
+    for qid in quiz_ids:
+        q = await admin_pb.collection("quizes").get_one(
+            qid,
             options={
                 "params": {
                     "expand": "quizItems_via_quiz",
                 }
             },
         )
-        items = quiz.get("expand", {}).get("quizItems_via_quiz", [])
-        questions.extend([item.get("question", "") for item in items])
+        items = q.get("expand", {}).get("quizItems_via_quiz", [])
+        qs = [item.get("question", "") for item in items]
+        questions.extend([q for q in qs if q])
+
     questions = questions[:50]
+    config = DynamicConfig(**quiz.get("dynamicConfig", {}))
+    config.negativeQuestions = questions
 
     quiz = await admin_pb.collection("quizes").update(
         quiz_id,
@@ -186,20 +202,21 @@ async def start_generating_quiz_task(
             "materialsContext": FileUpload(
                 ("materialsContext.txt", bytes(texts, "utf-8"))
             ),
+            "dynamicConfig": json.dumps(config.model_dump()),
         },
     )
 
-    task = asyncio.create_task(
-        summary_and_index(
-            admin_pb, http, meilisearch_client, user_id, attempt_id, quiz, texts
+    async with asyncio.TaskGroup() as tg:
+        tg.create_task(
+            summary_and_index(
+                admin_pb, http, meilisearch_client, user_id, attempt_id, quiz, texts
+            )
         )
-    )
-
-    await generate_quiz_task(
-        admin_pb, http, user_id, attempt_id, quiz_id, limit, "regenerate"
-    )
-
-    await task
+        tg.create_task(
+            generate_quiz_task(
+                admin_pb, http, user_id, attempt_id, quiz_id, limit, "regenerate"
+            )
+        )
 
 
 async def generate_quiz_task(
@@ -316,16 +333,24 @@ async def generate_quiz_task(
                         seen = len(items)
 
             usage = result.usage()
-            read_cache_input = usage.cache_read_tokens
-            write_cache_input = usage.cache_write_tokens
+            input_nc = usage.input_tokens - usage.cache_read_tokens
+            input_cah = usage.cache_read_tokens
+            outp = usage.output_tokens
+
+            input_nc_price = input_nc * LLMSCosts.GPT_5_MINI.input_nc
+            input_cah_price = input_cah * LLMSCosts.GPT_5_MINI.input_cah
+            outp_price = outp * LLMSCosts.GPT_5_MINI.output
 
             span.update_trace(
+                input=f"NC: {round(input_nc_price, 3)} + CAH: {round(input_cah_price, 3)} = {round(input_nc_price + input_cah_price, 3)}",
+                output=f"OUTP: {round(outp_price, 3)}",
                 user_id=user_id,
                 session_id=attempt_id,
                 metadata={
-                    "read_cache_input": read_cache_input,
-                    "write_cache_input": write_cache_input,
-                    "prompt_cache_key": prompt_cache_key,
+                    "input_nc_price": input_nc_price,
+                    "input_cah_price": input_cah_price,
+                    "outp_price": outp_price,
+                    "total_price": input_nc_price + input_cah_price + outp_price,
                 },
             )
 

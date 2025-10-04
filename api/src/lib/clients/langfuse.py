@@ -1,6 +1,7 @@
 from langfuse import Langfuse
 from pydantic_ai.agent import Agent
-from src.lib.settings import settings
+
+from lib.settings import settings
 
 langfuse_client = Langfuse(
     public_key=settings.langfuse_public_key,

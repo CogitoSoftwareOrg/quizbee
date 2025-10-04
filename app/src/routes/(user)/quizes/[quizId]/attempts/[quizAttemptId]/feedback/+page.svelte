@@ -55,7 +55,7 @@
 	class="relative mx-auto flex max-w-7xl flex-1 flex-col gap-6 p-1 pb-20 sm:h-full sm:flex-row sm:pb-1"
 >
 	{#if !feedback}
-		<section class="flex flex-col items-center justify-center gap-4">
+		<section class="flex flex-1 flex-col items-center justify-center gap-4">
 			<p class="loading loading-spinner loading-xl"></p>
 			<p class="text-center font-semibold">We are giving your feedback...</p>
 		</section>

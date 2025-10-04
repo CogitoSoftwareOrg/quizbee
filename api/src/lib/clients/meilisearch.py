@@ -19,9 +19,7 @@ meiliEmbeddings = {
 
 
 async def init_meilisearch(app: FastAPI):
-    meilisearch_client = AsyncClient(
-        settings.meilisearch_url, settings.meilisearch_master_key
-    )
+    meilisearch_client = AsyncClient(settings.meili_url, settings.meili_master_key)
 
     quiz_summaries_index = meilisearch_client.index("quizSummaries")
     await quiz_summaries_index.update_embedders(

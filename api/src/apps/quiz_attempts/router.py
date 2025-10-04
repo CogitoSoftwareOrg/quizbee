@@ -6,6 +6,7 @@ import httpx
 from apps.auth import auth_user
 from apps.billing import load_subscription
 from lib.clients import AdminPB, langfuse_client, HTTPAsyncClient
+from lib.config.llms import LLMSCosts
 from lib.utils import cache_key
 
 from .ai import FeedbackerDeps, feedbacker_agent
@@ -49,16 +50,24 @@ async def _generate_feedback_task(
 
         data = res.output.data
         usage = res.usage()
-        read_cache_input = usage.cache_read_tokens
-        write_cache_input = usage.cache_write_tokens
+        input_nc = usage.input_tokens - usage.cache_read_tokens
+        input_cah = usage.cache_read_tokens
+        outp = usage.output_tokens
+
+        input_nc_price = input_nc * LLMSCosts.GPT_5_MINI.input_nc
+        input_cah_price = input_cah * LLMSCosts.GPT_5_MINI.input_cah
+        outp_price = outp * LLMSCosts.GPT_5_MINI.output
 
         span.update_trace(
+            input=f"NC: {round(input_nc_price, 3)} + CAH: {round(input_cah_price, 3)} = {round(input_nc_price + input_cah_price, 3)}",
+            output=f"OUTP: {round(outp_price, 3)}",
             user_id=user_id,
             session_id=attempt_id,
             metadata={
-                "read_cache_input": read_cache_input,
-                "write_cache_input": write_cache_input,
-                "prompt_cache_key": prompt_cache_key,
+                "input_nc_price": input_nc_price,
+                "input_cah_price": input_cah_price,
+                "outp_price": outp_price,
+                "total_price": input_nc_price + input_cah_price + outp_price,
             },
         )
 
