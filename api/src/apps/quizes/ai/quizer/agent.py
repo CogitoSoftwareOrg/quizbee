@@ -1,6 +1,6 @@
 import logging
 from collections.abc import AsyncIterable
-from pydantic_ai import Agent, NativeOutput, PromptedOutput, RunContext
+from pydantic_ai import Agent, ModelRetry, NativeOutput, PromptedOutput, RunContext
 from pydantic_ai.messages import (
     AgentStreamEvent,
     FinalResultEvent,
@@ -28,6 +28,20 @@ quizer_agent = Agent(
     history_processors=[inject_request_prompt],
     retries=3,
 )
+
+
+@quizer_agent.output_validator
+async def validate_out(ctx: RunContext[QuizerDeps], out: AgentEnvelope):
+    # если список outputs:
+    if out.data.mode == "quiz":
+        if len(out.data.quiz_items) != 5:
+            raise ModelRetry("Нужно ровно 5 вопросов.")
+        for i, qi in enumerate(out.data.quiz_items, 1):
+            if len(qi.answers) != 4:
+                raise ModelRetry(f"Вопрос {i}: должно быть 4 ответа.")
+            if sum(a.correct for a in qi.answers) != 1:
+                raise ModelRetry(f"Вопрос {i}: ровно один correct=True.")
+    return out
 
 
 async def event_stream_handler(

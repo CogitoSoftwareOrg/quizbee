@@ -45,10 +45,10 @@ async def _generate_feedback_task(
             model_settings={"extra_body": {"prompt_cache_key": prompt_cache_key}},
         )
 
-        if res.output.data.mode != "feedback":
+        payload = res.output.data
+        if payload.mode != "feedback":
             raise ValueError(f"Unexpected output type: {type(res.output)}")
 
-        data = res.output.data
         usage = res.usage()
         input_nc = usage.input_tokens - usage.cache_read_tokens
         input_cah = usage.cache_read_tokens
@@ -74,14 +74,14 @@ async def _generate_feedback_task(
     await admin_pb.collection("quizAttempts").update(
         attempt_id,
         {
-            "feedback": data.feedback.model_dump_json(),
+            "feedback": payload.feedback.model_dump_json(),
         },
     )
 
     # Update quiz with adds if not final
     status = quiz.get("status")
     if status != "final":
-        adds = data.additional
+        adds = payload.additional
         await admin_pb.collection("quizes").update(
             quiz.get("id"),
             {"title": adds.quiz_title, "status": "final"},

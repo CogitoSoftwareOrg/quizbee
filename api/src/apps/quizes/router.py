@@ -17,6 +17,7 @@ from lib.clients import AdminPB, HTTPAsyncClient, MeilisearchClient
 from .ai import (
     generate_quiz_task,
     start_generating_quiz_task,
+    summary_and_index,
 )
 
 quizes_router = APIRouter(
@@ -51,6 +52,7 @@ async def create_quiz(
 ):
     user_id = user.get("id", "")
     quiz_id = dto.quiz_id
+    quiz = await admin_pb.collection("quizes").get_one(quiz_id)
     limit = 5
 
     attempt_id = dto.attempt_id
@@ -93,11 +95,25 @@ class GenerateQuizItems(BaseModel):
 async def generate_quiz_items(
     admin_pb: AdminPB,
     http: HTTPAsyncClient,
+    meilisearch_client: MeilisearchClient,
     quiz_id: str,
     dto: GenerateQuizItems,
     background: BackgroundTasks,
     user: User,
 ):
+    quiz = await admin_pb.collection("quizes").get_one(
+        quiz_id,
+        options={
+            "params": {
+                "expand": "materials,quizItems_via_quiz",
+            }
+        },
+    )
+    generation = quiz.get("generation", 0) + 1
+    await admin_pb.collection("quizes").update(
+        quiz_id,
+        {"generation": generation},
+    )
     # Generate
     background.add_task(
         generate_quiz_task,
@@ -107,8 +123,20 @@ async def generate_quiz_items(
         dto.attempt_id,
         quiz_id,
         dto.limit,
+        generation,
         dto.mode,
     )
+
+    if generation == 2:
+        background.add_task(
+            summary_and_index,
+            admin_pb,
+            http,
+            meilisearch_client,
+            user.get("id", ""),
+            dto.attempt_id,
+            quiz_id,
+        )
 
     return JSONResponse(
         content={"scheduled": True, "quiz_id": quiz_id, "limit": dto.limit},
