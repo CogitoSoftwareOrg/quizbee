@@ -11,7 +11,7 @@
 	import { createDraft } from '../new/createDraft';
 	import Modal from '$lib/ui/Modal.svelte';
 	import Button from '$lib/ui/Button.svelte';
-	import { Plus } from 'lucide-svelte';
+
 
 	interface Props {
 		quizTemplateId: string;
@@ -20,7 +20,8 @@
 		attachedFiles: AttachedFile[];
 		selectedDifficulty: string;
 		questionCount: number;
-		isDraft: boolean;
+        previousQuizes: any[];
+
 	}
 
 	let {
@@ -30,11 +31,12 @@
 		attachedFiles = $bindable(),
 		selectedDifficulty = $bindable(),
 		questionCount = $bindable(),
-		isDraft = $bindable()
+        previousQuizes = $bindable(),
+
 	}: Props = $props();
 
-	// drafts from store
-	const drafts = $derived(quizesStore.quizes.filter((q: any) => q.status === 'draft'));
+    const drafts = $derived(quizesStore.quizes.filter((q: any) => q.status === 'draft'));
+
 
 	// states
 	let showModal = $state(false);
@@ -44,14 +46,36 @@
 	let draftToDelete: any = $state(null);
 
 	// EFFECTS
+	
+	// Debounced update for all fields
+	let updateTimeout: ReturnType<typeof setTimeout> | undefined;
+	let pendingUpdates: Record<string, any> = {};
+
+	function scheduleUpdate(updates: Record<string, any>) {
+		if (!quizTemplateId || draftSwitch) return;
+		
+		// Merge new updates with pending ones
+		pendingUpdates = { ...pendingUpdates, ...updates };
+		
+		// Clear existing timeout
+		if (updateTimeout) {
+			clearTimeout(updateTimeout);
+		}
+		
+		// Schedule batch update
+		updateTimeout = setTimeout(() => {
+			if (Object.keys(pendingUpdates).length > 0) {
+				pb!.collection('quizes').update(quizTemplateId, pendingUpdates);
+				pendingUpdates = {};
+			}
+		}, 400);
+	}
 
 	// Title pb update
 	$effect(() => {
 		const _ = title;
 		untrack(() => {
-			if (!draftSwitch) {
-				pb!.collection('quizes').update(quizTemplateId, { title: title.trim() });
-			}
+			scheduleUpdate({ title: title.trim() });
 		});
 	});
 
@@ -59,9 +83,7 @@
 	$effect(() => {
 		const _ = selectedDifficulty;
 		untrack(() => {
-			if (!draftSwitch) {
-				pb!.collection('quizes').update(quizTemplateId, { difficulty: selectedDifficulty });
-			}
+			scheduleUpdate({ difficulty: selectedDifficulty });
 		});
 	});
 
@@ -69,25 +91,16 @@
 	$effect(() => {
 		const _ = questionCount;
 		untrack(() => {
-			if (!draftSwitch) {
-				pb!.collection('quizes').update(quizTemplateId, { itemsLimit: questionCount });
-			}
+			scheduleUpdate({ itemsLimit: questionCount });
 		});
 	});
 
-	// Input text pb update with debounce
-	let debounceTimeout: ReturnType<typeof setTimeout> | undefined;
-
+	// Input text pb update
 	$effect(() => {
 		const _ = inputText;
 		untrack(() => {
-			if (!draftSwitch && isDraft && quizTemplateId && inputText) {
-				if (debounceTimeout) {
-					clearTimeout(debounceTimeout);
-				}
-				debounceTimeout = setTimeout(() => {
-					pb!.collection('quizes').update(quizTemplateId, { query: inputText });
-				}, 250);
+			if (inputText) {
+				scheduleUpdate({ query: inputText });
 			}
 		});
 	});
@@ -118,20 +131,7 @@
 		}, 0);
 	});
 
-	async function handleDraftClick(draft: any) {
-		draftSwitch = true;
-		quizTemplateId = draft.id;
-		inputText = draft.query;
-		attachedFiles = draft.materials.map((materialId: string) => {
-			return createAttachedFileFromMaterial(materialId);
-		});
-		selectedDifficulty = draft.difficulty;
-		questionCount = draft.itemsLimit;
-		title = draft.title;
-		setTimeout(() => {
-			draftSwitch = false;
-		}, 0);
-	}
+	
 
 	function isDefaultDraft(draft: any): boolean {
 		return (
@@ -168,93 +168,21 @@
 		}
 	}
 
-	async function handleDelete(draft: any) {
-		if (isDefaultDraft(draft)) {
-			await confirmDelete(draft);
-		} else {
-			draftToDelete = draft;
-			showDeleteModal = true;
-		}
-	}
+	
 
-	function addEmptyDraft() {
-		draftSwitch = true;
-
-		const newDraft = createDraft();
-		quizTemplateId = newDraft.id;
-		inputText = newDraft.inputText;
-		attachedFiles = newDraft.attachedFiles;
-		selectedDifficulty = newDraft.selectedDifficulty;
-		questionCount = newDraft.questionCount;
-		title = newDraft.title;
-
-		setTimeout(() => {
-			draftSwitch = false;
-		}, 0);
-	}
+	
 </script>
 
-<div class="border-base-200 flex w-64 flex-shrink-0 flex-col border-r">
-	<header class="border-base-300 space-y-1 border-b px-4 py-3">
-		<h2 class="mb-4 text-center text-3xl font-semibold">Drafts</h2>
-		<div class="flex justify-center">
-			<Button style="outline" size="sm" block onclick={addEmptyDraft}>
-				<Plus size={20} />
-				<span class="text-lg">Add Empty Draft </span>
-			</Button>
-		</div>
-		<div class="flex justify-center">
-			<Button color="secondary" style="outline" size="sm" block onclick={() => (showModal = true)}>
-				<Plus size={20} />
-				<span class="text-lg">Create from a Quiz</span>
-			</Button>
-		</div>
-	</header>
-	{#if drafts.length === 0}
-		<div class="px-4 text-center">
-			<p class="text-sm">No drafts yet</p>
-			<p class="mt-1 text-xs">Start drafting your quiz and it will appear here.</p>
-		</div>
-	{:else}
-		<div class="max-h-150 mt-2 space-y-3 overflow-y-auto px-4">
-			{#each drafts as draft}
-				<div
-					class={[
-						'border-base-200 relative cursor-pointer rounded-lg border p-2 shadow-sm transition-shadow hover:shadow-md',
-						draft.id === quizTemplateId && 'border-primary border-2'
-					]}
-					onclick={() => handleDraftClick(draft)}
-					onkeydown={(e) => e.key === 'Enter' && handleDraftClick(draft)}
-					role="button"
-					tabindex="0"
-				>
-					<div class="mb-1 truncate font-medium">
-						{truncateFileName(draft.title, 30)}
-					</div>
-					<div class="text-muted text-xs">
-						{#if draft.updated}
-							Last updated: {new Date(draft.updated).toLocaleString()}
-						{:else}
-							Created: {new Date(draft.created).toLocaleString()}
-						{/if}
-					</div>
-					{#if drafts.length > 1}
-						<button
-							class="absolute right-1 top-0 cursor-pointer text-lg text-red-500 hover:text-red-700"
-							onclick={(e) => {
-								e.stopPropagation();
-								handleDelete(draft);
-							}}
-							title="Delete draft"
-						>
-							&times;
-						</button>
-					{/if}
-				</div>
-			{/each}
-		</div>
-	{/if}
-</div>
+
+
+{#if previousQuizes.length > 0}
+	<div class="mb-2  flex justify-center">
+		<button class="btn btn-xs btn-outline flex items-center text-sm" onclick={() => (showModal = true)}>
+			<span class="mt-1">Reuse previous quiz</span>
+		</button>
+	</div>
+{/if}
+
 
 {#if showModal}
 	<Modal
@@ -262,7 +190,7 @@
 		onclose={() => (showModal = false)}
 		class="max-h-screen max-w-sm items-start"
 	>
-		<h3 class="text-center text-xl font-bold">Create draft from a previous quiz</h3>
+		<h3 class="text-center text-2xl font-bold">Choose a quiz to copy configuration from</h3>
 		<div class="relative mb-4 mt-4">
 			<input
 				bind:value={searchQuery}
@@ -290,8 +218,9 @@
 				bind:inputText
 				bind:attachedFiles
 				bind:selectedDifficulty
-				bind:questionCount
 				bind:draftSwitch
+				bind:questionCount
+				
 				{searchQuery}
 				onQuizSelected={() => (showModal = false)}
 			/>
