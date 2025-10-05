@@ -37,7 +37,7 @@ async def upload_material(
     
     file_bytes = await file.read()
     file_size_mb = len(file_bytes) / (1024 * 1024)
-    max_size_mb = 30
+    max_size_mb = 100
 
     logging.info(f"File size: {round(file_size_mb, 2)}MB")
 
@@ -94,14 +94,14 @@ async def upload_material(
                     dto["textFile"] = FileUpload((text_filename, text_bytes))
                 
 
-                # dto["images"] = []
-                # if pdf_data["images"]:
-                #     logging.info(f"Adding {len(pdf_data['images'])} images to dto")
-                #     for img_data in pdf_data["images"]:
-                #         dto['images'].append(FileUpload((
-                #             f"{material_id}_p{img_data['page']}_img{img_data['index']}.{img_data['ext']}",
-                #             img_data["bytes"])))
-                   
+                images_list = []        
+                if pdf_data["images"]:
+                    logging.info(f"Adding {len(pdf_data['images'])} images to dto")
+                    for img_data in pdf_data["images"]:
+                        images_list.append((
+                            f"{material_id}_p{img_data['page']}_img{img_data['index']}.{img_data['ext']}",
+                            img_data["bytes"]))
+                    dto["images"] = FileUpload(*images_list)
                     
                 
                 logging.info(f"DTO prepared with keys: {list(dto.keys())}")
