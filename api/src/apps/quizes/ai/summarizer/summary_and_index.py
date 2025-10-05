@@ -97,7 +97,7 @@ async def summary_and_index(
         {
             "title": adds.quiz_title,
             "status": "final",
-            "slug": adds.quiz_slug,
+            "slug": f"{adds.quiz_slug}-{quiz_id[:4]}",
             "tags": json.dumps(adds.quiz_tags),
             "summary": summary,
         },

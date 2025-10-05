@@ -21,6 +21,7 @@
 	const {} = $props();
 
 	// QUIZ ATTEMPT
+	const user = $derived(userStore.user);
 	const quizAttemptId = $derived(page.params.quizAttemptId);
 	const quizAttempt = $derived(
 		quizAttemptsStore.quizAttempts.find((qa) => qa.id === quizAttemptId) || null
@@ -123,7 +124,7 @@
 				/>
 			{/if}
 
-			{#if lastFinalItem?.id === item?.id && item && !item?.managed && itemDecision && quiz && quizAttempt}
+			{#if quiz?.status !== 'final' && user?.id === quiz?.author && lastFinalItem?.id === item?.id && item && !item?.managed && itemDecision && quiz && quizAttempt}
 				<ManageQuiz {item} {quiz} {quizAttempt} />
 			{/if}
 		</div>

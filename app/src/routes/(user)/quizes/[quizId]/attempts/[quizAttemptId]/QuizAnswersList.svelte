@@ -11,7 +11,9 @@
 	import type { Answer } from '$lib/apps/quizes/types';
 	import { computeApiUrl } from '$lib/api/compute-url';
 	import { ChevronDown, ChevronRight, Info } from 'lucide-svelte';
-	import { patchApi } from '$lib/api/call-api';
+	import { patchApi, putApi } from '$lib/api/call-api';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 
 	interface Props {
 		class?: ClassValue;
@@ -81,6 +83,12 @@
 
 		expandedAnswers = nextExpanded;
 	});
+
+	async function createFeedback() {
+		if (!quizAttempt.id || quizAttempt.feedback) return;
+		const res = await putApi(`quiz_attempts/${quizAttempt.id}`, {});
+		console.log(res);
+	}
 </script>
 
 <div class={[className]}>
@@ -121,13 +129,18 @@
 										})
 									]);
 
-									if (toAnswer === 1) {
+									if (toAnswer === 2 && quizItems.some((qi) => ['blank'].includes(qi.status))) {
 										const result = await patchApi(`quizes/${quiz?.id}`, {
 											attempt_id: quizAttempt!.id,
 											limit: 5,
 											mode: 'continue'
 										});
 										console.log('Quiz settings updated:', result);
+									}
+
+									if (item.order + 1 === quizItems.length) {
+										await createFeedback();
+										return;
 									}
 
 									return;

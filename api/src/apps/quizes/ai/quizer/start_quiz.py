@@ -71,16 +71,17 @@ async def start_generating_quiz_task(
     texts = ENCODERS[LLMS.GPT_5_MINI].decode(truncated)
 
     estimated_summary = ENCODERS[LLMS.GPT_5_MINI].decode(estimated)
+    q = f"Query: {quiz.get('query', '')}\n\nEstimated summary: {estimated_summary}"
     logging.info("Estimated summary: %s", len(estimated_summary))
     search_result = await summaries_index.search(
-        query=estimated_summary,
+        query=q,
         hybrid=Hybrid(
             semantic_ratio=0.75,
             embedder="quizSummaries",
         ),
-        ranking_score_threshold=0.35,
+        ranking_score_threshold=0.3,
         filter=[f"userId = {user_id}"],
-        limit=5,
+        limit=10,
     )
     hits = search_result.hits
     quiz_ids = [hit.get("quizId", "") for hit in hits]

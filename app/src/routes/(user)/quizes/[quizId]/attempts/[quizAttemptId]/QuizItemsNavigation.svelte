@@ -30,12 +30,6 @@
 		const u = new URL(page.url);
 		goto(`${u.pathname}/feedback`, { replaceState: false, keepFocus: true, noScroll: true });
 	}
-
-	async function createFeedback() {
-		if (!quizAttempt.id || quizAttempt.feedback) return;
-		const res = await putApi(`quiz_attempts/${quizAttempt.id}`, {});
-		console.log(res);
-	}
 </script>
 
 {#if order > 0}
@@ -66,7 +60,6 @@
 			onclick={async () => {
 				if (!itemDecision) return;
 				if (order + 1 === quizItems.length) {
-					await createFeedback();
 					gotoFinal();
 					return;
 				}
