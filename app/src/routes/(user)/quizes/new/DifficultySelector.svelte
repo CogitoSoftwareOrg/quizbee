@@ -9,17 +9,17 @@
 		{ 
 			value: 'beginner', 
 			label: 'Beginner', 
-			color: 'success'
+			selectedClasses: 'border-success bg-success'
 		},
 		{ 
 			value: 'intermediate', 
 			label: 'Intermediate', 
-			color: 'warning'
+			selectedClasses: 'border-warning bg-warning'
 		},
 		{ 
 			value: 'expert', 
 			label: 'Expert', 
-			color: 'error'
+			selectedClasses: 'border-error bg-error'
 		}
 	];
 
@@ -38,7 +38,7 @@
 			<div
 				class="relative flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all duration-200 {selectedDifficulty ===
 				difficulty.value
-					? `border-${difficulty.color} bg-${difficulty.color}`
+					? difficulty.selectedClasses
 					: 'border-base-content/30 bg-base-100 hover:border-base-content/50'}"
 			>
 			</div>
