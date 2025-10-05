@@ -127,17 +127,6 @@ async def generate_quiz_items(
         dto.mode,
     )
 
-    if generation == 2:
-        background.add_task(
-            summary_and_index,
-            admin_pb,
-            http,
-            meilisearch_client,
-            user.get("id", ""),
-            dto.attempt_id,
-            quiz_id,
-        )
-
     return JSONResponse(
         content={"scheduled": True, "quiz_id": quiz_id, "limit": dto.limit},
         status_code=status.HTTP_202_ACCEPTED,

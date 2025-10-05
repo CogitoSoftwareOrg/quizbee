@@ -14,14 +14,14 @@ AgentPayload = Annotated[
     Field(discriminator="mode"),
 ]
 
+
 class AgentEnvelope(BaseModel):
     data: AgentPayload
-    
+
+
 # AgentEnvelope = [
 #     ToolOutput(QuizerOutput, name="quiz"),
 #     ToolOutput(ExplainerOutput, name="explain"),
 #     ToolOutput(FeedbackerOutput, name="feedback"),
 #     ToolOutput(SummarizerOutput, name="summarize"),
 # ]
-
-

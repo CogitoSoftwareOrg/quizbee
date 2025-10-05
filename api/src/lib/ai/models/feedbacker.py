@@ -14,32 +14,6 @@ class FeedbackerDeps:
     http: HTTPAsyncClient
 
 
-class Additional(BaseModel):
-    quiz_title: Annotated[
-        str,
-        Field(
-            title="Quiz Title",
-            description="The title of the quiz.",
-        ),
-    ]
-    quiz_slug: Annotated[
-        str,
-        Field(
-            title="Quiz Slug",
-            description="The slug of the quiz.",
-        ),
-    ]
-    quiz_tags: Annotated[
-        list[str],
-        Field(
-            title="Quiz Tags",
-            description="The topic tags of the quiz.",
-            min_length=2,
-            max_length=5,
-        ),
-    ]
-
-
 class Feedback(BaseModel):
     overview: Annotated[
         str,
@@ -69,4 +43,3 @@ class Feedback(BaseModel):
 class FeedbackerOutput(BaseModel):
     mode: Literal["feedback"]
     feedback: Feedback
-    additional: Additional

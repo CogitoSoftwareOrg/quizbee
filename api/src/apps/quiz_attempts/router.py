@@ -3,9 +3,10 @@ from fastapi import APIRouter, BackgroundTasks, Depends, status
 from fastapi.responses import JSONResponse
 import httpx
 
-from apps.auth import auth_user
+from apps.auth import User, auth_user
 from apps.billing import load_subscription
-from lib.clients import AdminPB, langfuse_client, HTTPAsyncClient
+from apps.quizes.ai import summary_and_index
+from lib.clients import AdminPB, langfuse_client, HTTPAsyncClient, MeilisearchClient
 from lib.config.llms import LLMSCosts
 from lib.utils import cache_key
 
@@ -78,25 +79,41 @@ async def _generate_feedback_task(
         },
     )
 
-    # Update quiz with adds if not final
-    status = quiz.get("status")
-    if status != "final":
-        adds = payload.additional
-        await admin_pb.collection("quizes").update(
-            quiz.get("id"),
-            {"title": adds.quiz_title, "status": "final"},
-        )
-
 
 @quiz_attempts_router.put("/{attempt_id}")
 async def update_quiz_attempt_with_feedback(
     admin_pb: AdminPB,
+    user: User,
+    meilisearch_client: MeilisearchClient,
     attempt_id: str,
     background: BackgroundTasks,
     http: HTTPAsyncClient,
 ):
 
+    # Generate feedback
     background.add_task(_generate_feedback_task, admin_pb, http, attempt_id)
+
+    # Summarize and index
+    attempt = await admin_pb.collection("quizAttempts").get_one(
+        attempt_id,
+    )
+    quiz_id = attempt.get("quiz", "")
+    quiz = await admin_pb.collection("quizes").get_one(
+        quiz_id,
+        options={
+            "params": {"expand": "materials,quizItems_via_quiz"},
+        },
+    )
+    # Only summarize and index if quiz is not final
+    if quiz.get("status") != "final":
+        background.add_task(
+            summary_and_index,
+            admin_pb,
+            http,
+            meilisearch_client,
+            user.get("id", ""),
+            attempt_id,
+        )
 
     return JSONResponse(
         content={"scheduled": True, "attempt_id": attempt_id},

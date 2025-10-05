@@ -10,6 +10,9 @@ onRecordCreate((e) => {
   if (!e.record.get("difficulty")) {
     e.record.set("difficulty", "intermediate");
   }
+  if (!e.record.get("visibility")) {
+    e.record.set("visibility", "private");
+  }
 
   e.record.set("dynamicConfig", {
     adds: [],

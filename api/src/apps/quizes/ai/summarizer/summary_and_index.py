@@ -1,4 +1,5 @@
 import logging
+import json
 
 from lib.ai.models import SummarizerDeps
 from lib.clients import AdminPB, HTTPAsyncClient, MeilisearchClient, langfuse_client
@@ -16,23 +17,35 @@ async def summary_and_index(
     meilisearch_client: MeilisearchClient,
     user_id: str,
     attempt_id: str,
-    quiz_id: str,
+    force: bool = False,
 ):
+    attempt = await admin_pb.collection("quizAttempts").get_one(
+        attempt_id,
+    )
+    quiz_id = attempt.get("quiz", "")
     quiz = await admin_pb.collection("quizes").get_one(
         quiz_id,
         options={
-            "params": {"expand": "materials"},
+            "params": {"expand": "materials,quizItems_via_quiz"},
         },
+    )
+    if quiz.get("status") == "final" and not force:
+        logging.info("Quiz is already final, skipping summary and index")
+        return
+
+    # Prepare quiz items
+    quiz_items = quiz.get("expand", {}).get("quizItems_via_quiz", [])
+    questions = [qi.get("question", "") for qi in quiz_items]
+    item_contents = "\n\n".join(
+        [
+            f"Question: {qi.get('question', '')}\nAnswers:\n{qi.get('answers', [])}"
+            for qi in quiz_items
+        ]
     )
 
     texts = await load_file_text(
         http, "quizes", quiz_id, quiz.get("materialsContext", "")
     )
-
-    summary = ""
-    if len(texts) == 0:
-        logging.warning("No texts to summarize and index")
-        return
 
     summaries_index = meilisearch_client.index("quizSummaries")
 
@@ -45,6 +58,7 @@ async def summary_and_index(
                 http=http,
                 quiz=quiz,
                 materials_context=texts,
+                quiz_contents=item_contents,
             ),
             model_settings={"extra_body": {"prompt_cache_key": prompt_cache_key}},
         )
@@ -77,14 +91,28 @@ async def summary_and_index(
             },
         )
 
+    adds = payload.additional
+    await admin_pb.collection("quizes").update(
+        quiz_id,
+        {
+            "title": adds.quiz_title,
+            "status": "final",
+            "slug": adds.quiz_slug,
+            "tags": json.dumps(adds.quiz_tags),
+            "summary": summary,
+        },
+    )
+
+    full_summary = f"Summary: {summary}\n\nTags: {adds.quiz_tags}\n\nTitle: {adds.quiz_title}\n\nQuiz questions: {questions}"
+
     # INDEX SUMMARY
     index_task = await summaries_index.add_documents(
         [
             {
-                "id": quiz.get("id", ""),
-                "summary": summary,
+                "id": quiz_id,
+                "summary": full_summary,
                 "userId": user_id,
-                "quizId": quiz.get("id", ""),
+                "quizId": quiz_id,
             }
         ],
         primary_key="id",
@@ -97,10 +125,6 @@ async def summary_and_index(
 
     if task.status == "succeeded":
         logging.info("Quiz summary indexed: %s", task)
-        await admin_pb.collection("quizes").update(
-            quiz.get("id", ""),
-            {"summary": summary},
-        )
     elif task.status == "failed":
         logging.error("Failed to index quiz summary: %s", task)
     else:
