@@ -6,10 +6,12 @@
 	import { pb } from '$lib/pb';
 	import type { MaterialsResponse } from '$lib/pb/pocketbase-types';
 	import { generateId } from '$lib/utils/generate-id';
+	import { removeFile } from '../new/removeFile';
+	import { addExistingMaterial } from '../new/addExistingMaterial';
 
 	interface Props {
-		inputText?: string;
-		attachedFiles?: AttachedFile[];
+		inputText: string;
+		attachedFiles: AttachedFile[];
 		quizTemplateId?: string;
 	}
 
@@ -24,9 +26,35 @@
 	let isMaterialsListOpen = $state(false);
 	let searchQuery = $state('');
 	let warningTextInput = $state(false);
+	let warningTooBigFile = $state<string | null>(null);
+	let warningUnsupportedFile = $state<string | null>(null);
 
 	let buttonElement = $state<HTMLButtonElement>();
 	let menuElement = $state<HTMLDivElement>();
+
+	const allowedExtensions = [
+		'pdf',
+		'doc',
+		'docx',
+		'xls',
+		'xlsx',
+		'ppt',
+		'pptx',
+		'txt',
+		'js',
+		'ts',
+		'html',
+		'css',
+		'json',
+		'xml',
+		'svg',
+		'jpg',
+		'jpeg',
+		'png',
+		'gif',
+		'webp',
+		'bmp'
+	];
 
 	onMount(() => {
 		document.addEventListener('click', handleClickOutside);
@@ -45,6 +73,16 @@
 
 	function processFiles(files: File[]) {
 		for (const file of files) {
+			const extension = file.name.split('.').pop()?.toLowerCase();
+
+			if (!extension || !allowedExtensions.includes(extension)) {
+				warningUnsupportedFile = file.name;
+				setTimeout(() => {
+					warningUnsupportedFile = null;
+				}, 5000);
+				continue;
+			}
+
 			const attachedFile: AttachedFile = {
 				file,
 				previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
@@ -60,17 +98,31 @@
 
 	// Для материалов которые сейчас грузим реактивно отслеживаем материалы в store и обновляем статус загрузки
 	$effect(() => {
-		attachedFiles.forEach((attachedFile) => {
+		// Обход с конца, чтобы безопасно удалять элементы
+		for (let i = attachedFiles.length - 1; i >= 0; i--) {
+			const attachedFile = attachedFiles[i];
+
 			if (attachedFile.isUploading && attachedFile.materialId) {
 				const foundMaterial = materialsStore.materials.find(
 					(m) => m.id === attachedFile.materialId
 				);
 
 				if (foundMaterial) {
-					attachedFile.isUploading = false;
+					// Check if file is too big
+					if (foundMaterial.status === 'too big') {
+						warningTooBigFile = attachedFile.name;
+						// Remove the file from attachedFiles
+						removeFile(i, attachedFiles, quizTemplateId);
+						// Clear warning after 5 seconds
+						setTimeout(() => {
+							warningTooBigFile = null;
+						}, 5000);
+					} else if (foundMaterial.status === 'uploaded') {
+						attachedFile.isUploading = false;
+					}
 				}
 			}
-		});
+		}
 	});
 
 	function openFileDialog() {
@@ -134,65 +186,21 @@
 		}
 	}
 
-	// Добавление уже существующего материала
-	async function addExistingMaterial(material: MaterialsResponse) {
-		const attachedFile: AttachedFile = {
-			name: material.title,
-			isUploading: false,
-			materialId: material.id,
-			previewUrl:
-				material.file && /\.(jpg|jpeg|png|gif|webp)$/i.test(material.file)
-					? pb!.files.getURL(material, material.file)
-					: null
-		};
+	async function toggleMaterial(material: MaterialsResponse) {
+		const existingIndex = attachedFiles.findIndex((file) => file.materialId === material.id);
 
-		attachedFiles = [...attachedFiles, attachedFile];
-
-		if (quizTemplateId) {
-			try {
-				await pb!
-					.collection('quizes')
-					.update(quizTemplateId, { 'materials+': material.id }, { requestKey: material.id });
-			} catch (error) {
-				console.error('Failed to attach material to quiz:', error);
-			}
+		if (existingIndex !== -1) {
+			// Материал уже прикреплен - удаляем его
+			attachedFiles = await removeFile(existingIndex, attachedFiles, quizTemplateId);
+		} else {
+			// Материал не прикреплен - добавляем его
+			const attachedFile = await addExistingMaterial(material.id, quizTemplateId);
+			attachedFiles = [...attachedFiles, attachedFile];
 		}
 	}
 
-	async function removeFile(index: number, attachedFiles: AttachedFile[]) {
-		const fileToRemove = attachedFiles[index];
-
-		if (fileToRemove.previewUrl) {
-			URL.revokeObjectURL(fileToRemove.previewUrl);
-		}
-
-		if (quizTemplateId) {
-			try {
-				await pb!
-					.collection('quizes')
-					.update(
-						quizTemplateId,
-						{ 'materials-': fileToRemove.materialId },
-						{ requestKey: fileToRemove.materialId }
-					);
-			} catch (error) {
-				console.error('Failed to detach material from quiz:', error);
-			}
-		}
-
-		if (fileToRemove.materialId) {
-			try {
-				const material = await pb!.collection('materials').getOne(fileToRemove.materialId);
-				if ((material as any).status !== 'used') {
-					await pb!.collection('materials').delete(fileToRemove.materialId);
-				}
-			} catch (error) {
-				console.error('Failed to delete material:', error);
-			}
-		}
-
-		attachedFiles.splice(index, 1);
-		attachedFiles = attachedFiles;
+	function isMaterialAttached(materialId: string): boolean {
+		return attachedFiles.some((file) => file.materialId === materialId);
 	}
 
 	async function handlePaste(event: ClipboardEvent) {
@@ -288,6 +296,8 @@
 			isMaterialsListOpen = false;
 		}
 	}
+
+	export { addExistingMaterial };
 </script>
 
 <div
@@ -384,13 +394,28 @@
 								.toLowerCase()
 								.includes(searchQuery.toLowerCase())) as material}
 							<button
-								class="hover:bg-primary w-full cursor-pointer p-2 text-left transition-colors duration-200"
+								class="hover:bg-primary flex w-full cursor-pointer items-center justify-between gap-2 p-2 text-left transition-colors duration-200"
 								onclick={() => {
-									addExistingMaterial(material);
-									isMaterialsListOpen = false;
+									toggleMaterial(material);
 								}}
 							>
-								{truncateFileName(material.title, 34)}
+								<span class="flex-1 truncate">{material.title}</span>
+								{#if isMaterialAttached(material.id)}
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										width="20"
+										height="20"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										class="lucide lucide-check flex-shrink-0"
+									>
+										<path d="M20 6 9 17l-5-5" />
+									</svg>
+								{/if}
 							</button>
 						{/each}
 					</div>
@@ -398,7 +423,7 @@
 			</div>
 		{/if}
 		<textarea
-			placeholder="Write a prompt for your quiz and attach relevant material"
+			placeholder="Attach relevant files and/or describe what you'd like the questions to be about"
 			bind:value={inputText}
 			class="max-h-[7.5rem] min-h-[1.5rem] flex-grow resize-none overflow-y-auto border-none bg-transparent py-1 pl-4 text-lg leading-6 outline-none focus:shadow-none focus:outline-none focus:ring-0"
 			onpaste={handlePaste}
@@ -416,6 +441,16 @@
 	{#if warningTextInput}
 		<div class="text-md mt-2 text-red-500">Maximum input length is 100.000 symbols.</div>
 	{/if}
+	{#if warningTooBigFile}
+		<div class="text-md mt-2 text-red-500">
+			File "{warningTooBigFile}" is too big and cannot be uploaded.
+		</div>
+	{/if}
+	{#if warningUnsupportedFile}
+		<div class="text-md mt-2 text-red-500">
+			File "{warningUnsupportedFile}" has an unsupported format and cannot be uploaded.
+		</div>
+	{/if}
 	{#if attachedFiles.length > 0}
 		<div class="grid grid-cols-5 gap-4 px-3">
 			{#each attachedFiles as attachedFile, index}
@@ -428,16 +463,16 @@
 						/>
 					{:else}
 						<div
-							class="text-base-content/60 flex h-full w-full flex-col items-center p-2 text-center"
+							class="text-base-content/60 flex h-full w-full flex-col items-center gap-5 p-2 text-center"
 						>
 							<img
 								src="/file-format-icons/{getFileIcon(attachedFile.name)}.svg"
 								alt="File icon"
-								class="mb-1 h-10 w-10"
+								class="file-icon h-10 w-10"
 							/>
 							<span
-								class="line-clamp-3 flex h-24 items-center break-words break-all text-[14px] leading-tight"
-								title={attachedFile.name}>{truncateFileName(attachedFile.name)}</span
+								class="line-clamp-3 break-words text-[14px] leading-tight"
+								title={attachedFile.name}>{attachedFile.name}</span
 							>
 						</div>
 					{/if}
@@ -452,7 +487,9 @@
 					{/if}
 
 					<button
-						onclick={() => removeFile(index, attachedFiles)}
+						onclick={async () => {
+							attachedFiles = await removeFile(index, attachedFiles, quizTemplateId);
+						}}
 						class="bg-base-content/50 text-base-100 absolute right-1 top-1 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full border-none text-sm leading-none opacity-0 transition-opacity group-hover:opacity-100"
 						aria-label="Remove file">&times;</button
 					>

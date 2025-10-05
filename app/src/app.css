@@ -107,3 +107,9 @@
 	font-size: 18px;
 	--font-sans: 'LV', system-ui, sans-serif;
 }
+
+@layer utilities {
+	[data-theme='QUIZBEE_DARK'] .file-icon {
+		filter: invert(1);
+	}
+}

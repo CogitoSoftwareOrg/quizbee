@@ -33,10 +33,17 @@ async def upload_material(
 ):
     """
     Uploads material to PocketBase with automatic token counting for PDF files.
+    For PDFs, extracts text and images, saves them separately with token counts.
     """
+    logging.info(
+        f"Starting upload for file: {file.filename}, material_id: {material_id}"
+    )
+
     file_bytes = await file.read()
     file_size_mb = len(file_bytes) / (1024 * 1024)
-    max_size_mb = 30
+    max_size_mb = 100
+
+    logging.info(f"File size: {round(file_size_mb, 2)}MB")
 
     dto = {
         "id": material_id,
@@ -49,6 +56,9 @@ async def upload_material(
 
     try:
         if file_size_mb > max_size_mb:
+            logging.warning(
+                f"File too large: {round(file_size_mb, 2)}MB > {max_size_mb}MB"
+            )
             dto["status"] = "too big"
 
             material = await admin_pb.collection("materials").create(dto)
@@ -66,27 +76,64 @@ async def upload_material(
                 }
             )
 
-        fname = file.filename or ""
+        logging.info(f"Adding original file to dto")
         dto["file"] = FileUpload((file.filename, file_bytes))
-        if fname.lower().endswith(".pdf"):
+
+        pdf_data = None
+        if file.filename and file.filename.lower().endswith(".pdf"):
+            logging.info(f"Processing PDF file: {file.filename}")
             try:
-                token_count = count_pdf_tokens(file_bytes)
-                dto["tokens"] = token_count
+                # Парсим PDF и получаем текст, изображения и токены
+                logging.info("Parsing PDF and counting tokens...")
+                pdf_data = count_pdf_tokens(file_bytes)
+
+                logging.info(
+                    f"PDF parsed: text_tokens={pdf_data['text_tokens']}, image_tokens={pdf_data['image_tokens']}, total={pdf_data['total_tokens']}, images_count={len(pdf_data['images'])}"
+                )
+
+                dto["tokens"] = pdf_data["total_tokens"]
                 dto["kind"] = "complex"
+
+                # Добавляем текст и изображения сразу в dto
+                if pdf_data["text"]:
+                    logging.info(
+                        f"Adding text file to dto (length: {len(pdf_data['text'])} chars)"
+                    )
+                    text_filename = f"{material_id}_text.txt"
+                    text_bytes = pdf_data["text"].encode("utf-8")
+                    dto["textFile"] = FileUpload((text_filename, text_bytes))
+
+                images_list = []
+                if pdf_data["images"]:
+                    logging.info(f"Adding {len(pdf_data['images'])} images to dto")
+                    for img_data in pdf_data["images"]:
+                        images_list.append(
+                            (
+                                f"{material_id}_p{img_data['page']}_img{img_data['index']}.{img_data['ext']}",
+                                img_data["bytes"],
+                            )
+                        )
+                    dto["images"] = FileUpload(*images_list)
+
+                logging.info(f"DTO prepared with keys: {list(dto.keys())}")
+
             except Exception as e:
-                print(f"Error while counting tokens for {fname}: {e}")
+                logging.error(
+                    f"Error while parsing PDF {file.filename}: {e}", exc_info=True
+                )
+                # Если парсинг не удался, сохраняем как обычный файл
+                dto["kind"] = "simple"
+                pdf_data = None
         else:
-            to_tokenize = (
-                file_bytes.decode("utf-8")
-                if fname.lower().endswith((".txt", ".md", ".csv", ".json"))
-                # else as_data_url(file_bytes, fname)
-                else ""
-            )
-            token_count = count_text_tokens(to_tokenize)
+            logging.info(f"Processing non-PDF file: {file.filename}")
+            # Для текстовых файлов
+            token_count = count_text_tokens(file_bytes.decode("utf-8"))
             dto["tokens"] = token_count
             dto["kind"] = "simple"
 
+        logging.info(f"Creating material in PocketBase...")
         material = await admin_pb.collection("materials").create(dto)
+        logging.info(f"Material created successfully with id: {material.get('id')}")
 
         response_data = {
             "id": material.get("id"),
