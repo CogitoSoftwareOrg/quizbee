@@ -21,6 +21,7 @@ dependencies = [
     "PyPDF2>=3.0.1",
     "PyMuPDF>=1.26.4",
     "pymupdf4llm>=0.0.27",
+    "spacy>=3.8.7",
     "Pillow>=11.3.0",
     "stripe>=12.5.1",
     "meilisearch-python-sdk>=4.10.1",
