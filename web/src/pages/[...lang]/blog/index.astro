@@ -1,7 +1,6 @@
 ---
-import { getLangFromUrl } from "@/i18n/utils";
-import { languages } from "@/i18n/ui";
 import Root from "@/layouts/Root.astro";
+import { languages } from "@/i18n/ui";
 
 export async function getStaticPaths() {
   const langParams = Object.keys(languages).map((lang) => ({
@@ -10,10 +9,8 @@ export async function getStaticPaths() {
   langParams.push({ params: { lang: "" } });
   return langParams;
 }
-
-const lang = getLangFromUrl(Astro.url);
 ---
 
-<Root title="Root page" active="home">
-  <h1>Root page {lang}</h1>
+<Root title="Blog" active="blog">
+  <h1>Blog</h1>
 </Root>

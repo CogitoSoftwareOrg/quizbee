@@ -30,10 +30,10 @@
 				'hidden sm:flex'
 			]}
 		>
-			<a href="/home" class="relative mb-4 flex select-none items-center justify-center gap-1">
-				<img src={Logo} alt="Quizbee" class="bg-primary/10 size-12 rounded-full" />
+			<a href="/home" class="relative mb-4 flex select-none items-center justify-center">
+				<img src={Logo} alt="Quizbee" class="size-14 rounded-full" />
 				{#if uiStore.globalSidebarOpen}
-					<p class="text-primary text-3xl font-semibold">Quizbee</p>
+					<p class="text-primary mt-2 text-3xl font-semibold">Quizbee</p>
 				{/if}
 			</a>
 

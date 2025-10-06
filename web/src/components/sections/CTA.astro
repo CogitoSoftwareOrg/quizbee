@@ -1,0 +1,109 @@
+---
+import Button from "../ui/Button.svelte";
+
+interface Props {
+  headline: string;
+  subheadline: string;
+  buttonText?: string;
+  buttonHref?: string;
+  modalId?: string;
+  theme?: "default" | "dark" | "gradient";
+}
+
+const {
+  headline,
+  subheadline,
+  buttonText = "Get Started",
+  buttonHref,
+  modalId,
+  theme = "default",
+} = Astro.props;
+
+const themeClasses = {
+  default: "",
+  dark: "bg-base-300",
+  gradient: "bg-gradient-to-br from-primary/10 to-secondary/10",
+};
+---
+
+<section
+  class={`cta-section w-full py-16 lg:py-24 ${themeClasses[theme]}`}
+  data-modal-id={modalId}
+>
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div
+      class="text-center space-y-8 transition-all duration-1000 ease-out opacity-0 translate-y-8"
+      data-animate="true"
+    >
+      <!-- Headline -->
+      <h2 class="text-4xl lg:text-6xl font-bold leading-tight">
+        {headline}
+      </h2>
+
+      <!-- Subheadline -->
+      <p
+        class="text-xl lg:text-2xl text-base-content/70 leading-relaxed max-w-3xl mx-auto"
+      >
+        {subheadline}
+      </p>
+
+      <!-- CTA Button -->
+      <div class="pt-8 px-12">
+        <Button
+          style="outline"
+          href={buttonHref}
+          size="xl"
+          block
+          class="cta-button"
+        >
+          {buttonText}
+        </Button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const sections = document.querySelectorAll(".cta-section");
+
+    sections.forEach((section) => {
+      const modalId = section.getAttribute("data-modal-id");
+      const animateElement = section.querySelector("[data-animate]");
+      const button = section.querySelector(".cta-button");
+
+      // IntersectionObserver for animations
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting && animateElement) {
+              animateElement.classList.remove("opacity-0", "translate-y-8");
+              animateElement.classList.add("opacity-100", "translate-y-0");
+            }
+          });
+        },
+        { threshold: 0.1 }
+      );
+
+      if (animateElement) {
+        observer.observe(section);
+      }
+
+      // Modal handling
+      if (modalId && button) {
+        const checkModal = setInterval(() => {
+          const modalElement = document.getElementById(
+            modalId
+          ) as HTMLDialogElement;
+          if (modalElement) {
+            button.addEventListener("click", (e) => {
+              e.preventDefault();
+              modalElement.showModal();
+            });
+            clearInterval(checkModal);
+          }
+        }, 200);
+      }
+    });
+  });
+</script>

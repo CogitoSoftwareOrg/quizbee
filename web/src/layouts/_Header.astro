@@ -1,0 +1,173 @@
+---
+import { Image } from "astro:assets";
+
+import QuizBeeLogo from "@/assets/icons/bee_final.svg";
+import ThemeController from "@/components/features/ThemeController.svelte";
+
+interface Props {
+  active: string;
+  ctaText?: string;
+  ctaModal?: string;
+  ctaHref?: string;
+}
+
+const {
+  active,
+  ctaHref = "/",
+  ctaText = "Start for free",
+  ctaModal,
+} = Astro.props;
+
+const navItems = [
+  {
+    name: "home",
+    label: "Home",
+    href: "/",
+  },
+  {
+    name: "blog",
+    label: "Blog",
+    href: "/blog",
+  },
+  {
+    name: "quizes",
+    label: "Quizes",
+    href: "/quizes",
+  },
+];
+---
+
+<header
+  class="w-full backdrop-blur-md bg-base-100/70 border-b border-base-300 sticky top-0 z-50"
+>
+  <div
+    class="max-w-screen-xl flex justify-between items-center px-4 py-2 mx-auto"
+  >
+    <!-- Logo -->
+    <a href="/" class="inline-flex items-center gap-2">
+      <Image
+        src={QuizBeeLogo}
+        alt="Quizbee"
+        class="size-10 rounded-full"
+        width={40}
+        height={40}
+      />
+      <p class="text-primary text-3xl font-semibold">Quizbee</p>
+    </a>
+
+    <!-- Desktop Navigation -->
+    <nav class="gap-5 hidden md:flex">
+      {
+        navItems.map((item) => (
+          <a
+            href={item.href}
+            class={`link link-hover ${active === item.name && "font-bold"}`}
+          >
+            {item.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <!-- Right side actions -->
+    <div class="items-center gap-3 flex">
+      <div class="hidden md:block">
+        <ThemeController client:load />
+      </div>
+
+      <!-- CTA Button -->
+      <div class="hidden md:block">
+        <slot name="CTA">
+          {
+            ctaModal && (
+              <button
+                onclick={`${ctaModal}.showModal()`}
+                class="btn btn-primary rounded-xl px-4"
+              >
+                {ctaText}
+              </button>
+            )
+          }
+          {
+            ctaHref && (
+              <a href={ctaHref} class="btn btn-primary rounded-xl px-4">
+                {ctaText}
+              </a>
+            )
+          }
+        </slot>
+      </div>
+
+      <!-- Mobile menu toggle -->
+      <div class="md:hidden">
+        <label for="modal_burger" class="btn btn-circle swap swap-rotate">
+          <svg
+            class="swap-off fill-current"
+            xmlns="http://www.w3.org/2000/svg"
+            width="32"
+            height="32"
+            viewBox="0 0 512 512"
+          >
+            <path
+              d="M64,384H448V341.33H64Zm0-106.67H448V234.67H64ZM64,128v42.67H448V128Z"
+            ></path>
+          </svg>
+        </label>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Mobile menu modal -->
+<input type="checkbox" id="modal_burger" class="modal-toggle" />
+<div class="modal modal-end z-100" role="dialog">
+  <div class="relative modal-box min-w-sm">
+    <label
+      for="modal_burger"
+      class="btn btn-sm btn-circle absolute right-4 top-2 text-lg font-bold"
+      >✕</label
+    >
+    <h3 class="text-xl font-bold text-center mb-4">Navigation</h3>
+    <nav class="*:text-lg space-y-2 mb-4">
+      {
+        navItems.map((item) => (
+          <a
+            href={item.href}
+            class={`block link link-hover ${active === item.name && "font-bold"}`}
+          >
+            {item.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <h4 class="text-xl font-bold text-center mb-4">Theme</h4>
+    <div class="flex justify-center">
+      <ThemeController client:load size="size-12" />
+    </div>
+  </div>
+  <label class="modal-backdrop" for="modal_burger">Close</label>
+</div>
+
+<div class="fixed bottom-4 right-1/2 translate-x-1/2 sm:hidden">
+  {
+    ctaModal && (
+      <button
+        onclick={`${ctaModal}.showModal()`}
+        class="btn btn-primary rounded-xl px-4 btn-wide btn-lg btn-outline"
+      >
+        {ctaText}
+      </button>
+    )
+  }
+  {
+    ctaHref && (
+      <a
+        href={ctaHref}
+        class="btn btn-primary rounded-xl px-4 btn-wide btn-lg btn-outline"
+      >
+        {ctaText}
+      </a>
+    )
+  }
+</div>

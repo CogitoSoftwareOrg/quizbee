@@ -1,0 +1,96 @@
+---
+import Button from "../ui/Button.svelte";
+
+interface Props {
+  title: string;
+  description: string;
+  buttonText: string;
+
+  href?: string;
+  modalId?: string;
+  overlay?: boolean;
+  image: string;
+
+  position?: "left" | "right";
+  center?: boolean;
+}
+
+const {
+  title,
+  description,
+  buttonText,
+  image,
+  href,
+  overlay = false,
+  center = true,
+  position = "right",
+  modalId,
+} = Astro.props;
+
+const positionClasses = {
+  left: "lg:flex-row",
+  right: "lg:flex-row-reverse",
+};
+---
+
+<section
+  class={`hero min-h-screen relative ${!overlay ? "bg-base-200" : ""}`}
+  style={overlay && image ? `background-image: url(${image});` : ""}
+  data-modal-id={modalId}
+>
+  {overlay && image && <div class="hero-overlay" />}
+
+  <div
+    class={`hero-content flex-col gap-6 ${positionClasses[position]} ${overlay && center ? "text-center" : ""} ${overlay ? "text-neutral-content" : ""}`}
+  >
+    {
+      image && !overlay && (
+        <img src={image} class="max-w-sm rounded-2xl shadow-2xl" alt={title} />
+      )
+    }
+
+    <div class="max-w-md space-y-4">
+      <h1
+        class="text-5xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
+      >
+        {title}
+      </h1>
+      <p class="py-6 font-semibold text-shadow-lg">
+        {description}
+      </p>
+      <Button href={href} size="lg" class="hero-button">
+        {buttonText}
+      </Button>
+    </div>
+  </div>
+
+  <div class="absolute bottom-16 w-full flex justify-center">
+    <span class="loading loading-ball loading-xl text-primary"></span>
+  </div>
+</section>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const heroSections = document.querySelectorAll(".hero");
+
+    heroSections.forEach((section) => {
+      const modalId = section.getAttribute("data-modal-id");
+      const button = section.querySelector(".hero-button");
+
+      if (modalId && button) {
+        const checkModal = setInterval(() => {
+          const modalElement = document.getElementById(
+            modalId
+          ) as HTMLDialogElement;
+          if (modalElement) {
+            button.addEventListener("click", (e) => {
+              e.preventDefault();
+              modalElement.showModal();
+            });
+            clearInterval(checkModal);
+          }
+        }, 200);
+      }
+    });
+  });
+</script>
