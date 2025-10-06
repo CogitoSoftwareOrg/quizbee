@@ -8,10 +8,7 @@ import {
   getLangFromUrl,
   useTranslations,
   useTranslatedPath,
-  getPathWithLang,
 } from "@/i18n/utils";
-import { languages } from "@/i18n/ui";
-
 interface Props {
   active: string;
   ctaText?: string;
@@ -84,65 +81,35 @@ const currentPath = Astro.url.pathname;
     </nav>
 
     <!-- Right side actions -->
-    <div class="items-center gap-3 flex">
-      <!-- Language Switcher -->
-      <div class="dropdown dropdown-end hidden md:block">
-        <div tabindex="0" role="button" class="btn btn-ghost">
-          {languages[lang]}
-          <ChevronDown size={14} />
-        </div>
-        <ul
-          tabindex="0"
-          class="dropdown-content menu bg-base-100 rounded-box z-[1] w-40 p-2 shadow-lg border border-base-300"
-        >
-          {
-            Object.entries(languages).map(([langCode, langName]) => (
-              <li>
-                <a
-                  href={getPathWithLang(currentPath, langCode, lang)}
-                  class={lang === langCode ? "active" : ""}
-                >
-                  {langName}
-                </a>
-              </li>
-            ))
-          }
-        </ul>
-      </div>
-
-      <div class="hidden md:block">
-        <ThemeController client:only />
-      </div>
-
+    <div class="hidden md:flex items-center gap-3">
+      <ThemeController client:only />
       <!-- CTA Button -->
-      <div class="hidden md:block">
-        <slot name="CTA">
-          {
-            ctaModal && (
-              <button
-                onclick={`${ctaModal}.showModal()`}
-                class="btn btn-primary rounded-xl px-4"
-              >
-                {ctaText}
-              </button>
-            )
-          }
-          {
-            ctaHref && (
-              <a href={ctaHref} class="btn btn-primary rounded-xl px-4">
-                {ctaText}
-              </a>
-            )
-          }
-        </slot>
-      </div>
+      <slot name="CTA">
+        {
+          ctaModal && (
+            <button
+              onclick={`${ctaModal}.showModal()`}
+              class="btn btn-primary rounded-xl px-4"
+            >
+              {ctaText}
+            </button>
+          )
+        }
+        {
+          ctaHref && (
+            <a href={ctaHref} class="btn btn-primary rounded-xl px-4">
+              {ctaText}
+            </a>
+          )
+        }
+      </slot>
+    </div>
 
-      <!-- Mobile menu toggle -->
-      <div class="md:hidden">
-        <label for="modal_burger" class="btn btn-circle swap swap-rotate">
-          <Menu size={24} />
-        </label>
-      </div>
+    <!-- Mobile menu toggle -->
+    <div class="md:hidden">
+      <label for="modal_burger" class="btn btn-circle swap swap-rotate">
+        <Menu size={24} />
+      </label>
     </div>
   </div>
 </header>
@@ -173,35 +140,6 @@ const currentPath = Astro.url.pathname;
     <h4 class="text-xl font-bold text-center mb-4">Controls</h4>
 
     <div class="flex flex-row items-center justify-center gap-4">
-      <div class="flex items-center h-full">
-        <div class="dropdown dropdown-bottom">
-          <div
-            tabindex="0"
-            role="button"
-            class="btn btn-lg btn-ghost flex items-center"
-          >
-            {languages[lang]}
-            <ChevronDown size={30} />
-          </div>
-          <ul
-            tabindex="0"
-            class="dropdown-content menu bg-base-100 rounded-box z-[1] w-40 p-2 shadow-lg border border-base-300"
-          >
-            {
-              Object.entries(languages).map(([langCode, langName]) => (
-                <li>
-                  <a
-                    href={getPathWithLang(currentPath, langCode, lang)}
-                    class={lang === langCode ? "active" : ""}
-                  >
-                    {langName}
-                  </a>
-                </li>
-              ))
-            }
-          </ul>
-        </div>
-      </div>
       <div class="flex items-center h-full">
         <ThemeController client:only size="size-12" />
       </div>

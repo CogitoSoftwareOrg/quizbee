@@ -1,0 +1,110 @@
+{
+  "title": "Terms of Service & Privacy Policy",
+  "lastUpdated": "October 6, 2025",
+  "sections": [
+    {
+      "heading": "Terms of Service",
+      "content": "Welcome to QuizBee. By accessing and using our service, you agree to be bound by these Terms of Service and our Privacy Policy. Please read them carefully.",
+      "subsections": [
+        {
+          "subheading": "1. Acceptance of Terms",
+          "content": "By creating an account or using QuizBee, you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our service."
+        },
+        {
+          "subheading": "2. Description of Service",
+          "content": "QuizBee is an AI-powered educational platform that generates interactive quizzes from your study materials. We provide quiz generation, AI tutoring, progress tracking, and related educational tools."
+        },
+        {
+          "subheading": "3. User Accounts",
+          "content": "You are responsible for maintaining the confidentiality of your account credentials. You agree to accept responsibility for all activities that occur under your account. Notify us immediately of any unauthorized use of your account."
+        },
+        {
+          "subheading": "4. Acceptable Use",
+          "content": "You agree not to use QuizBee for any unlawful purpose or in any way that interrupts, damages, or impairs the service. You may not attempt to gain unauthorized access to any part of the service, other accounts, or computer systems connected to the service."
+        },
+        {
+          "subheading": "5. Content Ownership",
+          "content": "You retain all rights to the materials you upload to QuizBee. By uploading content, you grant QuizBee a license to process, store, and analyze your materials solely for the purpose of providing our services to you. We do not claim ownership of your content."
+        },
+        {
+          "subheading": "6. AI-Generated Content",
+          "content": "QuizBee uses artificial intelligence to generate quiz questions and provide tutoring responses. While we strive for accuracy, AI-generated content may occasionally contain errors. You should verify important information independently."
+        },
+        {
+          "subheading": "7. Subscription and Payments",
+          "content": "Some features of QuizBee require a paid subscription. Subscription fees are charged in advance on a recurring basis. You may cancel your subscription at any time, and cancellation will take effect at the end of your current billing period."
+        },
+        {
+          "subheading": "8. Refund Policy",
+          "content": "We offer a 14-day money-back guarantee for new paid subscriptions. If you're not satisfied within the first 14 days, contact us for a full refund. Refunds after this period are at our discretion."
+        },
+        {
+          "subheading": "9. Termination",
+          "content": "We reserve the right to suspend or terminate your account if you violate these terms or engage in conduct that we deem harmful to QuizBee, our users, or third parties."
+        },
+        {
+          "subheading": "10. Limitation of Liability",
+          "content": "QuizBee is provided 'as is' without warranties of any kind. We are not liable for any indirect, incidental, special, or consequential damages arising from your use of the service."
+        },
+        {
+          "subheading": "11. Changes to Terms",
+          "content": "We may modify these Terms of Service at any time. We will notify users of significant changes via email or through the service. Continued use of QuizBee after changes constitutes acceptance of the modified terms."
+        }
+      ]
+    },
+    {
+      "heading": "Privacy Policy",
+      "content": "Your privacy is important to us. This Privacy Policy explains how we collect, use, and protect your personal information when you use QuizBee.",
+      "subsections": [
+        {
+          "subheading": "1. Information We Collect",
+          "content": "We collect information you provide directly (name, email, account details), information from your use of the service (study materials, quiz responses, learning progress), and technical information (IP address, browser type, device information, cookies)."
+        },
+        {
+          "subheading": "2. How We Use Your Information",
+          "content": "We use your information to: provide and improve our services, generate personalized quizzes and AI tutoring, track your learning progress, communicate with you about your account and our services, process payments, and ensure security and prevent fraud."
+        },
+        {
+          "subheading": "3. Data Storage and Security",
+          "content": "Your data is stored on secure servers with encryption at rest and in transit. We implement industry-standard security measures to protect your information. However, no method of transmission over the internet is 100% secure."
+        },
+        {
+          "subheading": "4. Your Study Materials",
+          "content": "Materials you upload are processed by our AI to generate quizzes and provide tutoring. We do not use your uploaded materials to train our AI models for other users. Your materials remain private and are not shared with third parties."
+        },
+        {
+          "subheading": "5. Third-Party Services",
+          "content": "We use third-party services for payment processing (Stripe), analytics, and infrastructure hosting. These services have access only to information necessary to perform their functions and are obligated to maintain confidentiality."
+        },
+        {
+          "subheading": "6. Cookies and Tracking",
+          "content": "We use cookies and similar technologies to maintain your session, remember your preferences, analyze usage patterns, and improve our service. You can control cookies through your browser settings."
+        },
+        {
+          "subheading": "7. Data Retention",
+          "content": "We retain your account information and study materials for as long as your account is active or as needed to provide services. You can request deletion of your data at any time by contacting us or deleting your account."
+        },
+        {
+          "subheading": "8. Your Rights",
+          "content": "You have the right to: access your personal data, correct inaccurate data, delete your data, export your data, opt-out of marketing communications, and withdraw consent for data processing. Contact us to exercise these rights."
+        },
+        {
+          "subheading": "9. Children's Privacy",
+          "content": "QuizBee is not intended for users under 13 years of age. We do not knowingly collect personal information from children under 13. If we discover such information, we will delete it promptly."
+        },
+        {
+          "subheading": "10. International Users",
+          "content": "QuizBee operates globally. If you access our service from outside the United States, your information may be transferred to and processed in the United States or other countries where our servers are located."
+        },
+        {
+          "subheading": "11. Changes to Privacy Policy",
+          "content": "We may update this Privacy Policy periodically. We will notify you of material changes via email or through the service. Your continued use after such notification constitutes acceptance of the updated policy."
+        },
+        {
+          "subheading": "12. Contact Us",
+          "content": "If you have questions about these Terms or Privacy Policy, contact us at: support@quizbee.com or through our website contact form."
+        }
+      ]
+    }
+  ]
+}

@@ -35,6 +35,39 @@ export async function getLandingContent(
   return entry.data;
 }
 
+/**
+ * Get page content with automatic fallback to default language
+ * Returns the content along with fallback information
+ */
+export async function getPageContent(
+  lang: keyof typeof ui,
+  pageName: string
+): Promise<{
+  data: CollectionEntry<"pages">["data"];
+  isFallback: boolean;
+  actualLang: keyof typeof ui;
+}> {
+  const entries = await getCollection("pages");
+  let entry = entries.find((e) => e.id === `${lang}/${pageName}`);
+  let isFallback = false;
+
+  // Fallback to default language if translation doesn't exist
+  if (!entry) {
+    entry = entries.find((e) => e.id === `${defaultLang}/${pageName}`);
+    isFallback = true;
+  }
+
+  if (!entry) {
+    throw new Error(`Page content not found for: ${pageName}`);
+  }
+
+  return {
+    data: entry.data,
+    isFallback,
+    actualLang: isFallback ? defaultLang : lang,
+  };
+}
+
 export function useTranslations(lang: keyof typeof ui) {
   return function t(key: keyof (typeof ui)[typeof defaultLang]) {
     return ui[lang][key] || ui[defaultLang][key];
