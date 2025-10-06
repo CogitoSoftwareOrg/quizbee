@@ -17,7 +17,7 @@ async def materials_to_ai_images(
 
         if m.get("kind") == "simple":
             fname = m.get("file", "")
-            url = f"{settings.pb_url}/api/files/{col}/{mid}/{fname}"
+            url = f"{settings.pb_url}api/files/{col}/{mid}/{fname}"
             if fname.endswith((".png", ".jpg", ".jpeg", ".gif", ".webp")):
                 images.append(url)
         else:
@@ -31,7 +31,7 @@ async def materials_to_ai_images(
 async def load_file_text(
     http: httpx.AsyncClient, col: str, rid: str, file_name: str
 ) -> str:
-    url = f"{settings.pb_url}/api/files/{col}/{rid}/{file_name}"
+    url = f"{settings.pb_url}api/files/{col}/{rid}/{file_name}"
     try:
         resp = await http.get(url)
         resp.raise_for_status()
@@ -47,7 +47,7 @@ async def load_file_text(
 async def load_file_bytes(
     http: httpx.AsyncClient, col: str, rid: str, file_name: str
 ) -> bytes:
-    url = f"{settings.pb_url}/api/files/{col}/{rid}/{file_name}"
+    url = f"{settings.pb_url}api/files/{col}/{rid}/{file_name}"
     try:
         resp = await http.get(url)
         resp.raise_for_status()

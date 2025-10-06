@@ -1,5 +1,8 @@
 import spacy
+import spacy.matcher
 from collections import Counter
+import fitz  # PyMuPDF
+from pathlib import Path
 import time
 from typing import Union
 
@@ -106,38 +109,4 @@ def summarize_to_fixed_tokens(
     print(f"Фактический размер конспекта: ~{final_token_count} токенов.")
 
     return summary_text
-
-# --- НОВАЯ ФУНКЦИЯ ДЛЯ ОБРАБОТКИ СТРОКИ ТЕКСТА ---
-def process_text_to_summary(
-    input_text: str, 
-    tokens: int = 50000, 
-    context: int = 2
-) -> str:
-    """
-    Основная функция-обработчик: принимает строку текста, создает конспект и возвращает его.
-    
-    Args:
-        input_text (str): Исходная строка текста для конспектирования.
-        tokens (int): Целевое количество токенов в конспекте.
-        context (int): Размер контекстного окна (предложений до и после ключевого).
-        
-    Returns:
-        str: Конспект исходного текста.
-    """
-    print(f"\n[1/3] Начало обработки текста (цель: {tokens} токенов, контекст: {context})...")
-    if not input_text or not input_text.strip():
-        print("Предупреждение: Входная строка текста пуста. Возвращаем пустую строку.")
-        return ""
-
-    start_time = time.time()
-    summary = summarize_to_fixed_tokens(
-        input_text, 
-        target_token_count=tokens, 
-        context_window=context
-    )
-    end_time = time.time()
-    print(f"[2/3] Конспект создан за {end_time - start_time:.2f} секунд.")
-    print("[3/3] Готово! ✅")
-
-    return summary
 

@@ -13,7 +13,7 @@ from pocketbase import FileUpload
 from fastapi.responses import JSONResponse
 from .tokens_calculation import count_image_tokens, count_text_tokens
 from .pdf_parser import parse_pdf
-from .important_sentences import process_text_to_summary
+from .important_sentences import summarize_to_fixed_tokens
 from apps.auth import User
 from apps.auth import User, auth_user
 from lib.clients import AdminPB
@@ -95,7 +95,7 @@ async def upload_material(
                     # Если текст больше 50k токенов, обрабатываем через process_text_to_summary
                     if original_text_tokens > 50000:
                         logging.info(f"Text exceeds 50k tokens ({original_text_tokens}), processing with summarization...")
-                        extracted_text = process_text_to_summary(extracted_text, tokens=50000, context=2)
+                        extracted_text = summarize_to_fixed_tokens(extracted_text, target_token_count=50000, context_window=2)
                         logging.info(f"Text summarized, new length: {len(extracted_text)} chars")
                 
                 # Шаг 3: Подсчитываем токены для обработанного текста
