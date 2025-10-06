@@ -1,19 +1,125 @@
 ---
+import { getEntry, getCollection } from "astro:content";
+
 import { getLangFromUrl } from "@/i18n/utils";
-import { languages } from "@/i18n/ui";
+import { languages, defaultLang } from "@/i18n/ui";
+import { getLandingContent } from "@/i18n/utils";
 import Root from "@/layouts/Root.astro";
+import Hero from "@/components/sections/Hero.astro";
+import Pains from "@/components/sections/Pains.astro";
+import Features from "@/components/sections/Features.astro";
+import HowItWorks from "@/components/sections/HowItWorks.astro";
+import Products from "@/components/sections/Products.astro";
+import Testimonials from "@/components/sections/Testimonials.astro";
+import Pricing from "@/components/sections/Pricing.astro";
+import FAQ from "@/components/sections/FAQ.astro";
+import CTA from "@/components/sections/CTA.astro";
 
 export async function getStaticPaths() {
-  const langParams = Object.keys(languages).map((lang) => ({
-    params: { lang },
-  }));
-  langParams.push({ params: { lang: "" } });
-  return langParams;
+  const langParams = Object.keys(languages).map(async (lang) => {
+    const entry = await getEntry("landings", `${lang}/quizbee-base`);
+    console.log("Entry:", lang, entry);
+    if (!entry) return null;
+    return { params: { lang }, props: { data: entry.data } };
+  });
+  const entry = await getEntry("landings", `${defaultLang}/quizbee-base`);
+  if (!entry) return null;
+  // @ts-ignore
+  langParams.push({ params: { lang: undefined }, props: { data: entry.data } });
+  return await Promise.all(langParams);
 }
 
-const lang = getLangFromUrl(Astro.url);
+const content = Astro.props.data;
 ---
 
-<Root title="Root page" active="home">
-  <h1>Root page {lang}</h1>
+<Root title="QuizBee - Learn Smarter with AI-Powered Quizzes" active="home">
+  <!-- Hero Section -->
+  <Hero
+    title={content.hero.title}
+    description={content.hero.description}
+    buttonText={content.hero.buttonText}
+    image={content.hero.image}
+    position="right"
+    overlay={false}
+    href="/app"
+  />
+
+  <!-- Pain Points Section -->
+  <Pains
+    title={content.pains.title}
+    theme="gradient"
+    pains={content.pains.items}
+  />
+
+  <!-- Features Section -->
+  <Features
+    title={content.features.title}
+    subtitle={content.features.subtitle}
+    theme="default"
+    features={content.features.items}
+    stats={content.features.stats}
+  />
+
+  <!-- How It Works Section -->
+  <HowItWorks
+    title={content.howItWorks.title}
+    subtitle={content.howItWorks.subtitle}
+    theme="gradient"
+    steps={content.howItWorks.steps}
+  />
+
+  <!-- Use Cases / Products Section -->
+  <Products
+    title={content.useCases.title}
+    subtitle={content.useCases.subtitle}
+    theme="default"
+    oracle={{
+      ...content.useCases.primary,
+      href: "/app",
+    }}
+    modules={content.useCases.modules.map((module: any) => ({
+      ...module,
+      href: "/app",
+    }))}
+    pantheon={{
+      ...content.useCases.secondary,
+      href: "/app",
+    }}
+  />
+
+  <!-- Testimonials Section -->
+  <Testimonials
+    title={content.testimonials.title}
+    subtitle={content.testimonials.subtitle}
+    theme="gradient"
+    testimonials={content.testimonials.items}
+  />
+
+  <!-- Pricing Section -->
+  <Pricing
+    title={content.pricing.title}
+    subtitle={content.pricing.subtitle}
+    theme="default"
+    plans={content.pricing.plans.map((plan: any) => ({
+      ...plan,
+      buttonHref: "/app",
+    }))}
+  />
+
+  <!-- FAQ Section -->
+  <FAQ
+    title={content.faq.title}
+    subtitle={content.faq.subtitle}
+    theme="gradient"
+    questions={content.faq.questions}
+  />
+
+  <!-- Final CTA Section -->
+  <CTA
+    headline={content.cta.headline}
+    subheadline={content.cta.subheadline}
+    buttonText={content.cta.buttonText}
+    buttonHref="/app"
+    theme="gradient"
+  />
 </Root>

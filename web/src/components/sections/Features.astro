@@ -1,4 +1,6 @@
 ---
+import DynamicIcon from "../ui/DynamicIcon.astro";
+
 interface Feature {
   title: string;
   description: string;
@@ -68,7 +70,7 @@ const themeClasses = {
             <div class="relative flex flex-col h-full p-8 rounded-2xl border transition-all duration-300 bg-base-100 shadow-lg hover:shadow-xl hover:-translate-y-2 hover:border-success/30 group-hover:bg-success/5">
               <!-- Icon -->
               <div class="p-4 rounded-xl bg-success/10 mb-6 aspect-square flex items-center justify-center border border-success/20 group-hover:bg-success/20 group-hover:border-success/30 transition-colors">
-                <span class="text-8xl" set:html={feature.icon} />
+                <DynamicIcon name={feature.icon} size={64} class="text-success" />
               </div>
 
               <!-- Content -->

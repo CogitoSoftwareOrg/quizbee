@@ -1,0 +1,42 @@
+---
+import {
+  Bot,
+  SlidersHorizontal,
+  MessageCircle,
+  Target,
+  FileText,
+  TrendingUp,
+  Bed,
+  BookOpen,
+  CircleHelp,
+  ChartNoAxesCombined,
+  CircleCheck,
+} from "lucide-astro";
+
+interface Props {
+  name: string;
+  size?: number;
+  class?: string;
+}
+
+const { name, size = 24, class: className = "" } = Astro.props;
+
+// Map icon names to components
+const iconMap: Record<string, any> = {
+  bot: Bot,
+  "sliders-horizontal": SlidersHorizontal,
+  "message-circle": MessageCircle,
+  target: Target,
+  "file-text": FileText,
+  "trending-up": TrendingUp,
+  bed: Bed,
+  "book-open": BookOpen,
+  "circle-help": CircleHelp,
+  "chart-no-axes-combined": ChartNoAxesCombined,
+  "circle-check": CircleCheck,
+};
+
+const IconComponent = iconMap[name];
+---
+
+{IconComponent && <IconComponent size={size} class={className} />}

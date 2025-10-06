@@ -1,8 +1,16 @@
 ---
 import { Image } from "astro:assets";
+import { ChevronDown, Menu, X } from "lucide-astro";
 
 import QuizBeeLogo from "@/assets/icons/bee_final.svg";
 import ThemeController from "@/components/features/ThemeController.svelte";
+import {
+  getLangFromUrl,
+  useTranslations,
+  useTranslatedPath,
+  getPathWithLang,
+} from "@/i18n/utils";
+import { languages } from "@/i18n/ui";
 
 interface Props {
   active: string;
@@ -11,30 +19,36 @@ interface Props {
   ctaHref?: string;
 }
 
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const tp = useTranslatedPath(lang);
+
 const {
   active,
   ctaHref = "/",
-  ctaText = "Start for free",
+  ctaText = t("cta.start_for_free"),
   ctaModal,
 } = Astro.props;
 
 const navItems = [
   {
     name: "home",
-    label: "Home",
+    label: t("nav.home"),
     href: "/",
   },
-  {
-    name: "blog",
-    label: "Blog",
-    href: "/blog",
-  },
-  {
-    name: "quizes",
-    label: "Quizes",
-    href: "/quizes",
-  },
+  // {
+  //   name: "blog",
+  //   label: t("nav.blog"),
+  //   href: "/blog",
+  // },
+  // {
+  //   name: "quizes",
+  //   label: t("nav.quizes"),
+  //   href: "/quizes",
+  // },
 ];
+
+const currentPath = Astro.url.pathname;
 ---
 
 <header
@@ -60,7 +74,7 @@ const navItems = [
       {
         navItems.map((item) => (
           <a
-            href={item.href}
+            href={tp(item.href, lang)}
             class={`link link-hover ${active === item.name && "font-bold"}`}
           >
             {item.label}
@@ -71,8 +85,33 @@ const navItems = [
 
     <!-- Right side actions -->
     <div class="items-center gap-3 flex">
+      <!-- Language Switcher -->
+      <div class="dropdown dropdown-end hidden md:block">
+        <div tabindex="0" role="button" class="btn btn-ghost">
+          {languages[lang]}
+          <ChevronDown size={14} />
+        </div>
+        <ul
+          tabindex="0"
+          class="dropdown-content menu bg-base-100 rounded-box z-[1] w-40 p-2 shadow-lg border border-base-300"
+        >
+          {
+            Object.entries(languages).map(([langCode, langName]) => (
+              <li>
+                <a
+                  href={getPathWithLang(currentPath, langCode, lang)}
+                  class={lang === langCode ? "active" : ""}
+                >
+                  {langName}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
       <div class="hidden md:block">
-        <ThemeController client:load />
+        <ThemeController client:only />
       </div>
 
       <!-- CTA Button -->
@@ -101,17 +140,7 @@ const navItems = [
       <!-- Mobile menu toggle -->
       <div class="md:hidden">
         <label for="modal_burger" class="btn btn-circle swap swap-rotate">
-          <svg
-            class="swap-off fill-current"
-            xmlns="http://www.w3.org/2000/svg"
-            width="32"
-            height="32"
-            viewBox="0 0 512 512"
-          >
-            <path
-              d="M64,384H448V341.33H64Zm0-106.67H448V234.67H64ZM64,128v42.67H448V128Z"
-            ></path>
-          </svg>
+          <Menu size={24} />
         </label>
       </div>
     </div>
@@ -124,15 +153,15 @@ const navItems = [
   <div class="relative modal-box min-w-sm">
     <label
       for="modal_burger"
-      class="btn btn-sm btn-circle absolute right-4 top-2 text-lg font-bold"
-      >✕</label
+      class="btn btn-ghost btn-sm btn-circle absolute right-4 top-2 text-lg font-bold"
+      ><X size={32} /></label
     >
     <h3 class="text-xl font-bold text-center mb-4">Navigation</h3>
     <nav class="*:text-lg space-y-2 mb-4">
       {
         navItems.map((item) => (
           <a
-            href={item.href}
+            href={tp(item.href, lang)}
             class={`block link link-hover ${active === item.name && "font-bold"}`}
           >
             {item.label}
@@ -141,20 +170,54 @@ const navItems = [
       }
     </nav>
 
-    <h4 class="text-xl font-bold text-center mb-4">Theme</h4>
-    <div class="flex justify-center">
-      <ThemeController client:load size="size-12" />
+    <h4 class="text-xl font-bold text-center mb-4">Controls</h4>
+
+    <div class="flex flex-row items-center justify-center gap-4">
+      <div class="flex items-center h-full">
+        <div class="dropdown dropdown-bottom">
+          <div
+            tabindex="0"
+            role="button"
+            class="btn btn-lg btn-ghost flex items-center"
+          >
+            {languages[lang]}
+            <ChevronDown size={30} />
+          </div>
+          <ul
+            tabindex="0"
+            class="dropdown-content menu bg-base-100 rounded-box z-[1] w-40 p-2 shadow-lg border border-base-300"
+          >
+            {
+              Object.entries(languages).map(([langCode, langName]) => (
+                <li>
+                  <a
+                    href={getPathWithLang(currentPath, langCode, lang)}
+                    class={lang === langCode ? "active" : ""}
+                  >
+                    {langName}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </div>
+      <div class="flex items-center h-full">
+        <ThemeController client:only size="size-12" />
+      </div>
     </div>
   </div>
-  <label class="modal-backdrop" for="modal_burger">Close</label>
+  <label class="modal-backdrop" for="modal_burger">
+    <X size={24} />
+  </label>
 </div>
 
-<div class="fixed bottom-4 right-1/2 translate-x-1/2 sm:hidden">
+<div class="fixed bottom-4 right-1/2 translate-x-1/2 sm:hidden z-50">
   {
     ctaModal && (
       <button
         onclick={`${ctaModal}.showModal()`}
-        class="btn btn-primary rounded-xl px-4 btn-wide btn-lg btn-outline"
+        class="btn btn-primary rounded-xl px-4 btn-wide btn-lg btn-outline shadow-lg"
       >
         {ctaText}
       </button>
@@ -164,7 +227,7 @@ const navItems = [
     ctaHref && (
       <a
         href={ctaHref}
-        class="btn btn-primary rounded-xl px-4 btn-wide btn-lg btn-outline"
+        class="btn btn-primary rounded-xl px-4 btn-wide btn-lg btn-outline shadow-lg"
       >
         {ctaText}
       </a>

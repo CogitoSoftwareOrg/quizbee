@@ -1,4 +1,6 @@
 ---
+import { ClientRouter } from "astro:transitions";
+
 import { getLangFromUrl } from "@/i18n/utils";
 import "@/styles/global.css";
 
@@ -10,7 +12,7 @@ import PortalHost from "@/components/PortalHost.svelte";
 import CookiesAccept from "@/components/CookiesAccept.svelte";
 
 import Header from "./_Header.astro";
-import { ClientRouter } from "astro:transitions";
+import Footer from "./_Footer.astro";
 
 const { title, active } = Astro.props;
 
@@ -34,19 +36,19 @@ const lang = getLangFromUrl(Astro.url);
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
 
-    <ClientRouter />
+    <!-- <ClientRouter /> -->
     <ThemeLoad />
   </head>
   <body>
     <CookiesAccept client:only />
     <PortalHost client:only />
 
-    <Header transition:persist="global-header" client:load active={active} />
+    <Header active={active} />
 
     <main class="mx-auto max-w-screen-xl">
       <slot />
     </main>
 
-    <footer></footer>
+    <Footer />
   </body>
 </html>

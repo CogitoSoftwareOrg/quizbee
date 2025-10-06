@@ -1,0 +1,14 @@
+---
+export const prerender = false;
+// Astro.response.headers.set(
+//   "Cache-Control",
+//   // year on CDN; browser can get less:
+//   "public, max-age=300, s-maxage=31536000, immutable"
+// );
+
+import Root from "@/layouts/Root.astro";
+---
+
+<Root title="Quizes" active="quizes">
+  <h1>Quizes</h1>
+</Root>

@@ -1,4 +1,6 @@
 ---
+import DynamicIcon from "../ui/DynamicIcon.astro";
+
 interface PainPoint {
   title: string;
   description: string;
@@ -42,9 +44,10 @@ const themeClasses = {
             <div class="relative flex flex-col items-center text-center p-8 rounded-2xl border transition-all duration-200 bg-base-100 shadow-lg hover:shadow-xl hover:-translate-y-1 hover:border-warning/30 group-hover:bg-warning/5 h-full">
               <!-- Icon Container -->
               <div class="p-6 rounded-2xl bg-warning/10 mb-6 aspect-square flex items-center justify-center border border-warning/20 group-hover:bg-warning/20 group-hover:border-warning/30 group-hover:scale-110 transition-all duration-300">
-                <span
-                  class="text-6xl group-hover:text-7xl transition-all duration-300"
-                  set:html={pain.icon}
+                <DynamicIcon
+                  name={pain.icon}
+                  size={56}
+                  class="text-warning transition-all duration-300 group-hover:scale-110"
                 />
               </div>
 

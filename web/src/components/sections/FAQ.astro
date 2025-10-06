@@ -1,0 +1,102 @@
+---
+interface Question {
+  question: string;
+  answer: string;
+}
+
+interface Props {
+  title: string;
+  subtitle?: string;
+  questions: Question[];
+  theme?: "default" | "dark" | "gradient";
+}
+
+const { title, subtitle, questions, theme = "default" } = Astro.props;
+
+const themeClasses = {
+  default: "",
+  dark: "bg-base-300",
+  gradient: "bg-gradient-to-br from-info/5 to-secondary/5",
+};
+---
+
+<section class={`faq-section w-full py-16 lg:py-24 ${themeClasses[theme]}`}>
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="text-center mb-16 space-y-4">
+      {
+        subtitle && (
+          <p class="text-sm font-semibold text-info uppercase tracking-wide">
+            {subtitle}
+          </p>
+        )
+      }
+
+      <h2 class="text-4xl lg:text-5xl font-bold leading-tight">
+        {title}
+      </h2>
+    </div>
+
+    <!-- FAQ Items -->
+    <div
+      class="space-y-4 transition-all duration-1000 ease-out opacity-0 translate-y-8"
+      data-animate="faq"
+    >
+      {
+        questions.map((item, index) => (
+          <div class="collapse collapse-plus bg-base-100 border border-base-200 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:border-info/30">
+            <input type="radio" name="faq-accordion" id={`faq-${index}`} />
+            <label
+              for={`faq-${index}`}
+              class="collapse-title text-xl font-bold cursor-pointer"
+            >
+              {item.question}
+            </label>
+            <div class="collapse-content">
+              <p class="text-base-content/70 leading-relaxed pt-2">
+                {item.answer}
+              </p>
+            </div>
+          </div>
+        ))
+      }
+    </div>
+
+    <!-- Bottom CTA -->
+    <div
+      class="text-center mt-12 p-8 rounded-2xl bg-gradient-to-r from-info/10 to-secondary/10 border border-info/20"
+    >
+      <h3 class="text-xl font-bold mb-2">Still have questions?</h3>
+      <p class="text-base-content/70 mb-4">
+        Our support team is here to help you get started.
+      </p>
+      <a href="mailto:support@quizbee.com" class="link link-info font-semibold">
+        Contact Support →
+      </a>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const sections = document.querySelectorAll(".faq-section");
+
+    sections.forEach((section) => {
+      const animateElement = section.querySelector("[data-animate]");
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting && animateElement) {
+              animateElement.classList.remove("opacity-0", "translate-y-8");
+              animateElement.classList.add("opacity-100", "translate-y-0");
+            }
+          });
+        },
+        { threshold: 0.1 }
+      );
+
+      observer.observe(section);
+    });
+  });
+</script>
