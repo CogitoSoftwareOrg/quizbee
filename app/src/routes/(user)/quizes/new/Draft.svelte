@@ -11,6 +11,7 @@
 	import { createDraft } from '../new/createDraft';
 	import Modal from '$lib/ui/Modal.svelte';
 	import Button from '$lib/ui/Button.svelte';
+	import { FilePlus } from 'lucide-svelte';
 
 
 	interface Props {
@@ -176,9 +177,10 @@
 
 
 {#if previousQuizes.length > 0}
-	<div class="mb-2  flex justify-center">
+	<div class="mt-2  flex justify-center">
 		<button class="btn btn-xs btn-outline flex items-center text-sm" onclick={() => (showModal = true)}>
-			<span class="mt-1">Reuse previous quiz</span>
+			<FilePlus class="w-4 h-4 mb-0.5" />
+			<span class=" ">Use previous quiz settings</span>
 		</button>
 	</div>
 {/if}

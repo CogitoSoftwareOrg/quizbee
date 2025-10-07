@@ -382,7 +382,7 @@ export  {addExistingMaterial}
 							><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg
 						>
 					</div>
-					<div class="max-h-67 mt-2 overflow-y-auto">
+					<div class="max-h-67 mt-2 ">
 						{#each materialsStore.materials.filter((m) => m.title
 								.toLowerCase()
 								.includes(searchQuery.toLowerCase())) as material}
@@ -418,7 +418,7 @@ export  {addExistingMaterial}
 		<textarea
 			placeholder="Attach relevant files and/or describe what you'd like the questions to be about"
 			bind:value={inputText}
-			class="max-h-[7.5rem] min-h-[1.5rem] flex-grow resize-none overflow-y-auto border-none bg-transparent py-1 pl-4 text-lg leading-6 outline-none focus:shadow-none focus:outline-none focus:ring-0"
+			class="max-h-[7.5rem] min-h-[1.5rem] flex-grow resize-none  border-none bg-transparent py-1 pl-4 text-lg leading-6 outline-none focus:shadow-none focus:outline-none focus:ring-0"
 			onpaste={handlePaste}
 			rows="1"
 			oninput={handleTextareaResize}
@@ -447,7 +447,7 @@ export  {addExistingMaterial}
 	{#if attachedFiles.length > 0}
 		<div class="grid grid-cols-5 gap-4 px-3">
 			{#each attachedFiles as attachedFile, index}
-				<div class="bg-base-300 group relative aspect-square w-full overflow-hidden rounded-lg">
+				<div class="bg-base-300 group relative aspect-square w-full rounded-lg">
 					{#if attachedFile.previewUrl}
 						<img
 							src={attachedFile.previewUrl}

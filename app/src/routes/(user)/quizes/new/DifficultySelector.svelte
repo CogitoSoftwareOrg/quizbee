@@ -9,17 +9,17 @@
 		{ 
 			value: 'beginner', 
 			label: 'Beginner', 
-			selectedClasses: 'border-success bg-success'
+			icon: '🌱'
 		},
 		{ 
 			value: 'intermediate', 
 			label: 'Intermediate', 
-			selectedClasses: 'border-warning bg-warning'
+			icon: '⚡'
 		},
 		{ 
 			value: 'expert', 
 			label: 'Expert', 
-			selectedClasses: 'border-error bg-error'
+			icon: '🎯'
 		}
 	];
 
@@ -28,27 +28,29 @@
 	}
 </script>
 
-<div class="flex items-center justify-center gap-8">
+<div class="space-y-3">
 	{#each difficulties as difficulty}
 		<button
 			type="button"
 			onclick={() => selectDifficulty(difficulty.value)}
-			class="flex cursor-pointer flex-col items-center gap-2 transition-all duration-200 hover:scale-105"
+			class="w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-all duration-100 {selectedDifficulty ===
+			difficulty.value
+				? 'border-base-content bg-primary/5 shadow-sm'
+				: 'border-base-300 bg-base-100 hover:border-base-content/50 hover:bg-base-200/50'}"
 		>
-			<div
-				class="relative flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all duration-200 {selectedDifficulty ===
-				difficulty.value
-					? difficulty.selectedClasses
-					: 'border-base-content/30 bg-base-100 hover:border-base-content/50'}"
-			>
-			</div>
+			<span class="text-2xl">{difficulty.icon}</span>
 			<span
-				class="text-md font-medium transition-colors {selectedDifficulty === difficulty.value
+				class="font-medium text-base {selectedDifficulty === difficulty.value
 					? 'text-base-content'
-					: 'text-base-content/70'}"
+					: 'text-base-content'}"
 			>
 				{difficulty.label}
 			</span>
+			{#if selectedDifficulty === difficulty.value}
+				<div class="ml-auto w-5 h-5 rounded-full bg-base-content flex items-center justify-center">
+					<div class="w-2 h-2 rounded-full bg-base-100"></div>
+				</div>
+			{/if}
 		</button>
 	{/each}
 </div>

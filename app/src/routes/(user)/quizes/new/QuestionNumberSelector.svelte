@@ -8,27 +8,17 @@
 	}
 </script>
 
-<div class="flex items-center justify-center gap-13">
+<div class="grid grid-cols-2 gap-3">
 	{#each numbers as num}
 		<button
 			type="button"
 			onclick={() => selectNumber(num)}
-			class="flex cursor-pointer flex-col items-center gap-2 transition-all duration-200 hover:scale-105"
+			class="p-4 rounded-lg border-2 transition-all duration-200 {value === num
+				? 'border-base-content bg-base-100 shadow-md scale-105'
+				: 'border-base-300 bg-base-100 text-base-content hover:border-base-content/50 hover:bg-base-200/50'}"
 		>
-			<div
-				class="relative flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all duration-200 {value ===
-				num
-					? 'border-warning bg-warning'
-					: 'border-base-content/30 bg-base-100 hover:border-base-content/50'}"
-			>
-			</div>
-			<span
-				class="text-md font-medium transition-colors {value === num
-					? 'text-base-content'
-					: 'text-base-content/70'}"
-			>
-				{num}
-			</span>
+			<div class="text-3xl font-bold">{num}</div>
+			<div class="text-xs mt-1 opacity-80">questions</div>
 		</button>
 	{/each}
 </div>
