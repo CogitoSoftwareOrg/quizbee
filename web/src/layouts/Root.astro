@@ -147,7 +147,6 @@ const defaultStructuredData = {
     <ThemeLoad />
   </head>
   <body>
-    <CookiesAccept client:only />
     <PortalHost client:only />
 
     <Header transition:persist="root-header" active={active} />
@@ -157,5 +156,6 @@ const defaultStructuredData = {
     </main>
 
     <Footer transition:persist="root-footer" />
+    <CookiesAccept client:only />
   </body>
 </html>
