@@ -28,7 +28,7 @@
 	}
 </script>
 
-<div class="flex items-center justify-center gap-3 sm:gap-6 md:gap-8">
+<div class="flex items-center justify-center gap-5 sm:gap-6 md:gap-8">
 	{#each difficulties as difficulty}
 		<button
 			type="button"

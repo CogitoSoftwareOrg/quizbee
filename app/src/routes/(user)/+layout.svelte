@@ -14,6 +14,7 @@
 
 	const { data, children } = $props();
 
+	const newPageColor = $derived(page.url.pathname === '/quizes/new');
 	const attemptingQuiz = $derived(
 		/quizes\/[0-9a-zA-Z]+\/attempts\/[0-9a-zA-Z]+/.test(page.url.pathname) &&
 			!page.url.pathname.includes('/feedback')
@@ -58,15 +59,21 @@
 			{#if !attemptingQuiz}
 				<footer class="dock dock-sm sm:hidden">
 					<a href="/home">
-						<House />
+						<House class={page.url.pathname === '/home' ? 'text-primary' : 'text-neutral'} />
 					</a>
 					<div>
-						<Button size="lg" href="/quizes/new" circle>
+						<Button
+							style={page.url.pathname === '/quizes/new' ? 'ghost' : 'solid'}
+							color={page.url.pathname === '/quizes/new' ? 'neutral' : 'primary'}
+							size="lg"
+							href="/quizes/new"
+							circle
+						>
 							<Plus size={32} />
 						</Button>
 					</div>
 					<a href="/profile">
-						<Settings />
+						<Settings class={page.url.pathname === '/profile' ? 'text-primary' : 'text-neutral'} />
 					</a>
 				</footer>
 			{/if}

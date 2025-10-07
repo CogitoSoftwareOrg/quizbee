@@ -129,7 +129,7 @@
 			<!-- Settings Section -->
 			<div class="mb-8 sm:mb-16">
 				<div
-					class="mx-auto flex max-w-7xl flex-col items-center gap-6 sm:gap-12 lg:flex-row lg:justify-center lg:gap-16"
+					class="mx-auto flex max-w-7xl flex-col items-center gap-4 sm:gap-8 lg:flex-row lg:justify-center lg:gap-12 lg:px-16"
 				>
 					<!-- Difficulty -->
 					<div class="w-full min-w-0 flex-1 text-center lg:w-auto">
