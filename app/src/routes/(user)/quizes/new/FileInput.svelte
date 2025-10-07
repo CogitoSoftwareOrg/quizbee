@@ -302,7 +302,7 @@
 
 <div
 	class={[
-		'mx-auto flex w-full max-w-3xl flex-col gap-2.5 rounded-lg p-2 font-sans transition-colors duration-200',
+		'mx-auto flex w-full max-w-3xl flex-col gap-2.5 rounded-lg p-1 font-sans transition-colors duration-200 sm:p-2',
 		isDragging && 'border-primary bg-primary/10 border-2 border-dashed'
 	]}
 	ondragover={handleDragOver}
@@ -313,25 +313,25 @@
 	aria-label="Drop files here or click to upload"
 >
 	<div
-		class="border-base-300 bg-base-300 focus-within:border-base-content/40 relative flex items-center rounded-3xl border px-4 py-4 transition-colors duration-200"
+		class="border-base-300 bg-base-300 focus-within:border-base-content/40 relative flex items-center rounded-3xl border px-3 py-3 transition-colors duration-200 sm:px-4 sm:py-4"
 	>
 		<button
 			bind:this={buttonElement}
 			onclick={() => (isMaterialsListOpen = !isMaterialsListOpen)}
-			class="text-base-content/60 hover:text-base-content mr-2 flex cursor-pointer items-center border-none bg-transparent p-0"
+			class="text-base-content/60 hover:text-base-content mr-2 flex shrink-0 cursor-pointer items-center border-none bg-transparent p-0"
 			aria-label="Attach files"
 		>
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
-				width="24"
-				height="24"
+				width="20"
+				height="20"
 				viewBox="0 0 24 24"
 				fill="none"
 				stroke="currentColor"
 				stroke-width="2"
 				stroke-linecap="round"
 				stroke-linejoin="round"
-				class="lucide lucide-paperclip"
+				class="lucide lucide-paperclip sm:h-6 sm:w-6"
 				><path
 					d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.59a2 2 0 0 1-2.83-2.83l8.49-8.48"
 				/></svg
@@ -340,7 +340,7 @@
 		{#if isMaterialsListOpen}
 			<div
 				bind:this={menuElement}
-				class="w-75 border-base-300 bg-base-100 absolute left-0 top-5 z-10 max-h-screen rounded-lg border shadow-lg"
+				class="border-base-300 bg-base-100 absolute left-0 right-0 top-full z-10 mt-2 max-h-[70vh] overflow-y-auto rounded-lg border shadow-lg sm:left-0 sm:right-auto sm:w-80"
 			>
 				<div class="p-2">
 					<button
@@ -389,7 +389,7 @@
 							><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg
 						>
 					</div>
-					<div class="max-h-67 mt-2 overflow-y-auto">
+					<div class="mt-2">
 						{#each materialsStore.materials.filter((m) => m.title
 								.toLowerCase()
 								.includes(searchQuery.toLowerCase())) as material}
@@ -425,7 +425,7 @@
 		<textarea
 			placeholder="Attach relevant files and/or describe what you'd like the questions to be about"
 			bind:value={inputText}
-			class="max-h-[7.5rem] min-h-[1.5rem] flex-grow resize-none overflow-y-auto border-none bg-transparent py-1 pl-4 text-lg leading-6 outline-none focus:shadow-none focus:outline-none focus:ring-0"
+			class="max-h-[7.5rem] min-h-[1.5rem] flex-grow resize-none overflow-y-auto border-none bg-transparent py-1 pl-2 text-base leading-6 outline-none focus:shadow-none focus:outline-none focus:ring-0 sm:pl-4 sm:text-lg"
 			onpaste={handlePaste}
 			rows="1"
 			oninput={handleTextareaResize}
@@ -452,7 +452,7 @@
 		</div>
 	{/if}
 	{#if attachedFiles.length > 0}
-		<div class="grid grid-cols-5 gap-4 px-3">
+		<div class="grid grid-cols-2 gap-3 px-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
 			{#each attachedFiles as attachedFile, index}
 				<div class="bg-base-300 group relative aspect-square w-full overflow-hidden rounded-lg">
 					{#if attachedFile.previewUrl}
