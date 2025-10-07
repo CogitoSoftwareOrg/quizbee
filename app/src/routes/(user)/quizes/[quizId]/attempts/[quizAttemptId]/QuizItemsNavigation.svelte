@@ -33,7 +33,7 @@
 </script>
 
 {#if order > 0}
-	<div class="pointer-events-none absolute -left-2 top-1/2 z-10 hidden -translate-y-1/2 md:block">
+	<div class="pointer-events-none absolute -left-10 top-1/2 z-10 hidden -translate-y-1/2 md:block">
 		<Button
 			class="pointer-events-auto"
 			color="neutral"
@@ -44,13 +44,13 @@
 				gotoItem(order - 1);
 			}}
 		>
-			<ChevronLeft size={42} />
+			<ChevronLeft size={52} />
 		</Button>
 	</div>
 {/if}
 
 {#if itemDecision}
-	<div class="pointer-events-none absolute -right-2 top-1/2 z-10 hidden -translate-y-1/2 md:block">
+	<div class="pointer-events-none absolute -right-10 top-1/2 z-10 hidden -translate-y-1/2 md:block">
 		<Button
 			class="pointer-events-auto"
 			color="neutral"
@@ -66,7 +66,7 @@
 				gotoItem(order + 1);
 			}}
 		>
-			<ChevronRight size={42} />
+			<ChevronRight size={52} />
 		</Button>
 	</div>
 {/if}

@@ -85,7 +85,7 @@
 		style:width={mainColumnWidth}
 	>
 		{#if !chatOpen}
-			<div class="absolute -right-3 top-1/2 -translate-y-1/2">
+			<div class="absolute -right-3 top-1/2 hidden -translate-y-1/2 sm:block">
 				<button
 					class="bg-primary flex-1 cursor-pointer rounded-2xl p-2 text-center text-2xl font-semibold"
 					onclick={() => (chatOpen = !chatOpen)}
@@ -131,7 +131,7 @@
 	</main>
 
 	<div
-		class="h-full min-w-0 flex-shrink-0 overflow-hidden transition-[width] duration-300 ease-out"
+		class="hidden h-full min-w-0 flex-shrink-0 overflow-hidden transition-[width] duration-300 ease-out sm:block"
 		style:pointer-events={!chatOpen ? 'none' : 'auto'}
 		style:width={chatColumnWidth}
 	>

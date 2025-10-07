@@ -93,7 +93,7 @@
 				<div class="hidden text-sm font-semibold">{quiz.title}</div>
 			{/if}
 
-			<ul class="flex flex-1 flex-wrap items-center gap-2">
+			<ul class="hidden flex-1 flex-wrap items-center gap-2 sm:flex">
 				{#each quizItems as quizItem, index}
 					{@const decision = quizDecisions.find((d) => d.itemId === quizItem.id)}
 

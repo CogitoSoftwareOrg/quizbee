@@ -185,24 +185,26 @@
 								class="grid transition-[grid-template-rows] duration-200 ease-out"
 								style={`grid-template-rows: ${isExpanded(index) ? '1fr' : '0fr'}`}
 							>
-								<div
-									class={[
-										'overflow-hidden border-t p-4',
-										itemDecision?.answerIndex === index && !answer.correct
-											? 'border-error/40 bg-error/10'
-											: answer.correct
-												? 'border-success/40 bg-success/10'
-												: 'border-base-300/60 bg-base-200/80'
-									]}
-									aria-hidden={!isExpanded(index)}
-								>
-									<div class="flex items-start gap-3">
-										<Info class="mt-0.5 shrink-0" size={18} />
-										<div class="space-y-1">
-											<p class="text-xs font-semibold uppercase tracking-wide opacity-60">
-												Explanation
-											</p>
-											<p class="text-sm leading-relaxed opacity-80">{answer.explanation}</p>
+								<div class="min-h-0 overflow-hidden">
+									<div
+										class={[
+											'border-t p-4',
+											itemDecision?.answerIndex === index && !answer.correct
+												? 'border-error/40 bg-error/10'
+												: answer.correct
+													? 'border-success/40 bg-success/10'
+													: 'border-base-300/60 bg-base-200/80'
+										]}
+										aria-hidden={!isExpanded(index)}
+									>
+										<div class="flex items-start gap-3">
+											<Info class="mt-0.5 shrink-0" size={18} />
+											<div class="space-y-1">
+												<p class="text-xs font-semibold uppercase tracking-wide opacity-60">
+													Explanation
+												</p>
+												<p class="text-sm leading-relaxed opacity-80">{answer.explanation}</p>
+											</div>
 										</div>
 									</div>
 								</div>

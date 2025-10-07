@@ -97,7 +97,11 @@ const currentPath = Astro.url.pathname;
         }
         {
           ctaHref && (
-            <a href={ctaHref} class="btn btn-primary rounded-xl px-4">
+            <a
+              href={ctaHref}
+              target="_blank"
+              class="btn btn-primary rounded-xl px-4"
+            >
               {ctaText}
             </a>
           )
@@ -164,6 +168,7 @@ const currentPath = Astro.url.pathname;
   {
     ctaHref && (
       <a
+        target="_blank"
         href={ctaHref}
         class="btn btn-primary rounded-xl px-4 btn-wide btn-lg btn-outline shadow-lg"
       >

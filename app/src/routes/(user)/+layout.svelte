@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { House, Plus, Settings } from 'lucide-svelte';
+	import { page } from '$app/state';
 
 	import Logo from '$lib/assets/icons/bee1.svg';
 
@@ -12,6 +13,11 @@
 	import Button from '$lib/ui/Button.svelte';
 
 	const { data, children } = $props();
+
+	const attemptingQuiz = $derived(
+		/quizes\/[0-9a-zA-Z]+\/attempts\/[0-9a-zA-Z]+/.test(page.url.pathname) &&
+			!page.url.pathname.includes('/feedback')
+	);
 </script>
 
 <SubscribeUser />
@@ -45,23 +51,25 @@
 		<main class="flex h-full flex-1 flex-col">
 			<GlobalHeader />
 
-			<div class="h-full flex-1 overflow-auto pb-12 sm:p-3 sm:pb-3">
+			<div class={['h-full flex-1 overflow-auto sm:p-3 sm:pb-3', !attemptingQuiz && 'pb-12']}>
 				{@render children?.()}
 			</div>
 
-			<footer class="dock dock-sm sm:hidden">
-				<a href="/home">
-					<House />
-				</a>
-				<div>
-					<Button size="lg" href="/quizes/new" circle>
-						<Plus size={32} />
-					</Button>
-				</div>
-				<a href="/profile">
-					<Settings />
-				</a>
-			</footer>
+			{#if !attemptingQuiz}
+				<footer class="dock dock-sm sm:hidden">
+					<a href="/home">
+						<House />
+					</a>
+					<div>
+						<Button size="lg" href="/quizes/new" circle>
+							<Plus size={32} />
+						</Button>
+					</div>
+					<a href="/profile">
+						<Settings />
+					</a>
+				</footer>
+			{/if}
 		</main>
 	</div>
 {:catch error}
