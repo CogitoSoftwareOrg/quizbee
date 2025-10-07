@@ -16,6 +16,7 @@
     "lucide-astro": "^0.544.0",
     "lucide-svelte": "^0.544.0",
     "posthog-js": "^1.269.1",
+    "sharp": "^0.34.4",
     "svelte": "^5.39.8",
     "tailwindcss": "^4.1.14",
     "theme-change": "^2.5.0",
