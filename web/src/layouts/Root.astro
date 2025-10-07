@@ -2,10 +2,10 @@
 import { ClientRouter } from "astro:transitions";
 
 import { getLangFromUrl } from "@/i18n/utils";
+import { languages } from "@/i18n/ui";
 import "@/styles/global.css";
 
 import ThemeLoad from "@/components/features/ThemeLoad.astro";
-import ThemeController from "@/components/features/ThemeController.svelte";
 
 import Posthog from "@/components/Posthog.astro";
 import PortalHost from "@/components/PortalHost.svelte";
@@ -14,9 +14,64 @@ import CookiesAccept from "@/components/CookiesAccept.svelte";
 import Header from "./_Header.astro";
 import Footer from "./_Footer.astro";
 
-const { title, active } = Astro.props;
+interface Props {
+  title: string;
+  active: string;
+  description?: string;
+  image?: string;
+  type?: "website" | "article";
+  noindex?: boolean;
+  canonical?: string;
+  structuredData?: object;
+}
+
+const {
+  title,
+  active,
+  description = "QuizBee turns your documents into engaging, AI-powered quizzes. Study smarter with personalized learning that adapts to your needs.",
+  image = "/bee_final.svg",
+  type = "website",
+  noindex = false,
+  canonical,
+  structuredData,
+} = Astro.props;
 
 const lang = getLangFromUrl(Astro.url);
+
+// Construct full URLs for meta tags
+const siteUrl = Astro.site || new URL(Astro.url.pathname, Astro.url.origin);
+const canonicalURL = canonical
+  ? new URL(canonical, siteUrl)
+  : new URL(Astro.url.pathname, siteUrl);
+const imageURL = new URL(image, siteUrl);
+
+// Generate alternate language URLs
+const alternateUrls = Object.keys(languages).map((l) => ({
+  lang: l,
+  url: new URL(
+    Astro.url.pathname.replace(
+      /^\/(en|ru|es|de|fr|pt)/,
+      l === "en" ? "" : `/${l}`
+    ),
+    siteUrl
+  ),
+}));
+
+// Default structured data for Organization
+const defaultStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "QuizBee",
+  url: siteUrl.toString(),
+  logo: imageURL.toString(),
+  description:
+    "AI-powered quiz generation platform that transforms study materials into interactive quizzes",
+  sameAs: [
+    // Add your social media profiles here
+    // "https://twitter.com/quizbee",
+    // "https://linkedin.com/company/quizbee",
+  ],
+};
 ---
 
 <!doctype html>
@@ -25,30 +80,82 @@ const lang = getLangFromUrl(Astro.url);
     <Posthog />
 
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+
+    <!-- Primary Meta Tags -->
+    <title>{title}</title>
+    <meta name="title" content={title} />
+    <meta name="description" content={description} />
+
+    <!-- Robots -->
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href={canonicalURL} />
+
+    <!-- Alternate Language Links -->
+    {
+      alternateUrls.map((alt) => (
+        <link rel="alternate" hreflang={alt.lang} href={alt.url.toString()} />
+      ))
+    }
+    <link
+      rel="alternate"
+      hreflang="x-default"
+      href={alternateUrls.find((a) => a.lang === "en")?.url.toString()}
+    />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content={type} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={imageURL} />
+    <meta property="og:site_name" content="QuizBee" />
+    <meta property="og:locale" content={lang} />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content={canonicalURL} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={imageURL} />
+    {/* <meta name="twitter:site" content="@quizbee" /> */}
+    {/* <meta name="twitter:creator" content="@quizbee" /> */}
+
+    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/bee_final.svg" />
+    <link rel="apple-touch-icon" href="/bee_final.svg" />
+
+    <!-- Fonts -->
     <link
       rel="preload"
       as="font"
       href="/fonts/League_Spartan/LeagueSpartan-VariableFont_wght.ttf"
       type="font/ttf"
+      crossorigin="anonymous"
     />
-    <meta name="generator" content={Astro.generator} />
-    <title>{title}</title>
 
-    <!-- <ClientRouter /> -->
+    <!-- Structured Data -->
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(structuredData || defaultStructuredData)}
+    />
+
+    <ClientRouter />
     <ThemeLoad />
   </head>
   <body>
     <CookiesAccept client:only />
     <PortalHost client:only />
 
-    <Header active={active} />
+    <Header transition:persist="root-header" active={active} />
 
     <main class="mx-auto max-w-screen-xl">
       <slot />
     </main>
 
-    <Footer />
+    <Footer transition:persist="root-footer" />
   </body>
 </html>

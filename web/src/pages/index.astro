@@ -337,7 +337,31 @@ const content = {
 };
 ---
 
-<Root title="QuizBee - Learn Smarter with AI-Powered Quizzes" active="home">
+<Root
+  title="QuizBee - Learn Smarter with AI-Powered Quizzes"
+  description="Transform your study materials into interactive AI-powered quizzes. Adaptive learning, AI tutoring, and progress tracking for students and professionals."
+  image="/bee_final.svg"
+  active="home"
+  structuredData={{
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "QuizBee",
+    description:
+      "AI-powered quiz generation platform that transforms study materials into interactive quizzes",
+    applicationCategory: "EducationalApplication",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+    },
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "5",
+      ratingCount: "6",
+      reviewCount: "6",
+    },
+  }}
+>
   <!-- Hero Section -->
   <Hero
     title={content.hero.title}
@@ -346,7 +370,7 @@ const content = {
     image={content.hero.image}
     position="right"
     overlay={false}
-    href="/app"
+    href={import.meta.env.PUBLIC_APP_URL}
   />
 
   <!-- Pain Points Section -->
@@ -380,15 +404,15 @@ const content = {
     theme="default"
     oracle={{
       ...content.useCases.primary,
-      href: "/app",
+      href: import.meta.env.PUBLIC_APP_URL,
     }}
     modules={content.useCases.modules.map((module: any) => ({
       ...module,
-      href: "/app",
+      href: import.meta.env.PUBLIC_APP_URL,
     }))}
     pantheon={{
       ...content.useCases.secondary,
-      href: "/app",
+      href: import.meta.env.PUBLIC_APP_URL,
     }}
   />
 
@@ -407,7 +431,7 @@ const content = {
     theme="default"
     plans={content.pricing.plans.map((plan: any) => ({
       ...plan,
-      buttonHref: "/app",
+      buttonHref: import.meta.env.PUBLIC_APP_URL,
     }))}
   />
 
@@ -424,7 +448,7 @@ const content = {
     headline={content.cta.headline}
     subheadline={content.cta.subheadline}
     buttonText={content.cta.buttonText}
-    buttonHref="/app"
+    buttonHref={import.meta.env.PUBLIC_APP_URL}
     theme="gradient"
   />
 </Root>

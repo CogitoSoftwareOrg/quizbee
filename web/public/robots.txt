@@ -1,0 +1,30 @@
+# robots.txt for QuizBee
+
+User-agent: *
+Allow: /
+
+# Disallow pages that shouldn't be indexed
+Disallow: /api/
+Disallow: /admin/
+Disallow: /_astro/
+
+# Sitemap location
+Sitemap: https://quizbee.com/sitemap-index.xml
+
+# Crawl-delay (optional, only if you want to rate-limit bots)
+# Crawl-delay: 10
+
+# Common search engine bots
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Block bad bots (optional)
+User-agent: AhrefsBot
+Crawl-delay: 5
+
+User-agent: SemrushBot
+Crawl-delay: 5
+

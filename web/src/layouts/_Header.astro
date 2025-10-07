@@ -22,7 +22,7 @@ const tp = useTranslatedPath(lang);
 
 const {
   active,
-  ctaHref = "/",
+  ctaHref = import.meta.env.PUBLIC_APP_URL,
   ctaText = t("cta.start_for_free"),
   ctaModal,
 } = Astro.props;
