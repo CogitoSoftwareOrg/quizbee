@@ -119,7 +119,7 @@
 			</ul>
 
 			<!-- Desktop navigation with numbers -->
-			<ul class="hidden flex-1 flex-wrap items-center gap-2 sm:flex">
+			<ul class="hidden flex-1 flex-wrap items-center gap-1 sm:flex">
 				{#each quizItems as quizItem, index}
 					{@const decision = quizDecisions.find((d) => d.itemId === quizItem.id)}
 
