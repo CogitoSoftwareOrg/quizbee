@@ -3,7 +3,11 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from fastapi.responses import StreamingResponse
 
 from apps.auth import auth_user
-from apps.billing import Subscription, load_subscription
+from apps.billing import (
+    Subscription,
+    load_subscription,
+    explainer_call_quota_protection,
+)
 from lib.clients import AdminPB, HTTPAsyncClient, langfuse_client
 from lib.config.llms import LLMSCosts
 from lib.utils import sse
@@ -23,7 +27,10 @@ messages_router = APIRouter(
 )
 
 
-@messages_router.get("/sse")
+@messages_router.get(
+    "/sse",
+    dependencies=[Depends(explainer_call_quota_protection)],
+)
 async def sse_messages(
     admin_pb: AdminPB,
     http: HTTPAsyncClient,

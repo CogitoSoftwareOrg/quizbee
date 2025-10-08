@@ -10,7 +10,11 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, Field
 
 from apps.auth import User, auth_user
-from apps.billing import load_subscription
+from apps.billing import (
+    load_subscription,
+    quiz_patch_quota_protection,
+    quiz_start_quota_protection,
+)
 from apps.materials import user_owns_materials
 from lib.clients import AdminPB, HTTPAsyncClient, MeilisearchClient
 
@@ -40,6 +44,7 @@ class CreateQuizDto(BaseModel):
     "",
     dependencies=[
         Depends(user_owns_materials),
+        Depends(quiz_start_quota_protection),
     ],
 )
 async def create_quiz(
@@ -91,7 +96,10 @@ class GenerateQuizItems(BaseModel):
     mode: Annotated[Literal["regenerate", "continue"], Field(default="regenerate")]
 
 
-@quizes_router.patch("/{quiz_id}")
+@quizes_router.patch(
+    "/{quiz_id}",
+    dependencies=[Depends(quiz_patch_quota_protection)],
+)
 async def generate_quiz_items(
     admin_pb: AdminPB,
     http: HTTPAsyncClient,

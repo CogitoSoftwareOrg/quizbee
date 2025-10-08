@@ -15,7 +15,7 @@ from .ai import FeedbackerDeps, feedbacker_agent
 
 quiz_attempts_router = APIRouter(
     prefix="/quiz_attempts",
-    tags=["attempts", "feedback"],
+    tags=["attempts"],
     dependencies=[Depends(auth_user), Depends(load_subscription)],
 )
 
@@ -90,20 +90,21 @@ async def update_quiz_attempt_with_feedback(
     http: HTTPAsyncClient,
 ):
 
-    # Generate feedback
-    background.add_task(_generate_feedback_task, admin_pb, http, attempt_id)
-
-    # Summarize and index
-    attempt = await admin_pb.collection("quizAttempts").get_one(
+    # CRUD
+    quiz_attempt = await admin_pb.collection("quizAttempts").get_one(
         attempt_id,
-    )
-    quiz_id = attempt.get("quiz", "")
-    quiz = await admin_pb.collection("quizes").get_one(
-        quiz_id,
         options={
-            "params": {"expand": "materials,quizItems_via_quiz"},
+            "params": {
+                "expand": "quiz,quiz.quizItems_via_quiz,quiz.materials_via_quiz"
+            },
         },
     )
+    quiz = quiz_attempt.get("expand", {}).get("quiz", {})
+
+    # No feedback -> generate feedback
+    if quiz_attempt.get("feedback") is None:
+        background.add_task(_generate_feedback_task, admin_pb, http, attempt_id)
+
     # Only summarize and index if quiz is not final
     if quiz.get("status") != "final":
         background.add_task(

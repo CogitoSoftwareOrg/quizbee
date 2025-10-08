@@ -2,9 +2,10 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, Request
 from pocketbase.models.dtos import Record
 
-from lib.settings import settings
 from lib.clients import AdminPB
 from apps.auth.middleware import User
+
+from .utils import ensure_active_and_maybe_reset, remaining
 
 
 def get_subscription(request: Request):
@@ -22,6 +23,76 @@ async def load_subscription(request: Request, admin_pb: AdminPB, user: User):
     request.state.subscription = subscription
 
 
-async def billing_protection(request: Request, subscription: Subscription):
+async def quiz_start_quota_protection(
+    request: Request, user: User, subscription: Subscription, admin_pb: AdminPB
+):
     if not subscription:
         raise HTTPException(status_code=401, detail=f"Unauthorized: no subscription")
+    subscription_id = subscription.get("id", "")
+
+    await ensure_active_and_maybe_reset(admin_pb, subscription)
+
+    body = await request.json()
+    delta = int(body.get("limit", 5))
+
+    remained = remaining(subscription, "quizItems")
+    if delta > remained:
+        raise HTTPException(status_code=400, detail=f"Quiz items limit exceeded")
+
+    await admin_pb.collection("subscriptions").update(
+        subscription_id, {"quizItemsUsage+": delta}
+    )
+
+
+async def quiz_patch_quota_protection(
+    request: Request, user: User, subscription: Subscription, admin_pb: AdminPB
+):
+    if not subscription:
+        raise HTTPException(status_code=401, detail=f"Unauthorized: no subscription")
+    subscription_id = subscription.get("id", "")
+
+    await ensure_active_and_maybe_reset(admin_pb, subscription)
+
+    quiz_id = request.path_params.get("quiz_id", "")
+    quiz = await admin_pb.collection("quizes").get_one(
+        quiz_id, options={"params": {"filter": f"author = '{user.get('id')}'"}}
+    )
+
+    body = await request.json()
+    new_items = int(body.get("limit", 5))
+    delta = max(0, new_items - quiz.get("itemsCount", 0))
+
+    remained = remaining(subscription, "quizItems")
+    if delta > remained:
+        raise HTTPException(status_code=400, detail=f"Quiz items limit exceeded")
+
+    await admin_pb.collection("subscriptions").update(
+        subscription_id, {"quizItemsUsage+": delta}
+    )
+
+
+async def explainer_call_quota_protection(
+    request: Request, user: User, subscription: Subscription, admin_pb: AdminPB
+):
+    if not subscription:
+        raise HTTPException(status_code=401, detail=f"Unauthorized: no subscription")
+    subscription_id = subscription.get("id", "")
+
+    await ensure_active_and_maybe_reset(admin_pb, subscription)
+
+    attempt_id = request.query_params.get("attempt_id", "") or request.query_params.get(
+        "attempt", ""
+    )
+    quiz_attempt = await admin_pb.collection("quizAttempts").get_one(
+        attempt_id, options={"params": {"filter": f"user = '{user.get('id')}'"}}
+    )
+    if not quiz_attempt:
+        raise HTTPException(status_code=404, detail=f"Quiz attempt not found")
+
+    remained = remaining(subscription, "messages")
+    if remained <= 0:
+        raise HTTPException(status_code=400, detail=f"Messages limit exceeded")
+
+    await admin_pb.collection("subscriptions").update(
+        subscription_id, {"messagesUsage+": 1}
+    )

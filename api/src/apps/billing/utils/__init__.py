@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 from datetime import timezone
 
+from fastapi import HTTPException
 from pocketbase.models.dtos import Record
 
 from lib.clients import AdminPB
@@ -98,3 +99,20 @@ async def stripe_subscription_to_pb(
 
     await admin_pb.collection("subscriptions").update(existing.get("id", ""), record)
     return existing.get("id", "")
+
+
+async def ensure_active_and_maybe_reset(admin_pb, sub: Record):
+    allowed = {"active", "trialing", "past_due"}
+    if sub.get("status") not in allowed:
+        raise HTTPException(402, "Subscription inactive")
+    current_period_start = _pb_to_ts(sub.get("currentPeriodStart", "")) or 0
+    patch = _maybe_reset_usage_on_period_change(sub, current_period_start)
+
+    if patch:
+        await admin_pb.collection("subscriptions").update(sub.get("id", ""), patch)
+
+    return sub
+
+
+def remaining(sub, field):
+    return int(sub.get(f"{field}Limit", 0) - sub.get(f"{field}Usage", 0))
