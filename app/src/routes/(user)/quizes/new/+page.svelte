@@ -8,12 +8,9 @@
 
 	import Draft from './Draft.svelte';
 
-	
 	import type { AttachedFile } from '$lib/types/attached-file';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
-	import {  Pencil } from 'lucide-svelte';
-
-	
+	import { Pencil } from 'lucide-svelte';
 
 	let quizTemplateId = $state<string>('');
 	let title = $state<string>('');
@@ -21,12 +18,12 @@
 	let selectedDifficulty = $state('intermediate');
 	let questionCount = $state(10);
 	let inputText = $state('');
+	let avoidRepeat = $state(false);
 
 	let inputElement: HTMLInputElement;
 	let showWarningLength = $state(false);
 
-    let previousQuizes = $derived(quizesStore.quizes.filter((q: any) => q.status !== 'draft'));
-
+	let previousQuizes = $derived(quizesStore.quizes.filter((q: any) => q.status !== 'draft'));
 
 	$effect(() => {
 		if (inputElement && title) {
@@ -47,97 +44,130 @@
 
 <svelte:head>
 	<title>New Quiz</title>
+
+	<style>
+		@media (max-width: 1920px) {
+			.quiz-container {
+				zoom: 0.9;
+			}
+		}
+	</style>
 </svelte:head>
 
-<main class="relative flex h-full overflow-hidden flex-row">
-    <div class="relative flex-1 overflow-y-auto overflow-x-hidden">
-        <div class="mx-auto max-w-7xl py-4 sm:px-6 lg:px-8">
-            <!-- Title Section -->
-            <div class="mb-12 text-center">
-                <div class="relative mx-auto inline-flex items-center justify-center">
-                    <input
-                        bind:value={title}
-                        bind:this={inputElement}
-                        type="text"
-                        placeholder=""
-                        class={`input input-xl rounded-lg text-center text-5xl font-semibold border-2 pt-3${title === 'Untitled Quiz' ? ' pr-8' : ''}`}
-                        style="width: auto; min-width: 300px;"
-                        oninput={(e) => {
-                            const target = e.target as HTMLInputElement;
-                            const originalLength = target.value.length;
-                            title = target.value.slice(0, 30);
-                            showWarningLength = originalLength > 30;
-                            target.style.width = '0';
-                            target.style.width = target.scrollWidth + 5 + 'px';
-                        }}
-                        onblur={() => {
-                            if (title.trim() === '') {
-                                title = 'Untitled Quiz';
-                                    
-                        }}}
-                    />
-                    {#if title ==='Untitled Quiz'}
-                        <div class="absolute pointer-events-none" style="left: 50%; transform: translateX(calc({title.length * 1}ch - 50% + 2ch)) translateY(-60%);">
-                            <Pencil class="w-4 h-4 text-base-content/30" />
-                        </div>
-                    {/if}
-                </div>
-                {#if showWarningLength}
-                    <p class="text-error mt-2 text-center">Title is limited to 30 characters.</p>
-                {/if}
-            </div>
+<main class="relative flex h-full flex-row overflow-y-auto">
+	<div class="relative flex-1">
+		<div class="flex min-h-screen items-start justify-center">
+			<div class="quiz-container w-full max-w-3xl">
+				<!-- Header with Title -->
+				<div class="mb-9 text-center">
+					<div class="group relative mx-auto -mt-3 ml-5 inline-flex items-center justify-center">
+						<input
+							bind:value={title}
+							bind:this={inputElement}
+							type="text"
+							placeholder=""
+							class="hover:text-warning cursor-pointer border-none bg-transparent px-0 text-center text-4xl font-bold leading-tight transition-colors focus:outline-none focus:ring-0 md:text-5xl"
+							style="width: auto; min-width: 300px;"
+							oninput={(e) => {
+								const target = e.target as HTMLInputElement;
+								const originalLength = target.value.length;
+								title = target.value.slice(0, 30);
+								showWarningLength = originalLength > 30;
+								target.style.width = '0';
+								target.style.width = target.scrollWidth + 5 + 'px';
+							}}
+							onblur={() => {
+								if (title.trim() === '') {
+									title = 'Untitled Quiz';
+								}
+							}}
+						/>
+						<Pencil
+							class="text-base-content/40 h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100 "
+						/>
+					</div>
+					{#if showWarningLength}
+						<p class="text-error -mt-1 text-center">Title is limited to 30 characters.</p>
+					{:else}
+						<p class="text-base-content/60 -mt-3 text-lg">
+							Customize your quiz settings and get started
+						</p>
+						<!-- Draft Component -->
+						<Draft
+							bind:title
+							bind:quizTemplateId
+							bind:inputText
+							bind:attachedFiles
+							bind:selectedDifficulty
+							bind:questionCount
+							bind:previousQuizes
+						/>
+					{/if}
+				</div>
 
-            <!-- Describe Quiz Section -->
-            <div class="mb-12 text-center">
-                <div class=" flex items-center justify-center gap-2">
-                    <h2 class="text-2xl font-semibold sm:text-3xl lg:text-4xl mb-2">Describe your quiz</h2>
-                    
-                </div>
-                
-                <!-- Draft Component -->
-                <Draft
-                    bind:title
-                    bind:quizTemplateId
-                    bind:inputText
-                    bind:attachedFiles
-                    bind:selectedDifficulty
-                    bind:questionCount
-                    bind:previousQuizes
-                    
-                />
-                
-                <div class="mx-auto w-full max-w-4xl">
-                    <FileInput bind:attachedFiles bind:inputText bind:quizTemplateId />
-                </div>
-            </div>
+				<!-- Main Card -->
+				<div class="card bg-base-100 border-base-300 border-2 shadow-xl backdrop-blur-sm">
+					<div class="card-body p-6.5">
+						<!-- Description Section -->
+						<div class="mb-7">
+							<div class="w-full">
+								<h3 class="mb-3 block text-base font-semibold">Describe your quiz</h3>
+								<FileInput bind:attachedFiles bind:inputText bind:quizTemplateId />
+							</div>
+						</div>
 
-            <!-- Settings Section -->
-            <div class="mb-16">
-                <div
-                    class="mx-auto flex max-w-5xl flex-col items-center gap-8 lg:flex-row lg:justify-center lg:gap-16"
-                >
-                    <!-- Difficulty -->
-                    <div class="w-full text-center lg:w-auto">
-                        <div class="mb-6 flex items-center justify-center gap-2">
-                            <h2 class="text-xl font-semibold sm:text-xl">Choose difficulty level</h2>
-                        </div>
-                        <DifficultySelector bind:selectedDifficulty />
-                    </div>
+						<!-- Difficulty and Questions Grid -->
+						<div class="mb-6 grid gap-6 md:grid-cols-2 md:gap-8">
+							<!-- Difficulty -->
+							<div>
+								<h3 class="mb-4 block text-base font-semibold">Choose difficulty level</h3>
+								<DifficultySelector bind:selectedDifficulty />
+							</div>
 
-                    <!-- Question Count -->
-                    <div class="w-full ml-20 text-center lg:w-auto">
-                        <div class="mb-6 flex items-center justify-center gap-2">
-                            <h2 class="text-xl font-semibold sm:text-xl">Choose number of questions</h2>
-                        </div>
-                        <QuestionNumberSelector bind:value={questionCount} />
-                    </div>
-                </div>
-            </div>
+							<!-- Question Count -->
+							<div>
+								<h3 class="mb-4 block text-base font-semibold">Number of questions</h3>
+								<QuestionNumberSelector bind:value={questionCount} />
+							</div>
+						</div>
 
-            <!-- Start Button -->
-            <div class="flex justify-center pb-8">
-                <StartQuizButton {quizTemplateId} {attachedFiles} {inputText} />
-            </div>
-        </div>
-    </div>
+						<!-- Avoid Repeat Questions Section -->
+						{#if previousQuizes.length > 0}
+							<div class="bg-base-200/50 border-base-300 mb-5 rounded-lg border p-5">
+								<div class="flex items-center justify-between">
+									<div class="flex-1">
+										<h3 class="mb-1 text-base font-semibold">Avoid repeating questions</h3>
+										<p class="text-base-content/60 text-sm">
+											We prevent questions from your previous quizzes on similar topics from
+											appearing again
+										</p>
+									</div>
+									<label class="ml-4 flex cursor-pointer items-center gap-3">
+										<span
+											class="label-text font-medium {avoidRepeat
+												? 'text-base-content/50'
+												: 'text-base-content'}">No</span
+										>
+										<input
+											type="checkbox"
+											bind:checked={avoidRepeat}
+											class="toggle toggle-primary toggle-lg"
+										/>
+										<span
+											class="label-text font-medium {avoidRepeat
+												? 'text-primary'
+												: 'text-base-content/50'}">Yes</span
+										>
+									</label>
+								</div>
+							</div>
+						{/if}
+
+						<!-- Start Button -->
+						<StartQuizButton {quizTemplateId} {attachedFiles} {inputText} />
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 </main>

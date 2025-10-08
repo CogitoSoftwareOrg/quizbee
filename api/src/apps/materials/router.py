@@ -14,6 +14,8 @@ from fastapi.responses import JSONResponse
 
 from apps.materials.utils import as_data_url
 from .tokens_calculation import count_pdf_tokens, count_text_tokens
+from .pdf_parser import parse_pdf
+from .important_sentences import summarize_to_fixed_tokens
 from apps.auth import User
 from apps.auth import User, auth_user
 from lib.clients import AdminPB
@@ -38,7 +40,6 @@ async def upload_material(
     logging.info(
         f"Starting upload for file: {file.filename}, material_id: {material_id}"
     )
-
     file_bytes = await file.read()
     file_size_mb = len(file_bytes) / (1024 * 1024)
     max_size_mb = 100
@@ -78,7 +79,6 @@ async def upload_material(
 
         logging.info(f"Adding original file to dto")
         dto["file"] = FileUpload((file.filename, file_bytes))
-
         pdf_data = None
         if file.filename and file.filename.lower().endswith(".pdf"):
             logging.info(f"Processing PDF file: {file.filename}")
@@ -91,16 +91,38 @@ async def upload_material(
                     f"PDF parsed: text_tokens={pdf_data['text_tokens']}, image_tokens={pdf_data['image_tokens']}, total={pdf_data['total_tokens']}, images_count={len(pdf_data['images'])}"
                 )
 
-                dto["tokens"] = pdf_data["total_tokens"]
+                # Обрабатываем текст (сократить если > 50k токенов)
+                extracted_text = pdf_data["text"]
+                if extracted_text and pdf_data["text_tokens"] > 50000:
+                    logging.info(
+                        f"Text exceeds 50k tokens ({pdf_data['text_tokens']}), processing with summarization..."
+                    )
+                    extracted_text = summarize_to_fixed_tokens(
+                        extracted_text, target_token_count=50000, context_window=2
+                    )
+                    logging.info(
+                        f"Text summarized, new length: {len(extracted_text)} chars"
+                    )
+
+                    # Пересчитываем токены для сокращенного текста
+                    final_text_tokens = count_text_tokens(extracted_text)
+                    total_tokens = final_text_tokens + pdf_data["image_tokens"]
+                    logging.info(
+                        f"Final text tokens: {final_text_tokens}, total tokens: {total_tokens}"
+                    )
+                else:
+                    total_tokens = pdf_data["total_tokens"]
+
+                dto["tokens"] = total_tokens
                 dto["kind"] = "complex"
 
-                # Добавляем текст и изображения сразу в dto
-                if pdf_data["text"]:
+                # Добавляем обработанный текст и изображения в dto
+                if extracted_text:
                     logging.info(
-                        f"Adding text file to dto (length: {len(pdf_data['text'])} chars)"
+                        f"Adding text file to dto (length: {len(extracted_text)} chars)"
                     )
                     text_filename = f"{material_id}_text.txt"
-                    text_bytes = pdf_data["text"].encode("utf-8")
+                    text_bytes = extracted_text.encode("utf-8")
                     dto["textFile"] = FileUpload((text_filename, text_bytes))
 
                 images_list = []
