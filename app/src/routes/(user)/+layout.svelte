@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { House, Plus, Settings } from 'lucide-svelte';
+	import { page } from '$app/state';
 
 	import Logo from '$lib/assets/icons/bee1.svg';
 
@@ -12,6 +13,12 @@
 	import Button from '$lib/ui/Button.svelte';
 
 	const { data, children } = $props();
+
+	const newPageColor = $derived(page.url.pathname === '/quizes/new');
+	const attemptingQuiz = $derived(
+		/quizes\/[0-9a-zA-Z]+\/attempts\/[0-9a-zA-Z]+/.test(page.url.pathname) &&
+			!page.url.pathname.includes('/feedback')
+	);
 </script>
 
 <SubscribeUser />
@@ -30,10 +37,10 @@
 				'hidden sm:flex'
 			]}
 		>
-			<a href="/home" class="relative mb-4 flex select-none items-center justify-center gap-1">
-				<img src={Logo} alt="Quizbee" class="bg-primary/10 size-12 rounded-full" />
+			<a href="/home" class="relative mb-4 flex select-none items-center justify-center">
+				<img src={Logo} alt="Quizbee" class="size-14 rounded-full" />
 				{#if uiStore.globalSidebarOpen}
-					<p class="text-primary text-3xl font-semibold">Quizbee</p>
+					<p class="text-primary mt-2 text-3xl font-semibold">Quizbee</p>
 				{/if}
 			</a>
 
@@ -45,23 +52,31 @@
 		<main class="flex h-full flex-1 flex-col">
 			<GlobalHeader />
 
-			<div class="h-full flex-1 overflow-auto pb-12 sm:p-3 sm:pb-3">
+			<div class={['h-full flex-1 overflow-auto sm:p-3 sm:pb-3', !attemptingQuiz && 'pb-12']}>
 				{@render children?.()}
 			</div>
 
-			<footer class="dock dock-sm sm:hidden">
-				<a href="/home">
-					<House />
-				</a>
-				<div>
-					<Button size="lg" href="/quizes/new" circle>
-						<Plus size={32} />
-					</Button>
-				</div>
-				<a href="/profile">
-					<Settings />
-				</a>
-			</footer>
+			{#if !attemptingQuiz}
+				<footer class="dock dock-sm sm:hidden">
+					<a href="/home">
+						<House class={page.url.pathname === '/home' ? 'text-primary' : 'text-neutral'} />
+					</a>
+					<div>
+						<Button
+							style={page.url.pathname === '/quizes/new' ? 'ghost' : 'solid'}
+							color={page.url.pathname === '/quizes/new' ? 'neutral' : 'primary'}
+							size="lg"
+							href="/quizes/new"
+							circle
+						>
+							<Plus size={32} />
+						</Button>
+					</div>
+					<a href="/profile">
+						<Settings class={page.url.pathname === '/profile' ? 'text-primary' : 'text-neutral'} />
+					</a>
+				</footer>
+			{/if}
 		</main>
 	</div>
 {:catch error}

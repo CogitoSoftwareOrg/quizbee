@@ -1,0 +1,179 @@
+---
+import { Image } from "astro:assets";
+import { ChevronDown, Menu, X } from "lucide-astro";
+
+import QuizBeeLogo from "@/assets/icons/bee_final.svg";
+import ThemeController from "@/components/features/ThemeController.svelte";
+import {
+  getLangFromUrl,
+  useTranslations,
+  useTranslatedPath,
+} from "@/i18n/utils";
+interface Props {
+  active: string;
+  ctaText?: string;
+  ctaModal?: string;
+  ctaHref?: string;
+}
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const tp = useTranslatedPath(lang);
+
+const {
+  active,
+  ctaHref = import.meta.env.PUBLIC_APP_URL,
+  ctaText = t("cta.start_for_free"),
+  ctaModal,
+} = Astro.props;
+
+const navItems = [
+  {
+    name: "home",
+    label: t("nav.home"),
+    href: "/",
+  },
+  // {
+  //   name: "blog",
+  //   label: t("nav.blog"),
+  //   href: "/blog",
+  // },
+  // {
+  //   name: "quizes",
+  //   label: t("nav.quizes"),
+  //   href: "/quizes",
+  // },
+];
+
+const currentPath = Astro.url.pathname;
+---
+
+<header
+  class="w-full backdrop-blur-md bg-base-100/70 border-b border-base-300 sticky top-0 z-50"
+>
+  <div
+    class="max-w-screen-xl flex justify-between items-center px-4 py-2 mx-auto"
+  >
+    <!-- Logo -->
+    <a href="/" class="inline-flex items-center gap-2">
+      <Image
+        src={QuizBeeLogo}
+        alt="Quizbee"
+        class="size-10 rounded-full"
+        width={40}
+        height={40}
+      />
+      <p class="text-primary text-3xl font-semibold">Quizbee</p>
+    </a>
+
+    <!-- Desktop Navigation -->
+    <nav class="gap-5 hidden md:flex">
+      {
+        navItems.map((item) => (
+          <a
+            href={tp(item.href, lang)}
+            class={`link link-hover ${active === item.name && "font-bold"}`}
+          >
+            {item.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <!-- Right side actions -->
+    <div class="hidden md:flex items-center gap-3">
+      <ThemeController client:only />
+      <!-- CTA Button -->
+      <slot name="CTA">
+        {
+          ctaModal && (
+            <button
+              onclick={`${ctaModal}.showModal()`}
+              class="btn btn-primary rounded-xl px-4"
+            >
+              {ctaText}
+            </button>
+          )
+        }
+        {
+          ctaHref && (
+            <a
+              href={ctaHref}
+              target="_blank"
+              class="btn btn-primary rounded-xl px-4"
+            >
+              {ctaText}
+            </a>
+          )
+        }
+      </slot>
+    </div>
+
+    <!-- Mobile menu toggle -->
+    <div class="md:hidden">
+      <label for="modal_burger" class="btn btn-circle swap swap-rotate">
+        <Menu size={24} />
+      </label>
+    </div>
+  </div>
+</header>
+
+<!-- Mobile menu modal -->
+<input type="checkbox" id="modal_burger" class="modal-toggle" />
+<div class="modal modal-end z-100" role="dialog">
+  <div class="relative modal-box min-w-sm">
+    <label
+      for="modal_burger"
+      class="btn btn-ghost btn-sm btn-circle absolute right-4 top-2 text-lg font-bold"
+      ><X size={32} /></label
+    >
+    <h3 class="text-xl font-bold text-center mb-4">Navigation</h3>
+    <nav class="*:text-lg space-y-2 mb-4">
+      {
+        navItems.map((item) => (
+          <a
+            href={tp(item.href, lang)}
+            class={`block link link-hover ${active === item.name && "font-bold"}`}
+          >
+            {item.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <h4 class="text-xl font-bold text-center mb-4">Controls</h4>
+
+    <div class="flex flex-row items-center justify-center gap-4">
+      <div class="flex items-center h-full">
+        <ThemeController client:only size="size-12" />
+      </div>
+    </div>
+  </div>
+  <label class="modal-backdrop" for="modal_burger">
+    <X size={24} />
+  </label>
+</div>
+
+<div class="fixed bottom-4 right-1/2 translate-x-1/2 sm:hidden z-50">
+  {
+    ctaModal && (
+      <button
+        onclick={`${ctaModal}.showModal()`}
+        class="btn btn-primary rounded-xl px-4 btn-wide btn-lg btn-outline shadow-lg"
+      >
+        {ctaText}
+      </button>
+    )
+  }
+  {
+    ctaHref && (
+      <a
+        target="_blank"
+        href={ctaHref}
+        class="btn btn-primary rounded-xl px-4 btn-wide btn-lg btn-outline shadow-lg"
+      >
+        {ctaText}
+      </a>
+    )
+  }
+</div>

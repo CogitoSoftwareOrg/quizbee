@@ -5,7 +5,7 @@
 	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 
-	import favicon from '$lib/assets/icons/bee1.svg';
+	import favicon from '$lib/assets/icons/bee_final.svg';
 	import PortalHost from '$lib/actions/PortalHost.svelte';
 	import ThemeLoad from '$lib/features/ThemeLoad.svelte';
 	// import posthog from 'posthog-js';

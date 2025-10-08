@@ -93,7 +93,33 @@
 				<div class="hidden text-sm font-semibold">{quiz.title}</div>
 			{/if}
 
-			<ul class="flex flex-1 flex-wrap items-center gap-2">
+			<!-- Mobile dots navigation -->
+			<ul class="flex flex-1 flex-wrap items-center gap-1.5 sm:hidden">
+				{#each quizItems as quizItem}
+					{@const decision = quizDecisions.find((d) => d.itemId === quizItem.id)}
+					{@const isDisabled = !decision && quizItem.order > (itemToAnswer?.order || 0)}
+					{@const isCurrent = currentItem?.id === quizItem.id}
+
+					<li>
+						<div
+							class={[
+								'block rounded-full transition-all',
+								isCurrent ? 'size-2.5' : 'size-1.5',
+								decision?.correct
+									? 'bg-success'
+									: decision && !decision?.correct
+										? 'bg-error'
+										: 'bg-neutral/30',
+								isDisabled ? 'opacity-40' : ''
+							].join(' ')}
+							aria-label={`Question ${quizItem.order + 1}`}
+						></div>
+					</li>
+				{/each}
+			</ul>
+
+			<!-- Desktop navigation with numbers -->
+			<ul class="hidden flex-1 flex-wrap items-center gap-2 sm:flex">
 				{#each quizItems as quizItem, index}
 					{@const decision = quizDecisions.find((d) => d.itemId === quizItem.id)}
 
@@ -107,7 +133,7 @@
 									: 'neutral'}
 							href={`/quizes/${quiz?.id}/attempts/${quizAttempt?.id}?order=${quizItem.order}`}
 							style={currentItem?.id === quizItem.id ? 'solid' : 'outline'}
-							size="sm"
+							size="xs"
 							circle
 						>
 							{index + 1}

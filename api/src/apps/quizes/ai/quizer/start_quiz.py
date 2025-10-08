@@ -71,7 +71,9 @@ async def start_generating_quiz_task(
     texts = ENCODERS[LLMS.GPT_5_MINI].decode(truncated)
 
     estimated_summary = ENCODERS[LLMS.GPT_5_MINI].decode(estimated)
+
     q = f"Query: {quiz.get('query', '')}\n\nEstimated summary: {estimated_summary}"
+
     logging.info("Estimated summary: %s", len(estimated_summary))
     search_result = await summaries_index.search(
         query=q,

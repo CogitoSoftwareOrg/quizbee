@@ -91,14 +91,14 @@
 	}
 </script>
 
-<div class={[className]}>
+<div class={[className, 'min-w-0']}>
 	{#if item.status === 'final' || item.status === 'generated'}
-		<ul class={['flex flex-col gap-6 px-12']}>
+		<ul class={['flex flex-col gap-6 px-3 sm:px-12']}>
 			{#each answers as answer, index}
-				<li>
+				<li class="min-w-0">
 					<article
 						class={[
-							'border-base-300 bg-base-200 focus-within:ring-primary/60 group w-full overflow-hidden rounded-2xl border text-left shadow-sm transition focus-within:outline-none focus-within:ring-2',
+							'border-base-300 bg-base-200 focus-within:ring-primary/60 group w-full min-w-0 overflow-hidden rounded-2xl border text-left shadow-sm transition focus-within:outline-none focus-within:ring-2',
 							!itemDecision ? 'hover:border-primary/50 hover:shadow-md' : '',
 							itemDecision && answer.correct
 								? 'border-success/40 bg-success/10 ring-success/60 ring-2'
@@ -110,7 +110,7 @@
 					>
 						<button
 							type="button"
-							class="focus-visible:ring-primary/60 flex w-full items-start gap-3 p-4 text-left transition focus-visible:outline-none focus-visible:ring-2"
+							class="focus-visible:ring-primary/60 flex w-full min-w-0 items-start gap-3 p-4 text-left transition focus-visible:outline-none focus-visible:ring-2"
 							onclick={async () => {
 								const toAnswer = readyItemsWithoutAnswers.length;
 								if (!itemDecision) {
@@ -166,8 +166,8 @@
 									<ChevronRight size={28} />
 								{/if}
 							{/if}
-							<div class="flex-1">
-								<p class="leading-relaxed">{answer.content}</p>
+							<div class="min-w-0 flex-1">
+								<p class="break-words leading-relaxed">{answer.content}</p>
 							</div>
 							{#if itemDecision}
 								<div class="ml-2 shrink-0">
@@ -185,24 +185,28 @@
 								class="grid transition-[grid-template-rows] duration-200 ease-out"
 								style={`grid-template-rows: ${isExpanded(index) ? '1fr' : '0fr'}`}
 							>
-								<div
-									class={[
-										'overflow-hidden border-t p-4',
-										itemDecision?.answerIndex === index && !answer.correct
-											? 'border-error/40 bg-error/10'
-											: answer.correct
-												? 'border-success/40 bg-success/10'
-												: 'border-base-300/60 bg-base-200/80'
-									]}
-									aria-hidden={!isExpanded(index)}
-								>
-									<div class="flex items-start gap-3">
-										<Info class="mt-0.5 shrink-0" size={18} />
-										<div class="space-y-1">
-											<p class="text-xs font-semibold uppercase tracking-wide opacity-60">
-												Explanation
-											</p>
-											<p class="text-sm leading-relaxed opacity-80">{answer.explanation}</p>
+								<div class="min-h-0 overflow-hidden">
+									<div
+										class={[
+											'border-t p-4',
+											itemDecision?.answerIndex === index && !answer.correct
+												? 'border-error/40 bg-error/10'
+												: answer.correct
+													? 'border-success/40 bg-success/10'
+													: 'border-base-300/60 bg-base-200/80'
+										]}
+										aria-hidden={!isExpanded(index)}
+									>
+										<div class="flex items-start gap-3">
+											<Info class="mt-0.5 shrink-0" size={18} />
+											<div class="min-w-0 flex-1 space-y-1">
+												<p class="text-xs font-semibold uppercase tracking-wide opacity-60">
+													Explanation
+												</p>
+												<p class="break-words text-sm leading-relaxed opacity-80">
+													{answer.explanation}
+												</p>
+											</div>
 										</div>
 									</div>
 								</div>

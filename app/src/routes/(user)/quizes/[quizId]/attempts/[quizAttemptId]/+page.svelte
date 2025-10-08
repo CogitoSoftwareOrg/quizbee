@@ -17,6 +17,9 @@
 	import QuizAnswersList from './QuizAnswersList.svelte';
 	import { quizItemsStore } from '$lib/apps/quizes/quizItems.svelte';
 	import ManageQuiz from './ManageQuiz.svelte';
+	import SwipeableContent from './SwipeableContent.svelte';
+	import MobileAIChat from './MobileAIChat.svelte';
+	import { goto } from '$app/navigation';
 
 	const {} = $props();
 
@@ -77,15 +80,48 @@
 			messagesStore.unsubscribe();
 		};
 	});
+
+	// Swipe navigation helpers
+	function gotoItem(idx: number) {
+		const max = quizItems.length ? quizItems.length - 1 : 0;
+		const clamped = Math.max(0, Math.min(idx, max));
+		const u = new URL(page.url);
+		u.searchParams.set('order', String(clamped));
+		goto(u, { replaceState: clamped !== idx, keepFocus: true, noScroll: true });
+	}
+
+	function gotoFinal() {
+		const u = new URL(page.url);
+		goto(`${u.pathname}/feedback`, { replaceState: false, keepFocus: true, noScroll: true });
+	}
+
+	function handleSwipeLeft() {
+		if (order > 0) {
+			gotoItem(order - 1);
+		}
+	}
+
+	function handleSwipeRight() {
+		if (itemDecision) {
+			if (order + 1 === quizItems.length) {
+				gotoFinal();
+			} else {
+				gotoItem(order + 1);
+			}
+		}
+	}
+
+	const canSwipeLeft = $derived(order > 0);
+	const canSwipeRight = $derived(!!itemDecision);
 </script>
 
 <div class="flex h-full overflow-hidden">
 	<main
-		class="border-base-200 relative h-full min-w-0 flex-shrink-0 border-r transition-[width] duration-300 ease-out"
+		class="border-base-200 relative h-full min-w-0 flex-shrink-0 overflow-x-hidden border-r transition-[width] duration-300 ease-out"
 		style:width={mainColumnWidth}
 	>
 		{#if !chatOpen}
-			<div class="absolute -right-3 top-1/2 -translate-y-1/2">
+			<div class="absolute -right-3 top-1/2 hidden -translate-y-1/2 sm:block">
 				<button
 					class="bg-primary flex-1 cursor-pointer rounded-2xl p-2 text-center text-2xl font-semibold"
 					onclick={() => (chatOpen = !chatOpen)}
@@ -100,38 +136,54 @@
 			</div>
 		{/if}
 
-		<div class="relative mx-auto flex h-full max-w-3xl flex-col p-2">
-			<div class="flex items-start justify-between gap-4 px-3">
-				<p class="text-center text-2xl font-bold leading-snug">
-					{item?.question || 'Loading...'}
-				</p>
+		<SwipeableContent
+			{canSwipeLeft}
+			{canSwipeRight}
+			onSwipeLeft={handleSwipeLeft}
+			onSwipeRight={handleSwipeRight}
+			class="h-full overflow-x-hidden"
+		>
+			<div class="relative mx-auto flex h-full min-w-0 max-w-3xl flex-col p-2">
+				<div class="flex min-w-0 items-start justify-between gap-4 px-3">
+					<p class="break-words text-center text-2xl font-bold leading-snug">
+						{item?.question}
+					</p>
+				</div>
+
+				{#if item && quiz && quizAttempt}
+					<QuizItemsNavigation
+						{quizAttempt}
+						{quizItems}
+						{order}
+						{itemDecision}
+						onPrevious={handleSwipeLeft}
+						onNext={handleSwipeRight}
+					/>
+				{/if}
+
+				{#if item && quiz && quizAttempt}
+					<QuizAnswersList
+						class="relative mt-6 flex-1 overflow-y-auto"
+						{answers}
+						{quizItems}
+						{quizDecisions}
+						{quiz}
+						{item}
+						{quizAttempt}
+						bind:itemDecision
+					/>
+				{/if}
+
+				{#if quiz?.status !== 'final' && user?.id === quiz?.author && lastFinalItem?.id === item?.id && item && !item?.managed && itemDecision && quiz && quizAttempt}
+					<ManageQuiz {item} {quiz} {quizAttempt} />
+				{/if}
 			</div>
-
-			{#if item && quiz && quizAttempt}
-				<QuizItemsNavigation {quizAttempt} {quizItems} {order} {itemDecision} />
-			{/if}
-
-			{#if item && quiz && quizAttempt}
-				<QuizAnswersList
-					class="relative mt-6 flex-1 overflow-y-auto"
-					{answers}
-					{quizItems}
-					{quizDecisions}
-					{quiz}
-					{item}
-					{quizAttempt}
-					bind:itemDecision
-				/>
-			{/if}
-
-			{#if quiz?.status !== 'final' && user?.id === quiz?.author && lastFinalItem?.id === item?.id && item && !item?.managed && itemDecision && quiz && quizAttempt}
-				<ManageQuiz {item} {quiz} {quizAttempt} />
-			{/if}
-		</div>
+		</SwipeableContent>
 	</main>
 
+	<!-- Desktop AI Chat -->
 	<div
-		class="h-full min-w-0 flex-shrink-0 overflow-hidden transition-[width] duration-300 ease-out"
+		class="hidden h-full min-w-0 flex-shrink-0 overflow-hidden transition-[width] duration-300 ease-out sm:block"
 		style:pointer-events={!chatOpen ? 'none' : 'auto'}
 		style:width={chatColumnWidth}
 	>
@@ -147,3 +199,14 @@
 		/>
 	</div>
 </div>
+
+<!-- Mobile AI Chat (bottom sheet) -->
+<MobileAIChat
+	{item}
+	{quizAttempt}
+	{itemDecision}
+	{messages}
+	{userSender}
+	{assistantSender}
+	bind:open={chatOpen}
+/>

@@ -3,9 +3,7 @@
 	import DifficultySelector from './DifficultySelector.svelte';
 	import QuestionNumberSelector from './QuestionNumberSelector.svelte';
 	import StartQuizButton from './StartQuizButton.svelte';
-	import { tick } from 'svelte';
-	import { onMount } from 'svelte';
-
+	import { tick, onMount } from 'svelte';
 	import Draft from './Draft.svelte';
 
 	import type { AttachedFile } from '$lib/types/attached-file';
@@ -25,20 +23,36 @@
 
 	let previousQuizes = $derived(quizesStore.quizes.filter((q: any) => q.status !== 'draft'));
 
+	function updateInputWidth() {
+		if (inputElement) {
+			const viewportWidth = window.innerWidth;
+			const minWidth = viewportWidth < 640 ? 150 : 200; // Меньше минимум на мобилке
+			const maxWidth = viewportWidth * 0.9; // Максимум 90% от viewport
+
+			inputElement.style.width = '0';
+			const calculatedWidth = Math.max(inputElement.scrollWidth + 5, minWidth);
+			inputElement.style.width = Math.min(calculatedWidth, maxWidth) + 'px';
+		}
+	}
+
 	$effect(() => {
 		if (inputElement && title) {
-			inputElement.style.width = '0';
-			inputElement.style.width = inputElement.scrollWidth + 5 + 'px';
+			updateInputWidth();
 		}
 	});
 
-	onMount(async () => {
-		await tick();
+	onMount(() => {
+		tick().then(() => {
+			updateInputWidth();
+		});
 
-		if (inputElement && title) {
-			inputElement.style.width = '0';
-			inputElement.style.width = inputElement.scrollWidth + 5 + 'px';
-		}
+		// Пересчитываем при изменении размера окна
+		const handleResize = () => updateInputWidth();
+		window.addEventListener('resize', handleResize);
+
+		return () => {
+			window.removeEventListener('resize', handleResize);
+		};
 	});
 </script>
 
@@ -73,8 +87,7 @@
 								const originalLength = target.value.length;
 								title = target.value.slice(0, 30);
 								showWarningLength = originalLength > 30;
-								target.style.width = '0';
-								target.style.width = target.scrollWidth + 5 + 'px';
+								updateInputWidth();
 							}}
 							onblur={() => {
 								if (title.trim() === '') {

@@ -1,0 +1,110 @@
+{
+  "title": "Termos de Serviço e Política de Privacidade",
+  "lastUpdated": "6 de outubro de 2025",
+  "sections": [
+    {
+      "heading": "Termos de Serviço",
+      "content": "Bem-vindo ao QuizBee. Ao acessar e usar nosso serviço, você concorda em estar vinculado a estes Termos de Serviço e nossa Política de Privacidade. Por favor, leia-os cuidadosamente.",
+      "subsections": [
+        {
+          "subheading": "1. Aceitação dos Termos",
+          "content": "Ao criar uma conta ou usar o QuizBee, você aceita e concorda em estar vinculado a estes Termos de Serviço. Se você não concordar com estes termos, por favor não use nosso serviço."
+        },
+        {
+          "subheading": "2. Descrição do Serviço",
+          "content": "QuizBee é uma plataforma educacional alimentada por IA que gera questionários interativos a partir de seus materiais de estudo. Fornecemos geração de questionários, tutoria com IA, rastreamento de progresso e ferramentas educacionais relacionadas."
+        },
+        {
+          "subheading": "3. Contas de Usuário",
+          "content": "Você é responsável por manter a confidencialidade das credenciais de sua conta. Você concorda em aceitar a responsabilidade por todas as atividades que ocorrem sob sua conta. Notifique-nos imediatamente de qualquer uso não autorizado de sua conta."
+        },
+        {
+          "subheading": "4. Uso Aceitável",
+          "content": "Você concorda em não usar o QuizBee para qualquer propósito ilegal ou de qualquer forma que interrompa, danifique ou prejudique o serviço. Você não pode tentar obter acesso não autorizado a qualquer parte do serviço, outras contas ou sistemas de computador conectados ao serviço."
+        },
+        {
+          "subheading": "5. Propriedade do Conteúdo",
+          "content": "Você mantém todos os direitos sobre os materiais que carrega no QuizBee. Ao carregar conteúdo, você concede ao QuizBee uma licença para processar, armazenar e analisar seus materiais apenas com o propósito de fornecer nossos serviços a você. Não reivindicamos propriedade do seu conteúdo."
+        },
+        {
+          "subheading": "6. Conteúdo Gerado por IA",
+          "content": "QuizBee usa inteligência artificial para gerar perguntas de questionários e fornecer respostas de tutoria. Embora nos esforcemos pela precisão, o conteúdo gerado por IA pode ocasionalmente conter erros. Você deve verificar informações importantes independentemente."
+        },
+        {
+          "subheading": "7. Assinatura e Pagamentos",
+          "content": "Alguns recursos do QuizBee requerem uma assinatura paga. As taxas de assinatura são cobradas antecipadamente de forma recorrente. Você pode cancelar sua assinatura a qualquer momento, e o cancelamento terá efeito no final do seu período de cobrança atual."
+        },
+        {
+          "subheading": "8. Política de Reembolso",
+          "content": "Oferecemos uma garantia de devolução do dinheiro de 14 dias para novas assinaturas pagas. Se você não estiver satisfeito dentro dos primeiros 14 dias, entre em contato conosco para um reembolso total. Reembolsos após este período são a nosso critério."
+        },
+        {
+          "subheading": "9. Rescisão",
+          "content": "Reservamo-nos o direito de suspender ou encerrar sua conta se você violar estes termos ou se envolver em conduta que consideramos prejudicial ao QuizBee, nossos usuários ou terceiros."
+        },
+        {
+          "subheading": "10. Limitação de Responsabilidade",
+          "content": "QuizBee é fornecido 'como está' sem garantias de qualquer tipo. Não somos responsáveis por quaisquer danos indiretos, incidentais, especiais ou consequenciais decorrentes do seu uso do serviço."
+        },
+        {
+          "subheading": "11. Alterações nos Termos",
+          "content": "Podemos modificar estes Termos de Serviço a qualquer momento. Notificaremos os usuários de mudanças significativas por e-mail ou através do serviço. O uso contínuo do QuizBee após as mudanças constitui aceitação dos termos modificados."
+        }
+      ]
+    },
+    {
+      "heading": "Política de Privacidade",
+      "content": "Sua privacidade é importante para nós. Esta Política de Privacidade explica como coletamos, usamos e protegemos suas informações pessoais quando você usa o QuizBee.",
+      "subsections": [
+        {
+          "subheading": "1. Informações que Coletamos",
+          "content": "Coletamos informações que você fornece diretamente (nome, e-mail, detalhes da conta), informações do seu uso do serviço (materiais de estudo, respostas de questionários, progresso de aprendizado) e informações técnicas (endereço IP, tipo de navegador, informações do dispositivo, cookies)."
+        },
+        {
+          "subheading": "2. Como Usamos Suas Informações",
+          "content": "Usamos suas informações para: fornecer e melhorar nossos serviços, gerar questionários personalizados e tutoria com IA, rastrear seu progresso de aprendizado, comunicar com você sobre sua conta e nossos serviços, processar pagamentos e garantir segurança e prevenir fraudes."
+        },
+        {
+          "subheading": "3. Armazenamento e Segurança de Dados",
+          "content": "Seus dados são armazenados em servidores seguros com criptografia em repouso e em trânsito. Implementamos medidas de segurança padrão da indústria para proteger suas informações. No entanto, nenhum método de transmissão pela internet é 100% seguro."
+        },
+        {
+          "subheading": "4. Seus Materiais de Estudo",
+          "content": "Os materiais que você carrega são processados por nossa IA para gerar questionários e fornecer tutoria. Não usamos seus materiais carregados para treinar nossos modelos de IA para outros usuários. Seus materiais permanecem privados e não são compartilhados com terceiros."
+        },
+        {
+          "subheading": "5. Serviços de Terceiros",
+          "content": "Usamos serviços de terceiros para processamento de pagamentos (Stripe), análises e hospedagem de infraestrutura. Esses serviços têm acesso apenas às informações necessárias para executar suas funções e são obrigados a manter a confidencialidade."
+        },
+        {
+          "subheading": "6. Cookies e Rastreamento",
+          "content": "Usamos cookies e tecnologias similares para manter sua sessão, lembrar suas preferências, analisar padrões de uso e melhorar nosso serviço. Você pode controlar cookies através das configurações do seu navegador."
+        },
+        {
+          "subheading": "7. Retenção de Dados",
+          "content": "Retemos suas informações de conta e materiais de estudo enquanto sua conta estiver ativa ou conforme necessário para fornecer serviços. Você pode solicitar a exclusão de seus dados a qualquer momento entrando em contato conosco ou excluindo sua conta."
+        },
+        {
+          "subheading": "8. Seus Direitos",
+          "content": "Você tem o direito de: acessar seus dados pessoais, corrigir dados imprecisos, excluir seus dados, exportar seus dados, optar por não receber comunicações de marketing e retirar o consentimento para processamento de dados. Entre em contato conosco para exercer esses direitos."
+        },
+        {
+          "subheading": "9. Privacidade de Crianças",
+          "content": "QuizBee não se destina a usuários com menos de 13 anos. Não coletamos intencionalmente informações pessoais de crianças menores de 13 anos. Se descobrirmos tais informações, nós as excluiremos prontamente."
+        },
+        {
+          "subheading": "10. Usuários Internacionais",
+          "content": "QuizBee opera globalmente. Se você acessar nosso serviço de fora dos Estados Unidos, suas informações podem ser transferidas e processadas nos Estados Unidos ou outros países onde nossos servidores estão localizados."
+        },
+        {
+          "subheading": "11. Alterações na Política de Privacidade",
+          "content": "Podemos atualizar esta Política de Privacidade periodicamente. Notificaremos você sobre mudanças materiais por e-mail ou através do serviço. Seu uso contínuo após tal notificação constitui aceitação da política atualizada."
+        },
+        {
+          "subheading": "12. Entre em Contato Conosco",
+          "content": "Se você tiver dúvidas sobre estes Termos ou Política de Privacidade, entre em contato conosco em: support@quizbee.com ou através do formulário de contato do nosso site."
+        }
+      ]
+    }
+  ]
+}

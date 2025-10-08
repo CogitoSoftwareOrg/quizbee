@@ -1,0 +1,35 @@
+---
+import { ChevronDown } from "lucide-astro";
+
+import { languages } from "@/i18n/ui";
+import { getPathWithLang, getLangFromUrl } from "@/i18n/utils";
+
+const lang = getLangFromUrl(Astro.url);
+const currentPath = Astro.url.pathname;
+---
+
+<div class="items-center gap-3 flex">
+  <div class="dropdown dropdown-end hidden md:block">
+    <div tabindex="0" role="button" class="btn btn-ghost">
+      {languages[lang]}
+      <ChevronDown size={14} />
+    </div>
+    <ul
+      tabindex="0"
+      class="dropdown-content menu bg-base-100 rounded-box z-[1] w-40 p-2 shadow-lg border border-base-300"
+    >
+      {
+        Object.entries(languages).map(([langCode, langName]) => (
+          <li>
+            <a
+              href={getPathWithLang(currentPath, langCode, lang)}
+              class={lang === langCode ? "active" : ""}
+            >
+              {langName}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</div>
