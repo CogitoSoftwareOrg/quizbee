@@ -50,7 +50,7 @@
 </script>
 
 <button
-	class="btn btn-primary transform rounded-2xl px-16 py-8 text-3xl font-bold shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl"
+	class="btn btn-primary w-full h-14 text-lg font-semibold shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl"
 	disabled={isSubmitDisabled || isLoading}
 	onclick={sendQuizCreation}
 >

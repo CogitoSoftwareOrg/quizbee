@@ -42,20 +42,22 @@ def count_pdf_tokens(pdf_bytes: bytes) -> Dict[str, Any]:
         # Подсчитываем токены изображений
         image_tokens = 0
         images_with_tokens = []
-        
+
         for img in images:
             img_tokens = calculate_image_tokens(img["width"], img["height"])
             image_tokens += img_tokens
-            
-            images_with_tokens.append({
-                "bytes": img["bytes"],
-                "ext": img["ext"],
-                "width": img["width"],
-                "height": img["height"],
-                "page": img["page"],
-                "index": img["index"],
-                "tokens": img_tokens,
-            })
+
+            images_with_tokens.append(
+                {
+                    "bytes": img["bytes"],
+                    "ext": img["ext"],
+                    "width": img["width"],
+                    "height": img["height"],
+                    "page": img["page"],
+                    "index": img["index"],
+                    "tokens": img_tokens,
+                }
+            )
 
         total_tokens = text_tokens + image_tokens
 
