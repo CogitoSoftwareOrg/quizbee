@@ -13,12 +13,12 @@
 		<button
 			type="button"
 			onclick={() => selectNumber(num)}
-			class="p-4 rounded-lg border-2 transition-all duration-200 {value === num
-				? 'border-base-content bg-base-100 shadow-md scale-105'
+			class="rounded-lg border-2 p-4 transition-all duration-200 {value === num
+				? 'border-base-content bg-base-100 scale-105 shadow-md'
 				: 'border-base-300 bg-base-100 text-base-content hover:border-base-content/50 hover:bg-base-200/50'}"
 		>
 			<div class="text-3xl font-bold">{num}</div>
-			<div class="text-xs mt-1 opacity-80">questions</div>
+			<div class="mt-1 text-xs opacity-80">questions</div>
 		</button>
 	{/each}
 </div>

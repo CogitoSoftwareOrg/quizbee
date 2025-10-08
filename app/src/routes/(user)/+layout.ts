@@ -10,6 +10,7 @@ import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
 import { userStore } from '$lib/apps/users/user.svelte';
 import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
 import { quizItemsStore } from '$lib/apps/quizes/quizItems.svelte';
+import { goto } from '$app/navigation';
 
 const EXPAND = [
 	'subscriptions_via_user',
@@ -22,7 +23,10 @@ const EXPAND = [
 export async function load({ depends }) {
 	depends('global:user');
 
-	if (!pb?.authStore.isValid) throw redirect(302, '/sign-in');
+	if (!pb?.authStore.isValid) {
+		// throw redirect(302, '/sign-in');
+		await goto('/sign-in');
+	}
 
 	const userLoadPromise: Promise<UsersResponse<unknown, UserExpand> | null> = pb!
 		.collection('users')
@@ -56,7 +60,8 @@ export async function load({ depends }) {
 		})
 		.catch((error) => {
 			console.error('Failed to load user:', error);
-			throw redirect(302, '/sign-in');
+			// throw redirect(302, '/sign-in');
+			goto('/sign-in');
 		});
 	return { userLoadPromise };
 }

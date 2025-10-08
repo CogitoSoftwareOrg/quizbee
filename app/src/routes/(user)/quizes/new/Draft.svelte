@@ -13,7 +13,6 @@
 	import Button from '$lib/ui/Button.svelte';
 	import { FilePlus } from 'lucide-svelte';
 
-
 	interface Props {
 		quizTemplateId: string;
 		title: string;
@@ -21,8 +20,7 @@
 		attachedFiles: AttachedFile[];
 		selectedDifficulty: string;
 		questionCount: number;
-        previousQuizes: any[];
-
+		previousQuizes: any[];
 	}
 
 	let {
@@ -32,12 +30,10 @@
 		attachedFiles = $bindable(),
 		selectedDifficulty = $bindable(),
 		questionCount = $bindable(),
-        previousQuizes = $bindable(),
-
+		previousQuizes = $bindable()
 	}: Props = $props();
 
-    const drafts = $derived(quizesStore.quizes.filter((q: any) => q.status === 'draft'));
-
+	const drafts = $derived(quizesStore.quizes.filter((q: any) => q.status === 'draft'));
 
 	// states
 	let showModal = $state(false);
@@ -47,22 +43,22 @@
 	let draftToDelete: any = $state(null);
 
 	// EFFECTS
-	
+
 	// Debounced update for all fields
 	let updateTimeout: ReturnType<typeof setTimeout> | undefined;
 	let pendingUpdates: Record<string, any> = {};
 
 	function scheduleUpdate(updates: Record<string, any>) {
 		if (!quizTemplateId || draftSwitch) return;
-		
+
 		// Merge new updates with pending ones
 		pendingUpdates = { ...pendingUpdates, ...updates };
-		
+
 		// Clear existing timeout
 		if (updateTimeout) {
 			clearTimeout(updateTimeout);
 		}
-		
+
 		// Schedule batch update
 		updateTimeout = setTimeout(() => {
 			if (Object.keys(pendingUpdates).length > 0) {
@@ -132,8 +128,6 @@
 		}, 0);
 	});
 
-	
-
 	function isDefaultDraft(draft: any): boolean {
 		return (
 			draft.query === '' &&
@@ -168,23 +162,19 @@
 			}
 		}
 	}
-
-	
-
-	
 </script>
 
-
-
 {#if previousQuizes.length > 0}
-	<div class="mt-2  flex justify-center">
-		<button class="btn btn-xs btn-outline flex items-center text-sm" onclick={() => (showModal = true)}>
-			<FilePlus class="w-4 h-4 mb-0.5" />
+	<div class="mt-2 flex justify-center">
+		<button
+			class="btn btn-xs btn-outline flex items-center text-sm"
+			onclick={() => (showModal = true)}
+		>
+			<FilePlus class="mb-0.5 h-4 w-4" />
 			<span class=" ">Use previous quiz settings</span>
 		</button>
 	</div>
 {/if}
-
 
 {#if showModal}
 	<Modal
@@ -222,7 +212,6 @@
 				bind:selectedDifficulty
 				bind:draftSwitch
 				bind:questionCount
-				
 				{searchQuery}
 				onQuizSelected={() => (showModal = false)}
 			/>

@@ -113,7 +113,7 @@
 		<div class="mb-6 flex justify-center">
 			<div class="avatar relative">
 				<div
-					class="ring-primary ring-offset-base-100 h-32 w-32 overflow-hidden rounded-full ring ring-offset-2"
+					class="ring-primary ring-offset-base-100 size-32 overflow-hidden rounded-full ring ring-offset-2"
 				>
 					{#if avatar}
 						<img src={avatar} alt="Avatar" class="h-full w-full object-cover" />

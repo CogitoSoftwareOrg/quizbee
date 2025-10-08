@@ -7,7 +7,7 @@
 	themes: all;
 }
 
-@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+@custom-variant dark (&:where([data-theme=QUIZBEE_DARK], [data-theme=QUIZBEE_DARK] *));
 
 @plugin "daisyui/theme" {
 	name: 'QUIZBEE_LIGHT';

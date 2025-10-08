@@ -2,6 +2,7 @@ import base64
 import mimetypes
 import httpx
 from pocketbase.models.dtos import Record
+from pydantic_ai import BinaryContent
 from pydantic_ai.messages import ImageUrl
 
 from lib.settings import settings
@@ -10,7 +11,7 @@ from lib.settings import settings
 async def materials_to_ai_images(
     materials: list[Record],
 ) -> list[ImageUrl]:
-    images = []
+    urls = []
     for m in materials:
         mid = m.get("id")
         col = m.get("collectionName")
@@ -19,13 +20,46 @@ async def materials_to_ai_images(
             fname = m.get("file", "")
             url = f"{settings.pb_url}api/files/{col}/{mid}/{fname}"
             if fname.endswith((".png", ".jpg", ".jpeg", ".gif", ".webp")):
-                images.append(url)
+                urls.append(url)
         else:
             images = m.get("images", [])
             for img in images:
-                images.append(f"{settings.pb_url}/api/files/{col}/{mid}/{img}")
+                urls.append(f"{settings.pb_url}api/files/{col}/{mid}/{img}")
 
-    return [ImageUrl(url=url, force_download=True) for url in images]
+    return [ImageUrl(url=url, force_download=True) for url in urls]
+
+
+async def materials_to_ai_bytes(
+    http: httpx.AsyncClient,
+    materials: list[Record],
+) -> list[BinaryContent]:
+    contents: list[BinaryContent] = []
+
+    for m in materials:
+        mid = m.get("id")
+        col = m.get("collectionName")
+
+        urls = []
+        if m.get("kind") == "simple":
+            fname = m.get("file", "")
+            if fname.endswith((".png", ".jpg", ".jpeg", ".gif", ".webp")):
+                urls.append(f"{settings.pb_url}api/files/{col}/{mid}/{fname}")
+        else:
+            for img in m.get("images", []):
+                urls.append(f"{settings.pb_url}api/files/{col}/{mid}/{img}")
+
+        for url in urls:
+            res = await http.get(url)
+            res.raise_for_status()
+            data = res.content
+
+            ctype, _ = mimetypes.guess_type(url)
+            if ctype is None:
+                ctype = "application/octet-stream"
+
+            contents.append(BinaryContent(data=data, media_type=ctype))
+
+    return contents
 
 
 async def load_file_text(

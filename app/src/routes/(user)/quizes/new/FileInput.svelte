@@ -7,7 +7,7 @@
 	import type { MaterialsResponse } from '$lib/pb/pocketbase-types';
 	import { generateId } from '$lib/utils/generate-id';
 	import { removeFile } from '../new/removeFile';
-	import {addExistingMaterial} from '../new/addExistingMaterial';
+	import { addExistingMaterial } from '../new/addExistingMaterial';
 
 	interface Props {
 		inputText: string;
@@ -32,16 +32,29 @@
 	let buttonElement = $state<HTMLButtonElement>();
 	let menuElement = $state<HTMLDivElement>();
 
-
-
 	const allowedExtensions = [
-		'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt',
-		'js', 'ts', 'html', 'css', 'json', 'xml', 'svg',
-		'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'
+		'pdf',
+		'doc',
+		'docx',
+		'xls',
+		'xlsx',
+		'ppt',
+		'pptx',
+		'txt',
+		'js',
+		'ts',
+		'html',
+		'css',
+		'json',
+		'xml',
+		'svg',
+		'jpg',
+		'jpeg',
+		'png',
+		'gif',
+		'webp',
+		'bmp'
 	];
-
-
-
 	onMount(() => {
 		document.addEventListener('click', handleClickOutside);
 
@@ -57,11 +70,9 @@
 		};
 	});
 
-	
 	function processFiles(files: File[]) {
 		for (const file of files) {
 			const extension = file.name.split('.').pop()?.toLowerCase();
-			
 			if (!extension || !allowedExtensions.includes(extension)) {
 				warningUnsupportedFile = file.name;
 				setTimeout(() => {
@@ -88,7 +99,6 @@
 		// Обход с конца, чтобы безопасно удалять элементы
 		for (let i = attachedFiles.length - 1; i >= 0; i--) {
 			const attachedFile = attachedFiles[i];
-			
 			if (attachedFile.isUploading && attachedFile.materialId) {
 				const foundMaterial = materialsStore.materials.find(
 					(m) => m.id === attachedFile.materialId
@@ -151,9 +161,9 @@
 			}
 
 			try {
-				const quiz = await pb!.collection('quizes').getOne(quizTemplateId, { $autoCancel: false });
-				const updatedMaterials = [...(quiz.materials || []), material.id];
-				await pb!.collection('quizes').update(quizTemplateId, { materials: updatedMaterials }, { $autoCancel: false });
+				await pb!
+					.collection('quizes')
+					.update(quizTemplateId, { 'materials+': material.id }, { requestKey: material.id });
 			} catch (error) {
 				console.error('Failed to attach material to quiz:', error);
 			}
@@ -173,12 +183,8 @@
 		}
 	}
 
-	
-
-	
 	async function toggleMaterial(material: MaterialsResponse) {
-		const existingIndex = attachedFiles.findIndex(file => file.materialId === material.id);
-		
+		const existingIndex = attachedFiles.findIndex((file) => file.materialId === material.id);
 		if (existingIndex !== -1) {
 			// Материал уже прикреплен - удаляем его
 			attachedFiles = await removeFile(existingIndex, attachedFiles, quizTemplateId);
@@ -189,12 +195,9 @@
 		}
 	}
 
-	
 	function isMaterialAttached(materialId: string): boolean {
-		return attachedFiles.some(file => file.materialId === materialId);
+		return attachedFiles.some((file) => file.materialId === materialId);
 	}
-
-	
 
 	async function handlePaste(event: ClipboardEvent) {
 		const clipboardData = event.clipboardData;
@@ -290,7 +293,7 @@
 		}
 	}
 
-export  {addExistingMaterial}
+	export { addExistingMaterial };
 </script>
 
 <div
@@ -382,12 +385,12 @@ export  {addExistingMaterial}
 							><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg
 						>
 					</div>
-					<div class="max-h-67 mt-2 ">
+					<div class="max-h-67 mt-2">
 						{#each materialsStore.materials.filter((m) => m.title
 								.toLowerCase()
 								.includes(searchQuery.toLowerCase())) as material}
 							<button
-								class="hover:bg-primary w-full cursor-pointer p-2 text-left transition-colors duration-200 flex items-center justify-between gap-2"
+								class="hover:bg-primary flex w-full cursor-pointer items-center justify-between gap-2 p-2 text-left transition-colors duration-200"
 								onclick={() => {
 									toggleMaterial(material);
 								}}
@@ -418,7 +421,7 @@ export  {addExistingMaterial}
 		<textarea
 			placeholder="Attach relevant files and/or describe what you'd like the questions to be about"
 			bind:value={inputText}
-			class="max-h-[7.5rem] min-h-[1.5rem] flex-grow resize-none  border-none bg-transparent py-1 pl-4 text-lg leading-6 outline-none focus:shadow-none focus:outline-none focus:ring-0"
+			class="max-h-[7.5rem] min-h-[1.5rem] flex-grow resize-none border-none bg-transparent py-1 pl-4 text-lg leading-6 outline-none focus:shadow-none focus:outline-none focus:ring-0"
 			onpaste={handlePaste}
 			rows="1"
 			oninput={handleTextareaResize}
@@ -465,8 +468,7 @@ export  {addExistingMaterial}
 							/>
 							<span
 								class="line-clamp-3 break-words text-[14px] leading-tight"
-								title={attachedFile.name}
-							>{attachedFile.name}</span
+								title={attachedFile.name}>{attachedFile.name}</span
 							>
 						</div>
 					{/if}

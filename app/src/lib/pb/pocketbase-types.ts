@@ -165,6 +165,7 @@ export type QuizItemsRecord<Tanswers = unknown> = {
 	answers?: null | Tanswers
 	created?: IsoDateString
 	id: string
+	managed?: boolean
 	order?: number
 	question?: string
 	quiz?: RecordIdString

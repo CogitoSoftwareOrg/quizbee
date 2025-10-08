@@ -5,18 +5,19 @@ from fastapi import (
     status,
 )
 from fastapi.responses import JSONResponse
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
 
 from apps.auth import User, auth_user
 from apps.billing import load_subscription
 from apps.materials import user_owns_materials
-from lib.clients import AdminPB, HTTPAsyncClient
+from lib.clients import AdminPB, HTTPAsyncClient, MeilisearchClient
 
 from .ai import (
     generate_quiz_task,
     start_generating_quiz_task,
+    summary_and_index,
 )
 
 quizes_router = APIRouter(
@@ -44,13 +45,15 @@ class CreateQuizDto(BaseModel):
 async def create_quiz(
     admin_pb: AdminPB,
     http: HTTPAsyncClient,
+    meilisearch_client: MeilisearchClient,
     user: User,
     dto: CreateQuizDto,
     background: BackgroundTasks,
 ):
     user_id = user.get("id", "")
     quiz_id = dto.quiz_id
-    limit = 50
+    quiz = await admin_pb.collection("quizes").get_one(quiz_id)
+    limit = 5
 
     attempt_id = dto.attempt_id
     if not attempt_id:
@@ -63,7 +66,14 @@ async def create_quiz(
         attempt_id = quiz_attempt.get("id", "")
 
     background.add_task(
-        start_generating_quiz_task, admin_pb, http, user_id, attempt_id, quiz_id, limit
+        start_generating_quiz_task,
+        admin_pb,
+        http,
+        meilisearch_client,
+        user_id,
+        attempt_id,
+        quiz_id,
+        limit,
     )
 
     return JSONResponse(
@@ -77,18 +87,33 @@ async def create_quiz(
 
 class GenerateQuizItems(BaseModel):
     attempt_id: str = Field(default="")
-    limit: Annotated[int, Field(default=50, ge=2, le=50)]
+    limit: Annotated[int, Field(default=5, ge=2, le=50)]
+    mode: Annotated[Literal["regenerate", "continue"], Field(default="regenerate")]
 
 
 @quizes_router.patch("/{quiz_id}")
 async def generate_quiz_items(
     admin_pb: AdminPB,
     http: HTTPAsyncClient,
+    meilisearch_client: MeilisearchClient,
     quiz_id: str,
     dto: GenerateQuizItems,
     background: BackgroundTasks,
     user: User,
 ):
+    quiz = await admin_pb.collection("quizes").get_one(
+        quiz_id,
+        options={
+            "params": {
+                "expand": "materials,quizItems_via_quiz",
+            }
+        },
+    )
+    generation = quiz.get("generation", 0) + 1
+    await admin_pb.collection("quizes").update(
+        quiz_id,
+        {"generation": generation},
+    )
     # Generate
     background.add_task(
         generate_quiz_task,
@@ -98,6 +123,8 @@ async def generate_quiz_items(
         dto.attempt_id,
         quiz_id,
         dto.limit,
+        generation,
+        dto.mode,
     )
 
     return JSONResponse(

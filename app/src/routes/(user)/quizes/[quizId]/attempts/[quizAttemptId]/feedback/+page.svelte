@@ -51,60 +51,68 @@
 	});
 </script>
 
-<div class="relative mx-auto flex h-full min-h-0 max-w-3xl flex-1 flex-col gap-6 p-1">
+<div
+	class="relative mx-auto flex max-w-7xl flex-1 flex-col gap-6 p-1 pb-20 sm:h-full sm:flex-row sm:pb-1"
+>
 	{#if !feedback}
-		<div class="flex flex-col items-center justify-center gap-4">
+		<section class="flex flex-1 flex-col items-center justify-center gap-4">
 			<p class="loading loading-spinner loading-xl"></p>
 			<p class="text-center font-semibold">We are giving your feedback...</p>
-		</div>
-	{:else if quiz && feedback}
-		<div class="flex w-full flex-col gap-6 px-3">
-			<Button
-				color="neutral"
-				style="ghost"
-				href={`/home`}
-				class="absolute left-0 top-0 flex underline"
-			>
-				<ChevronLeft /> Back to home
-			</Button>
+		</section>
+	{:else if feedback}
+		<section class="flex w-full flex-1 flex-col gap-6 px-3 sm:overflow-y-auto">
+			<div>
+				<Button color="neutral" style="ghost" href={`/home`} class="underline">
+					<ChevronLeft /> Back to home
+				</Button>
+				<h2 class="text-center text-2xl font-bold leading-tight">Feedback</h2>
+				<p class="mt-1 text-center text-sm opacity-70">
+					Score: {correctCount} / {quizItems.length}
+				</p>
+			</div>
 
-			<section class="text-center">
-				<h1 class="text-2xl font-bold leading-tight">{quiz.title || 'Quiz'}</h1>
-				<p class="mt-1 text-sm opacity-70">Score: {correctCount} / {quizItems.length}</p>
-
+			<div>
 				<div class="mt-4 space-y-2">
+					<h3 class="text-lg font-semibold">Overview</h3>
 					<p class="opacity-80">
 						{feedback.overview}
-					</p>
-					<p class="opacity-70">
-						Pay attention to the highlighted topics — they will help you improve.
 					</p>
 				</div>
 
 				{#if feedback.problem_topics.length > 0}
-					<div class="mt-3 flex flex-wrap justify-center gap-2">
+					<div class="mt-3">
 						<p class="opacity-70">Problem topics:</p>
-						{#each feedback.problem_topics as topic}
-							<span class="badge badge-outline badge-error">{topic}</span>
-						{/each}
+						<div class="flex flex-wrap gap-1">
+							{#each feedback.problem_topics as topic}
+								<span class="badge badge-soft badge-error">{topic}</span>
+							{/each}
+						</div>
 					</div>
 				{/if}
 
 				{#if feedback.uncovered_topics.length > 0}
-					<div class="mt-3 flex flex-wrap justify-center gap-2">
+					<div class="mt-3">
 						<p class="opacity-70">Uncovered topics:</p>
-						{#each feedback.uncovered_topics as topic}
-							<span class="badge badge-outline badge-info">{topic}</span>
-						{/each}
+						<div class="flex flex-wrap gap-1">
+							{#each feedback.uncovered_topics as topic}
+								<span class="badge badge-soft badge-info">{topic}</span>
+							{/each}
+						</div>
 					</div>
 				{/if}
-			</section>
-		</div>
+			</div>
+		</section>
 	{/if}
 
-	<section class="flex min-h-0 flex-1 flex-col gap-3">
+	<section class="flex flex-1 flex-col gap-3 sm:min-h-0">
+		{#if quiz}
+			<h1 class="text-center text-2xl font-bold leading-tight">{quiz?.title || 'Quiz'}</h1>
+		{:else}
+			<h1 class="text-center text-2xl font-bold leading-tight">Loading...</h1>
+		{/if}
+
 		<Input
-			class="w-full"
+			class="w-full sm:shrink-0"
 			placeholder="Search by questions and answers"
 			value={searchQuery}
 			oninput={(e) => {
@@ -120,7 +128,7 @@
 		{#if filteredItems.length === 0}
 			<p class="py-6 text-center opacity-70">Nothing found</p>
 		{:else if quiz && quizAttempt}
-			<ul class="flex flex-1 flex-col gap-2 overflow-y-auto pr-1">
+			<ul class="flex flex-1 flex-col gap-2 pr-1 sm:min-h-0 sm:overflow-y-auto">
 				{#each filteredItems as item, index}
 					{@const d = findDecision(item.id)}
 					<li>
@@ -144,9 +152,9 @@
 				{/each}
 			</ul>
 		{/if}
-	</section>
 
-	<section class="pt-2">
-		<Button block>Share Quiz</Button>
+		<div class="fixed bottom-12 left-0 right-0 z-10 p-4 sm:static sm:p-0">
+			<Button block>Share Quiz</Button>
+		</div>
 	</section>
 </div>

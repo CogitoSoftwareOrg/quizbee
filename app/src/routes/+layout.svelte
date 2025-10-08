@@ -7,6 +7,7 @@
 
 	import favicon from '$lib/assets/icons/bee1.svg';
 	import PortalHost from '$lib/actions/PortalHost.svelte';
+	import ThemeLoad from '$lib/features/ThemeLoad.svelte';
 	// import posthog from 'posthog-js';
 
 	let { children } = $props();
@@ -29,5 +30,7 @@
 </svelte:head>
 
 <PortalHost />
+
+<ThemeLoad />
 
 {@render children?.()}

@@ -4,10 +4,11 @@ from fastapi.responses import StreamingResponse
 
 from apps.auth import auth_user
 from apps.billing import Subscription, load_subscription
-from apps.materials.utils import load_file_text
 from lib.clients import AdminPB, HTTPAsyncClient, langfuse_client
+from lib.config.llms import LLMSCosts
 from lib.utils import sse
 from apps.auth import User
+from lib.utils.cache_key import cache_key
 
 from .pb_to_ai import pb_to_ai
 from .ai import ExplainerDeps, explainer_agent
@@ -62,6 +63,10 @@ async def sse_messages(
     ][0]
 
     # GUARD
+    user_id = quiz_attempt.get("user", "")
+    attempt_id = quiz_attempt.get("id", "")
+    prompt_cache_key = cache_key(attempt_id)
+
     if quiz_attempt.get("user") != user.get("id"):
         raise HTTPException(
             status_code=403, detail="You are not allowed to interact with this attempt"
@@ -93,7 +98,8 @@ async def sse_messages(
         content = ""
 
         deps = ExplainerDeps(
-            materials_context="",
+            http=http,
+            quiz=quiz,
             current_item=current_item,
             current_decision=current_decision,
         )
@@ -103,18 +109,38 @@ async def sse_messages(
                 query,
                 message_history=history,
                 deps=deps,
+                model_settings={"extra_body": {"prompt_cache_key": prompt_cache_key}},
                 # event_stream_handler=event_stream_handler,
             ) as run:
                 i = 0
-                async for text in run.stream_text(delta=True):
-                    i += 1
+                async for output in run.stream_output():
+                    if output.data.mode != "explanation":
+                        raise ValueError(f"Unexpected output type: {type(output)}")
+                    text = output.data.explanation[len(content) :]
                     content += text
                     yield sse(
                         "chunk", json.dumps({"text": text, "msg_id": ai_msg_id, "i": i})
                     )
+            usage = run.usage()
+            input_nc = usage.input_tokens - usage.cache_read_tokens
+            input_cah = usage.cache_read_tokens
+            outp = usage.output_tokens
+
+            input_nc_price = round(input_nc * LLMSCosts.GPT_5_MINI.input_nc, 4)
+            input_cah_price = round(input_cah * LLMSCosts.GPT_5_MINI.input_cah, 4)
+            outp_price = round(outp * LLMSCosts.GPT_5_MINI.output, 4)
+
             span.update_trace(
-                user_id=user.get("id", ""),
-                session_id=quiz_attempt.get("id", ""),
+                input=f"NC: {input_nc_price} + CAH: {input_cah_price} => {input_nc_price + input_cah_price}",
+                output=f"OUTP: {outp_price} => Total: {input_nc_price + input_cah_price + outp_price}",
+                user_id=user_id,
+                session_id=attempt_id,
+                metadata={
+                    "input_nc_price": input_nc_price,
+                    "input_cah_price": input_cah_price,
+                    "outp_price": outp_price,
+                    "total_price": input_nc_price + input_cah_price + outp_price,
+                },
             )
         await admin_pb.collection("messages").update(
             ai_msg_id,

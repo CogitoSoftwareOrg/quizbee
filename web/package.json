@@ -10,16 +10,16 @@
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.6.0",
-    "@astrojs/svelte": "^7.1.1",
-    "@tailwindcss/vite": "^4.1.13",
-    "astro": "^5.13.8",
-    "posthog-js": "^1.268.6",
-    "svelte": "^5.38.10",
-    "tailwindcss": "^4.1.13",
+    "@astrojs/svelte": "^7.2.0",
+    "@tailwindcss/vite": "^4.1.14",
+    "astro": "^5.14.1",
+    "posthog-js": "^1.269.1",
+    "svelte": "^5.39.8",
+    "tailwindcss": "^4.1.14",
     "theme-change": "^2.5.0",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
-    "daisyui": "^5.1.12"
+    "daisyui": "^5.1.26"
   }
 }
