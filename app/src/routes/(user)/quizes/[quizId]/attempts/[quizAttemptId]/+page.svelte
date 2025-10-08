@@ -126,25 +126,26 @@
 				{canSwipeRight}
 				onSwipeLeft={handleSwipeLeft}
 				onSwipeRight={handleSwipeRight}
-				class="h-full overflow-x-hidden"
+				class="relative h-full overflow-x-hidden"
 			>
-				<div class="relative mx-auto flex h-full min-w-0 max-w-3xl flex-col p-2">
+				{#if item && quiz && quizAttempt}
+					<QuizItemsNavigation
+						{quizAttempt}
+						{quizItems}
+						{order}
+						{itemDecision}
+						{chatOpen}
+						onPrevious={handleSwipeLeft}
+						onNext={handleSwipeRight}
+					/>
+				{/if}
+
+				<div class="mx-auto flex h-full min-w-0 max-w-3xl flex-col p-2">
 					<div class="flex min-w-0 items-start justify-between gap-4 px-3">
 						<p class="break-words text-center text-2xl font-bold leading-snug">
 							{item?.question}
 						</p>
 					</div>
-
-					{#if item && quiz && quizAttempt}
-						<QuizItemsNavigation
-							{quizAttempt}
-							{quizItems}
-							{order}
-							{itemDecision}
-							onPrevious={handleSwipeLeft}
-							onNext={handleSwipeRight}
-						/>
-					{/if}
 
 					{#if item && quiz && quizAttempt}
 						<QuizAnswersList

@@ -23,15 +23,13 @@ const EXPAND = [
 export async function load({ depends }) {
 	depends('global:user');
 
-	if (!pb?.authStore.isValid) {
-		// throw redirect(302, '/sign-in');
-		await goto('/sign-in');
-	}
+	if (!pb?.authStore.isValid) await goto('/sign-in');
 
 	const userLoadPromise: Promise<UsersResponse<unknown, UserExpand> | null> = pb!
 		.collection('users')
 		.authRefresh({
-			expand: EXPAND
+			expand: EXPAND,
+			requestKey: null
 		})
 		.then((res) => {
 			const user = res.record as UsersResponse<unknown, UserExpand>;
@@ -58,10 +56,10 @@ export async function load({ depends }) {
 			userStore.setLoaded();
 			return user;
 		})
-		.catch((error) => {
+		.catch(async (error) => {
 			console.error('Failed to load user:', error);
-			// throw redirect(302, '/sign-in');
-			goto('/sign-in');
+			await goto('/sign-in');
+			return null;
 		});
 	return { userLoadPromise };
 }
