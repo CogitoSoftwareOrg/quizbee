@@ -68,13 +68,15 @@
 	</style>
 </svelte:head>
 
-<main class="relative flex h-full flex-row overflow-y-auto">
+<main class="relative flex h-full flex-row">
 	<div class="relative flex-1">
-		<div class="flex min-h-screen items-start justify-center">
+		<div class="flex items-start justify-center">
 			<div class="quiz-container w-full max-w-3xl">
 				<!-- Header with Title -->
 				<div class="mb-9 text-center">
-					<div class="group relative mx-auto -mt-3 ml-5 inline-flex items-center justify-center">
+					<div
+						class="group relative mx-auto -mt-3 ml-5 inline-flex items-center justify-center pt-2"
+					>
 						<input
 							bind:value={title}
 							bind:this={inputElement}
@@ -119,7 +121,7 @@
 				</div>
 
 				<!-- Main Card -->
-				<div class="card bg-base-100 border-base-300 border-2 shadow-xl backdrop-blur-sm">
+				<div class="card bg-base-100 border-base-300 border-2 pb-12 shadow-xl backdrop-blur-sm">
 					<div class="card-body p-6.5">
 						<!-- Description Section -->
 						<div class="mb-7">

@@ -32,7 +32,13 @@
 	{#if uiStore.globalSidebarOpen}
 		<div class="flex h-full flex-1 flex-col gap-1">
 			<p class="truncate text-sm font-semibold">{user?.name || user?.email}</p>
-			<p class="badge-primary badge badge-sm font-semibold">{sub?.tariff}</p>
+
+			<div class="flex items-center gap-1">
+				<p class="badge-primary badge badge-sm font-semibold">{sub?.tariff}</p>
+				<!-- <p class="badge-primary badge badge-sm font-semibold">
+					q: <span class="text-xs">{sub?.quizItemsUsage} / {sub?.quizItemsLimit}</span>
+				</p> -->
+			</div>
 		</div>
 
 		<div>

@@ -1,5 +1,13 @@
 <script lang="ts">
-	import { House, Plus, Settings } from 'lucide-svelte';
+	import {
+		House,
+		Plus,
+		Settings,
+		Menu,
+		PanelRightOpen,
+		PanelRightClose,
+		MessageCircleHeart
+	} from 'lucide-svelte';
 	import { page } from '$app/state';
 
 	import Logo from '$lib/assets/icons/bee1.svg';
@@ -11,6 +19,7 @@
 	import GlobalHeader from './GlobalHeader.svelte';
 	import SubscribeUser from './SubscribeUser.svelte';
 	import Button from '$lib/ui/Button.svelte';
+	import ThemeController from '$lib/features/ThemeController.svelte';
 
 	const { data, children } = $props();
 
@@ -37,16 +46,45 @@
 				'hidden sm:flex'
 			]}
 		>
-			<a href="/home" class="relative mb-4 flex select-none items-center justify-center">
-				<img src={Logo} alt="Quizbee" class="size-14 rounded-full" />
+			<div
+				class={[
+					'mb-2 flex items-center',
+					uiStore.globalSidebarOpen ? 'justify-between pr-2' : 'justify-center'
+				]}
+			>
 				{#if uiStore.globalSidebarOpen}
-					<p class="text-primary mt-2 text-3xl font-semibold">Quizbee</p>
+					<a href="/home" class="relative mb-4 flex select-none items-center justify-center">
+						<img src={Logo} alt="Quizbee" class="size-14 rounded-full" />
+						<p class="text-primary mt-2 text-3xl font-semibold">Quizbee</p>
+					</a>
 				{/if}
-			</a>
+				<button
+					class={[
+						'hidden w-fit cursor-pointer items-center sm:flex',
+						uiStore.globalSidebarOpen ? 'mb-3' : ''
+					]}
+					onclick={() => uiStore.toggleGlobalSidebar()}
+				>
+					{#if uiStore.globalSidebarOpen}
+						<PanelRightOpen class="text-neutral size-8" />
+					{:else}
+						<PanelRightClose class="text-neutral size-8" />
+					{/if}
+				</button>
+			</div>
 
 			<SidebarNavigation class="flex min-h-0 flex-1" />
 
-			<ProfileRow />
+			<div class="mt-auto flex flex-col items-center justify-center gap-2">
+				<!-- <div class="flex items-center justify-center gap-2">
+					<ThemeController />
+					{#if uiStore.globalSidebarOpen}
+						<MessageCircleHeart class="size-7 " />
+					{/if}
+				</div> -->
+
+				<ProfileRow />
+			</div>
 		</aside>
 
 		<main class="flex h-full flex-1 flex-col">

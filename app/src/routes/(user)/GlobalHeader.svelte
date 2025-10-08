@@ -64,17 +64,6 @@
 		<button class="flex w-fit items-center sm:hidden" onclick={() => uiStore.toggleGlobalSidebar()}>
 			<Menu class="size-6 text-neutral-500" />
 		</button>
-		<!-- Desktop Sidebar Toggle -->
-		<button
-			class="hidden w-fit cursor-pointer items-center sm:flex"
-			onclick={() => uiStore.toggleGlobalSidebar()}
-		>
-			{#if uiStore.globalSidebarOpen}
-				<PanelRightOpen class="size-6 text-neutral-500" />
-			{:else}
-				<PanelRightClose class="size-6 text-neutral-500" />
-			{/if}
-		</button>
 		{#if !attemptingQuiz}
 			<!-- <h1 class="hidden font-semibold sm:block">{getTitle()}</h1> -->
 		{:else if attemptingQuiz}

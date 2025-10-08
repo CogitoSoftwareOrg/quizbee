@@ -6,9 +6,15 @@
 	import { userStore } from '$lib/apps/users/user.svelte';
 	import Button from '$lib/ui/Button.svelte';
 	import { goto } from '$app/navigation';
+	import { postApi } from '$lib/api/call-api';
+	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
 
 	const user = $derived(userStore.user);
 	const avatar = $derived(user?.avatar ? pb!.files.getURL(user, user.avatar) : null);
+	const paid = $derived(
+		subscriptionStore.subscription?.status === 'active' &&
+			subscriptionStore.subscription.tariff !== 'free'
+	);
 
 	const isOAuthUser = $derived(
 		user?.metadata ? (user.metadata as any).provider || (user.metadata as any).oauth2 : false
@@ -205,13 +211,25 @@
 			</div>
 		</div>
 
-		<div class="mt-3 space-y-2">
-			<h4 class="text-center font-semibold">Manage your subscription with Stripe</h4>
+		{#if paid}
+			<div class="mt-3 space-y-2">
+				<h4 class="text-center font-semibold">Manage your subscription with Stripe</h4>
 
-			<div class="flex justify-center">
-				<Button class="mx-auto" wide>Manage Subscription</Button>
+				<div class="flex justify-center">
+					<Button
+						onclick={async () => {
+							const response = await postApi('billing/portal', {
+								return_url: 'profile'
+							});
+							window.location.href = response.url;
+						}}
+						style="soft"
+						class="mx-auto"
+						wide>Manage Subscription</Button
+					>
+				</div>
 			</div>
-		</div>
+		{/if}
 
 		<!-- Logout Button -->
 		<div class="mt-20 flex justify-center">
