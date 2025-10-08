@@ -69,7 +69,7 @@ async def generate_quiz_task(
     prompt_cache_key = cache_key(attempt_id)
     try:
         with langfuse_client.start_as_current_span(
-            name=f"quiz-patch-{attempt_id}-{generation}"
+            name=f"quiz-patch"
         ) as span:
             async with quizer_agent.run_stream(
                 deps=QuizerDeps(
