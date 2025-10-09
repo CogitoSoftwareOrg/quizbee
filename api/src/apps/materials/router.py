@@ -93,25 +93,7 @@ async def upload_material(
 
                 # Обрабатываем текст (сократить если > 50k токенов)
                 extracted_text = pdf_data["text"]
-                if extracted_text and pdf_data["text_tokens"] > 50000:
-                    logging.info(
-                        f"Text exceeds 50k tokens ({pdf_data['text_tokens']}), processing with summarization..."
-                    )
-                    extracted_text = summarize_to_fixed_tokens(
-                        extracted_text, target_token_count=50000, context_window=2
-                    )
-                    logging.info(
-                        f"Text summarized, new length: {len(extracted_text)} chars"
-                    )
-
-                    # Пересчитываем токены для сокращенного текста
-                    final_text_tokens = count_text_tokens(extracted_text)
-                    total_tokens = final_text_tokens + pdf_data["image_tokens"]
-                    logging.info(
-                        f"Final text tokens: {final_text_tokens}, total tokens: {total_tokens}"
-                    )
-                else:
-                    total_tokens = pdf_data["total_tokens"]
+                total_tokens = pdf_data["total_tokens"]
 
                 dto["tokens"] = total_tokens
                 dto["kind"] = "complex"
