@@ -11,6 +11,7 @@
 	import Button from '$lib/ui/Button.svelte';
 	import Modal from '$lib/ui/Modal.svelte';
 	import Paywall from '$lib/apps/billing/Paywall.svelte';
+	import FeedbackForm from '$lib/apps/users/FeedbackForm.svelte';
 
 	const { data, children } = $props();
 
@@ -107,4 +108,13 @@
 	onclose={() => uiStore.setPaywallOpen(false)}
 >
 	<Paywall />
+</Modal>
+
+<Modal
+	class="max-w-2xl"
+	backdrop
+	open={uiStore.feedbackModalOpen}
+	onclose={() => uiStore.setFeedbackModalOpen(false)}
+>
+	<FeedbackForm />
 </Modal>

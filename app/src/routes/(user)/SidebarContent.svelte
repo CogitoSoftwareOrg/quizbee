@@ -5,6 +5,7 @@
 	import Logo from '$lib/assets/icons/bee1.svg';
 	import { uiStore } from '$lib/apps/users/ui.svelte';
 	import ProfileRow from '$lib/apps/users/ProfileRow.svelte';
+	import Feedback from '$lib/apps/users/Feedback.svelte';
 	import ThemeController from '$lib/features/ThemeController.svelte';
 
 	import SidebarNavigation from './SidebarNavigation.svelte';
@@ -44,7 +45,8 @@
 
 	<SidebarNavigation class="flex min-h-0 flex-1" expanded={isExpanded} />
 
-	<div class="mt-auto flex flex-col items-center justify-center gap-2">
+	<div class="mt-auto flex flex-col items-center justify-center gap-2 px-2">
+		<Feedback expanded={isExpanded} />
 		<ThemeController expanded={isExpanded} />
 
 		{#if !mobile.current}

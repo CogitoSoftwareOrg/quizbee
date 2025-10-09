@@ -3,7 +3,8 @@ import { z } from 'zod';
 
 const UIStateSchema = z.object({
 	paywallOpen: z.boolean().default(false),
-	globalSidebarOpen: z.boolean().default(true)
+	globalSidebarOpen: z.boolean().default(true),
+	feedbackModalOpen: z.boolean().default(false)
 });
 
 type UIState = z.infer<typeof UIStateSchema>;
@@ -13,6 +14,7 @@ class UIStore {
 
 	paywallOpen = $derived(this._state?.paywallOpen);
 	globalSidebarOpen = $derived(this._state?.globalSidebarOpen);
+	feedbackModalOpen = $derived(this._state?.feedbackModalOpen);
 
 	// paywallOpen
 	togglePaywallOpen() {
@@ -35,6 +37,18 @@ class UIStore {
 	setGlobalSidebarOpen(open: boolean) {
 		if (!this._state) return;
 		this._state.globalSidebarOpen = open;
+		this.saveState();
+	}
+
+	// feedbackModalOpen
+	toggleFeedbackModal() {
+		if (!this._state) return;
+		this._state.feedbackModalOpen = !this._state.feedbackModalOpen;
+		this.saveState();
+	}
+	setFeedbackModalOpen(open: boolean) {
+		if (!this._state) return;
+		this._state.feedbackModalOpen = open;
 		this.saveState();
 	}
 
