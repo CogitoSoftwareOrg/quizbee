@@ -121,7 +121,7 @@
 	});
 </script>
 
-<div class="mx-auto flex min-h-full w-full max-w-6xl flex-col gap-10 px-6 py-10">
+<div class="mx-auto flex min-h-full w-full max-w-6xl flex-col gap-10 py-10 sm:px-6">
 	<section class="flex justify-center">
 		<Button wide size="xl" style="solid" href="/quizes/new" class="self-start md:self-center">
 			<Plus size={24} /> Start New Quiz

@@ -155,6 +155,32 @@
 			</div>
 		{/if}
 
+		{#if paid}
+			<div class="mt-3 space-y-2">
+				<h4 class="text-center font-semibold">Manage your subscription with Stripe</h4>
+
+				<div class="flex justify-center">
+					<Button
+						onclick={async () => {
+							const response = await postApi('billing/portal', {
+								return_url: 'profile'
+							});
+							window.location.href = response.url;
+						}}
+						style="soft"
+						class="mx-auto"
+						wide>Manage Subscription</Button
+					>
+				</div>
+			</div>
+		{:else}
+			<div class="mt-3 flex justify-center space-y-2">
+				<Button onclick={() => uiStore.setPaywallOpen(true)} wide>
+					Upgrade subscription<Rocket />
+				</Button>
+			</div>
+		{/if}
+
 		<!-- Profile Fields -->
 		<div class="space-y-4">
 			<!-- Name Field -->
@@ -211,32 +237,6 @@
 				</div>
 			</div>
 		</div>
-
-		{#if paid}
-			<div class="mt-3 space-y-2">
-				<h4 class="text-center font-semibold">Manage your subscription with Stripe</h4>
-
-				<div class="flex justify-center">
-					<Button
-						onclick={async () => {
-							const response = await postApi('billing/portal', {
-								return_url: 'profile'
-							});
-							window.location.href = response.url;
-						}}
-						style="soft"
-						class="mx-auto"
-						wide>Manage Subscription</Button
-					>
-				</div>
-			</div>
-		{:else}
-			<div class="mt-3 flex justify-center space-y-2">
-				<Button onclick={() => uiStore.setPaywallOpen(true)} wide>
-					Upgrade subscription<Rocket />
-				</Button>
-			</div>
-		{/if}
 
 		<!-- Logout Button -->
 		<div class="mt-20 flex justify-center">

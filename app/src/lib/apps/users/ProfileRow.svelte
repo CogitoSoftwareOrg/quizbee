@@ -10,8 +10,9 @@
 
 	interface Props {
 		class?: ClassValue;
+		expanded?: boolean;
 	}
-	let { class: className }: Props = $props();
+	let { class: className, expanded = false }: Props = $props();
 
 	const user = $derived(userStore.user);
 	const avatar = $derived(user?.avatar ? pb!.files.getURL(user, user.avatar) : Man);
@@ -29,7 +30,7 @@
 		<img src={avatar} alt="avatar" />
 	</div>
 
-	{#if uiStore.globalSidebarOpen}
+	{#if expanded}
 		<div class="flex h-full flex-1 flex-col gap-1">
 			<p class="truncate text-sm font-semibold">{user?.name || user?.email}</p>
 

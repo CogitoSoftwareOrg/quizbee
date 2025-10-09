@@ -134,10 +134,5 @@
 	</div>
 
 	<!-- Always -->
-	<div class="flex items-center gap-1">
-		<div>
-			<MessageCircleHeart class="hidden size-8 text-black dark:text-white" />
-		</div>
-		<ThemeController />
-	</div>
+	<div class="flex items-center gap-1"></div>
 </header>

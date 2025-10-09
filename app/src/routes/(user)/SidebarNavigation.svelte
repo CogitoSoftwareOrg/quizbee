@@ -7,9 +7,10 @@
 
 	interface Props {
 		class?: ClassValue;
+		expanded?: boolean;
 	}
 
-	const { class: className }: Props = $props();
+	const { class: className, expanded = false }: Props = $props();
 
 	const navItems = [
 		{
@@ -51,7 +52,7 @@
 </script>
 
 <nav class={['overflow-y-auto overflow-x-hidden', className]}>
-	{#if uiStore.globalSidebarOpen}
+	{#if expanded}
 		<ul class="menu menu-vertical w-full gap-1 px-2 pb-2">
 			<div class="flex w-full flex-col items-center gap-2 py-2">
 				<Button block size="sm" style="solid" href="/quizes/new">
