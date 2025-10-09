@@ -20,6 +20,8 @@
 	import SubscribeUser from './SubscribeUser.svelte';
 	import Button from '$lib/ui/Button.svelte';
 	import ThemeController from '$lib/features/ThemeController.svelte';
+	import Modal from '$lib/ui/Modal.svelte';
+	import Paywall from '$lib/apps/billing/Paywall.svelte';
 
 	const { data, children } = $props();
 
@@ -66,9 +68,9 @@
 					onclick={() => uiStore.toggleGlobalSidebar()}
 				>
 					{#if uiStore.globalSidebarOpen}
-						<PanelRightOpen class="text-neutral size-8" />
+						<PanelRightOpen class="text-neutral size-7" />
 					{:else}
-						<PanelRightClose class="text-neutral size-8" />
+						<PanelRightClose class="text-neutral size-7" />
 					{/if}
 				</button>
 			</div>
@@ -120,3 +122,12 @@
 {:catch error}
 	{JSON.stringify(error)}
 {/await}
+
+<Modal
+	class="max-h-[95vh] max-w-[90vw]"
+	backdrop
+	open={uiStore.paywallOpen}
+	onclose={() => uiStore.setPaywallOpen(false)}
+>
+	<Paywall />
+</Modal>

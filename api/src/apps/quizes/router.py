@@ -13,7 +13,6 @@ from apps.auth import User, auth_user
 from apps.billing import (
     load_subscription,
     quiz_patch_quota_protection,
-    quiz_start_quota_protection,
 )
 from apps.materials import user_owns_materials
 from lib.clients import AdminPB, HTTPAsyncClient, MeilisearchClient
@@ -34,6 +33,7 @@ quizes_router = APIRouter(
 class CreateQuizDto(BaseModel):
     quiz_id: str = Field(default="")
     attempt_id: str | None = Field(default=None)
+
     # number_of_questions: int = Field(default=10, ge=1, le=50)
     # material_ids: list[str] = Field(default=[])
     # query: str = Field(default="")
@@ -44,7 +44,7 @@ class CreateQuizDto(BaseModel):
     "",
     dependencies=[
         Depends(user_owns_materials),
-        Depends(quiz_start_quota_protection),
+        Depends(quiz_patch_quota_protection),
     ],
 )
 async def create_quiz(

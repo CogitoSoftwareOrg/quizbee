@@ -2,6 +2,7 @@ import { Preferences } from '@capacitor/preferences';
 import { z } from 'zod';
 
 const UIStateSchema = z.object({
+	paywallOpen: z.boolean().default(false),
 	globalSidebarOpen: z.boolean().default(true)
 });
 
@@ -10,8 +11,22 @@ type UIState = z.infer<typeof UIStateSchema>;
 class UIStore {
 	private _state: UIState | null = $state(UIStateSchema.parse({}));
 
+	paywallOpen = $derived(this._state?.paywallOpen);
 	globalSidebarOpen = $derived(this._state?.globalSidebarOpen);
 
+	// paywallOpen
+	togglePaywallOpen() {
+		if (!this._state) return;
+		this._state.paywallOpen = !this._state.paywallOpen;
+		this.saveState();
+	}
+	setPaywallOpen(open: boolean) {
+		if (!this._state) return;
+		this._state.paywallOpen = open;
+		this.saveState();
+	}
+
+	// globalSidebarOpen
 	toggleGlobalSidebar() {
 		if (!this._state) return;
 		this._state.globalSidebarOpen = !this._state.globalSidebarOpen;

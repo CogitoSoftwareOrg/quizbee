@@ -81,9 +81,9 @@ async def start_generating_quiz_task(
             semantic_ratio=0.75,
             embedder="quizSummaries",
         ),
-        ranking_score_threshold=0.3,
+        ranking_score_threshold=0.4,
         filter=[f"userId = {user_id}"],
-        limit=10,
+        limit=50,
     )
     hits = search_result.hits
     quiz_ids = [hit.get("quizId", "") for hit in hits]
@@ -101,7 +101,7 @@ async def start_generating_quiz_task(
         qs = [item.get("question", "") for item in items]
         questions.extend([q for q in qs if q])
 
-    questions = questions[:50]
+    questions = questions[:500]
     config = DynamicConfig(**quiz.get("dynamicConfig", {}))
     config.negativeQuestions = questions
 

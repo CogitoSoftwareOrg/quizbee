@@ -12,8 +12,8 @@ onRecordCreate((e) => {
     ).toISOString()
   );
   // MONTHLY LIMITS FOR FREE USERS
-  e.record.set("quizItemsLimit", 20);
-  e.record.set("messagesLimit", 20);
+  e.record.set("quizItemsLimit", 100);
+  e.record.set("messagesLimit", 100);
   e.record.set("bytesLimit", 8_388_608);
 
   e.next();

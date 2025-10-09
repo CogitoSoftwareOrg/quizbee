@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { z } from 'zod';
-	import { Check, X, Upload, Edit } from 'lucide-svelte';
+	import { Check, X, Upload, Edit, Rocket } from 'lucide-svelte';
 
 	import { pb } from '$lib/pb';
 	import { userStore } from '$lib/apps/users/user.svelte';
@@ -8,6 +8,7 @@
 	import { goto } from '$app/navigation';
 	import { postApi } from '$lib/api/call-api';
 	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
+	import { uiStore } from '$lib/apps/users/ui.svelte';
 
 	const user = $derived(userStore.user);
 	const avatar = $derived(user?.avatar ? pb!.files.getURL(user, user.avatar) : null);
@@ -205,7 +206,7 @@
 				<div class="bg-base-200 flex h-12 items-center justify-between rounded-lg p-3">
 					<span class="text-base-content">{pb!.authStore.record?.email || 'Not set'}</span>
 					{#if isOAuthUser && oauthProvider}
-						<div class="badge badge-outline badge-sm">Managed by {oauthProvider}</div>
+						<div class="badge badge-outline badge-sm text-nowrap">Managed by {oauthProvider}</div>
 					{/if}
 				</div>
 			</div>
@@ -228,6 +229,12 @@
 						wide>Manage Subscription</Button
 					>
 				</div>
+			</div>
+		{:else}
+			<div class="mt-3 flex justify-center space-y-2">
+				<Button onclick={() => uiStore.setPaywallOpen(true)} wide>
+					Upgrade subscription<Rocket />
+				</Button>
 			</div>
 		{/if}
 

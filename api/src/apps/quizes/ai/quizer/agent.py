@@ -1,6 +1,7 @@
 import logging
 from collections.abc import AsyncIterable
 from pydantic_ai import Agent, ModelRetry, NativeOutput, PromptedOutput, RunContext
+from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.messages import (
     AgentStreamEvent,
     FinalResultEvent,

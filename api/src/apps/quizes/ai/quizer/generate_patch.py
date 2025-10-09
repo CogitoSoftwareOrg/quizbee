@@ -68,9 +68,7 @@ async def generate_quiz_task(
     seen = 0
     prompt_cache_key = cache_key(attempt_id)
     try:
-        with langfuse_client.start_as_current_span(
-            name=f"quiz-patch"
-        ) as span:
+        with langfuse_client.start_as_current_span(name=f"quiz-patch") as span:
             async with quizer_agent.run_stream(
                 deps=QuizerDeps(
                     quiz=quiz,
@@ -79,7 +77,11 @@ async def generate_quiz_task(
                     http=http,
                 ),
                 event_stream_handler=event_stream_handler,
-                model_settings={"extra_body": {"prompt_cache_key": prompt_cache_key}},
+                model_settings={
+                    "extra_body": {
+                        "prompt_cache_key": prompt_cache_key,
+                    },
+                },
             ) as result:
                 stream = result.stream_output()
                 async for partial in stream:

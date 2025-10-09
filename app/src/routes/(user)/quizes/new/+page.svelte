@@ -121,7 +121,9 @@
 				</div>
 
 				<!-- Main Card -->
-				<div class="card bg-base-100 border-base-300 border-2 pb-12 shadow-xl backdrop-blur-sm">
+				<div
+					class="card bg-base-100 border-base-300 border-2 pb-12 shadow-xl backdrop-blur-sm md:pb-0"
+				>
 					<div class="card-body p-6.5">
 						<!-- Description Section -->
 						<div class="mb-7">
