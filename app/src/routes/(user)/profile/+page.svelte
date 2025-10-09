@@ -232,7 +232,9 @@
 				<div class="bg-base-200 flex h-12 items-center justify-between rounded-lg p-3">
 					<span class="text-base-content">{pb!.authStore.record?.email || 'Not set'}</span>
 					{#if isOAuthUser && oauthProvider}
-						<div class="badge badge-outline badge-sm text-nowrap">Managed by {oauthProvider}</div>
+						<div class="badge badge-outline badge-sm hidden text-nowrap sm:block">
+							Managed by {oauthProvider}
+						</div>
 					{/if}
 				</div>
 			</div>

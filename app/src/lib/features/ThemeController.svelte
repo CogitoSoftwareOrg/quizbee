@@ -57,7 +57,7 @@
 			</svg>
 		</div>
 
-		<span class="text-base-content text-sm font-medium">{themeLabel}</span>
+		<span class="text-base-content text-nowrap text-sm font-medium">{themeLabel}</span>
 	</label>
 {:else}
 	<label class="swap swap-rotate cursor-pointer">

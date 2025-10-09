@@ -15,7 +15,7 @@
 </script>
 
 <div class="flex h-full flex-col pt-2">
-	<div class={['mb-2 flex items-center', isExpanded ? 'justify-between pr-2' : 'justify-center']}>
+	<div class={['flex items-center', isExpanded ? 'justify-between pr-2' : 'justify-center']}>
 		{#if isExpanded}
 			<a href="/home" class="relative mb-4 flex select-none items-center justify-center">
 				<img src={Logo} alt="Quizbee" class="size-14 rounded-full" />
