@@ -1,5 +1,4 @@
 import asyncio
-import logging
 from fastapi import (
     APIRouter,
     File,
@@ -12,8 +11,7 @@ from fastapi import (
 from pocketbase import FileUpload
 from fastapi.responses import JSONResponse
 
-from apps.materials.utils import as_data_url
-from .tokens_calculation import count_pdf_tokens, count_text_tokens
+from .tokens_calculation import count_text_tokens, calculate_image_tokens
 from .pdf_parser import parse_pdf
 from .important_sentences import summarize_to_fixed_tokens
 from apps.auth import User
@@ -37,14 +35,9 @@ async def upload_material(
     Uploads material to PocketBase with automatic token counting for PDF files.
     For PDFs, extracts text and images, saves them separately with token counts.
     """
-    logging.info(
-        f"Starting upload for file: {file.filename}, material_id: {material_id}"
-    )
     file_bytes = await file.read()
     file_size_mb = len(file_bytes) / (1024 * 1024)
     max_size_mb = 100
-
-    logging.info(f"File size: {round(file_size_mb, 2)}MB")
 
     dto = {
         "id": material_id,
@@ -57,9 +50,6 @@ async def upload_material(
 
     try:
         if file_size_mb > max_size_mb:
-            logging.warning(
-                f"File too large: {round(file_size_mb, 2)}MB > {max_size_mb}MB"
-            )
             dto["status"] = "too big"
 
             material = await admin_pb.collection("materials").create(dto)
@@ -77,39 +67,42 @@ async def upload_material(
                 }
             )
 
-        logging.info(f"Adding original file to dto")
         dto["file"] = FileUpload((file.filename, file_bytes))
         pdf_data = None
         if file.filename and file.filename.lower().endswith(".pdf"):
-            logging.info(f"Processing PDF file: {file.filename}")
             try:
                 # Парсим PDF и получаем текст, изображения и токены
-                logging.info("Parsing PDF and counting tokens...")
-                pdf_data = count_pdf_tokens(file_bytes)
-
-                logging.info(
-                    f"PDF parsed: text_tokens={pdf_data['text_tokens']}, image_tokens={pdf_data['image_tokens']}, total={pdf_data['total_tokens']}, images_count={len(pdf_data['images'])}"
-                )
+                pdf_data = parse_pdf(file_bytes)
 
                 # Обрабатываем текст (сократить если > 50k токенов)
                 extracted_text = pdf_data["text"]
-                total_tokens = pdf_data["total_tokens"]
+                
+                # Подсчитываем токены для текста
+                text_tokens = count_text_tokens(extracted_text) if extracted_text else 0
+                
+                # Подсчитываем токены для изображений
+                image_tokens = 0
+                if pdf_data["images"]:
+                    for img_data in pdf_data["images"]:
+                        image_tokens += calculate_image_tokens(
+                            img_data["width"], 
+                            img_data["height"]
+                        )
+                
+                # Общее количество токенов
+                total_tokens = text_tokens + image_tokens
 
                 dto["tokens"] = total_tokens
                 dto["kind"] = "complex"
 
                 # Добавляем обработанный текст и изображения в dto
                 if extracted_text:
-                    logging.info(
-                        f"Adding text file to dto (length: {len(extracted_text)} chars)"
-                    )
                     text_filename = f"{material_id}_text.txt"
                     text_bytes = extracted_text.encode("utf-8")
                     dto["textFile"] = FileUpload((text_filename, text_bytes))
 
                 images_list = []
                 if pdf_data["images"]:
-                    logging.info(f"Adding {len(pdf_data['images'])} images to dto")
                     for img_data in pdf_data["images"]:
                         images_list.append(
                             (
@@ -119,25 +112,17 @@ async def upload_material(
                         )
                     dto["images"] = FileUpload(*images_list)
 
-                logging.info(f"DTO prepared with keys: {list(dto.keys())}")
-
             except Exception as e:
-                logging.error(
-                    f"Error while parsing PDF {file.filename}: {e}", exc_info=True
-                )
                 # Если парсинг не удался, сохраняем как обычный файл
                 dto["kind"] = "simple"
                 pdf_data = None
         else:
-            logging.info(f"Processing non-PDF file: {file.filename}")
             # Для текстовых файлов
             token_count = count_text_tokens(file_bytes.decode("utf-8"))
             dto["tokens"] = token_count
             dto["kind"] = "simple"
 
-        logging.info(f"Creating material in PocketBase...")
         material = await admin_pb.collection("materials").create(dto)
-        logging.info(f"Material created successfully with id: {material.get('id')}")
 
         response_data = {
             "id": material.get("id"),
@@ -154,7 +139,6 @@ async def upload_material(
         return JSONResponse(content=response_data)
 
     except Exception as e:
-        logging.error(f"Error while uploading material: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Error while uploading material: {str(e)}"
         )

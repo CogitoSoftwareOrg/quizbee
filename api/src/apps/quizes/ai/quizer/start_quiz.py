@@ -82,7 +82,6 @@ async def start_generating_quiz_task(
         concatenated_texts = summarize_to_fixed_tokens(
             concatenated_texts, 
             target_token_count=52_000, 
-            context_window=2
         )
         # Recalculate tokens after summarization
         tokens = ENCODERS[LLMS.GPT_5_MINI].encode(concatenated_texts)
