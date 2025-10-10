@@ -243,11 +243,10 @@
 
 	<!-- History Section -->
 	<section
-		class="border-base-300 bg-base-100 rounded-2xl border p-4 shadow-lg sm:rounded-3xl sm:p-5 md:p-6 lg:p-8"
+		class="border-base-300 bg-base-100 rounded-2xl border p-4 shadow-lg sm:rounded-3xl sm:p-2 md:p-4 lg:p-5"
 	>
-		<h2 class="text-base-content mb-4 text-xl font-bold sm:mb-5 sm:text-2xl">Quiz History</h2>
 		<AttemptsHistory
-			class="h-[400px] sm:h-[480px] md:h-[520px]"
+			class="h-[600px] sm:h-[680px] md:h-[720px]"
 			{quizAttempts}
 			{quizes}
 			{materials}
