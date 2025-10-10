@@ -61,9 +61,12 @@ async def explainer_call_quota_protection(
 
     await ensure_active_and_maybe_reset(admin_pb, subscription)
 
-    attempt_id = request.query_params.get("attempt_id", "") or request.query_params.get(
-        "attempt", ""
-    )
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+
+    attempt_id = request.query_params.get("attempt", "") or body.get("attempt_id", "")
     quiz_attempt = await admin_pb.collection("quizAttempts").get_one(
         attempt_id, options={"params": {"filter": f"user = '{user.get('id')}'"}}
     )

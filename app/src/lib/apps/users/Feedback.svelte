@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { MessageSquare } from 'lucide-svelte';
+	import { MessageCircleHeart } from 'lucide-svelte';
 	import type { ClassValue } from 'svelte/elements';
 
 	import { uiStore } from './ui.svelte';
@@ -19,11 +19,11 @@
 		]}
 		onclick={() => uiStore.setFeedbackModalOpen(true)}
 	>
-		<MessageSquare class="size-7 shrink-0" />
+		<MessageCircleHeart class="size-7 shrink-0" />
 		<span class="text-base-content text-nowrap text-sm font-medium">Feedback & Support</span>
 	</button>
 {:else}
 	<button class={['cursor-pointer', className]} onclick={() => uiStore.setFeedbackModalOpen(true)}>
-		<MessageSquare class="size-7" />
+		<MessageCircleHeart class="size-7" />
 	</button>
 {/if}

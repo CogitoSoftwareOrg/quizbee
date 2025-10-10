@@ -45,12 +45,10 @@
 
 	<SidebarNavigation class="flex min-h-0 flex-1" expanded={isExpanded} />
 
-	<div class="mt-auto flex flex-col items-center justify-center gap-2 px-2">
+	<div class="mt-auto flex flex-col items-center justify-center gap-3 px-2">
 		<Feedback expanded={isExpanded} />
 		<ThemeController expanded={isExpanded} />
 
-		{#if !mobile.current}
-			<ProfileRow expanded={isExpanded} />
-		{/if}
+		<ProfileRow expanded={isExpanded} />
 	</div>
 </div>

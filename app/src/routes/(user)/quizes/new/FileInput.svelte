@@ -8,6 +8,7 @@
 	import { generateId } from '$lib/utils/generate-id';
 	import { removeFile } from '../new/removeFile';
 	import { addExistingMaterial } from '../new/addExistingMaterial';
+	import TextArea from '$lib/ui/TextArea.svelte';
 
 	interface Props {
 		inputText: string;
@@ -426,6 +427,12 @@
 			rows="1"
 			oninput={handleTextareaResize}
 		></textarea>
+		<!-- <TextArea
+			bind:value={inputText}
+			placeholder="Attach relevant files and/or describe what you'd like the questions to be about"
+			onpaste={handlePaste}
+			oninput={handleTextareaResize}
+		></TextArea> -->
 		<input
 			type="file"
 			bind:this={inputElement}

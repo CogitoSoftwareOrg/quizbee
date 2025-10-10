@@ -17,7 +17,7 @@ from lib.clients import (
 )
 from lib.config import LLMS
 
-from .generate_patch import generate_quiz_task
+from .generate_patch import GenMode, generate_oneshot, generate_quiz_task
 
 
 async def start_generating_quiz_task(
@@ -67,7 +67,7 @@ async def start_generating_quiz_task(
     # Truncate content somehow
     tokens = ENCODERS[LLMS.GPT_5_MINI].encode(texts)
     truncated = tokens[:25_000] + tokens[-25_000:]
-    estimated = tokens[:4000] + tokens[-4000:]
+    estimated = tokens[:3000] + tokens[-3000:]
     texts = ENCODERS[LLMS.GPT_5_MINI].decode(truncated)
 
     estimated_summary = ENCODERS[LLMS.GPT_5_MINI].decode(estimated)
@@ -116,8 +116,14 @@ async def start_generating_quiz_task(
             "dynamicConfig": json.dumps(config.model_dump()),
             "generation": 1,
         },
+        options={
+            "params": {"expand": "materials,quizItems_via_quiz"},
+        },
     )
 
     await generate_quiz_task(
-        admin_pb, http, user_id, attempt_id, quiz_id, limit, 1, "continue"
+        admin_pb, http, user_id, attempt_id, quiz_id, limit, 1, GenMode.Continue, True
     )
+    # await generate_oneshot(
+    #     admin_pb, http, user_id, attempt_id, quiz, limit, GenMode.Continue
+    # )

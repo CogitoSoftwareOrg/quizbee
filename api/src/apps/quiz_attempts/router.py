@@ -7,10 +7,9 @@ from apps.auth import User, auth_user
 from apps.billing import load_subscription
 from apps.quizes.ai import summary_and_index
 from lib.clients import AdminPB, langfuse_client, HTTPAsyncClient, MeilisearchClient
-from lib.config.llms import LLMSCosts
 from lib.utils import cache_key
 
-from .ai import FeedbackerDeps, feedbacker_agent
+from .ai import FEEDBACKER_COSTS, FeedbackerDeps, feedbacker_agent
 
 
 quiz_attempts_router = APIRouter(
@@ -26,7 +25,7 @@ async def _generate_feedback_task(
     quiz_attempt = await admin_pb.collection("quizAttempts").get_one(
         attempt_id,
         options={
-            "params": {"expand": "quiz,quiz.quizItems_via_quiz,quiz.materials_via_quiz"}
+            "params": {"expand": "quiz,quiz.quizItems_via_quiz,quiz.materials"}
         },
     )
     user_id = quiz_attempt.get("user", "")
@@ -43,7 +42,12 @@ async def _generate_feedback_task(
                 quiz_attempt=quiz_attempt,
                 http=http,
             ),
-            model_settings={"extra_body": {"prompt_cache_key": prompt_cache_key}},
+            model_settings={
+                "extra_body": {
+                    "reasoning_effort": "low",
+                    "prompt_cache_key": prompt_cache_key,
+                }
+            },
         )
 
         payload = res.output.data
@@ -55,9 +59,9 @@ async def _generate_feedback_task(
         input_cah = usage.cache_read_tokens
         outp = usage.output_tokens
 
-        input_nc_price = round(input_nc * LLMSCosts.GPT_5_MINI.input_nc, 4)
-        input_cah_price = round(input_cah * LLMSCosts.GPT_5_MINI.input_cah, 4)
-        outp_price = round(outp * LLMSCosts.GPT_5_MINI.output, 4)
+        input_nc_price = round(input_nc * FEEDBACKER_COSTS.input_nc, 4)
+        input_cah_price = round(input_cah * FEEDBACKER_COSTS.input_cah, 4)
+        outp_price = round(outp * FEEDBACKER_COSTS.output, 4)
 
         span.update_trace(
             input=f"NC: {input_nc_price} + CAH: {input_cah_price} => {input_nc_price + input_cah_price}",

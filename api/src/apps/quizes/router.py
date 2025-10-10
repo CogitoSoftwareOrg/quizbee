@@ -20,6 +20,8 @@ from lib.clients import AdminPB, HTTPAsyncClient, MeilisearchClient
 from .ai import (
     generate_quiz_task,
     start_generating_quiz_task,
+    GenMode,
+    generate_oneshot,
     summary_and_index,
 )
 
@@ -93,7 +95,7 @@ async def create_quiz(
 class GenerateQuizItems(BaseModel):
     attempt_id: str = Field(default="")
     limit: Annotated[int, Field(default=5, ge=2, le=50)]
-    mode: Annotated[Literal["regenerate", "continue"], Field(default="regenerate")]
+    mode: Annotated[GenMode, Field(default=GenMode.Regenerate)]
 
 
 @quizes_router.patch(
@@ -117,11 +119,15 @@ async def generate_quiz_items(
             }
         },
     )
-    generation = quiz.get("generation", 0) + 1
-    await admin_pb.collection("quizes").update(
-        quiz_id,
-        {"generation": generation},
-    )
+    generation = quiz.get("generation", 0)
+
+    if dto.mode == GenMode.Regenerate:
+        generation += 1
+        await admin_pb.collection("quizes").update(
+            quiz_id,
+            {"generation+": 1},
+        )
+
     # Generate
     background.add_task(
         generate_quiz_task,
@@ -134,6 +140,16 @@ async def generate_quiz_items(
         generation,
         dto.mode,
     )
+    # background.add_task(
+    #     generate_oneshot,
+    #     admin_pb,
+    #     http,
+    #     user.get("id", ""),
+    #     dto.attempt_id,
+    #     quiz,
+    #     dto.limit,
+    #     dto.mode,
+    # )
 
     return JSONResponse(
         content={"scheduled": True, "quiz_id": quiz_id, "limit": dto.limit},
