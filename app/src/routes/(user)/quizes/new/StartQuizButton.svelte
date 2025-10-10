@@ -4,22 +4,35 @@
 	import { uiStore } from '$lib/apps/users/ui.svelte';
 	import type { AttachedFile } from '$lib/types/attached-file';
 	import { pb } from '$lib/pb';
+	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
+	import Button from '$lib/ui/Button.svelte';
 
 	interface Props {
 		quizTemplateId: string;
 		attachedFiles: AttachedFile[];
 		inputText: string;
+		questionCount: number;
 	}
 
-	let { quizTemplateId, attachedFiles, inputText }: Props = $props();
+	let { quizTemplateId, attachedFiles, inputText, questionCount }: Props = $props();
 
 	const hasFiles = $derived(attachedFiles.length > 0);
 	const hasText = $derived(inputText.trim().length > 0);
 	const isSubmitDisabled = $derived(!hasFiles && !hasText);
 
+	const subscription = $derived(subscriptionStore.subscription);
+	const quizUsage = $derived(subscription?.quizItemsUsage || 0);
+	const quizLimit = $derived(subscription?.quizItemsLimit || 0);
+	const quizRemained = $derived(quizLimit - quizUsage);
+
 	let isLoading = $state(false);
 
 	async function sendQuizCreation(): Promise<boolean> {
+		if (questionCount > quizRemained) {
+			uiStore.setPaywallOpen(true);
+			return false;
+		}
+
 		isLoading = true;
 
 		try {
@@ -31,7 +44,7 @@
 			}
 
 			const { quiz_id: quizId, quiz_attempt_id: quizAttemptsId } = await postApi('quizes', {
-				quiz_id: quizTemplateId,
+				quiz_id: quizTemplateId
 			});
 
 			console.log('Quiz created:', quizId, 'Attempt created:', quizAttemptsId);
@@ -49,15 +62,20 @@
 	}
 </script>
 
-<button
-	class="btn btn-primary w-full h-14 text-lg font-semibold shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl"
+<Button
+	class={[
+		'h-14 w-full text-lg font-semibold shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl'
+	]}
 	disabled={isSubmitDisabled || isLoading}
 	onclick={sendQuizCreation}
+	style={quizRemained < questionCount ? 'soft' : 'solid'}
 >
 	{#if isLoading}
 		<span class="loading loading-md loading-spinner mr-2"></span>
 		Creating quiz...
+	{:else if quizRemained < questionCount}
+		You have {quizRemained} questions left
 	{:else}
 		Start a quiz
 	{/if}
-</button>
+</Button>

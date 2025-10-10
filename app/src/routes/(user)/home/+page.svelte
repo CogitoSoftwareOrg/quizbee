@@ -1,40 +1,30 @@
 <script lang="ts">
-	import { Flame, Plus, Sparkles, Target } from 'lucide-svelte';
+	import { Flame, Plus, Sparkles, Target, Crown } from 'lucide-svelte';
 
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte.js';
 	import { materialsStore } from '$lib/apps/materials/materials.svelte.js';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte.js';
+	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte.js';
 	import AttemptsHistory from '$lib/apps/quiz-attempts/AttemptsHistory.svelte';
-
 	import Button from '$lib/ui/Button.svelte';
+	import { uiStore } from '$lib/apps/users/ui.svelte';
+	import {
+		getValidAttempts,
+		calculateWeeklyQuestionCount,
+		calculateWeeklyProgress,
+		calculateStreak,
+		ensureChoicesArray
+	} from '$lib/apps/analytics/analytics-utils';
 
 	const quizAttempts = $derived(quizAttemptsStore.quizAttempts);
 	const quizes = $derived(quizesStore.quizes);
 	const materials = $derived(materialsStore.materials);
+	const subscription = $derived(subscriptionStore.subscription);
 
-	// Filter attempts: only with feedback and quiz status 'final'
-	const validAttempts = $derived.by(() => {
-		if (!quizAttempts?.length || !quizes?.length) return [];
-		return quizAttempts.filter((attempt) => {
-			if (!attempt?.feedback) return false;
-			const quiz = quizes.find((q) => q.id === attempt.quiz);
-			return quiz?.status === 'final';
-		});
-	});
+	const isFreePlan = $derived(subscription?.tariff === 'free');
 
-	function ensureChoicesArray(value: unknown) {
-		if (!value) return [];
-		if (Array.isArray(value)) return value;
-		if (typeof value === 'string') {
-			try {
-				const parsed = JSON.parse(value);
-				return Array.isArray(parsed) ? parsed : [];
-			} catch (error) {
-				return [];
-			}
-		}
-		return [];
-	}
+	// Filter valid attempts
+	const validAttempts = $derived(getValidAttempts(quizAttempts, quizes));
 
 	function formatDate(value: string) {
 		if (!value) return '';
@@ -48,67 +38,9 @@
 	}
 
 	const weeklyGoal = 200;
-
-	const weeklyQuestionCount = $derived.by(() => {
-		if (!validAttempts?.length) return 0;
-		const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
-		return validAttempts.reduce((sum, attempt) => {
-			if (!attempt?.created) return sum;
-			const createdAt = new Date(attempt.created).getTime();
-			if (Number.isNaN(createdAt) || createdAt < cutoff) return sum;
-			const choices = ensureChoicesArray(attempt.choices);
-			return sum + choices.length;
-		}, 0);
-	});
-
-	const weeklyProgress = $derived.by(() => {
-		if (!weeklyGoal) return 0;
-		const percentage = Math.round((weeklyQuestionCount / weeklyGoal) * 100);
-		return Math.max(0, Math.min(100, percentage));
-	});
-
-	const streak = $derived.by(() => {
-		if (!validAttempts?.length) return 0;
-		let streakCounter = 0;
-		let previousDay: Date | null = null;
-
-		for (const attempt of validAttempts) {
-			if (!attempt?.created) continue;
-
-			const createdDate = new Date(attempt.created);
-			if (Number.isNaN(createdDate.getTime())) continue;
-
-			const currentDay = new Date(
-				createdDate.getFullYear(),
-				createdDate.getMonth(),
-				createdDate.getDate()
-			);
-
-			if (!previousDay) {
-				streakCounter = 1;
-				previousDay = currentDay;
-				continue;
-			}
-
-			const diffInDays = Math.round(
-				(previousDay.getTime() - currentDay.getTime()) / (24 * 60 * 60 * 1000)
-			);
-
-			if (diffInDays === 0) {
-				continue;
-			}
-
-			if (diffInDays === 1) {
-				streakCounter += 1;
-				previousDay = currentDay;
-				continue;
-			}
-
-			break;
-		}
-
-		return streakCounter;
-	});
+	const weeklyQuestionCount = $derived(calculateWeeklyQuestionCount(validAttempts));
+	const weeklyProgress = $derived(calculateWeeklyProgress(weeklyQuestionCount, weeklyGoal));
+	const streak = $derived(calculateStreak(validAttempts));
 
 	const latestAttempt = $derived(validAttempts?.[0]);
 
@@ -117,7 +49,9 @@
 		if (!attempt) return null;
 		const quiz = quizes?.find((candidate) => candidate.id === attempt.quiz) ?? null;
 		const choices = ensureChoicesArray(attempt.choices);
-		const correctCount = choices.filter((choice) => Boolean(choice?.correct)).length;
+		const correctCount = choices.filter((choice) =>
+			Boolean((choice as { correct: boolean }).correct)
+		).length;
 		const totalCount = choices.length;
 		const score = totalCount === 0 ? null : Math.round((correctCount / totalCount) * 100);
 
@@ -132,17 +66,49 @@
 </script>
 
 <div
-	class="mx-auto flex min-h-full w-full max-w-7xl flex-col gap-4 py-4 sm:gap-6 sm:px-6 sm:py-6 lg:gap-8 lg:px-8 lg:py-8"
+	class="mx-auto flex min-h-full w-full max-w-7xl flex-col gap-4 py-1 sm:gap-6 sm:px-6 sm:py-2 lg:gap-8 lg:px-8 lg:py-4"
 >
+	<!-- Upgrade Reminder for Free Plan -->
+	{#if isFreePlan}
+		<button
+			onclick={() => {
+				uiStore.setPaywallOpen(true);
+			}}
+			class="border-warning/30 hover:border-warning/50 group relative cursor-pointer overflow-hidden rounded-2xl border p-4 shadow-lg transition-all hover:shadow-xl sm:rounded-3xl sm:p-5 md:p-6"
+		>
+			<div class="relative z-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+				<div class="flex items-start gap-3 sm:items-center sm:gap-4">
+					<div
+						class="bg-warning/20 text-warning rounded-xl p-2.5 transition-transform group-hover:scale-110 sm:p-3"
+					>
+						<Crown size={24} class="sm:size-7" />
+					</div>
+					<div class="space-y-1">
+						<h3 class="text-base-content text-base font-bold leading-tight sm:text-lg md:text-xl">
+							Unlock unlimited possibilities
+						</h3>
+						<p class="text-base-content/70 text-xs leading-relaxed sm:text-sm md:text-base">
+							Upgrade to Plus or Pro for unlimited quizzes, advanced AI features, and priority
+							support
+						</p>
+					</div>
+				</div>
+				<div
+					class="bg-warning text-warning-content group-hover:bg-warning/90 ml-auto inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold shadow-md transition-all group-hover:shadow-lg sm:ml-0 sm:px-5 sm:py-3 sm:text-base"
+				>
+					View Plans
+					<Sparkles size={16} class="sm:size-5" />
+				</div>
+			</div>
+			<div
+				class="from-warning/5 pointer-events-none absolute inset-0 bg-gradient-to-r to-transparent opacity-0 transition-opacity group-hover:opacity-100"
+			></div>
+		</button>
+	{/if}
+
 	<!-- CTA Section -->
 	<section class="flex justify-center">
-		<Button
-			wide
-			size="xl"
-			style="solid"
-			href="/quizes/new"
-			class="ring-primary/20 hover:ring-primary/40 shadow-2xl ring-2 transition-all"
-		>
+		<Button wide size="xl" style="solid" href="/quizes/new" class="shadow-2xl transition-all">
 			<Plus size={24} /> Start New Quiz
 		</Button>
 	</section>
@@ -182,9 +148,7 @@
 				<p class="text-base-content mt-3 text-3xl font-bold sm:mt-4 sm:text-4xl">
 					{weeklyQuestionCount}
 				</p>
-				<p class="text-base-content/60 mt-1.5 text-xs sm:mt-2 sm:text-sm">
-					Past 7 days across all attempts
-				</p>
+				<p class="text-base-content/60 mt-1.5 text-xs sm:mt-2 sm:text-sm">This week (Mon-Sun)</p>
 				<div class="mt-3 space-y-1.5 sm:mt-4 sm:space-y-2">
 					<div class="bg-base-300 h-2 w-full overflow-hidden rounded-full sm:h-2.5">
 						<div

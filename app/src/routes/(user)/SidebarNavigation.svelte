@@ -24,13 +24,13 @@
 			label: 'History',
 			href: '/quizes',
 			icon: History
+		},
+		{
+			name: '/analytics',
+			label: 'Analytics',
+			href: '/analytics',
+			icon: ChartBar
 		}
-		// {
-		// 	name: '/analytics',
-		// 	label: 'Analytics',
-		// 	href: '/analytics',
-		// 	icon: ChartBar
-		// }
 	];
 
 	const attemptingQuiz = $derived(

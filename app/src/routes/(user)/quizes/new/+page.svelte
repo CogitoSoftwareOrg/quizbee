@@ -181,7 +181,7 @@
 						{/if}
 
 						<!-- Start Button -->
-						<StartQuizButton {quizTemplateId} {attachedFiles} {inputText} />
+						<StartQuizButton {quizTemplateId} {attachedFiles} {inputText} {questionCount} />
 					</div>
 				</div>
 			</div>
