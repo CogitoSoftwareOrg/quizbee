@@ -64,17 +64,6 @@
 		<button class="flex w-fit items-center sm:hidden" onclick={() => uiStore.toggleGlobalSidebar()}>
 			<Menu class="size-6 text-neutral-500" />
 		</button>
-		<!-- Desktop Sidebar Toggle -->
-		<button
-			class="hidden w-fit cursor-pointer items-center sm:flex"
-			onclick={() => uiStore.toggleGlobalSidebar()}
-		>
-			{#if uiStore.globalSidebarOpen}
-				<PanelRightOpen class="size-6 text-neutral-500" />
-			{:else}
-				<PanelRightClose class="size-6 text-neutral-500" />
-			{/if}
-		</button>
 		{#if !attemptingQuiz}
 			<!-- <h1 class="hidden font-semibold sm:block">{getTitle()}</h1> -->
 		{:else if attemptingQuiz}
@@ -119,7 +108,7 @@
 			</ul>
 
 			<!-- Desktop navigation with numbers -->
-			<ul class="hidden flex-1 flex-wrap items-center gap-2 sm:flex">
+			<ul class="hidden flex-1 flex-wrap items-center gap-1 sm:flex">
 				{#each quizItems as quizItem, index}
 					{@const decision = quizDecisions.find((d) => d.itemId === quizItem.id)}
 
@@ -145,10 +134,5 @@
 	</div>
 
 	<!-- Always -->
-	<div class="flex items-center gap-1">
-		<div>
-			<MessageCircleHeart class="hidden size-8 text-black dark:text-white" />
-		</div>
-		<ThemeController />
-	</div>
+	<div class="flex items-center gap-1"></div>
 </header>

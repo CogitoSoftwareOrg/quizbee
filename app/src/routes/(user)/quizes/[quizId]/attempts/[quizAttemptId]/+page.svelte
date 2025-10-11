@@ -116,10 +116,57 @@
 </script>
 
 <div class="flex h-full overflow-hidden">
-	<main
-		class="border-base-200 relative h-full min-w-0 flex-shrink-0 overflow-x-hidden border-r transition-[width] duration-300 ease-out"
-		style:width={mainColumnWidth}
-	>
+	<div class="relative flex h-full min-w-0 flex-1">
+		<main
+			class="border-base-200 h-full min-w-0 flex-1 overflow-x-hidden border-r transition-[width] duration-300 ease-out"
+			style:width={mainColumnWidth}
+		>
+			<SwipeableContent
+				{canSwipeLeft}
+				{canSwipeRight}
+				onSwipeLeft={handleSwipeLeft}
+				onSwipeRight={handleSwipeRight}
+				class="relative h-full overflow-x-hidden"
+			>
+				{#if item && quiz && quizAttempt}
+					<QuizItemsNavigation
+						{quizAttempt}
+						{quizItems}
+						{order}
+						{itemDecision}
+						{chatOpen}
+						onPrevious={handleSwipeLeft}
+						onNext={handleSwipeRight}
+					/>
+				{/if}
+
+				<div class="mx-auto flex h-full min-w-0 max-w-3xl flex-col p-2">
+					<div class="flex min-w-0 items-start justify-between gap-4 px-3">
+						<p class="break-words text-center text-2xl font-bold leading-snug">
+							{item?.question}
+						</p>
+					</div>
+
+					{#if item && quiz && quizAttempt}
+						<QuizAnswersList
+							class="relative mt-6 flex-1 overflow-y-auto"
+							{answers}
+							{quizItems}
+							{quizDecisions}
+							{quiz}
+							{item}
+							{quizAttempt}
+							bind:itemDecision
+						/>
+					{/if}
+
+					{#if quiz?.status !== 'final' && user?.id === quiz?.author && lastFinalItem?.id === item?.id && item && !item?.managed && itemDecision && quiz && quizAttempt}
+						<ManageQuiz {item} {quiz} {quizAttempt} />
+					{/if}
+				</div>
+			</SwipeableContent>
+		</main>
+
 		{#if !chatOpen}
 			<div class="absolute -right-3 top-1/2 hidden -translate-y-1/2 sm:block">
 				<button
@@ -135,51 +182,7 @@
 				</button>
 			</div>
 		{/if}
-
-		<SwipeableContent
-			{canSwipeLeft}
-			{canSwipeRight}
-			onSwipeLeft={handleSwipeLeft}
-			onSwipeRight={handleSwipeRight}
-			class="h-full overflow-x-hidden"
-		>
-			<div class="relative mx-auto flex h-full min-w-0 max-w-3xl flex-col p-2">
-				<div class="flex min-w-0 items-start justify-between gap-4 px-3">
-					<p class="break-words text-center text-2xl font-bold leading-snug">
-						{item?.question}
-					</p>
-				</div>
-
-				{#if item && quiz && quizAttempt}
-					<QuizItemsNavigation
-						{quizAttempt}
-						{quizItems}
-						{order}
-						{itemDecision}
-						onPrevious={handleSwipeLeft}
-						onNext={handleSwipeRight}
-					/>
-				{/if}
-
-				{#if item && quiz && quizAttempt}
-					<QuizAnswersList
-						class="relative mt-6 flex-1 overflow-y-auto"
-						{answers}
-						{quizItems}
-						{quizDecisions}
-						{quiz}
-						{item}
-						{quizAttempt}
-						bind:itemDecision
-					/>
-				{/if}
-
-				{#if quiz?.status !== 'final' && user?.id === quiz?.author && lastFinalItem?.id === item?.id && item && !item?.managed && itemDecision && quiz && quizAttempt}
-					<ManageQuiz {item} {quiz} {quizAttempt} />
-				{/if}
-			</div>
-		</SwipeableContent>
-	</main>
+	</div>
 
 	<!-- Desktop AI Chat -->
 	<div

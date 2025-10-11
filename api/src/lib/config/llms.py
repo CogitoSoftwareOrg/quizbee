@@ -31,3 +31,14 @@ class LLMSCosts:
         input_cah=0.000000025,
         output=0.000002,
     )
+    GPT_5_MINI_PRIORITY = LLMCosts(
+        input_nc=0.00000045,
+        input_cah=0.000000045,
+        output=0.0000036,
+    )
+
+    GROK_4_FAST = LLMCosts(
+        input_nc=0.0000002,
+        input_cah=0.00000005,
+        output=0.0000005,
+    )

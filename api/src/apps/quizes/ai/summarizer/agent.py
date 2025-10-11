@@ -1,10 +1,16 @@
 from pydantic_ai import Agent, NativeOutput, RunContext
 from pydantic_ai.messages import ModelMessage, ModelRequest, SystemPromptPart
 
-from lib.config import LLMS
+from lib.config import LLMS, LLMSCosts
 from lib.clients import langfuse_client
 from lib.ai import build_pre_prompt, SummarizerDeps, AgentEnvelope
 from lib.settings import settings
+
+
+SUMMARIZER_LLM = LLMS.GPT_5_MINI
+SUMMARIZER_COSTS = LLMSCosts.GPT_5_MINI
+# SUMMARIZER_LLM = LLMS.GROK_4_FAST
+# SUMMARIZER_COSTS = LLMSCosts.GROK_4_FAST
 
 
 async def inject_request_prompt(
@@ -26,7 +32,7 @@ async def inject_request_prompt(
 
 
 summarizer_agent = Agent(
-    model=LLMS.GPT_5_MINI,
+    model=SUMMARIZER_LLM,
     deps_type=SummarizerDeps,
     output_type=AgentEnvelope,
     instrument=True,

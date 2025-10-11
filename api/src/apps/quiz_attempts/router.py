@@ -1,21 +1,20 @@
 import logging
-from fastapi import APIRouter, BackgroundTasks, Depends, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 import httpx
 
 from apps.auth import User, auth_user
-from apps.billing import load_subscription
+from apps.billing import load_subscription, Subscription
 from apps.quizes.ai import summary_and_index
 from lib.clients import AdminPB, langfuse_client, HTTPAsyncClient, MeilisearchClient
-from lib.config.llms import LLMSCosts
 from lib.utils import cache_key
 
-from .ai import FeedbackerDeps, feedbacker_agent
+from .ai import FEEDBACKER_COSTS, FeedbackerDeps, feedbacker_agent
 
 
 quiz_attempts_router = APIRouter(
     prefix="/quiz_attempts",
-    tags=["attempts", "feedback"],
+    tags=["attempts"],
     dependencies=[Depends(auth_user), Depends(load_subscription)],
 )
 
@@ -25,9 +24,7 @@ async def _generate_feedback_task(
 ):
     quiz_attempt = await admin_pb.collection("quizAttempts").get_one(
         attempt_id,
-        options={
-            "params": {"expand": "quiz,quiz.quizItems_via_quiz,quiz.materials_via_quiz"}
-        },
+        options={"params": {"expand": "quiz,quiz.quizItems_via_quiz,quiz.materials"}},
     )
     user_id = quiz_attempt.get("user", "")
     attempt_id = quiz_attempt.get("id", "")
@@ -43,7 +40,12 @@ async def _generate_feedback_task(
                 quiz_attempt=quiz_attempt,
                 http=http,
             ),
-            model_settings={"extra_body": {"prompt_cache_key": prompt_cache_key}},
+            model_settings={
+                "extra_body": {
+                    "reasoning_effort": "low",
+                    "prompt_cache_key": prompt_cache_key,
+                }
+            },
         )
 
         payload = res.output.data
@@ -55,9 +57,9 @@ async def _generate_feedback_task(
         input_cah = usage.cache_read_tokens
         outp = usage.output_tokens
 
-        input_nc_price = round(input_nc * LLMSCosts.GPT_5_MINI.input_nc, 4)
-        input_cah_price = round(input_cah * LLMSCosts.GPT_5_MINI.input_cah, 4)
-        outp_price = round(outp * LLMSCosts.GPT_5_MINI.output, 4)
+        input_nc_price = round(input_nc * FEEDBACKER_COSTS.input_nc, 4)
+        input_cah_price = round(input_cah * FEEDBACKER_COSTS.input_cah, 4)
+        outp_price = round(outp * FEEDBACKER_COSTS.output, 4)
 
         span.update_trace(
             input=f"NC: {input_nc_price} + CAH: {input_cah_price} => {input_nc_price + input_cah_price}",
@@ -84,26 +86,32 @@ async def _generate_feedback_task(
 async def update_quiz_attempt_with_feedback(
     admin_pb: AdminPB,
     user: User,
+    sub: Subscription,
     meilisearch_client: MeilisearchClient,
     attempt_id: str,
     background: BackgroundTasks,
     http: HTTPAsyncClient,
 ):
+    if sub.get("tariff") == "free":
+        raise HTTPException(
+            status_code=400, detail="Free tier does not support this feature"
+        )
 
-    # Generate feedback
-    background.add_task(_generate_feedback_task, admin_pb, http, attempt_id)
-
-    # Summarize and index
-    attempt = await admin_pb.collection("quizAttempts").get_one(
+    # CRUD
+    quiz_attempt = await admin_pb.collection("quizAttempts").get_one(
         attempt_id,
-    )
-    quiz_id = attempt.get("quiz", "")
-    quiz = await admin_pb.collection("quizes").get_one(
-        quiz_id,
         options={
-            "params": {"expand": "materials,quizItems_via_quiz"},
+            "params": {
+                "expand": "quiz,quiz.quizItems_via_quiz,quiz.materials_via_quiz"
+            },
         },
     )
+    quiz = quiz_attempt.get("expand", {}).get("quiz", {})
+
+    # No feedback -> generate feedback
+    if quiz_attempt.get("feedback") is None:
+        background.add_task(_generate_feedback_task, admin_pb, http, attempt_id)
+
     # Only summarize and index if quiz is not final
     if quiz.get("status") != "final":
         background.add_task(

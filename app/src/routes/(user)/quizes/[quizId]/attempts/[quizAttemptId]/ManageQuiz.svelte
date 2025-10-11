@@ -174,7 +174,7 @@
 					});
 				}}
 				color="success"
-				style="soft">Confirm (-1 quiz point)</Button
+				style="soft">Confirm (-5 questions)</Button
 			>
 		</div>
 	</div>

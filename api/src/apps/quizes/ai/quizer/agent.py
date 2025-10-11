@@ -1,6 +1,7 @@
 import logging
 from collections.abc import AsyncIterable
 from pydantic_ai import Agent, ModelRetry, NativeOutput, PromptedOutput, RunContext
+from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.messages import (
     AgentStreamEvent,
     FinalResultEvent,
@@ -13,11 +14,15 @@ from pydantic_ai.messages import (
     PartStartEvent,
 )
 from lib.ai import QuizerDeps, QuizerOutput, AgentEnvelope
-from lib.config import LLMS
+from lib.config import LLMS, LLMSCosts
 
 from .prompts import inject_request_prompt
 
 QUIZER_LLM = LLMS.GPT_5_MINI
+QUIZER_COSTS = LLMSCosts.GPT_5_MINI
+QUIZER_PRIORITY_COSTS = LLMSCosts.GPT_5_MINI_PRIORITY
+# QUIZER_LLM = LLMS.GROK_4_FAST
+# QUIZER_COSTS = LLMSCosts.GROK_4_FAST
 
 
 quizer_agent = Agent(

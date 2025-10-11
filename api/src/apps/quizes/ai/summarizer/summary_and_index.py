@@ -3,12 +3,11 @@ import json
 
 from lib.ai.models import SummarizerDeps
 from lib.clients import AdminPB, HTTPAsyncClient, MeilisearchClient, langfuse_client
-from lib.config.llms import LLMSCosts
 from lib.utils import cache_key
 
 from apps.materials.utils import load_file_text
 
-from .agent import summarizer_agent
+from .agent import SUMMARIZER_COSTS, summarizer_agent
 
 
 async def summary_and_index(
@@ -60,7 +59,12 @@ async def summary_and_index(
                 materials_context=texts,
                 quiz_contents=item_contents,
             ),
-            model_settings={"extra_body": {"prompt_cache_key": prompt_cache_key}},
+            model_settings={
+                "extra_body": {
+                    "reasoning_effort": "low",
+                    "prompt_cache_key": prompt_cache_key,
+                }
+            },
         )
 
         payload = res.output.data
@@ -74,9 +78,9 @@ async def summary_and_index(
         input_cah = usage.cache_read_tokens
         outp = usage.output_tokens
 
-        input_nc_price = round(input_nc * LLMSCosts.GPT_5_MINI.input_nc, 4)
-        input_cah_price = round(input_cah * LLMSCosts.GPT_5_MINI.input_cah, 4)
-        outp_price = round(outp * LLMSCosts.GPT_5_MINI.output, 4)
+        input_nc_price = round(input_nc * SUMMARIZER_COSTS.input_nc, 4)
+        input_cah_price = round(input_cah * SUMMARIZER_COSTS.input_cah, 4)
+        outp_price = round(outp * SUMMARIZER_COSTS.output, 4)
 
         span.update_trace(
             input=f"NC: {input_nc_price} + CAH: {input_cah_price} => {input_nc_price + input_cah_price}",

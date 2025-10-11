@@ -129,7 +129,7 @@
 										})
 									]);
 
-									if (toAnswer === 2 && quizItems.some((qi) => ['blank'].includes(qi.status))) {
+									if (toAnswer === 3 && quizItems.some((qi) => ['blank'].includes(qi.status))) {
 										const result = await patchApi(`quizes/${quiz?.id}`, {
 											attempt_id: quizAttempt!.id,
 											limit: 5,

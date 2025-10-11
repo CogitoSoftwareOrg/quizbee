@@ -9,7 +9,7 @@ from pydantic_ai.messages import (
 from lib.ai import FeedbackerDeps, build_pre_prompt, FeedbackerOutput, AgentEnvelope
 from lib.settings import settings
 from lib.clients import langfuse_client
-from lib.config import LLMS
+from lib.config import LLMS, LLMSCosts
 
 
 async def inject_request_prompt(
@@ -65,6 +65,9 @@ async def inject_request_prompt(
 
 
 FEEDBACKER_LLM = LLMS.GPT_5_MINI
+FEEDBACKER_COSTS = LLMSCosts.GPT_5_MINI
+# FEEDBACKER_LLM = LLMS.GROK_4_FAST
+# FEEDBACKER_COSTS = LLMSCosts.GROK_4_FAST
 
 feedbacker_agent = Agent(
     model=FEEDBACKER_LLM,

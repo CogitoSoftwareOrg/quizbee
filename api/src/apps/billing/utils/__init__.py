@@ -2,10 +2,11 @@ import logging
 from datetime import datetime
 from datetime import timezone
 
+from fastapi import HTTPException
 from pocketbase.models.dtos import Record
 
 from lib.clients import AdminPB
-from lib.config import STRIPE_TARIFS_MAP
+from lib.config import STRIPE_TARIFS_MAP, STRIPE_MONTHLY_LIMITS_MAP
 
 
 PB_DT_FMT = "%Y-%m-%d %H:%M:%S.%fZ"
@@ -59,6 +60,7 @@ async def stripe_subscription_to_pb(
     price = items[0]["price"] if items else {}
     price_id = price.get("id", "")
     product_id = price.get("product", "")
+    interval = price.get("recurring", {}).get("interval")
 
     cp_start_raw = sub.get("current_period_start") or items[0].get(
         "current_period_start"
@@ -73,13 +75,17 @@ async def stripe_subscription_to_pb(
         }
     )
 
+    tariff = STRIPE_TARIFS_MAP.get(price_id) or "free"
+    limits = STRIPE_MONTHLY_LIMITS_MAP.get(tariff)
+
     record = {
         "stripeSubscription": stripe_subscription_id,
         "stripeCustomer": sub.get("customer"),
         "status": status,
         "stripeProduct": product_id,
         "stripePrice": price_id,
-        "tariff": STRIPE_TARIFS_MAP.get(price_id),
+        "tariff": tariff,
+        "stripeInterval": interval,
         "currentPeriodStart": _ts_to_pb(cp_start_raw),
         "currentPeriodEnd": _ts_to_pb(cp_end_raw),
         "cancelAtPeriodEnd": bool(sub.get("cancel_at_period_end")),
@@ -88,6 +94,25 @@ async def stripe_subscription_to_pb(
 
     patch = _maybe_reset_usage_on_period_change(existing, cp_start_raw)
     record.update(patch)
+    if limits:
+        record.update(limits)
 
     await admin_pb.collection("subscriptions").update(existing.get("id", ""), record)
     return existing.get("id", "")
+
+
+async def ensure_active_and_maybe_reset(admin_pb, sub: Record):
+    allowed = {"active", "trialing", "past_due"}
+    if sub.get("status") not in allowed:
+        raise HTTPException(402, "Subscription inactive")
+    current_period_start = _pb_to_ts(sub.get("currentPeriodStart", "")) or 0
+    patch = _maybe_reset_usage_on_period_change(sub, current_period_start)
+
+    if patch:
+        await admin_pb.collection("subscriptions").update(sub.get("id", ""), patch)
+
+    return sub
+
+
+def remaining(sub, field):
+    return int(sub.get(f"{field}Limit", 0) - sub.get(f"{field}Usage", 0))

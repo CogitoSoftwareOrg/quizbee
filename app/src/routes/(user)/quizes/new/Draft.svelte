@@ -178,6 +178,7 @@
 
 {#if showModal}
 	<Modal
+		backdrop
 		open={showModal}
 		onclose={() => (showModal = false)}
 		class="max-h-screen max-w-sm items-start"

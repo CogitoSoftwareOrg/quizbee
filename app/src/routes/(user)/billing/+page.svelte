@@ -33,7 +33,7 @@
 		try {
 			const response = await fetch(`${computeApiUrl()}billing/stripe/checkout`, {
 				method: 'POST',
-				body: JSON.stringify({ price, return_url: page.url.pathname }),
+				body: JSON.stringify({ price, return_url: page.url.pathname.slice(1) }),
 				headers: {
 					'Content-Type': 'application/json'
 				},

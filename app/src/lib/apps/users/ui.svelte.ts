@@ -2,7 +2,9 @@ import { Preferences } from '@capacitor/preferences';
 import { z } from 'zod';
 
 const UIStateSchema = z.object({
-	globalSidebarOpen: z.boolean().default(true)
+	paywallOpen: z.boolean().default(false),
+	globalSidebarOpen: z.boolean().default(true),
+	feedbackModalOpen: z.boolean().default(false)
 });
 
 type UIState = z.infer<typeof UIStateSchema>;
@@ -10,8 +12,23 @@ type UIState = z.infer<typeof UIStateSchema>;
 class UIStore {
 	private _state: UIState | null = $state(UIStateSchema.parse({}));
 
+	paywallOpen = $derived(this._state?.paywallOpen);
 	globalSidebarOpen = $derived(this._state?.globalSidebarOpen);
+	feedbackModalOpen = $derived(this._state?.feedbackModalOpen);
 
+	// paywallOpen
+	togglePaywallOpen() {
+		if (!this._state) return;
+		this._state.paywallOpen = !this._state.paywallOpen;
+		this.saveState();
+	}
+	setPaywallOpen(open: boolean) {
+		if (!this._state) return;
+		this._state.paywallOpen = open;
+		this.saveState();
+	}
+
+	// globalSidebarOpen
 	toggleGlobalSidebar() {
 		if (!this._state) return;
 		this._state.globalSidebarOpen = !this._state.globalSidebarOpen;
@@ -20,6 +37,18 @@ class UIStore {
 	setGlobalSidebarOpen(open: boolean) {
 		if (!this._state) return;
 		this._state.globalSidebarOpen = open;
+		this.saveState();
+	}
+
+	// feedbackModalOpen
+	toggleFeedbackModal() {
+		if (!this._state) return;
+		this._state.feedbackModalOpen = !this._state.feedbackModalOpen;
+		this.saveState();
+	}
+	setFeedbackModalOpen(open: boolean) {
+		if (!this._state) return;
+		this._state.feedbackModalOpen = open;
 		this.saveState();
 	}
 

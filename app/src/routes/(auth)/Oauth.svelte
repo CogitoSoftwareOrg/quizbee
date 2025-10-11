@@ -23,7 +23,7 @@
 			const target = e.currentTarget as HTMLElement;
 			await pb!.collection('users').authWithOAuth2({
 				provider: target.dataset.provider!,
-				query: { expand: '' },
+				query: { expand: '', requestKey: 'oauth2' },
 				createData: {
 					metadata: {
 						provider: target.dataset.provider!
