@@ -2,6 +2,7 @@
 	import '../app.css';
 	import '$lib/pb/pb-on-change';
 
+	import { onMount } from 'svelte';
 	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 
@@ -17,9 +18,33 @@
 	// 		path: page.url.pathname
 	// 	});
 	// });
+
+	import { registerSW } from 'virtual:pwa-register';
+	onMount(() => {
+		const updateSW = registerSW({
+			immediate: true, // сразу ставим SW
+			onRegisteredSW(url: string, reg: ServiceWorkerRegistration) {
+				console.log('[PWA] registered:', url, reg);
+			},
+			onRegisterError(err: Error) {
+				console.error('[PWA] register error:', err);
+			},
+			onNeedRefresh() {
+				console.log('[PWA] need refresh');
+			},
+			onOfflineReady() {
+				console.log('[PWA] offline ready');
+			}
+		});
+		// при необходимости: updateSW(true) чтобы применить обновление
+	});
+
+	import { pwaInfo } from 'virtual:pwa-info';
+	const webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : '');
 </script>
 
 <svelte:head>
+	{@html webManifestLink}
 	<link rel="icon" href={favicon} />
 	<link
 		rel="preload"

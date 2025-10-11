@@ -1,4 +1,4 @@
-import { redirect } from '@sveltejs/kit';
+export const prerender = false;
 
 import { pb } from '$lib/pb';
 import type { UsersResponse } from '$lib/pb/pocketbase-types';
