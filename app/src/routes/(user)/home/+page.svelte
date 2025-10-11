@@ -108,7 +108,14 @@
 
 	<!-- CTA Section -->
 	<section class="flex justify-center">
-		<Button wide size="xl" style="solid" href="/quizes/new" class="shadow-2xl transition-all">
+		<Button
+			color="primary"
+			block
+			size="xl"
+			style="solid"
+			href="/quizes/new"
+			class="py-4 shadow-2xl sm:w-1/2"
+		>
 			<Plus size={24} /> Start New Quiz
 		</Button>
 	</section>
