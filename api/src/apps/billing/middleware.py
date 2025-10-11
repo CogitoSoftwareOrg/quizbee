@@ -40,15 +40,14 @@ async def quiz_patch_quota_protection(
         quiz_id, options={"params": {"filter": f"author = '{user.get('id')}'"}}
     )
 
-    new_items = int(body.get("limit", 5))
-    delta = max(0, new_items - quiz.get("itemsCount", 0))
+    cost = abs(int(body.get("limit", 5)))
 
     remained = remaining(subscription, "quizItems")
-    if delta > remained:
+    if cost > remained:
         raise HTTPException(status_code=400, detail=f"Quiz items limit exceeded")
 
     await admin_pb.collection("subscriptions").update(
-        subscription_id, {"quizItemsUsage+": delta}
+        subscription_id, {"quizItemsUsage+": cost}
     )
 
 
