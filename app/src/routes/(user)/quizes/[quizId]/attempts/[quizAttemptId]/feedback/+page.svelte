@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { Search, ChevronRight, ChevronLeft } from 'lucide-svelte';
+	import { Search, ChevronRight, ChevronLeft, Sparkles } from 'lucide-svelte';
 
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
@@ -10,6 +10,8 @@
 	import type { Answer } from '$lib/apps/quizes/types';
 	import type { QuizItemsResponse } from '$lib/pb';
 	import { quizItemsStore } from '$lib/apps/quizes/quizItems.svelte';
+	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
+	import { uiStore } from '$lib/apps/users/ui.svelte';
 
 	type Feedback = {
 		quiz_title: string;
@@ -17,6 +19,8 @@
 		problem_topics: string[];
 		uncovered_topics: string[];
 	};
+
+	const subscription = $derived(subscriptionStore.subscription);
 
 	const quizAttemptId = $derived(page.params.quizAttemptId);
 	const quizAttempt = $derived(
@@ -54,7 +58,68 @@
 <div
 	class="relative mx-auto flex max-w-7xl flex-1 flex-col gap-6 p-1 pb-20 sm:h-full sm:flex-row sm:pb-1"
 >
-	{#if !feedback}
+	{#if subscription?.tariff === 'free'}
+		<section class="flex flex-1 flex-col items-center justify-center gap-4 p-0 sm:p-4">
+			<button
+				onclick={() => {
+					uiStore.setPaywallOpen(true);
+				}}
+				class="border-primary/30 hover:border-primary/50 group relative max-w-2xl cursor-pointer overflow-hidden rounded-2xl border p-6 shadow-xl transition-all hover:shadow-2xl sm:rounded-3xl sm:p-8 md:p-10"
+			>
+				<div class="relative z-10 flex flex-col gap-6">
+					<div class="flex flex-col items-center gap-4 text-center">
+						<div
+							class="bg-primary/20 text-primary rounded-2xl p-4 transition-transform group-hover:scale-110 sm:p-5"
+						>
+							<Sparkles size={40} class="sm:size-12" />
+						</div>
+						<div class="space-y-3">
+							<h3 class="text-base-content text-xl font-bold leading-tight sm:text-2xl md:text-3xl">
+								AI-Powered Personalized Feedback
+							</h3>
+							<p class="text-base-content/70 text-sm leading-relaxed sm:text-base md:text-lg">
+								Get detailed insights on your performance, identify problem topics, and discover
+								uncovered areas. Our AI creates a personalized learning path just for you.
+							</p>
+						</div>
+					</div>
+					<div class="space-y-3">
+						<div class="flex items-start gap-3">
+							<div class="bg-success/20 text-success mt-1 rounded-lg p-1.5">
+								<ChevronRight size={16} />
+							</div>
+							<p class="text-base-content/80 text-left text-sm sm:text-base">
+								<strong>Performance Overview:</strong> Comprehensive analysis of your quiz results
+							</p>
+						</div>
+						<div class="flex items-start gap-3">
+							<div class="bg-error/20 text-error mt-1 rounded-lg p-1.5">
+								<ChevronRight size={16} />
+							</div>
+							<p class="text-base-content/80 text-left text-sm sm:text-base">
+								<strong>Problem Topics:</strong> Identify areas that need more attention
+							</p>
+						</div>
+						<div class="flex items-start gap-3">
+							<div class="bg-info/20 text-info mt-1 rounded-lg p-1.5">
+								<ChevronRight size={16} />
+							</div>
+							<p class="text-base-content/80 text-left text-sm sm:text-base">
+								<strong>Uncovered Topics:</strong> Discover what you haven't explored yet
+							</p>
+						</div>
+					</div>
+					<div class="btn btn-outline btn-primary btn-xl">
+						Unlock AI Feedback
+						<Sparkles size={20} />
+					</div>
+				</div>
+				<div
+					class="from-primary/10 pointer-events-none absolute inset-0 bg-gradient-to-br to-transparent opacity-50 transition-opacity group-hover:opacity-70"
+				></div>
+			</button>
+		</section>
+	{:else if !feedback}
 		<section class="flex flex-1 flex-col items-center justify-center gap-4">
 			<p class="loading loading-spinner loading-xl"></p>
 			<p class="text-center font-semibold">We are giving your feedback...</p>

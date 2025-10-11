@@ -1,10 +1,10 @@
 import logging
-from fastapi import APIRouter, BackgroundTasks, Depends, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 import httpx
 
 from apps.auth import User, auth_user
-from apps.billing import load_subscription
+from apps.billing import load_subscription, Subscription
 from apps.quizes.ai import summary_and_index
 from lib.clients import AdminPB, langfuse_client, HTTPAsyncClient, MeilisearchClient
 from lib.utils import cache_key
@@ -24,9 +24,7 @@ async def _generate_feedback_task(
 ):
     quiz_attempt = await admin_pb.collection("quizAttempts").get_one(
         attempt_id,
-        options={
-            "params": {"expand": "quiz,quiz.quizItems_via_quiz,quiz.materials"}
-        },
+        options={"params": {"expand": "quiz,quiz.quizItems_via_quiz,quiz.materials"}},
     )
     user_id = quiz_attempt.get("user", "")
     attempt_id = quiz_attempt.get("id", "")
@@ -88,11 +86,16 @@ async def _generate_feedback_task(
 async def update_quiz_attempt_with_feedback(
     admin_pb: AdminPB,
     user: User,
+    sub: Subscription,
     meilisearch_client: MeilisearchClient,
     attempt_id: str,
     background: BackgroundTasks,
     http: HTTPAsyncClient,
 ):
+    if sub.get("tariff") == "free":
+        raise HTTPException(
+            status_code=400, detail="Free tier does not support this feature"
+        )
 
     # CRUD
     quiz_attempt = await admin_pb.collection("quizAttempts").get_one(
