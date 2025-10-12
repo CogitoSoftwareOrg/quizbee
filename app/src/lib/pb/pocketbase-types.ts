@@ -11,6 +11,7 @@ export enum Collections {
 	Mfas = "_mfas",
 	Otps = "_otps",
 	Superusers = "_superusers",
+	Feedbacks = "feedbacks",
 	Materials = "materials",
 	Messages = "messages",
 	QuizAttempts = "quizAttempts",
@@ -95,6 +96,21 @@ export type SuperusersRecord = {
 	tokenKey: string
 	updated?: IsoDateString
 	verified?: boolean
+}
+
+export enum FeedbacksTypeOptions {
+	"support" = "support",
+	"feature" = "feature",
+}
+export type FeedbacksRecord<Tmetadata = unknown> = {
+	content?: string
+	created?: IsoDateString
+	id: string
+	metadata?: null | Tmetadata
+	rating?: number
+	type?: FeedbacksTypeOptions
+	updated?: IsoDateString
+	user?: RecordIdString
 }
 
 export enum MaterialsStatusOptions {
@@ -185,7 +201,13 @@ export enum QuizesStatusOptions {
 	"final" = "final",
 	"preparing" = "preparing",
 }
-export type QuizesRecord<TdynamicConfig = unknown> = {
+
+export enum QuizesVisibilityOptions {
+	"private" = "private",
+	"public" = "public",
+	"search" = "search",
+}
+export type QuizesRecord<TdynamicConfig = unknown, Tmetadata = unknown, Ttags = unknown> = {
 	author?: RecordIdString
 	created?: IsoDateString
 	difficulty?: QuizesDifficultyOptions
@@ -195,11 +217,15 @@ export type QuizesRecord<TdynamicConfig = unknown> = {
 	itemsLimit?: number
 	materials?: RecordIdString[]
 	materialsContext?: string
+	metadata?: null | Tmetadata
 	query?: string
+	slug?: string
 	status?: QuizesStatusOptions
 	summary?: string
+	tags?: null | Ttags
 	title?: string
 	updated?: IsoDateString
+	visibility?: QuizesVisibilityOptions
 }
 
 export type StripeEventsRecord<Tpayload = unknown> = {
@@ -269,11 +295,12 @@ export type ExternalauthsResponse<Texpand = unknown> = Required<ExternalauthsRec
 export type MfasResponse<Texpand = unknown> = Required<MfasRecord> & BaseSystemFields<Texpand>
 export type OtpsResponse<Texpand = unknown> = Required<OtpsRecord> & BaseSystemFields<Texpand>
 export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> & AuthSystemFields<Texpand>
+export type FeedbacksResponse<Tmetadata = unknown, Texpand = unknown> = Required<FeedbacksRecord<Tmetadata>> & BaseSystemFields<Texpand>
 export type MaterialsResponse<Texpand = unknown> = Required<MaterialsRecord> & BaseSystemFields<Texpand>
 export type MessagesResponse<Tmetadata = unknown, Texpand = unknown> = Required<MessagesRecord<Tmetadata>> & BaseSystemFields<Texpand>
 export type QuizAttemptsResponse<Tchoices = unknown, Tfeedback = unknown, Texpand = unknown> = Required<QuizAttemptsRecord<Tchoices, Tfeedback>> & BaseSystemFields<Texpand>
 export type QuizItemsResponse<Tanswers = unknown, Texpand = unknown> = Required<QuizItemsRecord<Tanswers>> & BaseSystemFields<Texpand>
-export type QuizesResponse<TdynamicConfig = unknown, Texpand = unknown> = Required<QuizesRecord<TdynamicConfig>> & BaseSystemFields<Texpand>
+export type QuizesResponse<TdynamicConfig = unknown, Tmetadata = unknown, Ttags = unknown, Texpand = unknown> = Required<QuizesRecord<TdynamicConfig, Tmetadata, Ttags>> & BaseSystemFields<Texpand>
 export type StripeEventsResponse<Tpayload = unknown, Texpand = unknown> = Required<StripeEventsRecord<Tpayload>> & BaseSystemFields<Texpand>
 export type SubscriptionsResponse<Tmetadata = unknown, Texpand = unknown> = Required<SubscriptionsRecord<Tmetadata>> & BaseSystemFields<Texpand>
 export type UsersResponse<Tmetadata = unknown, Texpand = unknown> = Required<UsersRecord<Tmetadata>> & AuthSystemFields<Texpand>
@@ -286,6 +313,7 @@ export type CollectionRecords = {
 	_mfas: MfasRecord
 	_otps: OtpsRecord
 	_superusers: SuperusersRecord
+	feedbacks: FeedbacksRecord
 	materials: MaterialsRecord
 	messages: MessagesRecord
 	quizAttempts: QuizAttemptsRecord
@@ -302,6 +330,7 @@ export type CollectionResponses = {
 	_mfas: MfasResponse
 	_otps: OtpsResponse
 	_superusers: SuperusersResponse
+	feedbacks: FeedbacksResponse
 	materials: MaterialsResponse
 	messages: MessagesResponse
 	quizAttempts: QuizAttemptsResponse
@@ -321,6 +350,7 @@ export type TypedPocketBase = PocketBase & {
 	collection(idOrName: '_mfas'): RecordService<MfasResponse>
 	collection(idOrName: '_otps'): RecordService<OtpsResponse>
 	collection(idOrName: '_superusers'): RecordService<SuperusersResponse>
+	collection(idOrName: 'feedbacks'): RecordService<FeedbacksResponse>
 	collection(idOrName: 'materials'): RecordService<MaterialsResponse>
 	collection(idOrName: 'messages'): RecordService<MessagesResponse>
 	collection(idOrName: 'quizAttempts'): RecordService<QuizAttemptsResponse>

@@ -17,7 +17,7 @@ from lib.clients import (
 )
 from lib.config import LLMS
 
-from .generate_patch import generate_quiz_task
+from .generate_patch import GenMode, generate_oneshot, generate_quiz_task
 
 
 async def start_generating_quiz_task(
@@ -67,7 +67,7 @@ async def start_generating_quiz_task(
     # Truncate content somehow
     tokens = ENCODERS[LLMS.GPT_5_MINI].encode(texts)
     truncated = tokens[:25_000] + tokens[-25_000:]
-    estimated = tokens[:4000] + tokens[-4000:]
+    estimated = tokens[:3000] + tokens[-3000:]
     texts = ENCODERS[LLMS.GPT_5_MINI].decode(truncated)
 
     estimated_summary = ENCODERS[LLMS.GPT_5_MINI].decode(estimated)
@@ -81,9 +81,9 @@ async def start_generating_quiz_task(
             semantic_ratio=0.75,
             embedder="quizSummaries",
         ),
-        ranking_score_threshold=0.3,
+        ranking_score_threshold=0.4,
         filter=[f"userId = {user_id}"],
-        limit=10,
+        limit=50,
     )
     hits = search_result.hits
     quiz_ids = [hit.get("quizId", "") for hit in hits]
@@ -101,7 +101,7 @@ async def start_generating_quiz_task(
         qs = [item.get("question", "") for item in items]
         questions.extend([q for q in qs if q])
 
-    questions = questions[:50]
+    questions = questions[:500]
     config = DynamicConfig(**quiz.get("dynamicConfig", {}))
     config.negativeQuestions = questions
 
@@ -116,8 +116,14 @@ async def start_generating_quiz_task(
             "dynamicConfig": json.dumps(config.model_dump()),
             "generation": 1,
         },
+        options={
+            "params": {"expand": "materials,quizItems_via_quiz"},
+        },
     )
 
     await generate_quiz_task(
-        admin_pb, http, user_id, attempt_id, quiz_id, limit, 1, "continue"
+        admin_pb, http, user_id, attempt_id, quiz_id, limit, 1, GenMode.Continue, True
     )
+    # await generate_oneshot(
+    #     admin_pb, http, user_id, attempt_id, quiz, limit, GenMode.Continue
+    # )
