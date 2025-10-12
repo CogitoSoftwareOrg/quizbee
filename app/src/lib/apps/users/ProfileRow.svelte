@@ -19,31 +19,30 @@
 	const sub = $derived(subscriptionStore.subscription);
 </script>
 
-<a
-	class={[
-		'border-base-200 flex cursor-pointer items-center justify-center gap-2 border-t p-1',
-		className
-	]}
-	href="/profile"
->
-	<div class="border-base-300 size-10 overflow-hidden rounded-full">
-		<img src={avatar} alt="avatar" />
-	</div>
+<div class={className}>
+	<a
+		class={['border-base-200 flex cursor-pointer items-center justify-center gap-2 border-t p-1']}
+		href="/profile"
+	>
+		<div class="border-base-300 size-10 overflow-hidden rounded-full">
+			<img src={avatar} alt="avatar" />
+		</div>
 
-	{#if expanded}
-		<div class="flex h-full flex-1 flex-col gap-1">
-			<p class="truncate text-sm font-semibold">{user?.name || user?.email}</p>
+		{#if expanded}
+			<div class="flex h-full flex-1 flex-col gap-1">
+				<p class="truncate text-sm font-semibold">{user?.name || user?.email}</p>
 
-			<div class="flex items-center gap-1">
-				<p class="badge-primary badge badge-sm font-semibold">{sub?.tariff}</p>
-				<!-- <p class="badge-primary badge badge-sm font-semibold">
-					q: <span class="text-xs">{sub?.quizItemsUsage} / {sub?.quizItemsLimit}</span>
+				<div class="flex items-center gap-1">
+					<p class="badge-primary badge badge-sm font-semibold">{sub?.tariff}</p>
+					<!-- <p class="badge-primary badge badge-sm font-semibold">
+				q: <span class="text-xs">{sub?.quizItemsUsage} / {sub?.quizItemsLimit}</span>
 				</p> -->
+				</div>
 			</div>
-		</div>
 
-		<div>
-			<Settings class="size-6" />
-		</div>
-	{/if}
-</a>
+			<div>
+				<Settings class="size-6" />
+			</div>
+		{/if}
+	</a>
+</div>
