@@ -9,20 +9,22 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/node": "^9.4.6",
     "@astrojs/sitemap": "^3.6.0",
     "@astrojs/svelte": "^7.2.0",
+    "@cogisoft/ui-astro": "^0.1.8",
+    "@cogisoft/ui-svelte-daisy": "^0.1.8",
     "@tailwindcss/vite": "^4.1.14",
     "astro": "^5.14.1",
+    "daisyui": "^5.2.3",
     "lucide-astro": "^0.544.0",
     "lucide-svelte": "^0.544.0",
+    "pocketbase": "^0.26.2",
     "posthog-js": "^1.269.1",
     "sharp": "^0.34.4",
     "svelte": "^5.39.8",
     "tailwindcss": "^4.1.14",
     "theme-change": "^2.5.0",
     "typescript": "^5.9.3"
-  },
-  "devDependencies": {
-    "daisyui": "^5.1.26"
   }
 }

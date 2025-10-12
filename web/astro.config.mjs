@@ -1,8 +1,8 @@
 // @ts-check
 import { defineConfig } from "astro/config";
 
+import node from "@astrojs/node";
 import svelte from "@astrojs/svelte";
-
 import sitemap from "@astrojs/sitemap";
 
 import tailwindcss from "@tailwindcss/vite";
@@ -40,4 +40,8 @@ export default defineConfig({
       redirectToDefaultLocale: true,
     },
   },
+
+  adapter: node({
+    mode: "standalone",
+  }),
 });
