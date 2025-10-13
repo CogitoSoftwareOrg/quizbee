@@ -59,7 +59,7 @@
 			<SidebarContent />
 		</aside>
 
-		<main class="flex h-full min-w-0 flex-1 flex-col sm:pt-4">
+		<main class={['flex h-full min-w-0 flex-1 flex-col sm:pt-4', 'pb-12 sm:pb-0']}>
 			<header class="mobile-header sm:hidden">
 				<GlobalHeader />
 			</header>
@@ -71,7 +71,7 @@
 			</div>
 
 			{#if !attemptingQuiz}
-				<footer class="mobile-dock-footer dock dock-sm sm:hidden">
+				<footer class="mobile-dock-footer dock dock-sm z-50 sm:hidden">
 					<a href="/home">
 						<House class={page.url.pathname === '/home' ? 'text-primary' : 'text-neutral'} />
 					</a>

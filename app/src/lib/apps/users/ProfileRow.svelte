@@ -24,7 +24,11 @@
 		class={['border-base-200 flex cursor-pointer items-center justify-center gap-2 border-t p-1']}
 		href="/profile"
 	>
-		<div class="border-base-300 size-10 overflow-hidden rounded-full">
+		<div
+			class:size-8={!expanded}
+			class:size-10={expanded}
+			class="border-base-300 overflow-hidden rounded-full"
+		>
 			<img src={avatar} alt="avatar" />
 		</div>
 
