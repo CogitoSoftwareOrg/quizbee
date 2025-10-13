@@ -23,6 +23,7 @@ interface Props {
   noindex?: boolean;
   canonical?: string;
   structuredData?: object;
+  headerCtaHref?: string;
 }
 
 const {
@@ -34,6 +35,7 @@ const {
   noindex = false,
   canonical,
   structuredData,
+  headerCtaHref,
 } = Astro.props;
 
 const lang = getLangFromUrl(Astro.url);
@@ -149,7 +151,11 @@ const defaultStructuredData = {
   <body>
     <PortalHost client:only />
 
-    <Header transition:persist="root-header" active={active} />
+    <Header
+      transition:persist="root-header"
+      active={active}
+      ctaHref={headerCtaHref}
+    />
 
     <main class="mx-auto max-w-screen-xl">
       <slot />
