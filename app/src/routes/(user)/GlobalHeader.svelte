@@ -106,30 +106,6 @@
 					</li>
 				{/each}
 			</ul>
-
-			<!-- Desktop navigation with numbers -->
-			<ul class="hidden flex-1 flex-wrap items-center gap-1 sm:flex">
-				{#each quizItems as quizItem, index}
-					{@const decision = quizDecisions.find((d) => d.itemId === quizItem.id)}
-
-					<li>
-						<Button
-							disabled={!decision && quizItem.order > (itemToAnswer?.order || 0)}
-							color={decision?.correct
-								? 'success'
-								: decision && !decision?.correct
-									? 'error'
-									: 'neutral'}
-							href={`/quizes/${quiz?.id}/attempts/${quizAttempt?.id}?order=${quizItem.order}`}
-							style={currentItem?.id === quizItem.id ? 'solid' : 'outline'}
-							size="xs"
-							circle
-						>
-							{index + 1}
-						</Button>
-					</li>
-				{/each}
-			</ul>
 		{/if}
 	</div>
 

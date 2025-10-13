@@ -113,96 +113,128 @@
 
 	const canSwipeLeft = $derived(order > 0);
 	const canSwipeRight = $derived(!!itemDecision);
+
+	const currentItem = $derived(quizItems.find((qi) => qi.order === order));
+	const itemToAnswer = $derived(
+		quizItems.find((qi) => !quizDecisions.some((d) => d.itemId === qi.id))
+	);
 </script>
 
-<div class="flex h-full overflow-hidden">
-	<div class="relative flex h-full min-w-0 flex-1">
-		<main
-			class="border-base-200 h-full min-w-0 flex-1 overflow-x-hidden border-r transition-[width] duration-300 ease-out"
-			style:width={mainColumnWidth}
-		>
-			<SwipeableContent
-				{canSwipeLeft}
-				{canSwipeRight}
-				onSwipeLeft={handleSwipeLeft}
-				onSwipeRight={handleSwipeRight}
-				class="relative h-full overflow-x-hidden"
+<div class="flex h-full flex-col">
+	<header class="px-4 py-2 sm:block">
+		<ul class="hidden flex-1 flex-wrap items-center gap-1 sm:flex">
+			{#each quizItems as quizItem, index}
+				{@const decision = quizDecisions.find((d) => d.itemId === quizItem.id)}
+
+				<li>
+					<Button
+						disabled={!decision && quizItem.order > (itemToAnswer?.order || 0)}
+						color={decision?.correct
+							? 'success'
+							: decision && !decision?.correct
+								? 'error'
+								: 'neutral'}
+						href={`/quizes/${quiz?.id}/attempts/${quizAttempt?.id}?order=${quizItem.order}`}
+						style={currentItem?.id === quizItem.id ? 'solid' : 'outline'}
+						size="xs"
+						circle
+					>
+						{index + 1}
+					</Button>
+				</li>
+			{/each}
+		</ul>
+	</header>
+
+	<div class="flex flex-1 overflow-hidden">
+		<div class="relative flex h-full min-w-0 flex-1">
+			<!-- Main column -->
+			<main
+				class="border-base-200 h-full min-w-0 flex-1 overflow-x-hidden border-r transition-[width] duration-300 ease-out"
+				style:width={mainColumnWidth}
 			>
-				{#if item && quiz && quizAttempt}
-					<QuizItemsNavigation
-						{quizAttempt}
-						{quizItems}
-						{order}
-						{itemDecision}
-						{chatOpen}
-						onPrevious={handleSwipeLeft}
-						onNext={handleSwipeRight}
-					/>
-				{/if}
-
-				<div class="mx-auto flex h-full min-w-0 max-w-3xl flex-col py-2">
-					<div class="flex min-w-0 items-start justify-between gap-4 px-3">
-						<p class="min-w-0 flex-1 break-words text-center text-2xl font-bold leading-snug">
-							{item?.question}
-						</p>
-					</div>
-
+				<SwipeableContent
+					{canSwipeLeft}
+					{canSwipeRight}
+					onSwipeLeft={handleSwipeLeft}
+					onSwipeRight={handleSwipeRight}
+					class="relative h-full overflow-x-hidden"
+				>
 					{#if item && quiz && quizAttempt}
-						<QuizAnswersList
-							class="relative mt-6 flex-1 overflow-y-auto"
-							{answers}
-							{quizItems}
-							{quizDecisions}
-							{quiz}
-							{item}
+						<QuizItemsNavigation
 							{quizAttempt}
-							bind:itemDecision
+							{quizItems}
+							{order}
+							{itemDecision}
+							{chatOpen}
+							onPrevious={handleSwipeLeft}
+							onNext={handleSwipeRight}
 						/>
 					{/if}
 
-					{#if quiz?.status !== 'final' && user?.id === quiz?.author && lastFinalItem?.id === item?.id && item && !item?.managed && itemDecision && quiz && quizAttempt}
-						<ManageQuiz {item} {quiz} {quizAttempt} />
-					{/if}
-				</div>
-			</SwipeableContent>
-		</main>
+					<div class="mx-auto flex h-full min-w-0 max-w-3xl flex-col py-2">
+						<div class="flex min-w-0 items-start justify-between gap-4 px-3">
+							<p class="min-w-0 flex-1 break-words text-center text-2xl font-bold leading-snug">
+								{item?.question}
+							</p>
+						</div>
 
-		{#if !chatOpen}
-			<div class="absolute -right-3 top-1/2 hidden -translate-y-1/2 sm:block">
-				<button
-					class="bg-primary flex-1 cursor-pointer rounded-2xl p-2 text-center text-2xl font-semibold"
-					onclick={() => (chatOpen = !chatOpen)}
-				>
-					<span
-						class="block select-none whitespace-nowrap tracking-widest text-black"
-						style="writing-mode: vertical-rl; transform: rotate(180deg);"
+						{#if item && quiz && quizAttempt}
+							<QuizAnswersList
+								class="relative mt-6 flex-1 overflow-y-auto"
+								{answers}
+								{quizItems}
+								{quizDecisions}
+								{quiz}
+								{item}
+								{quizAttempt}
+								bind:itemDecision
+							/>
+						{/if}
+
+						{#if quiz?.status !== 'final' && user?.id === quiz?.author && lastFinalItem?.id === item?.id && item && !item?.managed && itemDecision && quiz && quizAttempt}
+							<ManageQuiz {item} {quiz} {quizAttempt} />
+						{/if}
+					</div>
+				</SwipeableContent>
+			</main>
+
+			{#if !chatOpen}
+				<div class="absolute -right-3 top-1/2 hidden -translate-y-1/2 sm:block">
+					<button
+						class="bg-primary flex-1 cursor-pointer rounded-2xl p-2 text-center text-2xl font-semibold"
+						onclick={() => (chatOpen = !chatOpen)}
 					>
-						AI Chat
-					</span>
-				</button>
-			</div>
-		{/if}
-	</div>
+						<span
+							class="block select-none whitespace-nowrap tracking-widest text-black"
+							style="writing-mode: vertical-rl; transform: rotate(180deg);"
+						>
+							AI Chat
+						</span>
+					</button>
+				</div>
+			{/if}
+		</div>
 
-	<!-- Desktop AI Chat -->
-	<div
-		class="hidden h-full min-w-0 flex-shrink-0 overflow-hidden transition-[width] duration-300 ease-out sm:block"
-		style:pointer-events={!chatOpen ? 'none' : 'auto'}
-		style:width={chatColumnWidth}
-	>
-		<AIChat
-			class="flex h-full flex-col px-2"
-			{item}
-			{quizAttempt}
-			{itemDecision}
-			{messages}
-			{userSender}
-			{assistantSender}
-			bind:open={chatOpen}
-		/>
+		<!-- Desktop AI Chat -->
+		<div
+			class="hidden h-full min-w-0 flex-shrink-0 overflow-hidden transition-[width] duration-300 ease-out sm:block"
+			style:pointer-events={!chatOpen ? 'none' : 'auto'}
+			style:width={chatColumnWidth}
+		>
+			<AIChat
+				class="flex h-full flex-col px-2"
+				{item}
+				{quizAttempt}
+				{itemDecision}
+				{messages}
+				{userSender}
+				{assistantSender}
+				bind:open={chatOpen}
+			/>
+		</div>
 	</div>
 </div>
-
 <!-- Mobile AI Chat (bottom sheet) -->
 <MobileAIChat
 	{item}
