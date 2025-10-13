@@ -1,9 +1,12 @@
 <script lang="ts">
+	import { MediaQuery } from 'svelte/reactivity';
 	import { page } from '$app/state';
 	import { House, ChartBar, CreditCard, Plus, History } from 'lucide-svelte';
+
 	import { uiStore } from '$lib/apps/users/ui.svelte';
 	import type { ClassValue } from 'svelte/elements';
 	import Button from '$lib/ui/Button.svelte';
+	import { afterNavigate } from '$app/navigation';
 
 	interface Props {
 		class?: ClassValue;
@@ -32,6 +35,13 @@
 			icon: ChartBar
 		}
 	];
+
+	const mobile = new MediaQuery('(max-width: 640px)');
+	afterNavigate(() => {
+		if (mobile.current) {
+			uiStore.setGlobalSidebarOpen(false);
+		}
+	});
 
 	const attemptingQuiz = $derived(
 		/quizes\/[0-9a-zA-Z]+\/attempts\/[0-9a-zA-Z]+/.test(page.url.pathname) &&

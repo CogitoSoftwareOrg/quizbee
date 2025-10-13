@@ -140,9 +140,9 @@
 					/>
 				{/if}
 
-				<div class="mx-auto flex h-full min-w-0 max-w-3xl flex-col p-2">
+				<div class="mx-auto flex h-full min-w-0 max-w-3xl flex-col py-2">
 					<div class="flex min-w-0 items-start justify-between gap-4 px-3">
-						<p class="break-words text-center text-2xl font-bold leading-snug">
+						<p class="min-w-0 flex-1 break-words text-center text-2xl font-bold leading-snug">
 							{item?.question}
 						</p>
 					</div>

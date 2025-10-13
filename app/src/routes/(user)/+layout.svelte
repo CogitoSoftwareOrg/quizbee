@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { MediaQuery } from 'svelte/reactivity';
 	import { House, Plus, Settings } from 'lucide-svelte';
+	import { onNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 
 	import { uiStore } from '$lib/apps/users/ui.svelte';
@@ -22,6 +23,20 @@
 		/quizes\/[0-9a-zA-Z]+\/attempts\/[0-9a-zA-Z]+/.test(page.url.pathname) &&
 			!page.url.pathname.includes('/feedback')
 	);
+
+	// Enable View Transitions API for smooth page transitions
+	onNavigate((navigation) => {
+		if (!document.startViewTransition) return;
+
+		return new Promise((resolve) => {
+			document.startViewTransition(async () => {
+				document.documentElement.setAttribute('data-vt', mobile.current ? 'slide' : 'parallax');
+
+				resolve();
+				await navigation.complete;
+			});
+		});
+	});
 </script>
 
 <SubscribeUser />
@@ -36,7 +51,7 @@
 		<!-- Desktop Sidebar -->
 		<aside
 			class={[
-				'bg-base-100 border-base-200 z-10 h-full shrink-0 flex-col border-r transition-all duration-300 ease-in-out',
+				'desktop-sidebar bg-base-100 border-base-200 z-10 h-full shrink-0 flex-col border-r transition-all duration-300 ease-in-out',
 				uiStore.globalSidebarOpen ? 'w-56' : 'w-14',
 				'hidden sm:flex'
 			]}
@@ -45,21 +60,18 @@
 		</aside>
 
 		<main class="flex h-full min-w-0 flex-1 flex-col sm:pt-4">
-			<header class="sm:hidden">
+			<header class="mobile-header sm:hidden">
 				<GlobalHeader />
 			</header>
 
-			<div
-				class={[
-					'h-full min-w-0 flex-1 overflow-auto p-4 sm:p-3 sm:pb-3',
-					!attemptingQuiz && 'pb-16'
-				]}
-			>
-				{@render children?.()}
+			<div class={['h-full min-w-0 flex-1 overflow-auto', !attemptingQuiz && 'pb-16 sm:pb-3']}>
+				<div id="page-root" class={['h-full min-h-full', !attemptingQuiz && 'p-4 sm:p-3']}>
+					{@render children?.()}
+				</div>
 			</div>
 
 			{#if !attemptingQuiz}
-				<footer class="dock dock-sm sm:hidden">
+				<footer class="mobile-dock-footer dock dock-sm sm:hidden">
 					<a href="/home">
 						<House class={page.url.pathname === '/home' ? 'text-primary' : 'text-neutral'} />
 					</a>
@@ -118,3 +130,18 @@
 >
 	<FeedbackForm />
 </Modal>
+
+<style>
+	/* Исключить footer, header и sidebar из анимации */
+	.mobile-dock-footer {
+		view-transition-name: mobile-dock;
+	}
+
+	.mobile-header {
+		view-transition-name: mobile-header;
+	}
+
+	.desktop-sidebar {
+		view-transition-name: desktop-sidebar;
+	}
+</style>

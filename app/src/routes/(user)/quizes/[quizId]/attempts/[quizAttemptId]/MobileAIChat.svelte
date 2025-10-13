@@ -52,6 +52,13 @@
 	});
 
 	function handleTouchStart(e: TouchEvent) {
+		// Проверяем, не началось ли touch на интерактивном элементе (кнопке, инпуте и т.д.)
+		const target = e.target as HTMLElement;
+		if (target.closest('button, a, input, textarea, select')) {
+			// Если touch на интерактивном элементе, не обрабатываем его как свайп
+			return;
+		}
+
 		// Предотвращаем конфликт с другими обработчиками
 		e.stopPropagation();
 		touchStartY = e.touches[0].clientY;
@@ -135,7 +142,7 @@
 <!-- Постоянная зона свайпа внизу (всегда активна на мобилке) -->
 {#if !open && itemDecision}
 	<div
-		class="fixed bottom-0 left-0 right-0 z-30 h-24 sm:hidden"
+		class="fixed inset-x-0 bottom-0 z-30 h-24 max-w-full sm:hidden"
 		ontouchstart={handleTouchStart}
 		ontouchmove={handleTouchMove}
 		ontouchend={handleTouchEnd}
@@ -164,7 +171,7 @@
 
 <!-- Mobile Bottom Sheet -->
 <div
-	class="bg-base-100 fixed inset-x-0 bottom-0 z-40 flex flex-col overflow-hidden rounded-t-3xl shadow-2xl transition-transform duration-300 ease-out sm:hidden"
+	class="bg-base-100 fixed inset-x-0 bottom-0 z-40 flex max-w-full flex-col overflow-hidden rounded-t-3xl shadow-2xl transition-transform duration-300 ease-out sm:hidden"
 	class:pointer-events-none={!open}
 	style:transform={`translateY(${chatTranslateY()})`}
 	style:height="95vh"
