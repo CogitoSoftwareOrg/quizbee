@@ -61,6 +61,9 @@ class Settings(BaseSettings):
             hostname = parsed.hostname or ""
             self.pb_url = f"https://{self.pr_id}-{hostname}"
 
+            app_url = urlparse(self.app_url)
+            self.app_url = f"https://{self.pr_id}-{app_url.hostname}"
+
         return self
 
     class Config:
