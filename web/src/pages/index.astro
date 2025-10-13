@@ -10,6 +10,15 @@ import Pricing from "@/components/sections/Pricing.astro";
 import FAQ from "@/components/sections/FAQ.astro";
 import CTA from "@/components/sections/CTA.astro";
 
+import { extractPrIdFromCoolifyUrl } from "@/lib/pb";
+
+const coolify = import.meta.env.COOLIFY_URL;
+let appUrl = import.meta.env.PUBLIC_APP_URL;
+if (import.meta.env.PUBLIC_ENV === "preview" && coolify) {
+  const prId = extractPrIdFromCoolifyUrl(coolify);
+  appUrl = appUrl.replace("https://", `https://${prId}-`);
+}
+
 const content = {
   hero: {
     title: "Transform Your Study Materials into Interactive Quizzes",
@@ -362,7 +371,7 @@ const content = {
     image={content.hero.image}
     position="right"
     overlay={false}
-    href={import.meta.env.PUBLIC_APP_URL}
+    href={appUrl}
   />
 
   <!-- Pain Points Section -->
@@ -396,15 +405,15 @@ const content = {
     theme="default"
     oracle={{
       ...content.useCases.primary,
-      href: import.meta.env.PUBLIC_APP_URL,
+      href: appUrl,
     }}
     modules={content.useCases.modules.map((module: any) => ({
       ...module,
-      href: import.meta.env.PUBLIC_APP_URL,
+      href: appUrl,
     }))}
     pantheon={{
       ...content.useCases.secondary,
-      href: import.meta.env.PUBLIC_APP_URL,
+      href: appUrl,
     }}
   />
 
@@ -423,7 +432,7 @@ const content = {
     theme="default"
     plans={content.pricing.plans.map((plan: any) => ({
       ...plan,
-      buttonHref: import.meta.env.PUBLIC_APP_URL,
+      buttonHref: appUrl,
     }))}
   />
 
@@ -440,7 +449,7 @@ const content = {
     headline={content.cta.headline}
     subheadline={content.cta.subheadline}
     buttonText={content.cta.buttonText}
-    buttonHref={import.meta.env.PUBLIC_APP_URL}
+    buttonHref={appUrl}
     theme="gradient"
   />
 </Root>
