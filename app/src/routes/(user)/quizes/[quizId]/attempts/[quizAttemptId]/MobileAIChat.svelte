@@ -33,10 +33,10 @@
 	let hasMoved = $state(false);
 	let touchStartedOnBottom = $state(false); // отслеживаем, началось ли касание внизу экрана
 
-	const SWIPE_THRESHOLD = 60;
-	const HINT_DURATION = 4000;
-	const TAP_THRESHOLD = 5;
-	const BOTTOM_ZONE_HEIGHT = 150; // высота зоны внизу для открытия чата
+	const SWIPE_THRESHOLD = 60; // Минимальное расстояние для срабатывания свайпа
+	const HINT_DURATION = 4000; // Длительность анимации подсказки
+	const TAP_THRESHOLD = 5; // Максимальное движение для распознавания как клика (не свайпа)
+	const BOTTOM_ZONE_HEIGHT = 150; // Высота зоны внизу экрана для открытия чата
 
 	// Показываем анимацию только первые 4 секунды И если не было взаимодействия
 	let showPulse = $state(true);

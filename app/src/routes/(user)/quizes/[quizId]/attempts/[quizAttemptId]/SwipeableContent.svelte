@@ -29,11 +29,11 @@
 	let showInitialHint = $state(true);
 	let hasMoved = $state(false); // отслеживаем, было ли движение
 
-	const SWIPE_THRESHOLD = 70;
-	const MAX_TRANSLATE = 120;
-	const DIRECTION_THRESHOLD = 10; // для определения направления свайпа
-	const HINT_DURATION = 3000; // показываем анимированную подсказку 3 секунды
-	const TAP_THRESHOLD = 5; // максимальное движение для распознавания как тапа
+	const SWIPE_THRESHOLD = 70; // Минимальное расстояние для срабатывания свайпа
+	const MAX_TRANSLATE = 120; // Максимальное смещение контента
+	const DIRECTION_THRESHOLD = 10; // Порог для определения направления (горизонтально vs вертикально)
+	const HINT_DURATION = 3000; // Длительность анимации подсказки
+	const TAP_THRESHOLD = 5; // Максимальное движение для распознавания как клика (не свайпа)
 
 	// Скрываем анимированную подсказку через некоторое время
 	$effect(() => {
