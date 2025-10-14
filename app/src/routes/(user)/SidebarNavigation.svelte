@@ -2,10 +2,10 @@
 	import { MediaQuery } from 'svelte/reactivity';
 	import { page } from '$app/state';
 	import { House, ChartBar, CreditCard, Plus, History } from 'lucide-svelte';
+	import { Button } from '@cogisoft/ui-svelte-daisy';
 
 	import { uiStore } from '$lib/apps/users/ui.svelte';
 	import type { ClassValue } from 'svelte/elements';
-	import Button from '$lib/ui/Button.svelte';
 	import { afterNavigate } from '$app/navigation';
 
 	interface Props {

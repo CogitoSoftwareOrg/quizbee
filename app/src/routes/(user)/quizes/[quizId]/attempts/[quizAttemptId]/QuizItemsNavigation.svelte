@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { ChevronLeft, ChevronRight } from 'lucide-svelte';
 
-	import Button from '$lib/ui/Button.svelte';
+	import { Button } from '@cogisoft/ui-svelte-daisy';
+
 	import type { QuizAttemptsResponse, QuizItemsResponse } from '$lib/pb';
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
 

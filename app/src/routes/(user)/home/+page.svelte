@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { Flame, Plus, Sparkles, Target, Crown } from 'lucide-svelte';
 
+	import { Button } from '@cogisoft/ui-svelte-daisy';
+
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte.js';
 	import { materialsStore } from '$lib/apps/materials/materials.svelte.js';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte.js';
 	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte.js';
 	import AttemptsHistory from '$lib/apps/quiz-attempts/AttemptsHistory.svelte';
-	import Button from '$lib/ui/Button.svelte';
 	import { uiStore } from '$lib/apps/users/ui.svelte';
 	import {
 		getValidAttempts,

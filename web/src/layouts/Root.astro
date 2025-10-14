@@ -1,14 +1,15 @@
 ---
+import "@/styles/global.css";
 import { ClientRouter } from "astro:transitions";
 
 import { getLangFromUrl } from "@/i18n/utils";
 import { languages } from "@/i18n/ui";
-import "@/styles/global.css";
+
+import { PortalHost } from "@cogisoft/ui-svelte-daisy";
 
 import ThemeLoad from "@/components/features/ThemeLoad.astro";
 
 import Posthog from "@/components/Posthog.astro";
-import PortalHost from "@/components/PortalHost.svelte";
 import CookiesAccept from "@/components/CookiesAccept.svelte";
 
 import Header from "./_Header.astro";

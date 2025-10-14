@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { Clock, Search } from 'lucide-svelte';
 
+	import { Input } from '@cogisoft/ui-svelte-daisy';
+
 	import type { Answer } from '$lib/apps/quizes/types';
 	import type {
 		MaterialsResponse,
@@ -9,7 +11,6 @@
 		QuizExpand,
 		QuizItemsResponse
 	} from '$lib/pb';
-	import Input from '$lib/ui/Input.svelte';
 
 	import type { Decision } from './types';
 	import type { ClassValue } from 'svelte/elements';

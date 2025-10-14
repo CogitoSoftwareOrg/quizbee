@@ -2,11 +2,12 @@
 	import { page } from '$app/state';
 	import { Search, ChevronRight, ChevronLeft, Sparkles } from 'lucide-svelte';
 
+	import { Button, Input } from '@cogisoft/ui-svelte-daisy';
+
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
-	import Button from '$lib/ui/Button.svelte';
-	import Input from '$lib/ui/Input.svelte';
+
 	import type { Answer } from '$lib/apps/quizes/types';
 	import type { QuizItemsResponse } from '$lib/pb';
 	import { quizItemsStore } from '$lib/apps/quizes/quizItems.svelte';

@@ -30,6 +30,9 @@ export default defineConfig({
 
   vite: {
     plugins: [tailwindcss()],
+    ssr: {
+      noExternal: ["@cogisoft/ui-svelte-daisy"],
+    },
   },
 
   i18n: {

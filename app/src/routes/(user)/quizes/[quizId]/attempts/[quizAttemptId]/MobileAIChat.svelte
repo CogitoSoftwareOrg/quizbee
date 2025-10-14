@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { ChevronUp } from 'lucide-svelte';
+
 	import type { Sender } from '$lib/apps/messages/types';
 	import type { MessagesResponse, QuizAttemptsResponse, QuizItemsResponse } from '$lib/pb';
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
+
 	import AIChat from './AIChat.svelte';
 
 	interface Props {

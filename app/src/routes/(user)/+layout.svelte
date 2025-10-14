@@ -4,15 +4,15 @@
 	import { onNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 
+	import { Button, Modal } from '@cogisoft/ui-svelte-daisy';
+
 	import { uiStore } from '$lib/apps/users/ui.svelte';
+	import Paywall from '$lib/apps/billing/Paywall.svelte';
+	import FeedbackForm from '$lib/apps/users/FeedbackForm.svelte';
 
 	import SidebarContent from './SidebarContent.svelte';
 	import GlobalHeader from './GlobalHeader.svelte';
 	import SubscribeUser from './SubscribeUser.svelte';
-	import Button from '$lib/ui/Button.svelte';
-	import Modal from '$lib/ui/Modal.svelte';
-	import Paywall from '$lib/apps/billing/Paywall.svelte';
-	import FeedbackForm from '$lib/apps/users/FeedbackForm.svelte';
 
 	const { data, children } = $props();
 

@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+
+	import { TextArea } from '@cogisoft/ui-svelte-daisy';
+
 	import { computeApiUrl } from '$lib/api/compute-url';
 	import { materialsStore } from '$lib/apps/materials/materials.svelte';
 	import type { AttachedFile } from '$lib/types/attached-file';
@@ -8,7 +11,6 @@
 	import { generateId } from '$lib/utils/generate-id';
 	import { removeFile } from '../new/removeFile';
 	import { addExistingMaterial } from '../new/addExistingMaterial';
-	import TextArea from '$lib/ui/TextArea.svelte';
 
 	interface Props {
 		inputText: string;

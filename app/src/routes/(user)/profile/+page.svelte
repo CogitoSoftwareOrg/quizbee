@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { X } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
+
+	import { Button } from '@cogisoft/ui-svelte-daisy';
+
 	import { pb } from '$lib/pb';
-	import Button from '$lib/ui/Button.svelte';
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
 	import { materialsStore } from '$lib/apps/materials/materials.svelte';

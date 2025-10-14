@@ -2,7 +2,8 @@
 	import { page } from '$app/state';
 	// explanations rendered in QuizAnswersList
 
-	import Button from '$lib/ui/Button.svelte';
+	import { Button } from '@cogisoft/ui-svelte-daisy';
+
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte.js';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte.js';
 	import type { Decision } from '$lib/apps/quiz-attempts/types';

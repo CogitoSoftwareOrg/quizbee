@@ -3,6 +3,8 @@
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
 
+@source '../node_modules/@cogisoft/ui-svelte-daisy/dist/*';
+
 @import './lib/styles/theme.css';
 @import './lib/styles/fonts.css';
 @import './lib/styles/scroll.css';

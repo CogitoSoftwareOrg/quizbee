@@ -1,14 +1,18 @@
 ---
+import BeeFinal from "@/assets/icons/bee_final.svg";
+
 import Root from "@/layouts/Root.astro";
-import Hero from "@/components/sections/Hero.astro";
-import Pains from "@/components/sections/Pains.astro";
-import Features from "@/components/sections/Features.astro";
-import HowItWorks from "@/components/sections/HowItWorks.astro";
-import Products from "@/components/sections/Products.astro";
-import Testimonials from "@/components/sections/Testimonials.astro";
-import Pricing from "@/components/sections/Pricing.astro";
-import FAQ from "@/components/sections/FAQ.astro";
-import CTA from "@/components/sections/CTA.astro";
+import {
+  Hero,
+  Pains,
+  Features,
+  HowItWorks,
+  Products,
+  Testimonials,
+  Pricing,
+  FAQ,
+  CTA,
+} from "@cogisoft/ui-astro";
 
 import { extractPrIdFromCoolifyUrl } from "@/lib/pb";
 
@@ -25,7 +29,7 @@ const content = {
     description:
       "QuizBee turns your documents into engaging, AI-powered quizzes. Study smarter, not harder, with personalized learning that adapts to your needs.",
     buttonText: "Start Learning for Free",
-    image: "/bee_final.svg",
+    image: BeeFinal.src,
   },
   pains: {
     title: "Struggling to Stay Engaged While Studying?",

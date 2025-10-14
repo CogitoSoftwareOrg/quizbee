@@ -1,6 +1,7 @@
 <script lang="ts">
-	import Button from '$lib/ui/Button.svelte';
 	import type { ClassValue } from 'svelte/elements';
+
+	import { Button } from '@cogisoft/ui-svelte-daisy';
 
 	import { messagesStore } from './stores/messages.svelte';
 	import type { Sender } from './types';

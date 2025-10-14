@@ -143,6 +143,6 @@ const pagesCollection = defineCollection({
 });
 
 export const collections = {
-  landings: landingsCollection,
-  pages: pagesCollection,
+  // landings: landingsCollection,
+  // pages: pagesCollection,
 };

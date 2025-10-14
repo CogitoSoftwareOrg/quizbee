@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { Crown } from 'lucide-svelte';
 
+	import { Modal, Button, TextArea } from '@cogisoft/ui-svelte-daisy';
+
 	import { patchApi } from '$lib/api/call-api';
 	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
 	import { uiStore } from '$lib/apps/users/ui.svelte';
@@ -10,9 +12,6 @@
 		pb,
 		type QuizItemsResponse
 	} from '$lib/pb';
-	import Button from '$lib/ui/Button.svelte';
-	import Modal from '$lib/ui/Modal.svelte';
-	import TextArea from '$lib/ui/TextArea.svelte';
 
 	interface Props {
 		quiz: QuizesResponse;

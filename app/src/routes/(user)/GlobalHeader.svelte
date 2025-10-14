@@ -7,16 +7,13 @@
 		Menu,
 		MessageCircleHeart
 	} from 'lucide-svelte';
+	import { Button } from '@cogisoft/ui-svelte-daisy';
 
 	import { uiStore } from '$lib/apps/users/ui.svelte';
-	import ThemeController from '$lib/features/ThemeController.svelte';
-	import Button from '$lib/ui/Button.svelte';
-
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte';
-	import type { Decision } from '$lib/apps/quiz-attempts/types';
-	import { fly } from 'svelte/transition';
 	import { quizItemsStore } from '$lib/apps/quizes/quizItems.svelte';
+	import type { Decision } from '$lib/apps/quiz-attempts/types';
 
 	const isNewQuizPage = $derived(page.url.pathname === '/quizes/new');
 

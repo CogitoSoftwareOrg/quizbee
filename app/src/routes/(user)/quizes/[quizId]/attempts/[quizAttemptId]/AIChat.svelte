@@ -1,13 +1,14 @@
 <script lang="ts">
 	import type { ClassValue } from 'svelte/elements';
 
+	import { Button } from '@cogisoft/ui-svelte-daisy';
+
 	import type { Sender } from '$lib/apps/messages/types';
 	import type { MessagesResponse, QuizAttemptsResponse, QuizItemsResponse } from '$lib/pb';
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
 	import Messages from '$lib/apps/messages/Messages.svelte';
 	import MessageField from '$lib/apps/messages/MessageField.svelte';
 	import SendMessage from '$lib/apps/messages/SendMessage.svelte';
-	import Button from '$lib/ui/Button.svelte';
 	import { Crown, X } from 'lucide-svelte';
 	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
 
