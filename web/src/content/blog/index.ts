@@ -14,6 +14,49 @@ function estimateReadingTime(html: string): number {
   return minutes;
 }
 
+export type TocItem = { id: string; text: string; level: 2 | 3 };
+export function buildTocFromHtml(html: string): TocItem[] {
+  const re = /<(h[23])\s+[^>]*id="([^"]+)"[^>]*>(.*?)<\/h[23]>/gi;
+  const items: TocItem[] = [];
+  let m;
+  while ((m = re.exec(html))) {
+    const level = m[1] === "h2" ? 2 : 3;
+    const id = m[2];
+    const text = m[3].replace(/<[^>]+>/g, "").trim();
+    items.push({ id, text, level });
+  }
+  return items;
+}
+
+function slugify(text: string) {
+  return text
+    .toLowerCase()
+    .replace(/<\/?[^>]+(>|$)/g, "")
+    .replace(/[^\p{L}\p{N}\s-]/gu, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .slice(0, 64);
+}
+
+// Добавляет id в h2/h3, если их нет
+export function ensureHeadingIds(html: string): string {
+  return html.replace(
+    /<(h[23])([^>]*)>(.*?)<\/\1>/gi,
+    (m, tag, attrs, inner) => {
+      // уже есть id?
+      const hasId = /\sid="/i.test(attrs);
+      if (hasId) return m;
+      // текст без тегов
+      const plain = inner.replace(/<[^>]+>/g, "").trim();
+      const id = slugify(plain) || crypto.randomUUID();
+      // аккуратно вставляем id в открывающий тег
+      const attrsClean = attrs.trim();
+      const space = attrsClean.length ? " " : "";
+      return `<${tag}${space}${attrsClean} id="${id}">${inner}</${tag}>`;
+    }
+  );
+}
+
 export const blogCollectionPb = defineCollection({
   loader: async () => {
     if (!pb.authStore.isValid) {
@@ -35,12 +78,15 @@ export const blogCollectionPb = defineCollection({
       const i18ns = (post.expand?.blogI18n_via_post ?? []) as any[];
 
       return i18ns.map((i18n) => {
-        const slug: string = post.slug;
-        const category: string = post.category;
+        const slug = post.slug;
+        const category = post.category;
 
-        const locale: string = i18n.locale;
+        const locale = i18n.locale;
 
-        const contentHtml: string = i18n.content ?? "";
+        const rawHtml = i18n.content ?? "";
+        const contentHtml = ensureHeadingIds(rawHtml);
+        const toc = buildTocFromHtml(contentHtml);
+        console.log("toc", toc);
         const coverUrl = post.cover
           ? urlWithPR(pb.files.getURL(post, post.cover))
           : null;
@@ -69,6 +115,7 @@ export const blogCollectionPb = defineCollection({
             ogDescription: i18n.data?.ogDescription ?? null,
           },
           contentHtml, // главное поле: HTML из PocketBase
+          toc,
         };
       });
     });
@@ -94,5 +141,8 @@ export const blogCollectionPb = defineCollection({
       ogDescription: z.string().nullable().optional(),
     }),
     contentHtml: z.string(), // HTML-строка из PB
+    toc: z.array(
+      z.object({ id: z.string(), text: z.string(), level: z.number() })
+    ),
   }),
 });
