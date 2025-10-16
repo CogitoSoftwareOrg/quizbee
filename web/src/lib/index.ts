@@ -1,2 +1,2 @@
-export { pb } from "./pb";
+export { pb, pbPublic } from "./pb";
 export { urlWithPR } from "./pr-url";

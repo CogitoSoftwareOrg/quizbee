@@ -23,31 +23,161 @@ export const getStaticPaths = async () => {
 };
 
 const { meta, content, article } = Astro.props;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  headline: meta.title,
+  description: meta.description ?? "",
+  image: meta.image ? [meta.image] : undefined,
+  datePublished: article.datePublished ?? undefined,
+  dateModified: article.dateModified ?? undefined,
+  author: (article.authors ?? []).map((name: string) => ({
+    "@type": "Person",
+    name,
+  })),
+  mainEntityOfPage: Astro.url.toString(),
+};
 ---
 
 <Root
   title={meta.title}
   description={meta.description}
   image={meta.image}
+  structuredData={jsonLd}
   active="blog"
 >
-  <article class="mx-auto max-w-3xl py-12">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+    <!-- HEADER -->
+    <header class="mb-10 text-center lg:text-left">
+      <nav
+        class="text-sm text-muted-foreground mb-4 flex justify-center lg:justify-start space-x-1"
+      >
+        <a href={`/${Astro.params.locale}/blog`} class="hover:underline">Blog</a
+        >
+        <span>/</span>
+        <a
+          href={`/${Astro.params.locale}/blog/${Astro.params.category}`}
+          class="hover:underline capitalize"
+        >
+          {Astro.params.category}
+        </a>
+      </nav>
+
+      <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-3">
+        {meta.title}
+      </h1>
+
+      <p class="text-sm text-muted-foreground">
+        {new Date(article.datePublished).toLocaleDateString()} · {
+          article.readingTimeMin
+        } min read
+      </p>
+    </header>
+
+    <!-- COVER IMAGE -->
     {
       article.coverUrl && (
-        <Image
-          src={article.coverUrl}
-          alt={meta.title}
-          class="mb-6 rounded-xl"
-          width={1000}
-          height={1000}
-        />
+        <div class="aspect-[16/9] mb-10 overflow-hidden rounded-2xl shadow-sm lg:h-[calc(50vh)] mx-auto">
+          <Image
+            src={article.coverUrl}
+            alt={meta.title}
+            widths={[480, 768, 1024, 1280, 1600]}
+            width={1600}
+            height={900}
+            fit="cover"
+            sizes="(min-width:1280px) 736px, (min-width:1024px) 672px, 100vw"
+            class="h-full w-full object-cover"
+            loading="eager"
+            fetchpriority="high"
+          />
+        </div>
       )
     }
-    <h1 class="text-3xl font-bold mb-2">{meta.title}</h1>
-    <p class="text-sm text-muted-foreground mb-6">
-      {article.datePublished} · {article.readingTimeMin} min read
-    </p>
 
-    <div class="prose prose-neutral max-w-none" set:html={content} />
-  </article>
+    <!-- GRID -->
+    <div class="grid grid-cols-12 gap-6">
+      <!-- LEFT ASIDE (ToC) -->
+      <aside class="col-span-12 lg:col-span-2 order-2 lg:order-1">
+        <div class="sticky top-24 space-y-4 hidden lg:block">
+          <div class="rounded-xl bg-card p-4 shadow-sm">
+            <p class="font-medium mb-3">On this page</p>
+            <ul class="text-sm space-y-1 text-muted-foreground">
+              <li><a href="#intro" class="hover:underline">Intro</a></li>
+              <li><a href="#details" class="hover:underline">Details</a></li>
+              <li>
+                <a href="#conclusion" class="hover:underline">Conclusion</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </aside>
+
+      <!-- MAIN CONTENT -->
+      <main
+        class="col-span-12 lg:col-span-8 order-1 lg:order-2 border-x border-base-300 px-12"
+      >
+        <article
+          class="prose prose-neutral max-w-none prose-img:rounded-lg prose-headings:scroll-mt-24"
+        >
+          <div set:html={content} />
+        </article>
+
+        {
+          article.tags?.length > 0 && (
+            <div class="mt-10 pt-6 border-t">
+              <ul class="flex flex-wrap gap-2">
+                {article.tags.map((t: string) => (
+                  <li class="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
+                    #{t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )
+        }
+      </main>
+
+      <!-- RIGHT ASIDE -->
+      <aside class="col-span-12 lg:col-span-2 order-3 space-y-6">
+        <div class="sticky top-24 space-y-4">
+          <div class="rounded-xl bg-card p-4 shadow-sm hidden">
+            <p class="font-medium mb-2">Author</p>
+            <p class="text-sm text-muted-foreground">
+              {(article.authors && article.authors[0]) || "Editorial Team"}
+            </p>
+          </div>
+
+          <div class="rounded-xl bg-card p-4 shadow-sm">
+            <p class="font-medium mb-2">Related</p>
+            <ul class="text-sm list-disc pl-4 space-y-1 text-muted-foreground">
+              <li><a class="hover:underline" href="#">Adaptive quizzes</a></li>
+              <li><a class="hover:underline" href="#">AI tutor</a></li>
+            </ul>
+          </div>
+
+          <div class="rounded-xl bg-card p-4 shadow-sm">
+            <p class="font-medium mb-2">Newsletter</p>
+            <p class="text-sm text-muted-foreground mb-3">
+              Get new posts in your inbox.
+            </p>
+            <form action="/api/subscribe" method="post" class="space-y-2">
+              <input
+                name="email"
+                type="email"
+                required
+                placeholder="you@domain.com"
+                class="w-full rounded-md px-3 py-2 text-sm"
+              />
+              <button
+                class="w-full rounded-md bg-black text-white py-2 text-sm hover:bg-neutral-800 transition"
+              >
+                Subscribe
+              </button>
+            </form>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
 </Root>

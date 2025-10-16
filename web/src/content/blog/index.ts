@@ -1,7 +1,7 @@
 // src/content/config.ts (или где ты объявляешь коллекции)
 import { defineCollection, z } from "astro:content";
 
-import { pb, urlWithPR } from "@/lib";
+import { pb, pbPublic, urlWithPR } from "@/lib";
 
 // Вспомогательно: оценка времени чтения (по числу слов)
 function estimateReadingTime(html: string): number {
@@ -14,7 +14,7 @@ function estimateReadingTime(html: string): number {
   return minutes;
 }
 
-export const blogCollection = defineCollection({
+export const blogCollectionPb = defineCollection({
   loader: async () => {
     if (!pb.authStore.isValid) {
       await pb

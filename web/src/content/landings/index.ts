@@ -4,7 +4,7 @@ import { setByPath } from "@cogisoft/ui-astro";
 
 import { pb } from "@/lib";
 
-export const landingsCollection = defineCollection({
+export const landingsCollectionPb = defineCollection({
   loader: async () => {
     if (!pb.authStore.isValid) {
       await pb

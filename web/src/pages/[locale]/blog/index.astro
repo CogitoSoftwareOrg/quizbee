@@ -1,15 +1,39 @@
 ---
+import { getCollection } from "astro:content";
+
 import Root from "@/layouts/Root.astro";
 import { languages } from "@/i18n/ui";
 
-// export async function getStaticPaths() {
-//   const langParams = Object.keys(languages).map((lang) => ({
-//     params: { lang },
-//   }));
-//   // @ts-ignore
-//   langParams.push({ params: { lang: undefined } });
-//   return langParams;
-// }
+export const getStaticPaths = async () => {
+  const posts = await getCollection("blog");
+
+  const localeCategoryMap = new Map<string, Map<string, any[]>>();
+
+  posts.forEach((post: any) => {
+    const locale = post.data.locale;
+    const category = post.data.category;
+
+    if (!localeCategoryMap.has(locale))
+      localeCategoryMap.set(locale, new Map());
+    const categoryMap = localeCategoryMap.get(locale)!;
+
+    if (!categoryMap.has(category)) categoryMap.set(category, []);
+    categoryMap.get(category)!.push(post);
+  });
+
+  const paths: any[] = [];
+  for (const [locale, categoryMap] of localeCategoryMap.entries()) {
+    for (const [category, posts] of categoryMap.entries()) {
+      paths.push({
+        params: { locale, category },
+        props: {
+          posts,
+        },
+      });
+    }
+  }
+  return paths;
+};
 ---
 
 <Root title="Blog" active="blog">

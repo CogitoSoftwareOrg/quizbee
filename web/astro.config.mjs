@@ -7,9 +7,24 @@ import sitemap from "@astrojs/sitemap";
 
 import tailwindcss from "@tailwindcss/vite";
 
-// https://astro.build/config
 export default defineConfig({
   site: "https://quizbee.academy",
+
+  image: {
+    remotePatterns: [
+      {
+        protocol: "http",
+        hostname: "pb",
+        port: "8090",
+        pathname: "/api/files/**",
+      },
+      {
+        protocol: "https",
+        hostname: "*.quizbee.academy",
+        pathname: "/api/files/**",
+      },
+    ],
+  },
 
   integrations: [
     svelte(),
