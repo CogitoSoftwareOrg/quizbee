@@ -19,12 +19,9 @@ import { urlWithPR } from "@/lib";
 
 export const getStaticPaths = async () => {
   const landings = await getCollection("landings");
-  console.log(landings);
   return landings.map((landing) => {
-    const locale = landing.id.split("/")[0];
-    const slug = landing.id.split("/")[1];
     return {
-      params: { locale, slug },
+      params: { locale: landing.data.locale, slug: landing.data.slug },
       props: {
         meta: landing.data.meta,
         sections: landing.data.sections,

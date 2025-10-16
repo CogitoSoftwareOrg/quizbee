@@ -22,12 +22,13 @@ export const landingsCollection = defineCollection({
       sort: "-updated",
     });
 
-    console.log("pages", pages);
     return pages.flatMap((page) => {
       const i18ns = page.expand?.landingsI18n_via_landing;
       return i18ns.map((i18n: any) => {
         return {
           id: `${i18n.locale}/${page.slug}`,
+          locale: i18n.locale,
+          slug: page.slug,
           meta: {
             ...page.meta,
             title: i18n.data.title,
@@ -53,6 +54,8 @@ export const landingsCollection = defineCollection({
     });
   },
   schema: z.object({
+    locale: z.string(),
+    slug: z.string(),
     meta: z.object({
       active: z.string().optional(),
       headerCtaHref: z.string().optional(),
