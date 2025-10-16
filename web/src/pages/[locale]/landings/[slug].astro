@@ -1,5 +1,6 @@
 ---
-import Root from "@/layouts/Root.astro";
+import { getCollection } from "astro:content";
+
 import {
   Hero,
   Pains,
@@ -10,8 +11,11 @@ import {
   Pricing,
   FAQ,
   CTA,
+  setByPath,
 } from "@cogisoft/ui-astro";
-import { getCollection } from "astro:content";
+
+import Root from "@/layouts/Root.astro";
+import { urlWithPR } from "@/lib";
 
 export const getStaticPaths = async () => {
   const landings = await getCollection("landings");
@@ -30,6 +34,11 @@ export const getStaticPaths = async () => {
 };
 
 const { meta, sections } = Astro.props;
+
+const appUrl = urlWithPR(import.meta.env.PUBLIC_APP_URL);
+const parsed: typeof sections = JSON.parse(
+  JSON.stringify(sections).replaceAll("{{APP_URL}}", appUrl)
+);
 ---
 
 <Root
@@ -41,7 +50,7 @@ const { meta, sections } = Astro.props;
   structuredData={meta.structuredData}
 >
   {
-    sections.map((section, idx) => {
+    parsed.map((section, idx) => {
       switch (section.type) {
         case "Hero":
           return <Hero {...section.props} />;

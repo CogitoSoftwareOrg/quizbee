@@ -1,18 +1,8 @@
 import PocketBase from "pocketbase";
 
-export function extractPrIdFromCoolifyUrl(coolify: string) {
-  const url = new URL(coolify);
-  const prId = url.hostname.split(".")[0];
-  return prId;
-}
+import { urlWithPR } from "./pr-url";
 
-let url = import.meta.env.PB_URL ?? import.meta.env.PUBLIC_PB_URL;
-const coolify = import.meta.env.COOLIFY_URL;
-
-if (import.meta.env.PUBLIC_ENV === "preview" && coolify) {
-  const prId = extractPrIdFromCoolifyUrl(coolify);
-  url = url.replace("https://", `https://${prId}-`);
-}
+const url = urlWithPR(import.meta.env.PB_URL ?? import.meta.env.PUBLIC_PB_URL);
 
 export const pb = new PocketBase(url);
 if (typeof window === "undefined") pb.autoCancellation(false);

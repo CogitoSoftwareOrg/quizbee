@@ -18,8 +18,8 @@ importers:
         specifier: ^7.2.0
         version: 7.2.0(@types/node@24.7.2)(astro@5.14.5(@types/node@24.7.2)(jiti@2.6.1)(lightningcss@1.30.1)(rollup@4.52.4)(typescript@5.9.3))(jiti@2.6.1)(lightningcss@1.30.1)(svelte@5.40.1)(typescript@5.9.3)
       '@cogisoft/ui-astro':
-        specifier: ^0.1.14
-        version: 0.1.14(@astrojs/svelte@7.2.0(@types/node@24.7.2)(astro@5.14.5(@types/node@24.7.2)(jiti@2.6.1)(lightningcss@1.30.1)(rollup@4.52.4)(typescript@5.9.3))(jiti@2.6.1)(lightningcss@1.30.1)(svelte@5.40.1)(typescript@5.9.3))(@lucide/astro@0.545.0(astro@5.14.5(@types/node@24.7.2)(jiti@2.6.1)(lightningcss@1.30.1)(rollup@4.52.4)(typescript@5.9.3)))(astro@5.14.5(@types/node@24.7.2)(jiti@2.6.1)(lightningcss@1.30.1)(rollup@4.52.4)(typescript@5.9.3))(lucide-svelte@0.544.0(svelte@5.40.1))(svelte@5.40.1)
+        specifier: ^0.1.15
+        version: 0.1.15(@astrojs/svelte@7.2.0(@types/node@24.7.2)(astro@5.14.5(@types/node@24.7.2)(jiti@2.6.1)(lightningcss@1.30.1)(rollup@4.52.4)(typescript@5.9.3))(jiti@2.6.1)(lightningcss@1.30.1)(svelte@5.40.1)(typescript@5.9.3))(@lucide/astro@0.545.0(astro@5.14.5(@types/node@24.7.2)(jiti@2.6.1)(lightningcss@1.30.1)(rollup@4.52.4)(typescript@5.9.3)))(astro@5.14.5(@types/node@24.7.2)(jiti@2.6.1)(lightningcss@1.30.1)(rollup@4.52.4)(typescript@5.9.3))(lucide-svelte@0.544.0(svelte@5.40.1))(svelte@5.40.1)
       '@cogisoft/ui-svelte-daisy':
         specifier: ^0.1.13
         version: 0.1.13(lucide-svelte@0.544.0(svelte@5.40.1))(svelte@5.40.1)
@@ -116,8 +116,8 @@ packages:
     resolution: {integrity: sha512-+ntATQe1AlL7nTOYjwjj6w3299CgRot48wL761TUGYpYgAou3AaONZazp0PKZyCyWhudWsjhq1nvRHOvbMzhTA==}
     engines: {node: '>=18'}
 
-  '@cogisoft/ui-astro@0.1.14':
-    resolution: {integrity: sha512-2rnperuvIbvoISRNEowaZ3jbhs74y2oi6EsY3HNTPd95V1DYSev63E4VRdP622Ecqa+q332aps1PoBkTqVuSfQ==}
+  '@cogisoft/ui-astro@0.1.15':
+    resolution: {integrity: sha512-RalP+JOle6C+ACTg97vVuasVJdXa8vHPbagBIk2qSXYC0r7mXrRR8CFVD3OT1F5Hfq5lj9Xb+XUnLrQqr/JknA==}
     peerDependencies:
       '@astrojs/svelte': ^7.0.0
       '@lucide/astro': ^0.545.0
@@ -2018,7 +2018,7 @@ snapshots:
     dependencies:
       fontkit: 2.0.4
 
-  '@cogisoft/ui-astro@0.1.14(@astrojs/svelte@7.2.0(@types/node@24.7.2)(astro@5.14.5(@types/node@24.7.2)(jiti@2.6.1)(lightningcss@1.30.1)(rollup@4.52.4)(typescript@5.9.3))(jiti@2.6.1)(lightningcss@1.30.1)(svelte@5.40.1)(typescript@5.9.3))(@lucide/astro@0.545.0(astro@5.14.5(@types/node@24.7.2)(jiti@2.6.1)(lightningcss@1.30.1)(rollup@4.52.4)(typescript@5.9.3)))(astro@5.14.5(@types/node@24.7.2)(jiti@2.6.1)(lightningcss@1.30.1)(rollup@4.52.4)(typescript@5.9.3))(lucide-svelte@0.544.0(svelte@5.40.1))(svelte@5.40.1)':
+  '@cogisoft/ui-astro@0.1.15(@astrojs/svelte@7.2.0(@types/node@24.7.2)(astro@5.14.5(@types/node@24.7.2)(jiti@2.6.1)(lightningcss@1.30.1)(rollup@4.52.4)(typescript@5.9.3))(jiti@2.6.1)(lightningcss@1.30.1)(svelte@5.40.1)(typescript@5.9.3))(@lucide/astro@0.545.0(astro@5.14.5(@types/node@24.7.2)(jiti@2.6.1)(lightningcss@1.30.1)(rollup@4.52.4)(typescript@5.9.3)))(astro@5.14.5(@types/node@24.7.2)(jiti@2.6.1)(lightningcss@1.30.1)(rollup@4.52.4)(typescript@5.9.3))(lucide-svelte@0.544.0(svelte@5.40.1))(svelte@5.40.1)':
     dependencies:
       '@astrojs/svelte': 7.2.0(@types/node@24.7.2)(astro@5.14.5(@types/node@24.7.2)(jiti@2.6.1)(lightningcss@1.30.1)(rollup@4.52.4)(typescript@5.9.3))(jiti@2.6.1)(lightningcss@1.30.1)(svelte@5.40.1)(typescript@5.9.3)
       '@cogisoft/ui-svelte-daisy': 0.1.13(lucide-svelte@0.544.0(svelte@5.40.1))(svelte@5.40.1)

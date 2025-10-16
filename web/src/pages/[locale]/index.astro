@@ -16,7 +16,7 @@ import {
   CTA,
 } from "@cogisoft/ui-astro";
 
-import { extractPrIdFromCoolifyUrl } from "@/lib/pb";
+import { urlWithPR } from "@/lib";
 
 // export const getStaticPaths = async () => {
 //   const entries = await getCollection("landings");
@@ -30,12 +30,7 @@ import { extractPrIdFromCoolifyUrl } from "@/lib/pb";
 //   return objs;
 // }
 
-const coolify = import.meta.env.COOLIFY_URL;
-let appUrl = import.meta.env.PUBLIC_APP_URL;
-if (import.meta.env.PUBLIC_ENV === "preview" && coolify) {
-  const prId = extractPrIdFromCoolifyUrl(coolify);
-  appUrl = appUrl.replace("https://", `https://${prId}-`);
-}
+const appUrl = urlWithPR(import.meta.env.PUBLIC_APP_URL);
 
 const content = {
   hero: {
