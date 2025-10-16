@@ -23,7 +23,7 @@ const EXPAND = [
 export async function load({ depends }) {
 	depends('global:user');
 
-	if (!pb?.authStore.isValid) await goto('/sign-in');
+	if (!pb?.authStore.isValid) await goto('/sign-in', { replaceState: true });
 
 	const userLoadPromise: Promise<UsersResponse<unknown, UserExpand> | null> = pb!
 		.collection('users')
@@ -58,7 +58,7 @@ export async function load({ depends }) {
 		})
 		.catch(async (error) => {
 			console.error('Failed to load user:', error);
-			await goto('/sign-in');
+			await goto('/sign-in', { replaceState: true });
 			return null;
 		});
 	return { userLoadPromise };

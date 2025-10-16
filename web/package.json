@@ -9,22 +9,23 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/node": "^9.4.6",
+    "@astrojs/node": "^9.5.0",
     "@astrojs/sitemap": "^3.6.0",
     "@astrojs/svelte": "^7.2.0",
-    "@cogisoft/ui-astro": "^0.1.9",
-    "@cogisoft/ui-svelte-daisy": "^0.1.9",
+    "@cogisoft/ui-astro": "^0.1.14",
+    "@cogisoft/ui-svelte-daisy": "^0.1.13",
+    "@lucide/astro": "^0.545.0",
     "@tailwindcss/vite": "^4.1.14",
-    "astro": "^5.14.4",
-    "daisyui": "^5.3.1",
-    "lucide-astro": "^0.544.0",
+    "astro": "^5.14.5",
+    "daisyui": "^5.3.3",
     "lucide-svelte": "^0.544.0",
     "pocketbase": "^0.26.2",
-    "posthog-js": "^1.275.2",
+    "posthog-js": "^1.275.3",
     "sharp": "^0.34.4",
-    "svelte": "^5.39.12",
+    "svelte": "^5.40.1",
     "tailwindcss": "^4.1.14",
     "theme-change": "^2.5.0",
     "typescript": "^5.9.3"
-  }
+  },
+  "packageManager": "pnpm@10.18.3+sha512.bbd16e6d7286fd7e01f6b3c0b3c932cda2965c06a908328f74663f10a9aea51f1129eea615134bf992831b009eabe167ecb7008b597f40ff9bc75946aadfb08d"
 }

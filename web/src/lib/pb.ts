@@ -6,7 +6,7 @@ export function extractPrIdFromCoolifyUrl(coolify: string) {
   return prId;
 }
 
-let url = import.meta.env.PB_URL;
+let url = import.meta.env.PB_URL ?? import.meta.env.PUBLIC_PB_URL;
 const coolify = import.meta.env.COOLIFY_URL;
 
 if (import.meta.env.PUBLIC_ENV === "preview" && coolify) {

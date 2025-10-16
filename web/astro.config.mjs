@@ -14,17 +14,17 @@ export default defineConfig({
   integrations: [
     svelte(),
     sitemap({
-      // i18n: {
-      //   defaultLocale: "en",
-      //   locales: {
-      //     en: "en",
-      //     ru: "ru",
-      //     es: "es",
-      //     de: "de",
-      //     fr: "fr",
-      //     pt: "pt",
-      //   },
-      // },
+      i18n: {
+        defaultLocale: "en",
+        locales: {
+          en: "en",
+          es: "es",
+          ru: "ru",
+          de: "de",
+          fr: "fr",
+          pt: "pt",
+        },
+      },
     }),
   ],
 
@@ -36,10 +36,10 @@ export default defineConfig({
   },
 
   i18n: {
-    locales: ["en", "ru", "es", "de", "fr", "pt"],
+    locales: ["en", "es", "ru", "de", "fr", "pt"],
     defaultLocale: "en",
     routing: {
-      prefixDefaultLocale: false,
+      prefixDefaultLocale: true,
       redirectToDefaultLocale: true,
     },
   },

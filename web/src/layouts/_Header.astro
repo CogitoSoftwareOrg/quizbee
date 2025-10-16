@@ -1,7 +1,10 @@
 ---
 import { Image } from "astro:assets";
-import { ChevronDown, Menu, X } from "lucide-astro";
+import { Menu, Search, X } from "@lucide/astro";
 
+import { Button } from "@cogisoft/ui-svelte-daisy";
+
+import SwitchLang from "@/components/features/SwitchLang.astro";
 import QuizBeeLogo from "@/assets/icons/bee_final.svg";
 import ThemeController from "@/components/features/ThemeController.svelte";
 import {
@@ -33,16 +36,16 @@ const navItems = [
     label: t("nav.home"),
     href: "/",
   },
-  // {
-  //   name: "blog",
-  //   label: t("nav.blog"),
-  //   href: "/blog",
-  // },
-  // {
-  //   name: "quizes",
-  //   label: t("nav.quizes"),
-  //   href: "/quizes",
-  // },
+  {
+    name: "blog",
+    label: t("nav.blog"),
+    href: "/blog",
+  },
+  {
+    name: "quizes",
+    label: t("nav.quizes"),
+    href: "/quizes",
+  },
 ];
 
 const currentPath = Astro.url.pathname;
@@ -55,13 +58,14 @@ const currentPath = Astro.url.pathname;
     class="max-w-screen-xl flex justify-between items-center px-4 py-2 mx-auto"
   >
     <!-- Logo -->
-    <a href="/" class="inline-flex items-center gap-2">
+    <a href={tp("/")} class="inline-flex items-center gap-2">
       <Image
         src={QuizBeeLogo}
         alt="Quizbee"
         class="size-10 rounded-full"
         width={40}
         height={40}
+        loading="eager"
       />
       <p class="text-primary text-3xl font-semibold">Quizbee</p>
     </a>
@@ -81,8 +85,18 @@ const currentPath = Astro.url.pathname;
     </nav>
 
     <!-- Right side actions -->
-    <div class="hidden md:flex items-center gap-3">
+    <div class="hidden md:flex items-center gap-2">
       <ThemeController client:only />
+      <a
+        class={"aspect-square rounded-2xl p-2 border " +
+          (active === "search"
+            ? "border-primary text-primary"
+            : "border-base-300")}
+        href={tp("/search")}
+      >
+        <Search />
+      </a>
+      <SwitchLang />
       <!-- CTA Button -->
       <slot name="CTA">
         {
@@ -121,7 +135,7 @@ const currentPath = Astro.url.pathname;
 <!-- Mobile menu modal -->
 <input type="checkbox" id="modal_burger" class="modal-toggle" />
 <div class="modal modal-end z-100" role="dialog">
-  <div class="relative modal-box min-w-sm">
+  <div class="relative modal-box min-w-xs">
     <label
       for="modal_burger"
       class="btn btn-ghost btn-sm btn-circle absolute right-4 top-2 text-lg font-bold"
@@ -147,6 +161,9 @@ const currentPath = Astro.url.pathname;
       <div class="flex items-center h-full">
         <ThemeController client:only size="size-12" />
       </div>
+      <div class="flex items-center h-full">
+        <SwitchLang />
+      </div>
     </div>
   </div>
   <label class="modal-backdrop" for="modal_burger">
@@ -167,13 +184,9 @@ const currentPath = Astro.url.pathname;
   }
   {
     ctaHref && (
-      <a
-        target="_blank"
-        href={ctaHref}
-        class="btn btn-primary rounded-xl px-4 btn-wide btn-lg btn-outline shadow-lg"
-      >
+      <Button target="_blank" href={ctaHref} class="rounded-xl px-4 shadow-lg">
         {ctaText}
-      </a>
+      </Button>
     )
   }
 </div>

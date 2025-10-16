@@ -8,7 +8,6 @@ import { languages } from "@/i18n/ui";
 import { PortalHost } from "@cogisoft/ui-svelte-daisy";
 
 import ThemeLoad from "@/components/features/ThemeLoad.astro";
-
 import Posthog from "@/components/Posthog.astro";
 import CookiesAccept from "@/components/CookiesAccept.svelte";
 
@@ -20,10 +19,25 @@ interface Props {
   active: string;
   description?: string;
   image?: string;
+  imageAlt?: string;
   type?: "website" | "article";
   noindex?: boolean;
   canonical?: string;
   structuredData?: object;
+
+  // Допы для статей/листингов
+  publishedISO?: string;
+  updatedISO?: string;
+  authorName?: string;
+
+  // Навигация (опционально)
+  prevUrl?: string;
+  nextUrl?: string;
+
+  // Твиттер-хэндлы (опционально)
+  twitterSite?: string; // "@yourbrand"
+  twitterCreator?: string; // "@creator"
+
   headerCtaHref?: string;
 }
 
@@ -31,50 +45,75 @@ const {
   title,
   active,
   description = "QuizBee turns your documents into engaging, AI-powered quizzes. Study smarter with personalized learning that adapts to your needs.",
-  image = "/bee_final.svg",
+  image = "/og-default.png", // лучше растровое 1200×630
+  imageAlt = "QuizBee – AI quizzes from your docs",
   type = "website",
   noindex = false,
   canonical,
   structuredData,
+  publishedISO,
+  updatedISO,
+  authorName = "QuizBee",
+  prevUrl,
+  nextUrl,
+  twitterSite,
+  twitterCreator,
   headerCtaHref,
 } = Astro.props;
 
 const lang = getLangFromUrl(Astro.url);
 
-// Construct full URLs for meta tags
-const siteUrl = Astro.site || new URL(Astro.url.pathname, Astro.url.origin);
-const canonicalURL = canonical
-  ? new URL(canonical, siteUrl)
-  : new URL(Astro.url.pathname, siteUrl);
-const imageURL = new URL(image, siteUrl);
+// Надёжно формируем базовый origin и абсолютные URL
+const siteOrigin = Astro.site ? Astro.site.origin : Astro.url.origin;
+const siteUrl = new URL(Astro.url.pathname, siteOrigin);
 
-// Generate alternate language URLs
+const canonicalURL = canonical
+  ? new URL(canonical, siteOrigin)
+  : new URL(Astro.url.pathname, siteOrigin);
+
+const imageURL = new URL(image, siteOrigin);
+
+// Альтернативы hreflang
 const alternateUrls = Object.keys(languages).map((l) => ({
   lang: l,
   url: new URL(
-    Astro.url.pathname.replace(
-      /^\/(en|ru|es|de|fr|pt)/,
-      l === "en" ? "" : `/${l}`
-    ),
-    siteUrl
+    Astro.url.pathname.replace(/^\/(en|ru|es|de|fr|pt)/, `/${l}`),
+    siteOrigin
   ),
 }));
 
-// Default structured data for Organization
-const defaultStructuredData = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  name: "QuizBee",
-  url: siteUrl.toString(),
-  logo: imageURL.toString(),
-  description:
-    "AI-powered quiz generation platform that transforms study materials into interactive quizzes",
-  sameAs: [
-    // Add your social media profiles here
-    // "https://twitter.com/quizbee",
-    // "https://linkedin.com/company/quizbee",
-  ],
-};
+// JSON-LD: подставляем тип по контенту
+const defaultStructuredData =
+  type === "article"
+    ? {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        headline: title,
+        description,
+        image: [imageURL.toString()],
+        datePublished: publishedISO,
+        dateModified: updatedISO ?? publishedISO,
+        author: { "@type": "Person", name: authorName },
+        publisher: {
+          "@type": "Organization",
+          name: "QuizBee",
+          logo: { "@type": "ImageObject", url: imageURL.toString() },
+        },
+        mainEntityOfPage: canonicalURL.toString(),
+      }
+    : {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        name: "QuizBee",
+        url: siteUrl.toString(),
+        logo: imageURL.toString(),
+        description:
+          "AI-powered quiz generation platform that transforms study materials into interactive quizzes",
+        sameAs: [
+          // "https://twitter.com/quizbee",
+          // "https://linkedin.com/company/quizbee",
+        ],
+      };
 ---
 
 <!doctype html>
@@ -86,18 +125,25 @@ const defaultStructuredData = {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="generator" content={Astro.generator} />
 
-    <!-- Primary Meta Tags -->
+    <!-- Primary Meta -->
     <title>{title}</title>
     <meta name="title" content={title} />
     <meta name="description" content={description} />
 
     <!-- Robots -->
-    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    {
+      noindex && (
+        <>
+          <meta name="robots" content="noindex, nofollow" />
+          <meta name="googlebot" content="noindex, nofollow" />
+        </>
+      )
+    }
 
-    <!-- Canonical URL -->
-    <link rel="canonical" href={canonicalURL} />
+    <!-- Canonical -->
+    <link rel="canonical" href={canonicalURL.toString()} />
 
-    <!-- Alternate Language Links -->
+    <!-- Hreflang -->
     {
       alternateUrls.map((alt) => (
         <link rel="alternate" hreflang={alt.lang} href={alt.url.toString()} />
@@ -109,34 +155,78 @@ const defaultStructuredData = {
       href={alternateUrls.find((a) => a.lang === "en")?.url.toString()}
     />
 
-    <!-- Open Graph / Facebook -->
+    <!-- Open Graph -->
     <meta property="og:type" content={type} />
-    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:url" content={canonicalURL.toString()} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:image" content={imageURL} />
+    <meta property="og:image" content={imageURL.toString()} />
+    <meta property="og:image:alt" content={imageAlt} />
     <meta property="og:site_name" content="QuizBee" />
     <meta property="og:locale" content={lang} />
+    {
+      Object.keys(languages)
+        .filter((l) => l !== lang)
+        .map((l) => <meta property="og:locale:alternate" content={l} />)
+    }
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:url" content={canonicalURL} />
+    <meta name="twitter:url" content={canonicalURL.toString()} />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content={imageURL} />
-    {/* <meta name="twitter:site" content="@quizbee" /> */}
-    {/* <meta name="twitter:creator" content="@quizbee" /> */}
+    <meta name="twitter:image" content={imageURL.toString()} />
+    <meta name="twitter:image:alt" content={imageAlt} />
+    {twitterSite && <meta name="twitter:site" content={twitterSite} />}
+    {twitterCreator && <meta name="twitter:creator" content={twitterCreator} />}
 
-    <!-- Favicon -->
+    <!-- Article-only OG -->
+    {
+      type === "article" && (
+        <>
+          {publishedISO && (
+            <meta property="article:published_time" content={publishedISO} />
+          )}
+          {(updatedISO ?? publishedISO) && (
+            <meta
+              property="article:modified_time"
+              content={(updatedISO ?? publishedISO)!}
+            />
+          )}
+          <meta property="article:author" content={authorName} />
+          <meta property="article:publisher" content={siteOrigin} />
+        </>
+      )
+    }
+
+    <!-- Favicons -->
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="/favicons/favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="/favicons/favicon-16x16.png"
+    />
     <link rel="icon" type="image/svg+xml" href="/bee_final.svg" />
-    <link rel="apple-touch-icon" href="/bee_final.svg" />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/favicons/apple-touch-icon.png"
+    />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#000000" />
 
-    <!-- Fonts -->
+    <!-- Fonts (woff2 предпочтительнее ttf) -->
     <link
       rel="preload"
       as="font"
-      href="/fonts/League_Spartan/LeagueSpartan-VariableFont_wght.ttf"
-      type="font/ttf"
+      href="/fonts/League_Spartan/LeagueSpartan-VariableFont_wght.woff2"
+      type="font/woff2"
       crossorigin="anonymous"
     />
 
@@ -146,9 +236,22 @@ const defaultStructuredData = {
       set:html={JSON.stringify(structuredData || defaultStructuredData)}
     />
 
+    {/* Навигация по сериям/пагинация (если есть) */}
+    {
+      prevUrl && (
+        <link rel="prev" href={new URL(prevUrl, siteOrigin).toString()} />
+      )
+    }
+    {
+      nextUrl && (
+        <link rel="next" href={new URL(nextUrl, siteOrigin).toString()} />
+      )
+    }
+
     <ClientRouter />
     <ThemeLoad />
   </head>
+
   <body>
     <PortalHost client:only />
 
@@ -163,6 +266,7 @@ const defaultStructuredData = {
     </main>
 
     <Footer transition:persist="root-footer" />
+
     <CookiesAccept client:only />
   </body>
 </html>
