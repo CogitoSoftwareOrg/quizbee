@@ -16,6 +16,8 @@
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
 	import { QuizesVisibilityOptions } from '$lib/pb/pocketbase-types';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
+	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
+	import { uiStore } from '$lib/apps/users/ui.svelte';
 
 	const { data } = $props();
 	const quiz = $derived(
@@ -23,6 +25,7 @@
 	);
 
 	const user = $derived(userStore.user);
+	const subscription = $derived(subscriptionStore.subscription);
 
 	const forceStart = $derived(page.url.searchParams.get('forceStart') === 'true');
 
@@ -106,7 +109,12 @@
 				</div>
 
 				{#if user?.id === quiz.author}
-					<ToggleQuizVisibility quizId={quiz.id} visibility={quiz.visibility} />
+					<ToggleQuizVisibility
+						quizId={quiz.id}
+						visibility={quiz.visibility || QuizesVisibilityOptions.private}
+						tariff={subscription?.tariff}
+						onPaywallClick={() => uiStore.setPaywallOpen(true)}
+					/>
 				{/if}
 
 				{#if user?.id === quiz.author && quiz.materials && quiz.materials.length > 0}
