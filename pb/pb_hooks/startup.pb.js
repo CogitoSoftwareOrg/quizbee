@@ -6,5 +6,8 @@ onBootstrap((e) => {
   //   const meilisearch = require(`${__hooks}/lib/meilisearch.js`).meiliService;
   //   meilisearch.init();
 
+  const tg = require(`${__hooks}/lib/tg.js`).tgService;
+  tg.init();
+
   e.next();
 });
