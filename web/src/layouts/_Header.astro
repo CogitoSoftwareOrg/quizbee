@@ -52,7 +52,7 @@ const currentPath = Astro.url.pathname;
 ---
 
 <header
-  class="w-full backdrop-blur-md bg-base-100/70 border-b border-base-300 sticky top-0 z-50"
+  class="w-full backdrop-blur-md bg-base-100/80 border-b border-base-300 sticky top-0 z-50"
 >
   <div
     class="max-w-screen-xl flex justify-between items-center px-4 py-2 mx-auto"
@@ -184,7 +184,14 @@ const currentPath = Astro.url.pathname;
   }
   {
     ctaHref && (
-      <Button target="_blank" href={ctaHref} class="rounded-xl px-4 shadow-lg">
+      <Button
+        wide
+        size="md"
+        color="primary"
+        target="_blank"
+        href={ctaHref}
+        class="rounded-xl px-4 shadow-lg"
+      >
         {ctaText}
       </Button>
     )
