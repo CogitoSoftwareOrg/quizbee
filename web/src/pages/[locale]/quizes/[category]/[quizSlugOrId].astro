@@ -2,11 +2,14 @@
 import { ArrowRight } from "@lucide/astro";
 
 import Root from "@/layouts/Root.astro";
-import { pb } from "@/lib";
+import { pb, urlWithPR } from "@/lib";
+import { useTranslatedPath } from "@/i18n/utils";
+import { languages } from "@/i18n/ui";
 
 export const prerender = false;
 
 const { quizSlugOrId, category, locale } = Astro.params;
+
 const quiz = await pb
   .collection("quizes")
   .getFirstListItem(
@@ -23,6 +26,12 @@ const jsonLd = {
   educationalLevel: quiz.level || "intermediate",
   numberOfQuestions: items.length,
 };
+
+if (!(locale && locale in languages)) return;
+const tp = useTranslatedPath(locale as keyof typeof languages);
+
+const appUrl = urlWithPR(import.meta.env.PUBLIC_APP_URL);
+const quizUrl = `${appUrl}quizes/${quizSlugOrId}?forceStart=true`;
 ---
 
 <Root
@@ -38,7 +47,7 @@ const jsonLd = {
       <nav
         class="text-sm text-muted-foreground mb-4 flex justify-center space-x-1"
       >
-        <a href={`/${locale}/quizes`} class="hover:underline">Quizzes</a>
+        <a href={tp("/quizes")} class="hover:underline">Quizzes</a>
         <span>/</span>
         <span class="capitalize">{category}</span>
       </nav>
@@ -78,7 +87,8 @@ const jsonLd = {
 
       <div class="flex justify-center">
         <a
-          href="#"
+          target="_blank"
+          href={quizUrl}
           class="btn btn-primary btn-lg px-8 py-3 text-base font-semibold shadow-lg hover:shadow-xl transition-all"
         >
           Start Quiz
@@ -124,7 +134,8 @@ const jsonLd = {
                     <div class="space-y-2">
                       {item.answers.slice(0, 4).map((answer: any) => (
                         <a
-                          href="#"
+                          target="_blank"
+                          href={quizUrl}
                           class="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-muted/50 hover:bg-muted/50 hover:border-muted transition-all cursor-pointer no-underline"
                         >
                           <div class="w-4 h-4 rounded-full border-2 border-muted-foreground/40" />
@@ -152,7 +163,8 @@ const jsonLd = {
           your progress and get instant feedback.
         </p>
         <a
-          href="#"
+          target="_blank"
+          href={quizUrl}
           class="btn btn-primary btn-lg px-8 py-3 text-base font-semibold shadow-lg hover:shadow-xl transition-all"
         >
           Start Quiz Now

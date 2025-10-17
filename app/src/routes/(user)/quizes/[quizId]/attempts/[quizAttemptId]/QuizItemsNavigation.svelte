@@ -33,7 +33,10 @@
 			style="ghost"
 			circle
 			size="lg"
-			onclick={onPrevious}
+			onclick={(e) => {
+				e.preventDefault();
+				onPrevious();
+			}}
 		>
 			<ChevronLeft size={40} />
 		</Button>
@@ -50,7 +53,10 @@
 			style="ghost"
 			circle
 			size="lg"
-			onclick={onNext}
+			onclick={(e) => {
+				e.preventDefault();
+				onNext();
+			}}
 		>
 			<ChevronRight size={40} />
 		</Button>

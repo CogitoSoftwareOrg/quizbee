@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	// explanations rendered in QuizAnswersList
+	import { goto } from '$app/navigation';
 
 	import { Button } from '@cogisoft/ui-svelte-daisy';
 
@@ -12,6 +12,7 @@
 	import { messagesStore } from '$lib/apps/messages/stores/messages.svelte';
 	import { userStore } from '$lib/apps/users/user.svelte';
 	import { patchApi } from '$lib/api/call-api';
+	import type { QuizExpand } from '$lib/pb';
 
 	import AIChat from './AIChat.svelte';
 	import QuizItemsNavigation from './QuizItemsNavigation.svelte';
@@ -20,9 +21,7 @@
 	import ManageQuiz from './ManageQuiz.svelte';
 	import SwipeableContent from './SwipeableContent.svelte';
 	import MobileAIChat from './MobileAIChat.svelte';
-	import { goto } from '$app/navigation';
-
-	const {} = $props();
+	const { data } = $props();
 
 	// QUIZ ATTEMPT
 	const user = $derived(userStore.user);
@@ -32,11 +31,15 @@
 	);
 
 	const quizDecisions = $derived((quizAttempt?.choices as Decision[]) || []);
-
-	const quiz = $derived(quizesStore.quizes.find((q) => q.id === quizAttempt?.quiz));
-	const quizItems = $derived(quizItemsStore.quizItemsMap.get(quiz?.id || '') || []);
 	let itemDecision = $derived(quizDecisions.find((d) => d.itemId === item?.id) || null);
 
+	const pageQuiz = $derived(data.pageQuiz);
+	const quiz = $derived(quizesStore.quizes.find((q) => q.id === quizAttempt?.quiz) || pageQuiz);
+	const quizItems = $derived(
+		quizItemsStore.quizItemsMap.get(quiz?.id || '') ||
+			(quiz?.expand as QuizExpand)?.quizItems_via_quiz ||
+			[]
+	);
 	const lastFinalItem = $derived(quizItems.filter((i) => i.status === 'final').at(-1));
 
 	const order = $derived.by(() => {

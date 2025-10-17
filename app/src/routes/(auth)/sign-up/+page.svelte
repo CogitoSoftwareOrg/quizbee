@@ -1,10 +1,14 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 
 	import { pb } from '$lib/pb';
 	import ThemeController from '$lib/features/ThemeController.svelte';
 
 	import Oauth from '../Oauth.svelte';
+
+	const forceStart = $derived(page.url.searchParams.get('forceStart') === 'true');
+	const redirectUrl = $derived(page.url.searchParams.get('redirect') || '/home');
 
 	let username = $state('');
 	let email = $state('');
@@ -42,7 +46,7 @@
 			await pb!.collection('users').authWithPassword(email, password, {
 				expand: ''
 			});
-			await goto('/home');
+			await goto(`${redirectUrl}${forceStart ? '?forceStart=true' : ''}`);
 			await pb!.collection('users').requestVerification(email);
 		} catch (err) {
 			console.error(err);
@@ -155,6 +159,9 @@
 
 	<p class="mt-4 text-center text-sm">
 		Already have an account?
-		<a href="/sign-in" class="link link-secondary font-semibold">Sign in!</a>
+		<a
+			href={`/sign-in?redirect=${redirectUrl}&forceStart=${forceStart}`}
+			class="link link-secondary font-semibold">Sign in!</a
+		>
 	</p>
 </div>

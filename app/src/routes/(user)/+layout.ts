@@ -1,5 +1,7 @@
 export const prerender = false;
 
+import { goto } from '$app/navigation';
+
 import { pb } from '$lib/pb';
 import type { UsersResponse } from '$lib/pb/pocketbase-types';
 import type { QuizExpand, UserExpand } from '$lib/pb/expands';
@@ -10,7 +12,6 @@ import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
 import { userStore } from '$lib/apps/users/user.svelte';
 import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
 import { quizItemsStore } from '$lib/apps/quizes/quizItems.svelte';
-import { goto } from '$app/navigation';
 
 const EXPAND = [
 	'subscriptions_via_user',
@@ -20,10 +21,12 @@ const EXPAND = [
 	'quizes_via_author.quizItems_via_quiz'
 ].join(',');
 
-export async function load({ depends }) {
+export async function load({ depends, url }) {
 	depends('global:user');
+	const noAuthUrl = `/sign-in?redirect=${url.pathname}&forceStart=${url.searchParams.get('forceStart')}`;
+	console.log('noAuthUrl', noAuthUrl);
 
-	if (!pb?.authStore.isValid) await goto('/sign-in', { replaceState: true });
+	if (!pb?.authStore.isValid) await goto(noAuthUrl, { replaceState: true });
 
 	const userLoadPromise: Promise<UsersResponse<unknown, UserExpand> | null> = pb!
 		.collection('users')
@@ -58,7 +61,7 @@ export async function load({ depends }) {
 		})
 		.catch(async (error) => {
 			console.error('Failed to load user:', error);
-			await goto('/sign-in', { replaceState: true });
+			await goto(noAuthUrl, { replaceState: true });
 			return null;
 		});
 	return { userLoadPromise };
