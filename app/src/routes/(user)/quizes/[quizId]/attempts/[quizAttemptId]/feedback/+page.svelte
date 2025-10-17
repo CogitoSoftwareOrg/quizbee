@@ -6,6 +6,7 @@
 
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
+	import ShareQuizButton from '$lib/apps/quizes/ShareQuizButton.svelte';
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
 
 	import type { Answer } from '$lib/apps/quizes/types';
@@ -226,8 +227,10 @@
 			</ul>
 		{/if}
 
-		<div class="fixed bottom-12 left-0 right-0 z-10 p-4 sm:static sm:p-0">
-			<Button block>Share Quiz</Button>
-		</div>
+		{#if quiz}
+			<div class="fixed bottom-12 left-0 right-0 z-10 p-4 sm:static sm:p-0">
+				<ShareQuizButton quizId={quiz.id} quizTitle={quiz.title || 'Quiz'} block />
+			</div>
+		{/if}
 	</section>
 </div>

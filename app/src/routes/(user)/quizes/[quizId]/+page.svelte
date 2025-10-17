@@ -10,11 +10,17 @@
 	import { pb } from '$lib/pb/client.js';
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte.js';
 	import { quizItemsStore } from '$lib/apps/quizes/quizItems.svelte.js';
+	import ShareQuizButton from '$lib/apps/quizes/ShareQuizButton.svelte';
+	import ToggleQuizVisibility from '$lib/apps/quizes/ToggleQuizVisibility.svelte';
 	import type { QuizExpand, QuizItemsResponse } from '$lib/pb';
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
+	import { QuizesVisibilityOptions } from '$lib/pb/pocketbase-types';
+	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
 
 	const { data } = $props();
-	const quiz = $derived(data.pageQuiz);
+	const quiz = $derived(
+		quizesStore.quizes.find((q) => q.id === page.params.quizId) || data.pageQuiz
+	);
 
 	const user = $derived(userStore.user);
 
@@ -92,9 +98,16 @@
 	<section class="flex flex-1 flex-col gap-4 sm:min-h-0">
 		{#if quiz}
 			<div class="space-y-4">
-				<div>
+				<div class="flex flex-wrap items-start justify-between gap-3">
 					<h1 class="text-3xl font-bold leading-tight">{quiz.title || 'Quiz'}</h1>
+					{#if quiz.visibility === QuizesVisibilityOptions.public || quiz.visibility === QuizesVisibilityOptions.search}
+						<ShareQuizButton block quizId={quiz.id} quizTitle={quiz.title || 'Quiz'} />
+					{/if}
 				</div>
+
+				{#if user?.id === quiz.author}
+					<ToggleQuizVisibility quizId={quiz.id} visibility={quiz.visibility} />
+				{/if}
 
 				{#if user?.id === quiz.author && quiz.materials && quiz.materials.length > 0}
 					<div>

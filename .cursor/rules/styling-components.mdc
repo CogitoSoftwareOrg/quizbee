@@ -11,3 +11,5 @@ alwaysApply: false
 - Global styles of app and web projects:
   [app-styles](../../app/src/app.css)
   [web-styles](../../web/src/styles/global.css)
+- Use @cogisoft/ui-svelte-daisy uikit
+  [@cogisoft/ui-svelte-daisy](../../app/node_modules/@cogisoft/ui-svelte-daisy/dist)

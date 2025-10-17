@@ -11,7 +11,11 @@ export enum Collections {
 	Mfas = "_mfas",
 	Otps = "_otps",
 	Superusers = "_superusers",
+	Blog = "blog",
+	BlogI18n = "blogI18n",
 	Feedbacks = "feedbacks",
+	Landings = "landings",
+	LandingsI18n = "landingsI18n",
 	Materials = "materials",
 	Messages = "messages",
 	QuizAttempts = "quizAttempts",
@@ -98,6 +102,49 @@ export type SuperusersRecord = {
 	verified?: boolean
 }
 
+export enum BlogCategoryOptions {
+	"product" = "product",
+	"education" = "education",
+	"edtechTrends" = "edtechTrends",
+	"quizMaking" = "quizMaking",
+	"useCases" = "useCases",
+	"general" = "general",
+}
+export type BlogRecord<Ttags = unknown> = {
+	category?: BlogCategoryOptions
+	cover?: string
+	created?: IsoDateString
+	id: string
+	published?: boolean
+	slug?: string
+	tags?: null | Ttags
+	updated?: IsoDateString
+}
+
+export enum BlogI18nStatusOptions {
+	"draft" = "draft",
+	"published" = "published",
+}
+
+export enum BlogI18nLocaleOptions {
+	"en" = "en",
+	"es" = "es",
+	"ru" = "ru",
+	"de" = "de",
+	"fr" = "fr",
+	"pt" = "pt",
+}
+export type BlogI18nRecord<Tdata = unknown> = {
+	content?: HTMLString
+	created?: IsoDateString
+	data?: null | Tdata
+	id: string
+	locale?: BlogI18nLocaleOptions
+	post?: RecordIdString
+	status?: BlogI18nStatusOptions
+	updated?: IsoDateString
+}
+
 export enum FeedbacksTypeOptions {
 	"support" = "support",
 	"feature" = "feature",
@@ -111,6 +158,40 @@ export type FeedbacksRecord<Tmetadata = unknown> = {
 	type?: FeedbacksTypeOptions
 	updated?: IsoDateString
 	user?: RecordIdString
+}
+
+export type LandingsRecord<Tmeta = unknown, Tstructure = unknown> = {
+	created?: IsoDateString
+	id: string
+	meta?: null | Tmeta
+	published?: boolean
+	slug?: string
+	structure?: null | Tstructure
+	updated?: IsoDateString
+	version?: number
+}
+
+export enum LandingsI18nFormatOptions {
+	"plain" = "plain",
+	"markdown" = "markdown",
+	"html" = "html",
+	"mixed" = "mixed",
+}
+
+export enum LandingsI18nStatusOptions {
+	"draft" = "draft",
+	"published" = "published",
+}
+export type LandingsI18nRecord<Tdata = unknown> = {
+	created?: IsoDateString
+	data?: null | Tdata
+	format?: LandingsI18nFormatOptions
+	id: string
+	landing?: RecordIdString
+	locale?: string
+	status?: LandingsI18nStatusOptions
+	updated?: IsoDateString
+	version?: number
 }
 
 export enum MaterialsStatusOptions {
@@ -207,8 +288,21 @@ export enum QuizesVisibilityOptions {
 	"public" = "public",
 	"search" = "search",
 }
+
+export enum QuizesCategoryOptions {
+	"stem" = "stem",
+	"general" = "general",
+	"math" = "math",
+	"history" = "history",
+	"law" = "law",
+	"language" = "language",
+	"art" = "art",
+	"popCulture" = "popCulture",
+	"psychology" = "psychology",
+}
 export type QuizesRecord<TdynamicConfig = unknown, Tmetadata = unknown, Ttags = unknown> = {
 	author?: RecordIdString
+	category?: QuizesCategoryOptions
 	created?: IsoDateString
 	difficulty?: QuizesDifficultyOptions
 	dynamicConfig?: null | TdynamicConfig
@@ -295,7 +389,11 @@ export type ExternalauthsResponse<Texpand = unknown> = Required<ExternalauthsRec
 export type MfasResponse<Texpand = unknown> = Required<MfasRecord> & BaseSystemFields<Texpand>
 export type OtpsResponse<Texpand = unknown> = Required<OtpsRecord> & BaseSystemFields<Texpand>
 export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> & AuthSystemFields<Texpand>
+export type BlogResponse<Ttags = unknown, Texpand = unknown> = Required<BlogRecord<Ttags>> & BaseSystemFields<Texpand>
+export type BlogI18nResponse<Tdata = unknown, Texpand = unknown> = Required<BlogI18nRecord<Tdata>> & BaseSystemFields<Texpand>
 export type FeedbacksResponse<Tmetadata = unknown, Texpand = unknown> = Required<FeedbacksRecord<Tmetadata>> & BaseSystemFields<Texpand>
+export type LandingsResponse<Tmeta = unknown, Tstructure = unknown, Texpand = unknown> = Required<LandingsRecord<Tmeta, Tstructure>> & BaseSystemFields<Texpand>
+export type LandingsI18nResponse<Tdata = unknown, Texpand = unknown> = Required<LandingsI18nRecord<Tdata>> & BaseSystemFields<Texpand>
 export type MaterialsResponse<Texpand = unknown> = Required<MaterialsRecord> & BaseSystemFields<Texpand>
 export type MessagesResponse<Tmetadata = unknown, Texpand = unknown> = Required<MessagesRecord<Tmetadata>> & BaseSystemFields<Texpand>
 export type QuizAttemptsResponse<Tchoices = unknown, Tfeedback = unknown, Texpand = unknown> = Required<QuizAttemptsRecord<Tchoices, Tfeedback>> & BaseSystemFields<Texpand>
@@ -313,7 +411,11 @@ export type CollectionRecords = {
 	_mfas: MfasRecord
 	_otps: OtpsRecord
 	_superusers: SuperusersRecord
+	blog: BlogRecord
+	blogI18n: BlogI18nRecord
 	feedbacks: FeedbacksRecord
+	landings: LandingsRecord
+	landingsI18n: LandingsI18nRecord
 	materials: MaterialsRecord
 	messages: MessagesRecord
 	quizAttempts: QuizAttemptsRecord
@@ -330,7 +432,11 @@ export type CollectionResponses = {
 	_mfas: MfasResponse
 	_otps: OtpsResponse
 	_superusers: SuperusersResponse
+	blog: BlogResponse
+	blogI18n: BlogI18nResponse
 	feedbacks: FeedbacksResponse
+	landings: LandingsResponse
+	landingsI18n: LandingsI18nResponse
 	materials: MaterialsResponse
 	messages: MessagesResponse
 	quizAttempts: QuizAttemptsResponse
@@ -350,7 +456,11 @@ export type TypedPocketBase = PocketBase & {
 	collection(idOrName: '_mfas'): RecordService<MfasResponse>
 	collection(idOrName: '_otps'): RecordService<OtpsResponse>
 	collection(idOrName: '_superusers'): RecordService<SuperusersResponse>
+	collection(idOrName: 'blog'): RecordService<BlogResponse>
+	collection(idOrName: 'blogI18n'): RecordService<BlogI18nResponse>
 	collection(idOrName: 'feedbacks'): RecordService<FeedbacksResponse>
+	collection(idOrName: 'landings'): RecordService<LandingsResponse>
+	collection(idOrName: 'landingsI18n'): RecordService<LandingsI18nResponse>
 	collection(idOrName: 'materials'): RecordService<MaterialsResponse>
 	collection(idOrName: 'messages'): RecordService<MessagesResponse>
 	collection(idOrName: 'quizAttempts'): RecordService<QuizAttemptsResponse>
