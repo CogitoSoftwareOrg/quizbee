@@ -9,7 +9,6 @@ export async function load({ params }) {
 			.getFirstListItem(`id = "${params.quizId}" || slug = "${params.quizId}"`, {
 				expand: 'quizItems_via_quiz'
 			});
-		console.log('quiz', quiz);
 		return {
 			pageQuiz: quiz
 		};

@@ -5,8 +5,9 @@ alwaysApply: false
 ---
 
 - Use modern tailwind v4 for styles
+
 - Use daisyUI 5 if possible, use its semantic vars
 - Never write dark:, never hardcode theme variants inside components
-
-[global.css](../../app/src/app.css)
-[daisy5.txt](../docs/daisy5.txt)
+- Global styles of app and web projects:
+  [app-styles](../../app/src/app.css)
+  [web-styles](../../web/src/styles/global.css)

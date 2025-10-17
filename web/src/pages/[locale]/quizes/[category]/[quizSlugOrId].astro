@@ -57,6 +57,14 @@ const quizUrl = `${appUrl}quizes/${quizSlugOrId}?forceStart=true`;
       </h1>
 
       {
+        quiz.summary && (
+          <p class="text-left text-muted-foreground max-w-3xl mx-auto mb-6">
+            {quiz.summary.slice(0, 500)}...
+          </p>
+        )
+      }
+
+      {
         quiz.description && (
           <p class="text-lg text-muted-foreground max-w-3xl mx-auto mb-6">
             {quiz.description}
