@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { goto, invalidate } from '$app/navigation';
 	import { page } from '$app/state';
 
 	import { pb } from '$lib/pb';
@@ -18,9 +18,6 @@
 		}
 	];
 
-	const forceStart = $derived(page.url.searchParams.get('forceStart') === 'true');
-	const redirectUrl = $derived(page.url.searchParams.get('redirect') || '/home');
-
 	const onClick = async (e: MouseEvent) => {
 		loading = true;
 		try {
@@ -34,7 +31,9 @@
 					}
 				}
 			});
-			await goto(`${redirectUrl}${forceStart ? '?forceStart=true' : ''}`);
+			const redirectUrl = sessionStorage.getItem('postLoginPath') || '/home';
+			// await invalidate('global:user');
+			await goto(redirectUrl);
 		} catch (e) {
 			console.error('Error during OAuth2 flow:', e);
 		} finally {

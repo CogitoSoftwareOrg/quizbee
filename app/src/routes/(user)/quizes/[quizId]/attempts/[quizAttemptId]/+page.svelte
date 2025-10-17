@@ -21,6 +21,7 @@
 	import ManageQuiz from './ManageQuiz.svelte';
 	import SwipeableContent from './SwipeableContent.svelte';
 	import MobileAIChat from './MobileAIChat.svelte';
+
 	const { data } = $props();
 
 	// QUIZ ATTEMPT
@@ -33,7 +34,7 @@
 	const quizDecisions = $derived((quizAttempt?.choices as Decision[]) || []);
 	let itemDecision = $derived(quizDecisions.find((d) => d.itemId === item?.id) || null);
 
-	const pageQuiz = $derived(data.pageQuiz);
+	const pageQuiz = $derived(data?.pageQuiz?.id === quizAttempt?.quiz ? data.pageQuiz : null);
 	const quiz = $derived(quizesStore.quizes.find((q) => q.id === quizAttempt?.quiz) || pageQuiz);
 	const quizItems = $derived(
 		quizItemsStore.quizItemsMap.get(quiz?.id || '') ||
@@ -89,9 +90,15 @@
 	function gotoItem(idx: number) {
 		const max = quizItems.length ? quizItems.length - 1 : 0;
 		const clamped = Math.max(0, Math.min(idx, max));
-		const u = new URL(page.url);
-		u.searchParams.set('order', String(clamped));
-		goto(u, { replaceState: clamped !== idx, keepFocus: true, noScroll: true });
+
+		// относительный href БЕЗ pathname — привяжется к текущему пути
+		const href = `?order=${clamped}`;
+
+		goto(href, {
+			replaceState: clamped !== idx,
+			keepFocus: true,
+			noScroll: true
+		});
 	}
 
 	function gotoFinal() {

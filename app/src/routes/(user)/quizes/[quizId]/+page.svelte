@@ -5,6 +5,7 @@
 
 	import { userStore } from '$lib/apps/users/user.svelte.js';
 	import { pb } from '$lib/pb/client.js';
+	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte.js';
 
 	const { data } = $props();
 	const quiz = $derived(data.pageQuiz);
@@ -19,7 +20,7 @@
 			user: user.id,
 			quiz: quiz.id
 		});
-		console.log('attempt', attempt);
+		quizAttemptsStore.add(attempt);
 		await goto(`/quizes/${quiz.id}/attempts/${attempt.id}`);
 	});
 </script>

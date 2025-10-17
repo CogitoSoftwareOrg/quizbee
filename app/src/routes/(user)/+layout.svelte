@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { MediaQuery } from 'svelte/reactivity';
 	import { House, Plus, Settings } from 'lucide-svelte';
-	import { onNavigate } from '$app/navigation';
+	import { goto, onNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 
 	import { Button, Modal } from '@cogisoft/ui-svelte-daisy';
@@ -13,6 +13,8 @@
 	import SidebarContent from './SidebarContent.svelte';
 	import GlobalHeader from './GlobalHeader.svelte';
 	import SubscribeUser from './SubscribeUser.svelte';
+	import { onMount } from 'svelte';
+	import { pb } from '$lib/pb';
 
 	const { data, children } = $props();
 
@@ -36,6 +38,13 @@
 				await navigation.complete;
 			});
 		});
+	});
+
+	onMount(() => {
+		if (!pb?.authStore.isValid) {
+			sessionStorage.setItem('postLoginPath', page.url.pathname + page.url.search);
+			goto('/sign-in', { replaceState: true });
+		}
 	});
 </script>
 

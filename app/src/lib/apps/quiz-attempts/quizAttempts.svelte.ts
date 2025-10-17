@@ -11,6 +11,9 @@ class QuizAttemptsStore {
 		const sortedQuizAttempts = quizAttempts.toSorted((a, b) => b.created.localeCompare(a.created));
 		this._quizAttempts = sortedQuizAttempts;
 	}
+	add(quizAttempt: QuizAttemptsResponse) {
+		this._quizAttempts.unshift(quizAttempt);
+	}
 
 	async subscribe(userId: string) {
 		console.log('subscribing to quizAttempts', userId);

@@ -9,7 +9,7 @@
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
 
 	import type { Answer } from '$lib/apps/quizes/types';
-	import type { QuizItemsResponse } from '$lib/pb';
+	import type { QuizExpand, QuizItemsResponse } from '$lib/pb';
 	import { quizItemsStore } from '$lib/apps/quizes/quizItems.svelte';
 	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
 	import { uiStore } from '$lib/apps/users/ui.svelte';
@@ -21,6 +21,8 @@
 		uncovered_topics: string[];
 	};
 
+	const { data } = $props();
+
 	const subscription = $derived(subscriptionStore.subscription);
 
 	const quizAttemptId = $derived(page.params.quizAttemptId);
@@ -31,8 +33,13 @@
 
 	const correctCount = $derived(quizDecisions.filter((d) => d.correct).length);
 
-	const quiz = $derived(quizesStore.quizes.find((q) => q.id === quizAttempt?.quiz));
-	const quizItems = $derived(quizItemsStore.quizItemsMap.get(quiz?.id || '') || []);
+	const pageQuiz = $derived(data.pageQuiz);
+	const quiz = $derived(quizesStore.quizes.find((q) => q.id === quizAttempt?.quiz) || pageQuiz);
+	const quizItems = $derived(
+		quizItemsStore.quizItemsMap.get(quiz?.id || '') ||
+			(quiz?.expand as QuizExpand)?.quizItems_via_quiz ||
+			[]
+	);
 
 	const feedback = $derived(quizAttempt?.feedback as Feedback | undefined);
 
