@@ -5,6 +5,7 @@
 
 	import { pb } from '$lib/pb/client';
 	import { QuizesVisibilityOptions, SubscriptionsTariffOptions } from '$lib/pb/pocketbase-types';
+	import { uiStore } from '$lib/apps/users/ui.svelte';
 
 	interface Props {
 		quizId: string;
@@ -100,7 +101,7 @@
 	{#if !isPaidUser}
 		<!-- Free User: Show badge with paywall trigger -->
 		<button
-			onclick={onPaywallClick}
+			onclick={() => uiStore.setPaywallOpen(true)}
 			class="border-primary/20 bg-primary/5 hover:border-primary/40 hover:bg-primary/10 group flex cursor-pointer items-center justify-between gap-3 rounded-lg border p-3 shadow-sm transition-all"
 		>
 			<div class="flex flex-1 items-center gap-2.5">

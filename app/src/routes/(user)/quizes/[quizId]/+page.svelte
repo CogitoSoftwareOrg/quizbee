@@ -17,7 +17,6 @@
 	import { QuizesVisibilityOptions } from '$lib/pb/pocketbase-types';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
 	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
-	import { uiStore } from '$lib/apps/users/ui.svelte';
 
 	const { data } = $props();
 	const quiz = $derived(
@@ -113,7 +112,6 @@
 						quizId={quiz.id}
 						visibility={quiz.visibility || QuizesVisibilityOptions.private}
 						tariff={subscription?.tariff}
-						onPaywallClick={() => uiStore.setPaywallOpen(true)}
 					/>
 				{/if}
 

@@ -23,9 +23,9 @@
 			icon: House
 		},
 		{
-			name: '/quizes/attempts',
+			name: '/attempts',
 			label: 'Attempts',
-			href: '/quizes/attempts',
+			href: '/attempts',
 			icon: History
 		},
 		{
