@@ -95,9 +95,11 @@
 								}
 							}}
 						/>
-						<Pencil
-							class="text-base-content/40 h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100 "
-						/>
+						{#if title.startsWith('Untitled Quiz')}
+							<Pencil
+								class="text-base-content/40 -mt-4 ml-1 h-4 w-4"
+							/>
+						{/if}
 					</div>
 					{#if showWarningLength}
 						<p class="text-error -mt-1 text-center">Title is limited to 30 characters.</p>
