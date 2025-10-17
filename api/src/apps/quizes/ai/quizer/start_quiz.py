@@ -81,7 +81,7 @@ async def start_generating_quiz_task(
         logging.info(f"Token count ({total_tokens}) exceeds 100k, applying summarization to 50k tokens...")
         concatenated_texts = summarize_to_fixed_tokens(
             concatenated_texts, 
-            target_token_count=52_000, 
+            target_token_count=52000, 
         )
         # Recalculate tokens after summarization
         tokens = ENCODERS[LLMS.GPT_5_MINI].encode(concatenated_texts)

@@ -1,7 +1,6 @@
 
 from lib.clients.tiktoken import ENCODERS
 from lib.config import LLMS
-from .pdf_parser import parse_pdf
 
 
 def calculate_image_tokens(width: int, height: int) -> int:
@@ -38,19 +37,18 @@ def calculate_image_tokens(width: int, height: int) -> int:
 
 
 
-def count_text_tokens(text: str) -> int:
+def count_text_tokens(concatenated_texts: str) -> int:
     """
     Подсчитывает количество токенов в тексте.
 
     Args:
-        text: Текст для подсчета токенов
+        concatenated_texts: Объединенный текст для подсчета токенов
 
     Returns:
         Количество токенов в тексте
     """
     try:
-        encoding = ENCODERS[LLMS.GPT_5_MINI]
-        tokens = encoding.encode(text)
+        tokens = ENCODERS[LLMS.GPT_5_MINI].encode(concatenated_texts)
         return len(tokens)
     except Exception as e:
         raise Exception(f"Ошибка при подсчете токенов: {str(e)}")

@@ -256,20 +256,15 @@
 
 		const iconMap: Record<string, string> = {
 			pdf: 'pdf',
-			doc: 'doc',
-			docx: 'doc',
-			xls: 'xls',
-			xlsx: 'xls',
-			ppt: 'ppt',
-			pptx: 'ppt',
+			md: 'md',
 			txt: 'txt',
 			js: 'js',
 			ts: 'js',
 			html: 'html',
 			css: 'css',
 			json: 'json',
-			xml: 'xml',
-			svg: 'svg'
+			
+			
 		};
 
 		return iconMap[extension || ''] || 'unknown';
@@ -467,7 +462,7 @@
 								class="file-icon h-10 w-10"
 							/>
 							<span
-								class="line-clamp-3 break-words text-[14px] leading-tight"
+								class="line-clamp-3 break-all text-[14px] leading-tight"
 								title={attachedFile.name}>{attachedFile.name}</span
 							>
 						</div>

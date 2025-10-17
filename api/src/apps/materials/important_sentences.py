@@ -4,6 +4,9 @@ import math
 import time
 from typing import Union
 
+from lib.clients.tiktoken import ENCODERS
+from lib.config import LLMS
+
 # -----------------------------------------------------------------------------
 # БЛОК КОДА ДЛЯ СУММАРИЗАЦИИ
 # -----------------------------------------------------------------------------
@@ -12,6 +15,19 @@ STOP_WORDS = {'the', 'a', 'an', 'in', 'on', 'is', 'are', 'was', 'were', 'it', 'h
               'this', 'that', 'these', 'those', 'and', 'or', 'but', 'with', 'at', 'from', 'by', 
               'for', 'of', 'to', 'as', 'into', 'through', 'during', 'before', 'after', 'above',
               'below', 'between', 'under', 'over', 'again', 'further', 'then', 'once'}
+
+def count_tokens(text: str) -> int:
+    """
+    Подсчитывает количество токенов в тексте используя tiktoken encoder.
+    
+    Args:
+        text: Текст для подсчета токенов
+        
+    Returns:
+        Количество токенов
+    """
+    tokens = ENCODERS[LLMS.GPT_5_MINI].encode(text)
+    return len(tokens)
 
 def score_paragraph(paragraph: str) -> float:
     """
@@ -188,7 +204,7 @@ def summarize_to_fixed_tokens(
     total_paragraphs = len(paragraphs)
     print(f"Найдено {total_paragraphs} абзацев.")
 
-    para_lengths = [len(p.split()) for p in paragraphs]
+    para_lengths = [count_tokens(p) for p in paragraphs]
     total_tokens_in_doc = sum(para_lengths)
 
     if total_tokens_in_doc < target_token_count:
@@ -221,13 +237,52 @@ def summarize_to_fixed_tokens(
                  selected_paragraphs_indices.add(original_idx)
                  break
 
-    print(f"Шаг 3: Сборка итогового конспекта... Выбрано {len(selected_paragraphs_indices)} абзацев.")
-    sorted_indices = sorted(list(selected_paragraphs_indices))
+    print(f"Шаг 3: Добавление контекстных параграфов с контролем лимита...")
+    # Сортируем выбранные параграфы по их позиции в документе
+    sorted_selected = sorted(list(selected_paragraphs_indices))
+    
+    # Расширяем выбранные индексы, добавляя соседние параграфы с проверкой лимита
+    extended_indices = set()
+    current_token_count = 0
+    
+    # Создаем список кандидатов с приоритетом (основные параграфы имеют высший приоритет)
+    candidates = []
+    for idx in sorted_selected:
+        candidates.append((0, idx, para_lengths[idx]))  # Приоритет 0 - основные параграфы
+        if idx > 0 and idx - 1 not in selected_paragraphs_indices:
+            candidates.append((1, idx - 1, para_lengths[idx - 1]))  # Приоритет 1 - предыдущие
+        if idx < total_paragraphs - 1 and idx + 1 not in selected_paragraphs_indices:
+            candidates.append((1, idx + 1, para_lengths[idx + 1]))  # Приоритет 1 - следующие
+    
+    # Сортируем по приоритету (основные параграфы первыми), затем по позиции
+    candidates.sort(key=lambda x: (x[0], x[1]))
+    
+    # Добавляем параграфы пока не превысим лимит
+    for priority, idx, length in candidates:
+        if idx not in extended_indices:
+            if current_token_count + length <= target_token_count * 1.1:  # Допускаем 10% превышение
+                extended_indices.add(idx)
+                current_token_count += length
+            elif priority == 0:  # Основные параграфы добавляем всегда
+                extended_indices.add(idx)
+                current_token_count += length
+    
+    print(f"Шаг 4: Сборка итогового конспекта... Выбрано {len(extended_indices)} абзацев (включая контекст).")
+    sorted_indices = sorted(list(extended_indices))
     
     summary = "\n\n".join([paragraphs[i] for i in sorted_indices])
     
-    final_token_count = len(summary.split())
-    print(f"Финальный размер конспекта: примерно {final_token_count} токенов.")
+    final_token_count = count_tokens(summary)
+    print(f"Финальный размер конспекта: {final_token_count} токенов (цель: {target_token_count}).")
+    
+    # Если всё ещё сильно превышаем лимит, обрезаем контекстные параграфы
+    if final_token_count > target_token_count * 1.15:
+        print(f"Превышение лимита более чем на 15%. Удаляем лишние контекстные параграфы...")
+        # Оставляем только основные выбранные параграфы
+        sorted_indices = sorted(list(selected_paragraphs_indices))
+        summary = "\n\n".join([paragraphs[i] for i in sorted_indices])
+        final_token_count = count_tokens(summary)
+        print(f"После обрезки: {final_token_count} токенов.")
     
     return summary
 

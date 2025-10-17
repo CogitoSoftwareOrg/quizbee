@@ -17,6 +17,7 @@ from .important_sentences import summarize_to_fixed_tokens
 from apps.auth import User
 from apps.auth import User, auth_user
 from lib.clients import AdminPB
+from lib.settings import settings
 
 materials_router = APIRouter(
     prefix="/materials", tags=["materials"], dependencies=[Depends(auth_user)]
@@ -95,12 +96,7 @@ async def upload_material(
                 dto["tokens"] = total_tokens
                 dto["kind"] = "complex"
 
-                # Добавляем обработанный текст и изображения в dto
-                if extracted_text:
-                    text_filename = f"{material_id}_text.txt"
-                    text_bytes = extracted_text.encode("utf-8")
-                    dto["textFile"] = FileUpload((text_filename, text_bytes))
-
+                # Сначала загружаем изображения в материал
                 images_list = []
                 if pdf_data["images"]:
                     for img_data in pdf_data["images"]:
@@ -117,12 +113,73 @@ async def upload_material(
                 dto["kind"] = "simple"
                 pdf_data = None
         else:
-            # Для текстовых файлов
-            token_count = count_text_tokens(file_bytes.decode("utf-8"))
-            dto["tokens"] = token_count
-            dto["kind"] = "simple"
+            # Проверяем, является ли файл изображением
+            is_image = False
+            if file.filename:
+                image_extensions = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".svg", ".ico")
+                is_image = file.filename.lower().endswith(image_extensions)
+            
+            if is_image:
+                # Для изображений подсчитываем токены на основе размера
+                # Примерная оценка: используем фиксированное количество токенов для изображений
+                # или можно добавить реальный подсчет через PIL если нужно
+                dto["tokens"] = 0  # Для простых изображений можно не считать текстовые токены
+                dto["kind"] = "simple"
+            else:
+                # Для текстовых файлов
+                try:
+                    text_content = file_bytes.decode("utf-8")
+                    token_count = count_text_tokens(text_content)
+                    dto["tokens"] = token_count
+                    dto["kind"] = "simple"
+                except UnicodeDecodeError:
+                    # Если не удается декодировать как текст, это бинарный файл
+                    dto["tokens"] = 0
+                    dto["kind"] = "simple"
 
+        # Создаем материал в БД
         material = await admin_pb.collection("materials").create(dto)
+
+        # Если это PDF с извлеченным текстом, сохраняем textFile
+        if pdf_data and pdf_data.get("text"):
+            extracted_text = pdf_data["text"]
+            
+            # Получаем ID материала
+            material_id_str = material.get("id")
+            if not material_id_str:
+                raise HTTPException(500, "Material ID not found after creation")
+            
+            # Если есть изображения, заменяем маркеры на реальные URLs
+            if pdf_data.get("images"):
+                image_files = material.get("images", [])
+                
+                # Создаем словарь маркер -> URL
+                marker_to_url = {}
+                pb_base_url = settings.pb_url.rstrip("/")
+                
+                for idx, img_data in enumerate(pdf_data["images"]):
+                    marker = img_data.get("marker")
+                    if marker and idx < len(image_files):
+                        # Формируем URL изображения
+                        image_filename = image_files[idx]
+                        image_url = f"{pb_base_url}/api/files/materials/{material_id_str}/{image_filename}"
+                        marker_to_url[marker] = image_url
+                
+                # Заменяем все маркеры на URLs в формате Markdown
+                for marker, url in marker_to_url.items():
+                    extracted_text = extracted_text.replace(marker, f"\n![Image]({url})\n")
+            
+            # Обновляем материал с текстом (независимо от наличия изображений)
+            text_filename = f"{material_id_str}_text.txt"
+            text_bytes = extracted_text.encode("utf-8")
+            
+            await admin_pb.collection("materials").update(
+                material_id_str,
+                {"textFile": FileUpload((text_filename, text_bytes))}
+            )
+            
+            # Обновляем объект material для ответа
+            material = await admin_pb.collection("materials").get_one(material_id_str)
 
         response_data = {
             "id": material.get("id"),
