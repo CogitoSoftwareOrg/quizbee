@@ -71,7 +71,7 @@ const pageHref = (n: number) => tp(`/blog/${category}/${n}`);
 <Root title={title} description={desc} active="blog">
   <!-- HERO категории -->
   <section
-    class="mb-8 rounded-2xl bg-gradient-to-r from-primary-70 to-secondary-70 border p-6 md:p-8"
+    class="mb-8 rounded-2xl bg-gradient-to-r from-primary-70 to-secondary-70 border p-6 md:p-8 border-base-300"
   >
     <div
       class="flex flex-col md:flex-row md:items-center md:justify-between gap-3"
@@ -122,7 +122,7 @@ const pageHref = (n: number) => tp(`/blog/${category}/${n}`);
         return (
           <a
             href={href}
-            class="group rounded-2xl border bg-card shadow-sm overflow-hidden hover:shadow-md transition"
+            class="group rounded-2xl border bg-card shadow-sm overflow-hidden hover:shadow-md transition border-base-300"
           >
             {/* preview image (надёжно для любых remote URL) */}
             <div class="relative aspect-[16/9] bg-muted overflow-hidden">
