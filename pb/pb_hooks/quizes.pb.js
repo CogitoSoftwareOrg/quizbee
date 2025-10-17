@@ -11,7 +11,7 @@ onRecordCreate((e) => {
     e.record.set("difficulty", "intermediate");
   }
   if (!e.record.get("visibility")) {
-    e.record.set("visibility", "private");
+    e.record.set("visibility", "public");
   }
 
   e.record.set("dynamicConfig", {
