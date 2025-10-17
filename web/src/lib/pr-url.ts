@@ -1,15 +1,16 @@
-function extractPrIdFromCoolifyUrl(coolify: string) {
-  const url = new URL(coolify);
-  const prId = url.hostname.split(".")[0];
-  return prId;
-}
+export function urlWithPR(raw?: string | URL) {
+  if (!raw) throw new Error("urlWithPR: empty url");
+  const u = new URL(typeof raw === "string" ? raw : raw.toString());
 
-const coolify = import.meta.env.COOLIFY_URL;
+  const env = (import.meta as any).env?.PUBLIC_ENV ?? process.env.PUBLIC_ENV;
+  const coolify =
+    (import.meta as any).env?.COOLIFY_URL ?? process.env.COOLIFY_URL;
 
-export function urlWithPR(url: string | URL) {
-  if (import.meta.env.PUBLIC_ENV === "preview" && coolify) {
-    const prId = extractPrIdFromCoolifyUrl(coolify);
-    return new URL(url).toString().replace("https://", `https://${prId}-`);
+  if (env === "preview" && coolify) {
+    // валидируем только если реально есть coolify
+    const cu = new URL(coolify);
+    const pr = cu.hostname.split(".")[0];
+    u.hostname = `${pr}-${u.hostname}`;
   }
-  return new URL(url).toString();
+  return u.toString();
 }
