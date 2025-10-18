@@ -121,8 +121,13 @@ async def update_quiz_attempt_with_feedback(
         )
 
     # No feedback -> generate feedback
-    if sub.get("tariff") != "free" and quiz_attempt.get("feedback") is None:
-        background.add_task(_generate_feedback_task, admin_pb, http, attempt_id)
+    if quiz_attempt.get("feedback") is None:
+        if sub.get("tariff") == "free":
+            await admin_pb.collection("quizAttempts").update(
+                attempt_id, {"feedback": {}}
+            )
+        else:
+            background.add_task(_generate_feedback_task, admin_pb, http, attempt_id)
 
     return JSONResponse(
         content={"scheduled": True, "attempt_id": attempt_id},
