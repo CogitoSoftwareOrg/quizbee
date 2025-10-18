@@ -10,7 +10,7 @@ import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
 import { userStore } from '$lib/apps/users/user.svelte';
 import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
 import { quizItemsStore } from '$lib/apps/quizes/quizItems.svelte';
-import { redirect } from '@sveltejs/kit';
+import { goto } from '$app/navigation';
 
 export async function load({ depends }) {
 	depends('global:user');
@@ -67,7 +67,8 @@ export async function load({ depends }) {
 		})
 		.catch(async (error) => {
 			console.error('Failed to load user:', error);
-			redirect(302, '/sign-in');
+			await goto('/sign-in', { replaceState: true });
+			return null;
 		});
 	return { userLoadPromise };
 }
