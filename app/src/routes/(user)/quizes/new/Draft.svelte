@@ -21,7 +21,9 @@
 		selectedDifficulty: string;
 		questionCount: number;
 		previousQuizes: any[];
+		avoidRepeat: boolean;
 	}
+	
 
 	let {
 		title = $bindable(),
@@ -30,7 +32,8 @@
 		attachedFiles = $bindable(),
 		selectedDifficulty = $bindable(),
 		questionCount = $bindable(),
-		previousQuizes = $bindable()
+		previousQuizes = $bindable(),
+		avoidRepeat = $bindable()
 	}: Props = $props();
 
 	const drafts = $derived(quizesStore.quizes.filter((q: any) => q.status === 'draft'));
@@ -72,7 +75,7 @@
 	$effect(() => {
 		const _ = title;
 		untrack(() => {
-			scheduleUpdate({ title: title.trim() });
+			scheduleUpdate({ title: title });
 		});
 	});
 
@@ -99,6 +102,14 @@
 			if (inputText) {
 				scheduleUpdate({ query: inputText });
 			}
+		});
+	});
+
+
+	$effect(() => {
+		const _ = avoidRepeat;
+		untrack(() => {
+			scheduleUpdate({ avoidRepeat: avoidRepeat });
 		});
 	});
 

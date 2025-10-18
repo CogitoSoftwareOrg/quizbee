@@ -116,6 +116,7 @@
 							bind:selectedDifficulty
 							bind:questionCount
 							bind:previousQuizes
+							bind:avoidRepeat
 						/>
 					{/if}
 				</div>
