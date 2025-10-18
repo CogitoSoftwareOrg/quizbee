@@ -27,8 +27,10 @@ export function getValidAttempts(
 ): QuizAttemptsResponse[] {
 	if (!quizAttempts?.length || !quizes?.length) return [];
 	return quizAttempts.filter((attempt) => {
-		if (!attempt?.feedback) return false;
+		const choices = ensureChoicesArray(attempt.choices);
 		const quiz = quizes.find((q) => q.id === attempt.quiz);
+
+		if (choices.length !== quiz?.itemsLimit) return false;
 		return quiz?.status === 'final';
 	});
 }

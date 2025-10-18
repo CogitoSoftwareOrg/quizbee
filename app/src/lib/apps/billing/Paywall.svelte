@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { Check, Sparkles } from 'lucide-svelte';
+
+	import { Button } from '@cogisoft/ui-svelte-daisy';
+
 	import { computeApiUrl } from '$lib/api/compute-url';
-	import Button from '$lib/ui/Button.svelte';
 
 	type Price = 'plus_monthly' | 'pro_monthly' | 'plus_yearly' | 'pro_yearly';
 

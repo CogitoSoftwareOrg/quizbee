@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { ChevronsRight } from 'lucide-svelte';
 
-	import Button from '$lib/ui/Button.svelte';
-	import type { QuizAttemptsResponse, QuizItemsResponse } from '$lib/pb';
-	import type { Sender } from './types';
+	import { Button } from '@cogisoft/ui-svelte-daisy';
 
+	import type { QuizAttemptsResponse, QuizItemsResponse } from '$lib/pb';
+
+	import type { Sender } from './types';
 	import { messagesStore } from './stores/messages.svelte';
 
 	type Props = {

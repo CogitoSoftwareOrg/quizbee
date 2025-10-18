@@ -1,8 +1,11 @@
 ---
+import { getLangFromUrl, useTranslatedPath } from "@/i18n/utils";
 
+const lang = getLangFromUrl(Astro.url);
+const tp = useTranslatedPath(lang);
 ---
 
-<footer class="footer md:footer-horizontal bg-base-100 text-base-content p-10">
+<footer class="footer md:footer-horizontal bg-base-200 text-base-content p-10">
   <nav>
     <!-- <h6 class="footer-title">Services</h6>
     <a href="/products/forge" class="link link-hover">IT End2End Forge</a>
@@ -24,7 +27,9 @@
   </nav>
   <nav>
     <h6 class="footer-title">Legal</h6>
-    <a href="/terms-and-privacy" class="link link-hover">Terms & Privacy</a>
+    <a href={tp("/terms-and-privacy")} class="link link-hover"
+      >Terms & Privacy</a
+    >
   </nav>
 
   <form
@@ -35,7 +40,7 @@
   >
     <div class="flex flex-col gap-3 p-4 rounded-xl bg-base-200 shadow-lg">
       <h3 class="footer-title text-lg font-bold mb-2 flex items-center gap-2">
-        <span class="text-yellow-400">🌼</span> Subscribe
+        <span class="text-yellow-400">🌼</span> Subscribe our newsletter
       </h3>
       <input type="hidden" name="nonce" />
 

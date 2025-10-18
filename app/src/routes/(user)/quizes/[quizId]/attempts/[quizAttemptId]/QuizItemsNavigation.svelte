@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { ChevronLeft, ChevronRight } from 'lucide-svelte';
 
-	import Button from '$lib/ui/Button.svelte';
+	import { Button } from '@cogisoft/ui-svelte-daisy';
+
 	import type { QuizAttemptsResponse, QuizItemsResponse } from '$lib/pb';
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
 
@@ -32,7 +33,10 @@
 			style="ghost"
 			circle
 			size="lg"
-			onclick={onPrevious}
+			onclick={(e) => {
+				e.preventDefault();
+				onPrevious();
+			}}
 		>
 			<ChevronLeft size={40} />
 		</Button>
@@ -49,7 +53,10 @@
 			style="ghost"
 			circle
 			size="lg"
-			onclick={onNext}
+			onclick={(e) => {
+				e.preventDefault();
+				onNext();
+			}}
 		>
 			<ChevronRight size={40} />
 		</Button>

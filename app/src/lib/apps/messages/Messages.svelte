@@ -3,8 +3,8 @@
 	import type { ClassValue } from 'svelte/elements';
 	import { fade } from 'svelte/transition';
 
-	import Button from '$lib/ui/Button.svelte';
-	import { scrollToBottom } from '$lib/actions/scroll-to-bottom';
+	import { Button, scrollToBottom } from '@cogisoft/ui-svelte-daisy';
+
 	import type { MessagesResponse } from '$lib/pb';
 
 	import type { Sender } from './types';

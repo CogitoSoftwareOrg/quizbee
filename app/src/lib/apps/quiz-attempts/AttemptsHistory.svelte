@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { Clock, Search } from 'lucide-svelte';
 
+	import { Input } from '@cogisoft/ui-svelte-daisy';
+
 	import type { Answer } from '$lib/apps/quizes/types';
 	import type {
 		MaterialsResponse,
@@ -9,11 +11,11 @@
 		QuizExpand,
 		QuizItemsResponse
 	} from '$lib/pb';
-	import Input from '$lib/ui/Input.svelte';
 
 	import type { Decision } from './types';
 	import type { ClassValue } from 'svelte/elements';
 	import { quizItemsStore } from '../quizes/quizItems.svelte';
+	import { userStore } from '../users/user.svelte';
 	interface HistoryPoint {
 		quizId: string;
 		attemptId: string;
@@ -34,6 +36,8 @@
 	}
 
 	const { class: className = '', quizAttempts, quizes, materials }: Props = $props();
+
+	const user = $derived(userStore.user);
 
 	function formatDateTime(value: string): string {
 		if (!value) return '';
@@ -64,9 +68,12 @@
 					.flatMap((item) => item.answers as Answer[])
 					.map((a) => a.content || '');
 
-				const materialTitles = quiz.materials
-					.map((id) => materialMap.get(id))
-					.filter((title): title is string => Boolean(title));
+				const materialTitles =
+					quiz.author === user?.id
+						? quiz.materials
+								.map((id) => materialMap.get(id))
+								.filter((title): title is string => Boolean(title))
+						: [];
 
 				return {
 					quizId: quiz.id,
@@ -99,7 +106,7 @@
 
 <div class={['flex h-full flex-col gap-6', className]}>
 	<header class="flex flex-col gap-2">
-		<h1 class="text-3xl font-semibold tracking-tight">Quiz history</h1>
+		<h1 class="text-3xl font-semibold tracking-tight">Attempts history</h1>
 		<p class="text-base-content/70 text-sm">
 			Review every completed attempt, revisit materials, and drill into detailed feedback.
 		</p>

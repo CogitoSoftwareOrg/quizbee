@@ -3,11 +3,9 @@
 	import '$lib/pb/pb-on-change';
 
 	import { onMount } from 'svelte';
-	import { afterNavigate } from '$app/navigation';
-	import { page } from '$app/state';
+	import { PortalHost } from '@cogisoft/ui-svelte-daisy';
 
 	import favicon from '$lib/assets/icons/bee_final.svg';
-	import PortalHost from '$lib/actions/PortalHost.svelte';
 	import ThemeLoad from '$lib/features/ThemeLoad.svelte';
 	// import posthog from 'posthog-js';
 

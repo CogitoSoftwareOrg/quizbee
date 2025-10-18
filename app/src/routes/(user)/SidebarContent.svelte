@@ -52,6 +52,6 @@
 		<Feedback expanded={isExpanded} />
 		<ThemeController expanded={isExpanded} />
 
-		<ProfileRow expanded={isExpanded} />
+		<ProfileRow class="w-full" expanded={isExpanded} />
 	</div>
 </div>

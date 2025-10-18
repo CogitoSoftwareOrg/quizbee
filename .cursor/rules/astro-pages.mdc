@@ -1,0 +1,7 @@
+---
+globs: *.astro
+alwaysApply: false
+---
+
+- Use astro-sections components for pages and landing
+  [@cogisoft/astro-sections](../../web/node_modules/@cogisoft/ui-astro/src/index.ts)

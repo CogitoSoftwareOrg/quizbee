@@ -1,15 +1,15 @@
 STRIPE_PRICES_MAP = {
-    "plus_monthly": "price_1SGFmjPuRQMxFFQtexbkfz9X",
-    "pro_monthly": "price_1SGFs0PuRQMxFFQtsBStJMnM",
-    "plus_yearly": "price_1SGFnRPuRQMxFFQteWtWficS",
-    "pro_yearly": "price_1SGFsPPuRQMxFFQtlJdds00h",
+    "plus_monthly": "price_1SHi0fCrmGGYHLx7oHb9VCLF",
+    "plus_yearly": "price_1SHhyyCrmGGYHLx7Z5iGCnEy",
+    "pro_monthly": "price_1SHi3SCrmGGYHLx7TTE00Gau",
+    "pro_yearly": "price_1SHi4BCrmGGYHLx7jx9QYOs7",
 }
 
 STRIPE_TARIFS_MAP = {
-    "price_1SGFmjPuRQMxFFQtexbkfz9X": "plus",
-    "price_1SGFnRPuRQMxFFQteWtWficS": "plus",
-    "price_1SGFs0PuRQMxFFQtsBStJMnM": "pro",
-    "price_1SGFsPPuRQMxFFQtlJdds00h": "pro",
+    "price_1SHi0fCrmGGYHLx7oHb9VCLF": "plus",
+    "price_1SHhyyCrmGGYHLx7Z5iGCnEy": "plus",
+    "price_1SHi3SCrmGGYHLx7TTE00Gau": "pro",
+    "price_1SHi4BCrmGGYHLx7jx9QYOs7": "pro",
 }
 
 STRIPE_MONTHLY_LIMITS_MAP = {

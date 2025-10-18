@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { Modal, Button } from '@cogisoft/ui-svelte-daisy';
+
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
 	import { materialsStore } from '$lib/apps/materials/materials.svelte';
 	import type { AttachedFile } from '$lib/types/attached-file';
@@ -9,8 +11,6 @@
 	import PreviousQuizes from './PreviousQuizes.svelte';
 	import { truncateFileName } from '$lib/utils/truncuate-file-name';
 	import { createDraft } from '../new/createDraft';
-	import Modal from '$lib/ui/Modal.svelte';
-	import Button from '$lib/ui/Button.svelte';
 	import { FilePlus } from 'lucide-svelte';
 
 	interface Props {

@@ -92,11 +92,6 @@ async def update_quiz_attempt_with_feedback(
     background: BackgroundTasks,
     http: HTTPAsyncClient,
 ):
-    if sub.get("tariff") == "free":
-        raise HTTPException(
-            status_code=400, detail="Free tier does not support this feature"
-        )
-
     # CRUD
     quiz_attempt = await admin_pb.collection("quizAttempts").get_one(
         attempt_id,
@@ -108,12 +103,14 @@ async def update_quiz_attempt_with_feedback(
     )
     quiz = quiz_attempt.get("expand", {}).get("quiz", {})
 
-    # No feedback -> generate feedback
-    if quiz_attempt.get("feedback") is None:
-        background.add_task(_generate_feedback_task, admin_pb, http, attempt_id)
-
     # Only summarize and index if quiz is not final
     if quiz.get("status") != "final":
+        if sub.get("tariff") == "free":
+            await admin_pb.collection("quizes").update(
+                quiz.get("id", ""),
+                {"visibility": "search"},
+            )
+
         background.add_task(
             summary_and_index,
             admin_pb,
@@ -122,6 +119,15 @@ async def update_quiz_attempt_with_feedback(
             user.get("id", ""),
             attempt_id,
         )
+
+    # No feedback -> generate feedback
+    if quiz_attempt.get("feedback") is None:
+        if sub.get("tariff") == "free":
+            await admin_pb.collection("quizAttempts").update(
+                attempt_id, {"feedback": {}}
+            )
+        else:
+            background.add_task(_generate_feedback_task, admin_pb, http, attempt_id)
 
     return JSONResponse(
         content={"scheduled": True, "attempt_id": attempt_id},

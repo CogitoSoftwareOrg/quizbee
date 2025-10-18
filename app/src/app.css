@@ -3,150 +3,16 @@
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
 
-@plugin "daisyui" {
-	themes: all;
-}
+@source '../node_modules/@cogisoft/ui-svelte-daisy/dist/*';
 
-@custom-variant dark (&:where([data-theme=QUIZBEE_DARK], [data-theme=QUIZBEE_DARK] *));
+@import './lib/styles/theme.css';
+@import './lib/styles/fonts.css';
+@import './lib/styles/scroll.css';
+@import './lib/styles/transitions.css';
 
-@plugin "daisyui/theme" {
-	name: 'QUIZBEE_LIGHT';
-	default: false;
-	prefersdark: false;
-	color-scheme: 'light';
-	--color-base-100: oklch(100% 0 0);
-	--color-base-200: oklch(97% 0 0);
-	--color-base-300: oklch(92% 0 0);
-	--color-base-content: oklch(20% 0 0);
-	--color-primary: oklch(85% 0.199 91.936);
-	--color-primary-content: oklch(42% 0.095 57.708);
-	--color-secondary: oklch(75% 0.183 55.934);
-	--color-secondary-content: oklch(40% 0.123 38.172);
-	--color-accent: oklch(0% 0 0);
-	--color-accent-content: oklch(100% 0 0);
-	--color-neutral: oklch(37% 0.01 67.558);
-	--color-neutral-content: oklch(92% 0.003 48.717);
-	--color-info: oklch(74% 0.16 232.661);
-	--color-info-content: oklch(39% 0.09 240.876);
-	--color-success: oklch(74.722% 0.072 131.116);
-	--color-success-content: oklch(37% 0.077 168.94);
-	--color-warning: oklch(82% 0.189 84.429);
-	--color-warning-content: oklch(41% 0.112 45.904);
-	--color-error: oklch(77.318% 0.128 31.871);
-	--color-error-content: oklch(39% 0.141 25.723);
-	--radius-selector: 1rem;
-	--radius-field: 2rem;
-	--radius-box: 1rem;
-	--size-selector: 0.25rem;
-	--size-field: 0.25rem;
-	--border: 1px;
-	--depth: 1;
-	--noise: 0;
-}
-
-@plugin "daisyui/theme" {
-	name: 'QUIZBEE_DARK';
-	default: false;
-	prefersdark: false;
-	color-scheme: 'dark';
-	--color-base-100: oklch(22% 0.019 237.69);
-	--color-base-200: oklch(20% 0.019 237.69);
-	--color-base-300: oklch(18% 0.019 237.69);
-	--color-base-content: oklch(92% 0.013 255.508);
-	--color-primary: oklch(85% 0.199 91.936);
-	--color-primary-content: oklch(14.94% 0.031 39.947);
-	--color-secondary: oklch(75% 0.183 55.934);
-	--color-secondary-content: oklch(14.507% 0.035 2.72);
-	--color-accent: oklch(71.294% 0.166 299.844);
-	--color-accent-content: oklch(14.258% 0.033 299.844);
-	--color-neutral: oklch(41% 0.019 237.69);
-	--color-neutral-content: oklch(70% 0.019 237.69);
-	--color-info: oklch(85.559% 0.085 206.015);
-	--color-info-content: oklch(17.111% 0.017 206.015);
-	--color-success: oklch(85.56% 0.085 144.778);
-	--color-success-content: oklch(17.112% 0.017 144.778);
-	--color-warning: oklch(85.569% 0.084 74.427);
-	--color-warning-content: oklch(17.113% 0.016 74.427);
-	--color-error: oklch(85.511% 0.078 16.886);
-	--color-error-content: oklch(17.102% 0.015 16.886);
-	--radius-selector: 1rem;
-	--radius-field: 2rem;
-	--radius-box: 1rem;
-	--size-selector: 0.25rem;
-	--size-field: 0.25rem;
-	--border: 1px;
-	--depth: 0;
-	--noise: 0;
-}
-
-/* Sidebar width transitions */
-.sidebar-open {
-	width: 256px;
-}
-
-.sidebar-closed {
-	width: 64px;
-}
-
-.inner-open {
-	width: 256px;
-}
-
-.inner-closed {
-	width: 0px;
-}
-
-@font-face {
-	font-family: 'LV';
-	src: url('/fonts/League_Spartan/LeagueSpartan-VariableFont_wght.ttf') format('truetype');
-	font-weight: 100 900; /* если variable */
-	font-style: normal;
-	font-display: swap;
-}
-:root {
-	font-size: 18px;
-	--font-sans: 'LV', system-ui, sans-serif;
-}
-
-@layer utilities {
-	[data-theme='QUIZBEE_DARK'] .file-icon {
-		filter: invert(1);
-	}
-}
-
-/* Custom Scrollbar Styles */
-* {
-	scrollbar-width: thin;
-	scrollbar-color: oklch(var(--bc) / 0.15) transparent;
-}
-
-*:hover {
-	scrollbar-color: oklch(var(--bc) / 0.25) transparent;
-}
-
-/* Webkit browsers (Chrome, Safari, Edge) */
-*::-webkit-scrollbar {
-	width: 6px;
-	height: 6px;
-}
-
-*::-webkit-scrollbar-track {
-	background: transparent;
-}
-
-*::-webkit-scrollbar-thumb {
-	background: oklch(var(--bc) / 0.15);
-	border-radius: 100vw;
-}
-
-*::-webkit-scrollbar-thumb:hover {
-	background: oklch(var(--bc) / 0.25);
-}
-
-*::-webkit-scrollbar-thumb:active {
-	background: oklch(var(--bc) / 0.35);
-}
-
-*::-webkit-scrollbar-corner {
-	background: transparent;
+/* Prevent horizontal scroll globally */
+html,
+body {
+	overflow-x: hidden;
+	max-width: 100vw;
 }

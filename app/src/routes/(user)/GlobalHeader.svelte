@@ -7,16 +7,13 @@
 		Menu,
 		MessageCircleHeart
 	} from 'lucide-svelte';
+	import { Button } from '@cogisoft/ui-svelte-daisy';
 
 	import { uiStore } from '$lib/apps/users/ui.svelte';
-	import ThemeController from '$lib/features/ThemeController.svelte';
-	import Button from '$lib/ui/Button.svelte';
-
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte';
-	import type { Decision } from '$lib/apps/quiz-attempts/types';
-	import { fly } from 'svelte/transition';
 	import { quizItemsStore } from '$lib/apps/quizes/quizItems.svelte';
+	import type { Decision } from '$lib/apps/quiz-attempts/types';
 
 	const isNewQuizPage = $derived(page.url.pathname === '/quizes/new');
 
@@ -103,30 +100,6 @@
 							].join(' ')}
 							aria-label={`Question ${quizItem.order + 1}`}
 						></div>
-					</li>
-				{/each}
-			</ul>
-
-			<!-- Desktop navigation with numbers -->
-			<ul class="hidden flex-1 flex-wrap items-center gap-1 sm:flex">
-				{#each quizItems as quizItem, index}
-					{@const decision = quizDecisions.find((d) => d.itemId === quizItem.id)}
-
-					<li>
-						<Button
-							disabled={!decision && quizItem.order > (itemToAnswer?.order || 0)}
-							color={decision?.correct
-								? 'success'
-								: decision && !decision?.correct
-									? 'error'
-									: 'neutral'}
-							href={`/quizes/${quiz?.id}/attempts/${quizAttempt?.id}?order=${quizItem.order}`}
-							style={currentItem?.id === quizItem.id ? 'solid' : 'outline'}
-							size="xs"
-							circle
-						>
-							{index + 1}
-						</Button>
 					</li>
 				{/each}
 			</ul>

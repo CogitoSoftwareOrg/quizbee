@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { Send, MessageSquare, Bug, Lightbulb } from 'lucide-svelte';
+
+	import { Button, TextArea } from '@cogisoft/ui-svelte-daisy';
+
 	import { pb } from '$lib/pb';
-	import Button from '$lib/ui/Button.svelte';
 
 	import { uiStore } from './ui.svelte';
 	import { userStore } from './user.svelte';
-	import TextArea from '$lib/ui/TextArea.svelte';
 
 	const user = $derived(userStore.user);
 

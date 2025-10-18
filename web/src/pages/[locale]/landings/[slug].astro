@@ -1,0 +1,79 @@
+---
+import { getCollection } from "astro:content";
+
+import {
+  Hero,
+  Pains,
+  Features,
+  HowItWorks,
+  Products,
+  Testimonials,
+  Pricing,
+  FAQ,
+  CTA,
+  setByPath,
+} from "@cogisoft/ui-astro";
+
+import Root from "@/layouts/Root.astro";
+import { urlWithPR } from "@/lib";
+
+export const getStaticPaths = async () => {
+  const landings = await getCollection("landings");
+  return landings.map((landing) => {
+    return {
+      params: { locale: landing.data.locale, slug: landing.data.slug },
+      props: {
+        meta: landing.data.meta,
+        sections: landing.data.sections,
+      },
+    };
+  });
+};
+
+const { meta, sections } = Astro.props;
+
+const appUrl = urlWithPR(import.meta.env.PUBLIC_APP_URL);
+const parsed: typeof sections = JSON.parse(
+  JSON.stringify(sections).replaceAll("{{APP_URL}}", appUrl)
+);
+---
+
+<Root
+  title={meta.title}
+  description={meta.description}
+  image={meta.image}
+  active={meta.active || "home"}
+  headerCtaHref={meta.headerCtaHref}
+  structuredData={meta.structuredData}
+>
+  {
+    parsed.map((section, idx) => {
+      switch (section.type) {
+        case "Hero":
+          return <Hero {...section.props} />;
+        case "Pains":
+          return <Pains {...section.props} />;
+        case "Features":
+          return <Features {...section.props} />;
+        case "HowItWorks":
+          return <HowItWorks {...section.props} />;
+        case "Products":
+          return <Products {...section.props} />;
+        case "Testimonials":
+          return <Testimonials {...section.props} />;
+        case "Pricing":
+          return <Pricing {...section.props} />;
+        case "FAQ":
+          return <FAQ {...section.props} />;
+        case "CTA":
+          return <CTA {...section.props} />;
+        default:
+          return (
+            <Fragment
+              set:html={`<!-- Unknown section type: ${(section as any).type} at index ${idx} -->`}
+            />
+          );
+      }
+    })
+  }
+</Root>

@@ -2,13 +2,15 @@
 	import { page } from '$app/state';
 	import { Search, ChevronRight, ChevronLeft, Sparkles } from 'lucide-svelte';
 
+	import { Button, Input } from '@cogisoft/ui-svelte-daisy';
+
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
+	import ShareQuizButton from '$lib/apps/quizes/ShareQuizButton.svelte';
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
-	import Button from '$lib/ui/Button.svelte';
-	import Input from '$lib/ui/Input.svelte';
+
 	import type { Answer } from '$lib/apps/quizes/types';
-	import type { QuizItemsResponse } from '$lib/pb';
+	import type { QuizExpand, QuizItemsResponse } from '$lib/pb';
 	import { quizItemsStore } from '$lib/apps/quizes/quizItems.svelte';
 	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
 	import { uiStore } from '$lib/apps/users/ui.svelte';
@@ -20,6 +22,8 @@
 		uncovered_topics: string[];
 	};
 
+	const { data } = $props();
+
 	const subscription = $derived(subscriptionStore.subscription);
 
 	const quizAttemptId = $derived(page.params.quizAttemptId);
@@ -30,8 +34,13 @@
 
 	const correctCount = $derived(quizDecisions.filter((d) => d.correct).length);
 
-	const quiz = $derived(quizesStore.quizes.find((q) => q.id === quizAttempt?.quiz));
-	const quizItems = $derived(quizItemsStore.quizItemsMap.get(quiz?.id || '') || []);
+	const pageQuiz = $derived(data.pageQuiz);
+	const quiz = $derived(quizesStore.quizes.find((q) => q.id === quizAttempt?.quiz) || pageQuiz);
+	const quizItems = $derived(
+		quizItemsStore.quizItemsMap.get(quiz?.id || '') ||
+			(quiz?.expand as QuizExpand)?.quizItems_via_quiz ||
+			[]
+	);
 
 	const feedback = $derived(quizAttempt?.feedback as Feedback | undefined);
 
@@ -218,8 +227,10 @@
 			</ul>
 		{/if}
 
-		<div class="fixed bottom-12 left-0 right-0 z-10 p-4 sm:static sm:p-0">
-			<Button block>Share Quiz</Button>
-		</div>
+		{#if quiz}
+			<div class="fixed bottom-12 left-0 right-0 z-10 p-4 sm:static sm:p-0">
+				<ShareQuizButton quizId={quiz.id} quizTitle={quiz.title || 'Quiz'} block />
+			</div>
+		{/if}
 	</section>
 </div>

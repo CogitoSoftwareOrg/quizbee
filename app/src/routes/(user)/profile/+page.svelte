@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { X } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
+
+	import { Button } from '@cogisoft/ui-svelte-daisy';
+
 	import { pb } from '$lib/pb';
-	import Button from '$lib/ui/Button.svelte';
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
 	import { materialsStore } from '$lib/apps/materials/materials.svelte';
@@ -97,7 +99,7 @@
 		</div>
 
 		<!-- Right Column: Stats & Settings -->
-		<div class="space-y-4 sm:space-y-6 lg:col-span-2">
+		<div class="hidden space-y-4 sm:block sm:space-y-6 lg:col-span-2">
 			<!-- Statistics Cards Grid -->
 			<div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
 				<StreakCard {streak} />

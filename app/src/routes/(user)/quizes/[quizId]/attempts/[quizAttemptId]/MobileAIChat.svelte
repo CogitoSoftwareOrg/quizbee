@@ -1,8 +1,10 @@
 <script lang="ts">
-	import { ChevronDown, ChevronUp } from 'lucide-svelte';
+	import { ChevronUp } from 'lucide-svelte';
+
 	import type { Sender } from '$lib/apps/messages/types';
 	import type { MessagesResponse, QuizAttemptsResponse, QuizItemsResponse } from '$lib/pb';
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
+
 	import AIChat from './AIChat.svelte';
 
 	interface Props {
@@ -30,9 +32,13 @@
 	let isDragging = $state(false);
 	let translateY = $state(0);
 	let hasInteracted = $state(false);
+	let hasMoved = $state(false);
+	let touchStartedOnBottom = $state(false); // отслеживаем, началось ли касание внизу экрана
 
-	const SWIPE_THRESHOLD = 60;
-	const HINT_DURATION = 4000;
+	const SWIPE_THRESHOLD = 60; // Минимальное расстояние для срабатывания свайпа
+	const HINT_DURATION = 4000; // Длительность анимации подсказки
+	const TAP_THRESHOLD = 5; // Максимальное движение для распознавания как клика (не свайпа)
+	const BOTTOM_ZONE_HEIGHT = 150; // Высота зоны внизу экрана для открытия чата
 
 	// Показываем анимацию только первые 4 секунды И если не было взаимодействия
 	let showPulse = $state(true);
@@ -48,75 +54,115 @@
 		if (!open) {
 			translateY = 0;
 			isDragging = false;
+			hasMoved = false;
+			touchStartedOnBottom = false;
 		}
 	});
 
-	function handleTouchStart(e: TouchEvent) {
-		// Предотвращаем конфликт с другими обработчиками
-		e.stopPropagation();
-		touchStartY = e.touches[0].clientY;
-		touchCurrentY = touchStartY;
-		isDragging = true;
+	// Глобальные обработчики touch событий
+	$effect(() => {
+		const handleTouchStart = (e: TouchEvent) => {
+			// Не блокируем touch на кнопках - различаем клик от свайпа по движению (hasMoved)
+			const touchY = e.touches[0].clientY;
+			const windowHeight = window.innerHeight;
 
-		// Скрываем подсказку навсегда после первого взаимодействия
-		if (!hasInteracted) {
-			hasInteracted = true;
-		}
-	}
+			if (open) {
+				// Когда чат открыт - ловим любые касания
+				touchStartY = touchY;
+				touchCurrentY = touchY;
+				isDragging = true;
+				hasMoved = false;
+				touchStartedOnBottom = false;
+			} else if (itemDecision) {
+				// Когда чат закрыт - ловим только касания в нижней зоне
+				if (touchY > windowHeight - BOTTOM_ZONE_HEIGHT) {
+					touchStartY = touchY;
+					touchCurrentY = touchY;
+					isDragging = true;
+					hasMoved = false;
+					touchStartedOnBottom = true;
 
-	function handleTouchMove(e: TouchEvent) {
-		if (!isDragging) return;
-
-		touchCurrentY = e.touches[0].clientY;
-		const diff = touchCurrentY - touchStartY;
-
-		if (open) {
-			// Когда открыт - можно только закрыть свайпом вниз
-			if (diff > 0) {
-				// Свайп вниз - закрытие
-				e.preventDefault();
-				translateY = diff;
-			} else {
-				// Свайп вверх - небольшой bounce эффект
-				translateY = Math.max(diff * 0.2, -30);
+					if (!hasInteracted) {
+						hasInteracted = true;
+					}
+				}
 			}
-		} else {
-			// Когда закрыт - можно только открыть свайпом вверх
-			if (diff < 0) {
-				// Свайп вверх - открытие
-				e.preventDefault();
-				const damping = Math.abs(diff) > 200 ? 0.5 : 1;
-				translateY = diff * damping;
-			} else {
-				// Свайп вниз - небольшой bounce эффект
-				translateY = Math.min(diff * 0.2, 30);
+		};
+
+		const handleTouchMove = (e: TouchEvent) => {
+			if (!isDragging) return;
+
+			touchCurrentY = e.touches[0].clientY;
+			const diff = touchCurrentY - touchStartY;
+
+			// Проверяем, превышен ли порог для свайпа
+			if (Math.abs(diff) > TAP_THRESHOLD) {
+				hasMoved = true;
 			}
-		}
-	}
 
-	function handleTouchEnd() {
-		if (!isDragging) return;
-
-		const diff = touchCurrentY - touchStartY;
-
-		if (open) {
-			// Закрываем если свайп вниз превышает порог
-			if (diff > SWIPE_THRESHOLD) {
-				open = false;
+			// Применяем визуальные эффекты всегда, но preventDefault только при реальном свайпе
+			if (open) {
+				// Когда открыт - можно только закрыть свайпом вниз
+				if (diff > 0) {
+					if (hasMoved) {
+						e.preventDefault();
+					}
+					translateY = diff;
+				} else {
+					translateY = Math.max(diff * 0.2, -30);
+				}
+			} else if (touchStartedOnBottom) {
+				// Когда закрыт - можно только открыть свайпом вверх из нижней зоны
+				if (diff < 0) {
+					if (hasMoved) {
+						e.preventDefault();
+					}
+					const damping = Math.abs(diff) > 200 ? 0.5 : 1;
+					translateY = diff * damping;
+				} else {
+					translateY = Math.min(diff * 0.2, 30);
+				}
 			}
-		} else {
-			// Открываем если свайп вверх превышает порог
-			if (diff < -SWIPE_THRESHOLD) {
-				open = true;
-			}
-		}
+		};
 
-		// Сброс состояния
-		isDragging = false;
-		translateY = 0;
-		touchStartY = 0;
-		touchCurrentY = 0;
-	}
+		const handleTouchEnd = () => {
+			if (!isDragging) return;
+
+			const diff = touchCurrentY - touchStartY;
+
+			if (hasMoved) {
+				if (open) {
+					if (diff > SWIPE_THRESHOLD) {
+						open = false;
+					}
+				} else if (touchStartedOnBottom) {
+					if (diff < -SWIPE_THRESHOLD) {
+						open = true;
+					}
+				}
+			}
+
+			isDragging = false;
+			hasMoved = false;
+			translateY = 0;
+			touchStartY = 0;
+			touchCurrentY = 0;
+			touchStartedOnBottom = false;
+		};
+
+		// Добавляем глобальные обработчики
+		document.addEventListener('touchstart', handleTouchStart);
+		document.addEventListener('touchmove', handleTouchMove, { passive: false });
+		document.addEventListener('touchend', handleTouchEnd);
+		document.addEventListener('touchcancel', handleTouchEnd);
+
+		return () => {
+			document.removeEventListener('touchstart', handleTouchStart);
+			document.removeEventListener('touchmove', handleTouchMove);
+			document.removeEventListener('touchend', handleTouchEnd);
+			document.removeEventListener('touchcancel', handleTouchEnd);
+		};
+	});
 
 	const hintOpacity = $derived(() => {
 		if (!itemDecision) return 0;
@@ -132,52 +178,35 @@
 	});
 </script>
 
-<!-- Постоянная зона свайпа внизу (всегда активна на мобилке) -->
-{#if !open && itemDecision}
-	<div
-		class="fixed bottom-0 left-0 right-0 z-30 h-24 sm:hidden"
-		ontouchstart={handleTouchStart}
-		ontouchmove={handleTouchMove}
-		ontouchend={handleTouchEnd}
-		ontouchcancel={handleTouchEnd}
+<!-- Индикатор AI чата (показывается только до первого взаимодействия) -->
+{#if !open && itemDecision && !hasInteracted}
+	<button
+		class="bg-base-100/90 fixed bottom-4 left-1/2 z-30 -translate-x-1/2 rounded-full p-3 shadow-lg backdrop-blur-sm transition-all duration-300 hover:scale-105 active:scale-95 sm:hidden"
+		class:animate-bounce={showPulse}
+		style:opacity={hintOpacity()}
+		onclick={() => {
+			open = true;
+			hasInteracted = true;
+		}}
+		aria-label="Open AI Chat"
 	>
-		<!-- Видимый индикатор (показывается только до первого взаимодействия) -->
-		{#if !hasInteracted}
-			<button
-				class="bg-base-100/90 absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full p-3 shadow-lg backdrop-blur-sm transition-all duration-300 hover:scale-105 active:scale-95"
-				class:animate-bounce={showPulse}
-				style:opacity={hintOpacity()}
-				onclick={() => {
-					open = true;
-					hasInteracted = true;
-				}}
-				aria-label="Open AI Chat"
-			>
-				<div class="flex flex-col items-center gap-1">
-					<ChevronUp size={20} class="text-primary" />
-					<span class="text-primary text-xs font-semibold">AI Chat</span>
-				</div>
-			</button>
-		{/if}
-	</div>
+		<div class="flex flex-col items-center gap-1">
+			<ChevronUp size={20} class="text-primary" />
+			<span class="text-primary text-xs font-semibold">AI Chat</span>
+		</div>
+	</button>
 {/if}
 
 <!-- Mobile Bottom Sheet -->
 <div
-	class="bg-base-100 fixed inset-x-0 bottom-0 z-40 flex flex-col overflow-hidden rounded-t-3xl shadow-2xl transition-transform duration-300 ease-out sm:hidden"
+	class="bg-base-100 fixed inset-x-0 bottom-0 z-40 flex max-w-full flex-col overflow-hidden rounded-t-3xl shadow-2xl transition-transform duration-300 ease-out sm:hidden"
 	class:pointer-events-none={!open}
 	style:transform={`translateY(${chatTranslateY()})`}
 	style:height="95vh"
 	style:transition-duration={isDragging ? '0ms' : '300ms'}
 >
 	<!-- Handle для свайпа -->
-	<div
-		class="flex cursor-grab items-center justify-center py-3 active:cursor-grabbing"
-		ontouchstart={handleTouchStart}
-		ontouchmove={handleTouchMove}
-		ontouchend={handleTouchEnd}
-		ontouchcancel={handleTouchEnd}
-	>
+	<div class="flex cursor-grab items-center justify-center py-3 active:cursor-grabbing">
 		<div class="bg-base-300 h-1.5 w-12 rounded-full"></div>
 	</div>
 
@@ -201,10 +230,6 @@
 	<button
 		class="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm transition-opacity duration-300 sm:hidden"
 		onclick={() => (open = false)}
-		ontouchstart={(e) => {
-			e.preventDefault();
-			open = false;
-		}}
 		aria-label="Close AI Chat"
 	></button>
 {/if}

@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+
+	import { TextArea } from '@cogisoft/ui-svelte-daisy';
+
 	import { computeApiUrl } from '$lib/api/compute-url';
 	import { materialsStore } from '$lib/apps/materials/materials.svelte';
 	import type { AttachedFile } from '$lib/types/attached-file';
@@ -8,7 +11,6 @@
 	import { generateId } from '$lib/utils/generate-id';
 	import { removeFile } from '../new/removeFile';
 	import { addExistingMaterial } from '../new/addExistingMaterial';
-	import TextArea from '$lib/ui/TextArea.svelte';
 
 	interface Props {
 		inputText: string;
@@ -299,7 +301,7 @@
 
 <div
 	class={[
-		'mx-auto flex w-full max-w-3xl flex-col gap-2.5 rounded-lg p-1 font-sans transition-colors duration-200 sm:p-2',
+		'flex w-full flex-col gap-2.5 overflow-x-hidden rounded-lg font-sans transition-colors duration-200',
 		isDragging && 'border-primary bg-primary/10 border-2 border-dashed'
 	]}
 	ondragover={handleDragOver}
@@ -337,7 +339,7 @@
 		{#if isMaterialsListOpen}
 			<div
 				bind:this={menuElement}
-				class="border-base-300 bg-base-100 absolute left-0 right-0 top-full z-10 mt-2 max-h-[70vh] overflow-y-auto rounded-lg border shadow-lg sm:left-0 sm:right-auto sm:w-80"
+				class="border-base-300 bg-base-100 absolute left-0 right-0 top-full z-10 mt-2 max-h-[70vh] max-w-full overflow-y-auto rounded-lg border shadow-lg sm:left-0 sm:right-auto sm:w-80"
 			>
 				<div class="p-2">
 					<button
@@ -455,7 +457,7 @@
 		</div>
 	{/if}
 	{#if attachedFiles.length > 0}
-		<div class="grid grid-cols-2 gap-3 px-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+		<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
 			{#each attachedFiles as attachedFile, index}
 				<div class="bg-base-300 group relative aspect-square w-full rounded-lg">
 					{#if attachedFile.previewUrl}

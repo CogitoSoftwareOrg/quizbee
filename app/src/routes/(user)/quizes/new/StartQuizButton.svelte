@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { Button } from '@cogisoft/ui-svelte-daisy';
+
 	import { postApi } from '$lib/api/call-api';
 	import { uiStore } from '$lib/apps/users/ui.svelte';
 	import type { AttachedFile } from '$lib/types/attached-file';
 	import { pb } from '$lib/pb';
 	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
-	import Button from '$lib/ui/Button.svelte';
 
 	interface Props {
 		quizTemplateId: string;

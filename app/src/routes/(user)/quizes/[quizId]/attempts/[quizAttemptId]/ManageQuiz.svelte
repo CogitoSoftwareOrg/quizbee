@@ -1,14 +1,17 @@
 <script lang="ts">
+	import { Crown } from 'lucide-svelte';
+
+	import { Modal, Button, TextArea } from '@cogisoft/ui-svelte-daisy';
+
 	import { patchApi } from '$lib/api/call-api';
+	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
+	import { uiStore } from '$lib/apps/users/ui.svelte';
 	import {
 		type QuizesResponse,
 		type QuizAttemptsResponse,
 		pb,
 		type QuizItemsResponse
 	} from '$lib/pb';
-	import Button from '$lib/ui/Button.svelte';
-	import Modal from '$lib/ui/Modal.svelte';
-	import TextArea from '$lib/ui/TextArea.svelte';
 
 	interface Props {
 		quiz: QuizesResponse;
@@ -24,12 +27,27 @@
 	let difficulty: 'easier' | 'same' | 'harder' = $state('same');
 	let topic: 'less' | 'same' | 'more' = $state('same');
 	let additionalQuery = $state('');
+
+	const sub = $derived(subscriptionStore.subscription);
+	const isFreePlan = $derived(sub?.tariff === 'free');
 </script>
 
 <div class="mt-6 flex gap-2">
-	<Button onclick={() => (showModal = true)} class="flex-1" color="neutral" style="soft"
-		>Manage Quiz</Button
+	<Button
+		onclick={() => {
+			if (isFreePlan) {
+				uiStore.setPaywallOpen(true);
+			} else {
+				showModal = true;
+			}
+		}}
+		class="flex-1"
+		color="neutral"
+		style="soft"
 	>
+		Manage Quiz
+		<Crown size={16} />
+	</Button>
 </div>
 
 <Modal backdrop bind:open={showModal}>
