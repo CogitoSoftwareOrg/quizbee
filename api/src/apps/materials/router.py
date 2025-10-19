@@ -140,7 +140,7 @@ async def upload_material(
         # Создаем материал в БД
         material = await admin_pb.collection("materials").create(dto)
 
-        # Если это PDF с извлеченным текстом, сохраняем textFile
+        # Если это PDF с извлеченным текстом, сохраняем textFile и contents
         if pdf_data and pdf_data.get("text"):
             extracted_text = pdf_data["text"]
             
@@ -165,18 +165,37 @@ async def upload_material(
                         image_url = f"{pb_base_url}/api/files/materials/{material_id_str}/{image_filename}"
                         marker_to_url[marker] = image_url
                 
-                # Заменяем все маркеры на URLs в формате Markdown
+                # Заменяем все маркеры на URLs с уникальным префиксом
                 for marker, url in marker_to_url.items():
-                    extracted_text = extracted_text.replace(marker, f"\n![Image]({url})\n")
+                    extracted_text = extracted_text.replace(marker, f"\n{{quizbee_unique_image_url:{url}}}\n")
             
             # Обновляем материал с текстом (независимо от наличия изображений)
             text_filename = f"{material_id_str}_text.txt"
             text_bytes = extracted_text.encode("utf-8")
             
+            
             await admin_pb.collection("materials").update(
                 material_id_str,
                 {"textFile": FileUpload((text_filename, text_bytes))}
             )
+            
+            # Если есть оглавление из parse_pdf, сохраняем его
+
+
+            if pdf_data.get("isBook"):
+                is_book_doc = pdf_data["isBook"]
+                await admin_pb.collection("materials").update(
+                    material_id_str,
+                    {"isBook": "true" if is_book_doc else "false"}
+                )
+                
+            if pdf_data.get("contents"):
+                import json
+                toc_json = json.dumps(pdf_data["contents"])
+                await admin_pb.collection("materials").update(
+                    material_id_str,
+                    {"contents": toc_json}
+                )
             
             # Обновляем объект material для ответа
             material = await admin_pb.collection("materials").get_one(material_id_str)

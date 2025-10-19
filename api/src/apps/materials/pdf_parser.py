@@ -11,6 +11,185 @@ logging.basicConfig(
 )
 
 
+def extract_table_of_contents(doc: fitz.Document) -> List[Dict[str, Any]]:
+    """
+    Извлекает оглавление (Table of Contents) из PDF документа.
+    
+    Использует три метода в порядке приоритета:
+    1. Встроенный get_toc()
+    2. Анализ структуры документа через блоки текста (ищет крупные заголовки)
+    3. Эвристический поиск страницы оглавления
+    
+    Args:
+        doc: Открытый PDF документ
+        
+    Returns:
+        Список элементов оглавления, каждый содержит:
+        {
+            "level": int,      # Уровень вложенности (1, 2, 3...)
+            "title": str,      # Название главы/раздела
+            "page": int        # Номер страницы
+        }
+    """
+    toc_items = []
+    
+    # Метод 1: Пытаемся использовать встроенный get_toc()
+    try:
+        toc = doc.get_toc()  # type: ignore
+        if toc:
+            logging.info(f"✓ Оглавление извлечено через get_toc(): {len(toc)} элементов")
+            for item in toc:
+                toc_items.append({
+                    "level": item[0],
+                    "title": item[1],
+                    "page": item[2]
+                })
+            return toc_items
+    except Exception as e:
+        logging.warning(f"get_toc() не сработал: {e}")
+    
+    # Метод 2: Анализ структуры документа через текстовые блоки
+    # Применяется только для документов меньше 200 страниц
+    if len(doc) < 150:
+        logging.info("Попытка извлечь оглавление через анализ структуры документа...")
+        toc_items = extract_toc_from_structure(doc)
+        if toc_items:
+            logging.info(f"✓ Оглавление извлечено через анализ структуры: {len(toc_items)} элементов")
+            return toc_items
+    else:
+        logging.info(f"Документ содержит {len(doc)} страниц (>= 200), пропускаем анализ структуры")
+    
+  
+    
+    return toc_items
+
+
+def extract_toc_from_structure(doc: fitz.Document) -> List[Dict[str, Any]]:
+    """
+    Извлекает оглавление, анализируя структуру текста в документе.
+    
+    Ищет заголовки по характеристикам:
+    - Крупный размер шрифта (больше среднего)
+    - Жирный шрифт
+    - Короткий текст (обычно заголовки не длинные)
+    - Позиция в начале страницы или отдельная строка
+    
+    Args:
+        doc: Открытый PDF документ
+        
+    Returns:
+        Список элементов оглавления
+    """
+    toc_items = []
+    
+    # Собираем статистику по размерам шрифтов для определения "крупного" текста
+    font_sizes = []
+    sample_size = min(10, len(doc))
+    
+    for page_num in range(0, len(doc), max(1, len(doc) // sample_size)):
+        page = doc.load_page(page_num)
+        blocks = page.get_text("dict")["blocks"]  # type: ignore
+        
+        for block in blocks:
+            if block.get("type") == 0:  # текстовый блок
+                for line in block.get("lines", []):
+                    for span in line.get("spans", []):
+                        font_sizes.append(span.get("size", 0))
+    
+    if not font_sizes:
+        return []
+    
+    # Вычисляем средний размер шрифта и порог для заголовков
+    avg_font_size = sum(font_sizes) / len(font_sizes)
+    heading_threshold = avg_font_size * 1.2  # заголовки обычно на 20%+ крупнее
+    
+    logging.info(f"Средний размер шрифта: {avg_font_size:.1f}, порог заголовков: {heading_threshold:.1f}")
+    
+    # Проходим по всем страницам и ищем потенциальные заголовки
+    seen_titles = set()  # для избежания дубликатов
+    
+    for page_num in range(len(doc)):
+        page = doc.load_page(page_num)
+        blocks = page.get_text("dict")["blocks"]  # type: ignore
+        
+        for block in blocks:
+            if block.get("type") != 0:  # пропускаем не-текстовые блоки
+                continue
+                
+            for line in block.get("lines", []):
+                # Анализируем каждую строку
+                line_text = ""
+                max_font_size = 0
+                is_bold = False
+                
+                for span in line.get("spans", []):
+                    line_text += span.get("text", "")
+                    font_size = span.get("size", 0)
+                    max_font_size = max(max_font_size, font_size)
+                    
+                    # Проверяем, жирный ли шрифт
+                    font_flags = span.get("flags", 0)
+                    if font_flags & 2**4:  # бит 4 = bold
+                        is_bold = True
+                
+                line_text = line_text.strip()
+                
+                # Критерии для заголовка:
+                # 1. Размер шрифта больше порога
+                # 2. Текст не слишком длинный (< 150 символов)
+                # 3. Текст не слишком короткий (> 3 символа)
+                # 4. Не является просто числом или символами
+                if (max_font_size >= heading_threshold and
+                    3 < len(line_text) < 150 and
+                    line_text not in seen_titles and
+                    not line_text.replace('.', '').replace(' ', '').isdigit()):
+                    
+                    # Определяем уровень по размеру шрифта
+                    if max_font_size >= heading_threshold * 1.3:
+                        level = 1
+                    elif max_font_size >= heading_threshold * 1.15:
+                        level = 2
+                    else:
+                        level = 3
+                    
+                    # Также можем использовать номер главы для определения уровня
+                    # Например: "1. Глава" - уровень 1, "1.1 Раздел" - уровень 2
+                    chapter_match = re.match(r'^(\d+(?:\.\d+)*)\s+', line_text)
+                    if chapter_match:
+                        number = chapter_match.group(1)
+                        level = number.count('.') + 1
+                    
+                    toc_items.append({
+                        "level": level,
+                        "title": line_text,
+                        "page": page_num + 1
+                    })
+                    seen_titles.add(line_text)
+    
+    # Фильтруем слишком частые заголовки (вероятно, это не заголовки)
+    if toc_items:
+        # Удаляем элементы, которые встречаются слишком часто на соседних страницах
+        filtered_items = []
+        for i, item in enumerate(toc_items):
+            # Проверяем, не повторяется ли похожий заголовок слишком близко
+            is_duplicate = False
+            for j in range(max(0, i - 3), i):
+                if (abs(toc_items[j]["page"] - item["page"]) <= 2 and
+                    toc_items[j]["title"][:20] == item["title"][:20]):
+                    is_duplicate = True
+                    break
+            
+            if not is_duplicate:
+                filtered_items.append(item)
+        
+        toc_items = filtered_items
+    
+    return toc_items
+
+
+
+
+
 def is_book(doc: fitz.Document) -> bool:
     """
     Определяет, является ли PDF-документ книгой на основе нескольких эвристик.
@@ -29,10 +208,7 @@ def is_book(doc: fitz.Document) -> bool:
     """
     page_count = len(doc)
     
-    # Слишком короткие документы не книги (< 30 страниц)
-    if page_count < 100:
-        return False
-    
+  
     # Анализируем первые N страниц для определения характеристик
     sample_size = min(10, page_count)
     sample_pages = [0, page_count // 4, page_count // 2, 3 * page_count // 4, page_count - 1]
@@ -83,9 +259,9 @@ def is_book(doc: fitz.Document) -> bool:
     
     is_book_candidate = (
         avg_text_length > 1000 and  # Высокая плотность текста
-        avg_images < 2 and  # Мало изображений
+        avg_images < 5 and  # Мало изображений
         portrait_ratio > 0.8 and  # Портретная ориентация
-        page_count > 50  # Достаточно страниц
+        page_count > 100  # Достаточно страниц
     )
     
     if is_book_candidate:
@@ -163,9 +339,26 @@ def parse_pdf(
 
         # Если документ определен как книга - не извлекаем изображения
         if is_book_doc:
+
             logging.info(
                 f"Документ является книгой - изображения не извлекаются"
             )
+            
+            # Извлекаем оглавление с помощью специальной функции
+            toc_items = extract_table_of_contents(doc)
+
+            if not toc_items:
+                logging.warning("Оглавление (Table of Contents) не найдено в документе.")
+            else:
+                logging.info(f"Найдено оглавление из {len(toc_items)} элементов:")
+                for item in toc_items:
+                    level = item["level"]
+                    title = item["title"]
+                    page_num = item["page"]
+
+                    # Добавляем отступы в зависимости от уровня вложенности
+                    indent = "  " * (level - 1)
+                    logging.info(f"{indent}- {title} (стр. {page_num})")
         else:
             global_image_counter = 1
             
@@ -407,6 +600,10 @@ def parse_pdf(
             
             page = doc.load_page(page_num)
             page_text = page.get_text()  # type: ignore
+            
+            # Добавляем маркер номера страницы в начало
+            page_marker = f"{{quizbee_page_number_{page_num + 1}}}\n\n"
+            page_text = page_marker + page_text
         
             # Если на странице есть изображения, вставляем маркеры
             if page_num in image_positions:
@@ -448,6 +645,9 @@ def parse_pdf(
         
         md_text = "\n\n-----\n\n".join(md_text_parts)
         
+        # Извлекаем оглавление перед закрытием документа
+        toc_items = extract_table_of_contents(doc)
+        
         doc.close()
 
         
@@ -458,6 +658,8 @@ def parse_pdf(
         return {
             "text": md_text,
             "images": images,
+            "contents": toc_items,
+            "isBook" : is_book_doc
         }
 
     except Exception as e:

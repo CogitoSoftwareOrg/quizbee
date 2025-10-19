@@ -110,20 +110,26 @@ async def start_generating_quiz_task(
     hits = search_result.hits
     quiz_ids = [hit.get("quizId", "") for hit in hits]
     questions = []
-    for qid in quiz_ids:
-        q = await admin_pb.collection("quizes").get_one(
-            qid,
-            options={
-                "params": {
-                    "expand": "quizItems_via_quiz",
-                }
-            },
-        )
-        items = q.get("expand", {}).get("quizItems_via_quiz", [])
-        qs = [item.get("question", "") for item in items]
-        questions.extend([q for q in qs if q])
 
-    questions = questions[:50]
+
+    # Avoid repeating questions from similar quizzes
+    if quiz.get("avoidRepeat"):
+        for qid in quiz_ids:
+            q = await admin_pb.collection("quizes").get_one(
+                qid,
+                options={
+                    "params": {
+                        "expand": "quizItems_via_quiz",
+                    }
+                },
+            )
+            items = q.get("expand", {}).get("quizItems_via_quiz", [])
+            qs = [item.get("question", "") for item in items]
+            questions.extend([q for q in qs if q])
+
+        questions = questions[:50]
+
+
     config = DynamicConfig(**quiz.get("dynamicConfig", {}))
     config.negativeQuestions = questions
 

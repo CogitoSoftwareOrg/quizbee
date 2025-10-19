@@ -107,36 +107,51 @@ async def parse_text_with_images(
     materials: list[Record],
 ) -> list[str | BinaryContent]:
     """
-    Парсит текст и заменяет Markdown-ссылки на изображения на BinaryContent.
+    Парсит текст и заменяет маркеры изображений на BinaryContent.
+    
+    Поддерживает два формата:
+    1. Markdown-ссылки: ![Image](url)
+    2. Уникальные маркеры: {quizbee_unique_image_url:url}
     
     Пример текста:
-        "Вот первый график \n![Image](http://localhost:8090/api/files/materials/xxx/img1.png)\n 
-        и второй график \n![Image](http://localhost:8090/api/files/materials/xxx/img2.png)\n"
+        "Вот первый график \n{quizbee_unique_image_url:http://localhost:8090/api/files/materials/xxx/img1.png}\n 
+        и второй график \n{quizbee_unique_image_url:http://localhost:8090/api/files/materials/xxx/img2.png}\n"
     
     Args:
         http: HTTP клиент
-        text: Текст с Markdown-ссылками на изображения типа ![Image](url)
+        text: Текст с маркерами изображений
         materials: Список материалов (не используется, но оставлен для совместимости)
     
     Returns:
         Список элементов (строки и BinaryContent) в правильном порядке
         Например: ["Вот первый график ", BinaryContent(...), " и второй график ", BinaryContent(...), ...]
     """
-    # Находим все Markdown-ссылки на изображения в тексте
-    # Паттерн: ![...](url)
-    pattern = r"!\[([^\]]*)\]\(([^)]+)\)"
     parts = []
     last_end = 0
-
-    for match in re.finditer(pattern, text):
+    
+    # Паттерн для уникальных маркеров: {quizbee_unique_image_url:url}
+    pattern_unique = r"\{quizbee_unique_image_url:([^}]+)\}"
+    
+    # Паттерн для Markdown: ![...](url)
+    pattern_markdown = r"!\[([^\]]*)\]\(([^)]+)\)"
+    
+    # Объединяем оба паттерна с использованием именованных групп
+    combined_pattern = f"(?P<unique>{pattern_unique})|(?P<markdown>{pattern_markdown})"
+    
+    for match in re.finditer(combined_pattern, text):
         # Добавляем текст перед изображением
         if match.start() > last_end:
             text_part = text[last_end:match.start()]
             if text_part.strip():  # Добавляем только непустой текст
                 parts.append(text_part)
-
-        # Извлекаем URL изображения
-        image_url = match.group(2)
+        
+        # Определяем, какой паттерн сработал и извлекаем URL
+        if match.group('unique'):
+            # Уникальный маркер {quizbee_unique_image_url:url}
+            image_url = match.group(1)
+        else:
+            # Markdown ![...](url)
+            image_url = match.group(3)
         
         try:
             res = await http.get(image_url)

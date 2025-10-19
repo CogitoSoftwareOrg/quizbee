@@ -7,10 +7,11 @@ from .quizer import *
 from .feedbacker import *
 from .explainer import *
 from .summarizer import *
+from .trimmer import *
 
 
 AgentPayload = Annotated[
-    Union[QuizerOutput, ExplainerOutput, FeedbackerOutput, SummarizerOutput],
+    Union[QuizerOutput, ExplainerOutput, FeedbackerOutput, SummarizerOutput, TrimmerOutput],
     Field(discriminator="mode"),
 ]
 
