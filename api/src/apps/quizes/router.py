@@ -10,13 +10,18 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, Field
 
 from apps.auth import User, auth_user
-from apps.billing import load_subscription
+from apps.billing import (
+    load_subscription,
+    quiz_patch_quota_protection,
+)
 from apps.materials import user_owns_materials
 from lib.clients import AdminPB, HTTPAsyncClient, MeilisearchClient
 
 from .ai import (
     generate_quiz_task,
     start_generating_quiz_task,
+    GenMode,
+    generate_oneshot,
     summary_and_index,
 )
 
@@ -30,6 +35,7 @@ quizes_router = APIRouter(
 class CreateQuizDto(BaseModel):
     quiz_id: str = Field(default="")
     attempt_id: str | None = Field(default=None)
+
     # number_of_questions: int = Field(default=10, ge=1, le=50)
     # material_ids: list[str] = Field(default=[])
     # query: str = Field(default="")
@@ -40,6 +46,7 @@ class CreateQuizDto(BaseModel):
     "",
     dependencies=[
         Depends(user_owns_materials),
+        Depends(quiz_patch_quota_protection),
     ],
 )
 async def create_quiz(
@@ -88,10 +95,13 @@ async def create_quiz(
 class GenerateQuizItems(BaseModel):
     attempt_id: str = Field(default="")
     limit: Annotated[int, Field(default=5, ge=2, le=50)]
-    mode: Annotated[Literal["regenerate", "continue"], Field(default="regenerate")]
+    mode: Annotated[GenMode, Field(default=GenMode.Regenerate)]
 
 
-@quizes_router.patch("/{quiz_id}")
+@quizes_router.patch(
+    "/{quiz_id}",
+    dependencies=[Depends(quiz_patch_quota_protection)],
+)
 async def generate_quiz_items(
     admin_pb: AdminPB,
     http: HTTPAsyncClient,
@@ -109,11 +119,15 @@ async def generate_quiz_items(
             }
         },
     )
-    generation = quiz.get("generation", 0) + 1
-    await admin_pb.collection("quizes").update(
-        quiz_id,
-        {"generation": generation},
-    )
+    generation = quiz.get("generation", 0)
+
+    if dto.mode == GenMode.Regenerate:
+        generation += 1
+        await admin_pb.collection("quizes").update(
+            quiz_id,
+            {"generation+": 1},
+        )
+
     # Generate
     background.add_task(
         generate_quiz_task,
@@ -126,6 +140,16 @@ async def generate_quiz_items(
         generation,
         dto.mode,
     )
+    # background.add_task(
+    #     generate_oneshot,
+    #     admin_pb,
+    #     http,
+    #     user.get("id", ""),
+    #     dto.attempt_id,
+    #     quiz,
+    #     dto.limit,
+    #     dto.mode,
+    # )
 
     return JSONResponse(
         content={"scheduled": True, "quiz_id": quiz_id, "limit": dto.limit},

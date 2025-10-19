@@ -19,6 +19,7 @@
 		class: className
 	}: Props = $props();
 
+	let containerElement = $state<HTMLDivElement | null>(null);
 	let touchStartX = $state(0);
 	let touchStartY = $state(0);
 	let touchCurrentX = $state(0);
@@ -26,11 +27,13 @@
 	let isHorizontalSwipe = $state(false);
 	let translateX = $state(0);
 	let showInitialHint = $state(true);
+	let hasMoved = $state(false); // отслеживаем, было ли движение
 
-	const SWIPE_THRESHOLD = 70;
-	const MAX_TRANSLATE = 120;
-	const DIRECTION_THRESHOLD = 10; // для определения направления свайпа
-	const HINT_DURATION = 3000; // показываем анимированную подсказку 3 секунды
+	const SWIPE_THRESHOLD = 70; // Минимальное расстояние для срабатывания свайпа
+	const MAX_TRANSLATE = 120; // Максимальное смещение контента
+	const DIRECTION_THRESHOLD = 10; // Порог для определения направления (горизонтально vs вертикально)
+	const HINT_DURATION = 3000; // Длительность анимации подсказки
+	const TAP_THRESHOLD = 5; // Максимальное движение для распознавания как клика (не свайпа)
 
 	// Скрываем анимированную подсказку через некоторое время
 	$effect(() => {
@@ -38,6 +41,73 @@
 			showInitialHint = false;
 		}, HINT_DURATION);
 		return () => clearTimeout(timer);
+	});
+
+	// Устанавливаем обработчики с { passive: false } через $effect
+	$effect(() => {
+		if (!containerElement) return;
+
+		const handleTouchMove = (e: TouchEvent) => {
+			if (!isDragging) return;
+
+			const currentX = e.touches[0].clientX;
+			const currentY = e.touches[0].clientY;
+			const diffX = currentX - touchStartX;
+			const diffY = currentY - touchStartY;
+
+			// Проверяем, превышен ли порог для начала свайпа (не просто тап)
+			if (Math.abs(diffX) > TAP_THRESHOLD || Math.abs(diffY) > TAP_THRESHOLD) {
+				hasMoved = true;
+			}
+
+			// Определяем направление свайпа только на первом движении
+			if (
+				!isHorizontalSwipe &&
+				(Math.abs(diffX) > DIRECTION_THRESHOLD || Math.abs(diffY) > DIRECTION_THRESHOLD)
+			) {
+				isHorizontalSwipe = Math.abs(diffX) > Math.abs(diffY);
+				if (!isHorizontalSwipe) {
+					// Это вертикальный скролл - не мешаем
+					isDragging = false;
+					translateX = 0;
+					return;
+				}
+			}
+
+			if (!isHorizontalSwipe) return;
+
+			// Предотвращаем скролл при горизонтальном свайпе (только если было реальное движение)
+			if (hasMoved) {
+				e.preventDefault();
+			}
+
+			touchCurrentX = currentX;
+
+			// Ограничиваем свайп в зависимости от доступности навигации
+			if (diffX > 0 && !canSwipeLeft) {
+				translateX = Math.min(diffX * 0.2, 30); // Небольшой feedback что дальше нельзя
+				return;
+			}
+			if (diffX < 0 && !canSwipeRight) {
+				translateX = Math.max(diffX * 0.2, -30);
+				return;
+			}
+
+			// Применяем плавный эффект "резинки"
+			let damping = 1;
+			if (Math.abs(diffX) > MAX_TRANSLATE) {
+				const excess = Math.abs(diffX) - MAX_TRANSLATE;
+				damping = Math.max(0.1, 1 - excess / 200);
+			}
+			translateX = diffX * damping;
+		};
+
+		// Добавляем обработчик с { passive: false }
+		containerElement.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+		return () => {
+			containerElement?.removeEventListener('touchmove', handleTouchMove);
+		};
 	});
 
 	function triggerHaptic() {
@@ -48,63 +118,17 @@
 	}
 
 	function handleTouchStart(e: TouchEvent) {
+		// Не блокируем touch на кнопках - различаем клик от свайпа по движению (hasMoved)
 		touchStartX = e.touches[0].clientX;
 		touchStartY = e.touches[0].clientY;
 		touchCurrentX = touchStartX;
 		isDragging = true;
 		isHorizontalSwipe = false;
+		hasMoved = false;
 		// Скрываем подсказку при первом касании
 		if (showInitialHint) {
 			showInitialHint = false;
 		}
-	}
-
-	function handleTouchMove(e: TouchEvent) {
-		if (!isDragging) return;
-
-		const currentX = e.touches[0].clientX;
-		const currentY = e.touches[0].clientY;
-		const diffX = currentX - touchStartX;
-		const diffY = currentY - touchStartY;
-
-		// Определяем направление свайпа только на первом движении
-		if (
-			!isHorizontalSwipe &&
-			(Math.abs(diffX) > DIRECTION_THRESHOLD || Math.abs(diffY) > DIRECTION_THRESHOLD)
-		) {
-			isHorizontalSwipe = Math.abs(diffX) > Math.abs(diffY);
-			if (!isHorizontalSwipe) {
-				// Это вертикальный скролл - не мешаем
-				isDragging = false;
-				translateX = 0;
-				return;
-			}
-		}
-
-		if (!isHorizontalSwipe) return;
-
-		// Предотвращаем скролл при горизонтальном свайпе
-		e.preventDefault();
-
-		touchCurrentX = currentX;
-
-		// Ограничиваем свайп в зависимости от доступности навигации
-		if (diffX > 0 && !canSwipeLeft) {
-			translateX = Math.min(diffX * 0.2, 30); // Небольшой feedback что дальше нельзя
-			return;
-		}
-		if (diffX < 0 && !canSwipeRight) {
-			translateX = Math.max(diffX * 0.2, -30);
-			return;
-		}
-
-		// Применяем плавный эффект "резинки"
-		let damping = 1;
-		if (Math.abs(diffX) > MAX_TRANSLATE) {
-			const excess = Math.abs(diffX) - MAX_TRANSLATE;
-			damping = Math.max(0.1, 1 - excess / 200);
-		}
-		translateX = diffX * damping;
 	}
 
 	function handleTouchEnd() {
@@ -112,8 +136,8 @@
 
 		const diff = touchCurrentX - touchStartX;
 
-		// Проверяем, превышен ли порог для свайпа
-		if (isHorizontalSwipe && Math.abs(diff) > SWIPE_THRESHOLD) {
+		// Проверяем, превышен ли порог для свайпа (только если было движение)
+		if (hasMoved && isHorizontalSwipe && Math.abs(diff) > SWIPE_THRESHOLD) {
 			if (diff > 0 && canSwipeLeft) {
 				triggerHaptic();
 				onSwipeLeft();
@@ -126,6 +150,7 @@
 		// Сброс состояния
 		isDragging = false;
 		isHorizontalSwipe = false;
+		hasMoved = false;
 		translateX = 0;
 		touchStartX = 0;
 		touchStartY = 0;
@@ -153,9 +178,9 @@
 </script>
 
 <div
+	bind:this={containerElement}
 	class="{className} relative overflow-hidden"
 	ontouchstart={handleTouchStart}
-	ontouchmove={handleTouchMove}
 	ontouchend={handleTouchEnd}
 	ontouchcancel={handleTouchEnd}
 >

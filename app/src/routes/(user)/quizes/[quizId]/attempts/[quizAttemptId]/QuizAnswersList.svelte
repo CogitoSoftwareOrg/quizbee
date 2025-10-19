@@ -129,7 +129,7 @@
 										})
 									]);
 
-									if (toAnswer === 2 && quizItems.some((qi) => ['blank'].includes(qi.status))) {
+									if (toAnswer === 3 && quizItems.some((qi) => ['blank'].includes(qi.status))) {
 										const result = await patchApi(`quizes/${quiz?.id}`, {
 											attempt_id: quizAttempt!.id,
 											limit: 5,
@@ -167,7 +167,7 @@
 								{/if}
 							{/if}
 							<div class="min-w-0 flex-1">
-								<p class="break-words leading-relaxed">{answer.content}</p>
+								<p class="break-words leading-relaxed">{@html answer.content}</p>
 							</div>
 							{#if itemDecision}
 								<div class="ml-2 shrink-0">
@@ -204,7 +204,7 @@
 													Explanation
 												</p>
 												<p class="break-words text-sm leading-relaxed opacity-80">
-													{answer.explanation}
+													{@html answer.explanation}
 												</p>
 											</div>
 										</div>

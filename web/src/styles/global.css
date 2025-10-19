@@ -1,8 +1,12 @@
 @import "tailwindcss";
 
+@plugin "@tailwindcss/typography";
 @plugin "daisyui" {
   themes: all;
 }
+
+@source "../../node_modules/@cogisoft/ui-svelte-daisy/dist/*";
+@source "../../node_modules/@cogisoft/ui-astro/src/*";
 
 @custom-variant dark (&:where([data-theme=QUIZBEE_DARK], [data-theme=QUIZBEE_DARK] *));
 

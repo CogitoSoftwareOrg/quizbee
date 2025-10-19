@@ -1,15 +1,19 @@
 <script lang="ts">
+	import { MediaQuery } from 'svelte/reactivity';
 	import { page } from '$app/state';
-	import { House, ChartBar, CreditCard, Plus, History } from 'lucide-svelte';
+	import { House, ChartBar, CreditCard, Plus, History, Pickaxe } from 'lucide-svelte';
+	import { Button } from '@cogisoft/ui-svelte-daisy';
+
 	import { uiStore } from '$lib/apps/users/ui.svelte';
 	import type { ClassValue } from 'svelte/elements';
-	import Button from '$lib/ui/Button.svelte';
+	import { afterNavigate } from '$app/navigation';
 
 	interface Props {
 		class?: ClassValue;
+		expanded?: boolean;
 	}
 
-	const { class: className }: Props = $props();
+	const { class: className, expanded = false }: Props = $props();
 
 	const navItems = [
 		{
@@ -19,18 +23,31 @@
 			icon: House
 		},
 		{
-			name: '/quizes',
-			label: 'History',
-			href: '/quizes',
+			name: '/attempts',
+			label: 'Attempts',
+			href: '/attempts',
 			icon: History
+		},
+		{
+			name: '/quizes',
+			label: 'Quizes',
+			href: '/quizes',
+			icon: Pickaxe
+		},
+		{
+			name: '/analytics',
+			label: 'Analytics',
+			href: '/analytics',
+			icon: ChartBar
 		}
-		// {
-		// 	name: '/analytics',
-		// 	label: 'Analytics',
-		// 	href: '/analytics',
-		// 	icon: ChartBar
-		// }
 	];
+
+	const mobile = new MediaQuery('(max-width: 640px)');
+	afterNavigate(() => {
+		if (mobile.current) {
+			uiStore.setGlobalSidebarOpen(false);
+		}
+	});
 
 	const attemptingQuiz = $derived(
 		/quizes\/[0-9a-zA-Z]+\/attempts\/[0-9a-zA-Z]+/.test(page.url.pathname) &&
@@ -51,7 +68,7 @@
 </script>
 
 <nav class={['overflow-y-auto overflow-x-hidden', className]}>
-	{#if uiStore.globalSidebarOpen}
+	{#if expanded}
 		<ul class="menu menu-vertical w-full gap-1 px-2 pb-2">
 			<div class="flex w-full flex-col items-center gap-2 py-2">
 				<Button block size="sm" style="solid" href="/quizes/new">

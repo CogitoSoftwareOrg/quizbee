@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { goto, invalidate } from '$app/navigation';
+	import { page } from '$app/state';
 
 	import { pb } from '$lib/pb';
 
@@ -23,14 +24,16 @@
 			const target = e.currentTarget as HTMLElement;
 			await pb!.collection('users').authWithOAuth2({
 				provider: target.dataset.provider!,
-				query: { expand: '' },
+				query: { expand: '', requestKey: 'oauth2' },
 				createData: {
 					metadata: {
 						provider: target.dataset.provider!
 					}
 				}
 			});
-			await goto('/');
+			const redirectUrl = sessionStorage.getItem('postLoginPath') || '/home';
+			// await invalidate('global:user');
+			await goto(redirectUrl);
 		} catch (e) {
 			console.error('Error during OAuth2 flow:', e);
 		} finally {

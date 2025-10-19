@@ -1,5 +1,6 @@
 import { goto } from '$app/navigation';
 
 export const load = async () => {
-	await goto('/home');
+	console.log('LOAD HOME');
+	await goto('/home', { replaceState: true });
 };

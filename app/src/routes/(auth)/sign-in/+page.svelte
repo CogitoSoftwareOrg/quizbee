@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { goto, invalidate } from '$app/navigation';
+	import { page } from '$app/state';
 
 	import ThemeController from '$lib/features/ThemeController.svelte';
 	import { pb } from '$lib/pb';
@@ -23,7 +24,10 @@
 			await pb!.collection('users').authWithPassword(email, password, {
 				expand: ''
 			});
-			await goto('/home');
+
+			const redirectUrl = sessionStorage.getItem('postLoginPath') || '/home';
+			// await invalidate('global:user');
+			await goto(redirectUrl);
 		} catch (err) {
 			console.error(err);
 			error = err as any;

@@ -1,7 +1,7 @@
-import { redirect } from '@sveltejs/kit';
+export const prerender = false;
 
 import { pb } from '$lib/pb';
-import type { UsersResponse } from '$lib/pb/pocketbase-types';
+import type { UsersResponse, QuizesResponse } from '$lib/pb/pocketbase-types';
 import type { QuizExpand, UserExpand } from '$lib/pb/expands';
 
 import { materialsStore } from '$lib/apps/materials/materials.svelte';
@@ -10,58 +10,64 @@ import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
 import { userStore } from '$lib/apps/users/user.svelte';
 import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
 import { quizItemsStore } from '$lib/apps/quizes/quizItems.svelte';
-import { goto } from '$app/navigation';
-
-const EXPAND = [
-	'subscriptions_via_user',
-	'materials_via_user',
-	'quizAttempts_via_user',
-	'quizes_via_author',
-	'quizes_via_author.quizItems_via_quiz'
-].join(',');
+import { redirect } from '@sveltejs/kit';
 
 export async function load({ depends }) {
 	depends('global:user');
 
-	if (!pb?.authStore.isValid) {
-		// throw redirect(302, '/sign-in');
-		await goto('/sign-in');
-	}
-
 	const userLoadPromise: Promise<UsersResponse<unknown, UserExpand> | null> = pb!
 		.collection('users')
 		.authRefresh({
-			expand: EXPAND
+			requestKey: null
 		})
-		.then((res) => {
+		.then(async (res) => {
 			const user = res.record as UsersResponse<unknown, UserExpand>;
-			const subscription = user.expand.subscriptions_via_user?.[0] || null;
-			const materials = user.expand.materials_via_user || [];
-			const quizAttempts = user.expand.quizAttempts_via_user || [];
-			const quizes = user.expand.quizes_via_author || [];
-			const quizItems = quizes.map((q) => q.expand.quizItems_via_quiz || []).flat();
+			userStore.user = user;
+
+			// Load related data in separate calls to avoid storage quota issues
+			const [subscription, materials, quizAttempts, quizesWithExpand] = await Promise.all([
+				pb!
+					.collection('subscriptions')
+					.getFirstListItem(`user="${user.id}"`)
+					.catch(() => null),
+				pb!
+					.collection('materials')
+					.getFullList({ filter: `user="${user.id}"` })
+					.catch(() => []),
+				pb!
+					.collection('quizAttempts')
+					.getFullList({ filter: `user="${user.id}"` })
+					.catch(() => []),
+				pb!
+					.collection('quizes')
+					.getFullList<QuizesResponse<unknown, unknown, unknown, QuizExpand>>({
+						filter: `author="${user.id}"`,
+						expand: 'quizItems_via_quiz'
+					})
+					.catch(() => [] as QuizesResponse<unknown, unknown, unknown, QuizExpand>[])
+			]);
+
+			const quizItems = quizesWithExpand.map((q) => q.expand?.quizItems_via_quiz || []).flat();
 
 			materialsStore.materials = materials;
 			quizAttemptsStore.quizAttempts = quizAttempts;
 			subscriptionStore.subscription = subscription;
-
 			quizItemsStore.quizItems = quizItems;
 
-			quizes.forEach((q) => {
-				q.expand = {} as QuizExpand;
-			});
+			// Remove expand from quizes to avoid storing too much data
+			const quizes = quizesWithExpand.map((q) => {
+				const quiz = { ...q };
+				quiz.expand = {} as QuizExpand;
+				return quiz;
+			}) as QuizesResponse<QuizExpand>[];
 			quizesStore.quizes = quizes;
-
-			user.expand = {} as UserExpand;
-			userStore.user = user;
 
 			userStore.setLoaded();
 			return user;
 		})
-		.catch((error) => {
+		.catch(async (error) => {
 			console.error('Failed to load user:', error);
-			// throw redirect(302, '/sign-in');
-			goto('/sign-in');
+			redirect(302, '/sign-in');
 		});
 	return { userLoadPromise };
 }

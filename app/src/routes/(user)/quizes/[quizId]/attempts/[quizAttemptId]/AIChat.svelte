@@ -1,14 +1,16 @@
 <script lang="ts">
 	import type { ClassValue } from 'svelte/elements';
 
+	import { Button } from '@cogisoft/ui-svelte-daisy';
+
 	import type { Sender } from '$lib/apps/messages/types';
 	import type { MessagesResponse, QuizAttemptsResponse, QuizItemsResponse } from '$lib/pb';
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
 	import Messages from '$lib/apps/messages/Messages.svelte';
 	import MessageField from '$lib/apps/messages/MessageField.svelte';
 	import SendMessage from '$lib/apps/messages/SendMessage.svelte';
-	import Button from '$lib/ui/Button.svelte';
-	import { X } from 'lucide-svelte';
+	import { Crown, X } from 'lucide-svelte';
+	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
 
 	interface Props {
 		class?: ClassValue;
@@ -33,6 +35,9 @@
 	}: Props = $props();
 
 	let query = $state('');
+
+	const sub = $derived(subscriptionStore.subscription);
+	const isFreePlan = $derived(sub?.tariff === 'free');
 </script>
 
 <div class={['flex h-full flex-col overflow-hidden', className]}>
@@ -64,10 +69,17 @@
 		</section>
 
 		<footer class="border-base-200 border-t px-3 py-4">
-			<MessageField bind:inputText={query} {item} attempt={quizAttempt} sender={userSender} />
-			<div class="flex justify-end">
-				<SendMessage {item} attempt={quizAttempt} sender={userSender} inputText={query} />
-			</div>
+			{#if isFreePlan}
+				<div class="flex items-center justify-center gap-2">
+					<p class="text-center text-sm font-semibold">Only premium users can use chat with AI</p>
+					<Crown class="block" size={24} />
+				</div>
+			{:else}
+				<MessageField bind:inputText={query} {item} attempt={quizAttempt} sender={userSender} />
+				<div class="flex justify-end">
+					<SendMessage {item} attempt={quizAttempt} sender={userSender} inputText={query} />
+				</div>
+			{/if}
 		</footer>
 	{/if}
 </div>
