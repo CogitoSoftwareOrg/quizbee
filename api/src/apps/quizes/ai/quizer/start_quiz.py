@@ -151,6 +151,8 @@ async def start_generating_quiz_task(
     logging.info(f"Total tokens from all materials: {total_tokens}")
     
     # If exceeds 80k tokens and has books, use trimming
+    material_page_ranges = {}  # Dictionary to store page ranges: {material_id: page_ranges}
+    
     if total_tokens > 80_000 and has_book:
         logging.info(f"Token count ({total_tokens}) exceeds 80k and books detected, applying trim_content...")
         
@@ -171,13 +173,8 @@ async def start_generating_quiz_task(
                             session_id=attempt_id,
                         )
                         
-                        # Store page ranges in material metadata
-                        await admin_pb.collection("materials").update(
-                            mid,
-                            {
-                                "trimmedPageRanges": json.dumps(page_ranges),
-                            }
-                        )
+                        # Store page ranges in memory
+                        material_page_ranges[mid] = page_ranges
                         
                         logging.info(f"Material {mid} trimmed to page ranges: {page_ranges}")
                         
@@ -214,14 +211,11 @@ async def start_generating_quiz_task(
                     content = await load_file_text(http, "materials", mid, txt)
                     
                     # Apply page range filtering if available and material is a book
-                    trimmed_ranges_str = m.get("trimmedPageRanges", "")
+                    page_ranges = material_page_ranges.get(mid)
                     is_book_material = m.get("isBook", False)
                     
-                    if trimmed_ranges_str and is_book_material:
+                    if page_ranges and is_book_material:
                         try:
-                            # Parse JSON string to list of dicts
-                            page_ranges = json.loads(trimmed_ranges_str) if isinstance(trimmed_ranges_str, str) else trimmed_ranges_str
-                            
                             logging.info(f"Filtering material {mid} ({txt}) to page ranges: {page_ranges}")
                             
                             # Filter content based on page ranges
@@ -250,11 +244,11 @@ async def start_generating_quiz_task(
         logging.info(f"After trimming: {total_tokens} tokens")
     
     # If still exceeds 80k tokens, use important_sentences
-    elif total_tokens > 80_000:
+    if total_tokens > 80_000:
         logging.info(f"Token count ({total_tokens}) exceeds 80k, applying summarization to 52k tokens...")
         concatenated_texts = summarize_to_fixed_tokens(
             concatenated_texts, 
-            target_token_count=80000, 
+            target_token_count=50000, 
         )
         # Recalculate tokens after summarization
         tokens = ENCODERS[LLMS.GPT_5_MINI].encode(concatenated_texts)
@@ -264,7 +258,7 @@ async def start_generating_quiz_task(
     texts = concatenated_texts
 
     # Create estimated summary from beginning and end
-    estimated = tokens[:4000] + tokens[-4000:]
+    estimated = tokens[:3000] + tokens[-3000:]
     estimated_summary = ENCODERS[LLMS.GPT_5_MINI].decode(estimated)
 
     q = f"Query: {quiz.get('query', '')}\n\nEstimated summary: {estimated_summary}"

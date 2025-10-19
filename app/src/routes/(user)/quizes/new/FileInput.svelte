@@ -313,7 +313,7 @@
 
 <div
 	class={[
-		'flex w-full flex-col gap-2.5 overflow-x-hidden rounded-lg font-sans transition-colors duration-200',
+		'flex w-full flex-col gap-2.5 rounded-lg font-sans transition-colors duration-200',
 		isDragging && 'border-primary bg-primary/10 border-2 border-dashed'
 	]}
 	ondragover={handleDragOver}
@@ -351,7 +351,7 @@
 		{#if isMaterialsListOpen}
 			<div
 				bind:this={menuElement}
-				class="border-base-300 bg-base-100 absolute left-0 right-0 top-full z-10 mt-2 max-h-[70vh] max-w-full overflow-y-auto rounded-lg border shadow-lg sm:left-0 sm:right-auto sm:w-80"
+				class="border-base-300 bg-base-100 absolute left-0 right-0 top-full z-10 mt-2 max-h-[70vh] overflow-y-auto rounded-lg border shadow-lg sm:left-0 sm:right-auto sm:w-80"
 			>
 				<div class="p-2">
 					<button
