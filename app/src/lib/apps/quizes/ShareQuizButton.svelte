@@ -110,7 +110,7 @@
 
 <Button
 	color="primary"
-	style="outline"
+	style="solid"
 	{block}
 	class={className}
 	onclick={() => {

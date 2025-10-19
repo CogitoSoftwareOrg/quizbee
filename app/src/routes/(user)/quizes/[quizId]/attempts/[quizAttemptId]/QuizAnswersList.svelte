@@ -110,7 +110,7 @@
 					>
 						<button
 							type="button"
-							class="focus-visible:ring-primary/60 flex w-full min-w-0 items-start gap-3 p-4 text-left transition focus-visible:outline-none focus-visible:ring-2"
+							class="focus-visible:ring-primary/60 flex w-full min-w-0 cursor-pointer items-start gap-3 p-4 text-left transition focus-visible:outline-none focus-visible:ring-2"
 							onclick={async () => {
 								const toAnswer = readyItemsWithoutAnswers.length;
 								if (!itemDecision) {
