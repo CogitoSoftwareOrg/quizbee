@@ -97,7 +97,7 @@
 						/>
 						{#if title.startsWith('Untitled Quiz')}
 							<Pencil
-								class="text-base-content/40 -mt-4 ml-1 h-4 w-4"
+								class="text-base-content/40 -mt-8 ml-1 h-5 w-5"
 							/>
 						{/if}
 					</div>
@@ -164,14 +164,16 @@
 												? 'text-base-content/50'
 												: 'text-base-content'}">No</span
 										>
-										<input
-											type="checkbox"
-											bind:checked={avoidRepeat}
-											class="toggle toggle-primary toggle-lg"
-										/>
+										<div class="toggle toggle-lg !bg-transparent [&:before]:bg-current">
+											<input
+												type="checkbox"
+												bind:checked={avoidRepeat}
+												class="sr-only"
+											/>
+										</div>
 										<span
 											class="label-text font-medium {avoidRepeat
-												? 'text-primary'
+												? 'text-base-content'
 												: 'text-base-content/50'}">Yes</span
 										>
 									</label>

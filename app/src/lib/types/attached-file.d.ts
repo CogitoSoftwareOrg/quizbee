@@ -6,6 +6,7 @@ type AttachedFile = {
 	name: string;
 	isUploading?: boolean;
 	tokens?: number;
+	isBook?: boolean;
 };
 
 export type { AttachedFile };

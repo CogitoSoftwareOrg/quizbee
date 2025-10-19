@@ -99,9 +99,7 @@
 	$effect(() => {
 		const _ = inputText;
 		untrack(() => {
-			if (inputText) {
-				scheduleUpdate({ query: inputText });
-			}
+			scheduleUpdate({ query: inputText  });
 		});
 	});
 
@@ -123,6 +121,7 @@
 			selectedDifficulty = newDraft.selectedDifficulty;
 			questionCount = newDraft.questionCount;
 			title = newDraft.title;
+			avoidRepeat = newDraft.avoidRepeat;
 		} else {
 			quizTemplateId = drafts[0].id;
 			inputText = drafts[0].query;
@@ -132,6 +131,7 @@
 			selectedDifficulty = drafts[0].difficulty;
 			questionCount = drafts[0].itemsLimit;
 			title = drafts[0].title;
+			avoidRepeat = drafts[0].avoidRepeat;
 		}
 
 		setTimeout(() => {
