@@ -52,12 +52,7 @@
 
 	const allowedExtensions = [
 		'pdf',
-		'doc',
-		'docx',
-		'xls',
-		'xlsx',
-		'ppt',
-		'pptx',
+		'md',
 		'txt',
 		'js',
 		'ts',
@@ -69,9 +64,6 @@
 		'jpg',
 		'jpeg',
 		'png',
-		'gif',
-		'webp',
-		'bmp'
 	];
 	onMount(() => {
 		document.addEventListener('click', handleClickOutside);
