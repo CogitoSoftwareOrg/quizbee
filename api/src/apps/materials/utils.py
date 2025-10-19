@@ -1,5 +1,6 @@
 import base64
 import mimetypes
+import re
 import httpx
 from pocketbase.models.dtos import Record
 from pydantic_ai import BinaryContent
@@ -98,3 +99,80 @@ def as_data_url(raw_bytes: bytes, filename: str) -> str:
     mime = mimetypes.guess_type(filename)[0] or "application/octet-stream"
     b64 = base64.b64encode(raw_bytes).decode("ascii")
     return f"data:{mime};base64,{b64}"
+
+
+async def parse_text_with_images(
+    http: httpx.AsyncClient,
+    text: str,
+    materials: list[Record],
+) -> list[str | BinaryContent]:
+    """
+    Парсит текст и заменяет маркеры изображений на BinaryContent.
+    
+    Поддерживает два формата:
+    1. Markdown-ссылки: ![Image](url)
+    2. Уникальные маркеры: {quizbee_unique_image_url:url}
+    
+    Пример текста:
+        "Вот первый график \n{quizbee_unique_image_url:http://localhost:8090/api/files/materials/xxx/img1.png}\n 
+        и второй график \n{quizbee_unique_image_url:http://localhost:8090/api/files/materials/xxx/img2.png}\n"
+    
+    Args:
+        http: HTTP клиент
+        text: Текст с маркерами изображений
+        materials: Список материалов (не используется, но оставлен для совместимости)
+    
+    Returns:
+        Список элементов (строки и BinaryContent) в правильном порядке
+        Например: ["Вот первый график ", BinaryContent(...), " и второй график ", BinaryContent(...), ...]
+    """
+    parts = []
+    last_end = 0
+    
+    # Паттерн для уникальных маркеров: {quizbee_unique_image_url:url}
+    pattern_unique = r"\{quizbee_unique_image_url:([^}]+)\}"
+    
+    # Паттерн для Markdown: ![...](url)
+    pattern_markdown = r"!\[([^\]]*)\]\(([^)]+)\)"
+    
+    # Объединяем оба паттерна с использованием именованных групп
+    combined_pattern = f"(?P<unique>{pattern_unique})|(?P<markdown>{pattern_markdown})"
+    
+    for match in re.finditer(combined_pattern, text):
+        # Добавляем текст перед изображением
+        if match.start() > last_end:
+            text_part = text[last_end:match.start()]
+            if text_part.strip():  # Добавляем только непустой текст
+                parts.append(text_part)
+        
+        # Определяем, какой паттерн сработал и извлекаем URL
+        if match.group('unique'):
+            # Уникальный маркер {quizbee_unique_image_url:url}
+            image_url = match.group(1)
+        else:
+            # Markdown ![...](url)
+            image_url = match.group(3)
+        
+        try:
+            res = await http.get(image_url)
+            res.raise_for_status()
+            data = res.content
+
+            ctype, _ = mimetypes.guess_type(image_url)
+            if ctype is None:
+                ctype = "application/octet-stream"
+
+            parts.append(BinaryContent(data=data, media_type=ctype))
+        except Exception as e:
+            # Если не удалось загрузить изображение, оставляем описание ошибки
+            parts.append(f"[Ошибка загрузки изображения {image_url}: {e}]")
+
+        last_end = match.end()
+
+    # Добавляем оставшийся текст после последнего изображения
+    if last_end < len(text):
+        remaining_text = text[last_end:]
+        if remaining_text.strip():
+            parts.append(remaining_text)
+
+    return parts

@@ -27,6 +27,7 @@ function createDraft(
 	const existingTitles = quizesStore.quizes.map((d) => d.title);
 	const uniqueTitle = generateUniqueTitle(baseTitle, existingTitles);
 	formData.append('title', uniqueTitle);
+	formData.append('avoidRepeat', 'false');
 	pb!.collection('quizes').create(formData);
 
 	const attachedFiles = currentQuiz
@@ -39,7 +40,8 @@ function createDraft(
 		inputText: currentQuiz ? currentQuiz.query || '' : '',
 		attachedFiles,
 		selectedDifficulty: currentQuiz ? currentQuiz.difficulty : 'intermediate',
-		questionCount: currentQuiz ? currentQuiz.itemsLimit : 10
+		questionCount: currentQuiz ? currentQuiz.itemsLimit : 10,
+		avoidRepeat: currentQuiz ? currentQuiz.avoidRepeat : false
 	};
 }
 

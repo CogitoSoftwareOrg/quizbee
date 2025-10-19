@@ -1,5 +1,4 @@
 import asyncio
-import logging
 from fastapi import (
     APIRouter,
     File,
@@ -12,13 +11,13 @@ from fastapi import (
 from pocketbase import FileUpload
 from fastapi.responses import JSONResponse
 
-from apps.materials.utils import as_data_url
-from .tokens_calculation import count_pdf_tokens, count_text_tokens
+from .tokens_calculation import count_text_tokens, calculate_image_tokens
 from .pdf_parser import parse_pdf
 from .important_sentences import summarize_to_fixed_tokens
 from apps.auth import User
 from apps.auth import User, auth_user
 from lib.clients import AdminPB
+from lib.settings import settings
 
 materials_router = APIRouter(
     prefix="/materials", tags=["materials"], dependencies=[Depends(auth_user)]
@@ -37,14 +36,9 @@ async def upload_material(
     Uploads material to PocketBase with automatic token counting for PDF files.
     For PDFs, extracts text and images, saves them separately with token counts.
     """
-    logging.info(
-        f"Starting upload for file: {file.filename}, material_id: {material_id}"
-    )
     file_bytes = await file.read()
     file_size_mb = len(file_bytes) / (1024 * 1024)
     max_size_mb = 100
-
-    logging.info(f"File size: {round(file_size_mb, 2)}MB")
 
     dto = {
         "id": material_id,
@@ -57,9 +51,6 @@ async def upload_material(
 
     try:
         if file_size_mb > max_size_mb:
-            logging.warning(
-                f"File too large: {round(file_size_mb, 2)}MB > {max_size_mb}MB"
-            )
             dto["status"] = "too big"
 
             material = await admin_pb.collection("materials").create(dto)
@@ -77,57 +68,37 @@ async def upload_material(
                 }
             )
 
-        logging.info(f"Adding original file to dto")
         dto["file"] = FileUpload((file.filename, file_bytes))
         pdf_data = None
         if file.filename and file.filename.lower().endswith(".pdf"):
-            logging.info(f"Processing PDF file: {file.filename}")
             try:
                 # Парсим PDF и получаем текст, изображения и токены
-                logging.info("Parsing PDF and counting tokens...")
-                pdf_data = count_pdf_tokens(file_bytes)
-
-                logging.info(
-                    f"PDF parsed: text_tokens={pdf_data['text_tokens']}, image_tokens={pdf_data['image_tokens']}, total={pdf_data['total_tokens']}, images_count={len(pdf_data['images'])}"
-                )
+                pdf_data = parse_pdf(file_bytes)
 
                 # Обрабатываем текст (сократить если > 50k токенов)
                 extracted_text = pdf_data["text"]
-                if extracted_text and pdf_data["text_tokens"] > 50000:
-                    logging.info(
-                        f"Text exceeds 50k tokens ({pdf_data['text_tokens']}), processing with summarization..."
-                    )
-                    extracted_text = summarize_to_fixed_tokens(
-                        extracted_text, target_token_count=50000, context_window=2
-                    )
-                    logging.info(
-                        f"Text summarized, new length: {len(extracted_text)} chars"
-                    )
-
-                    # Пересчитываем токены для сокращенного текста
-                    final_text_tokens = count_text_tokens(extracted_text)
-                    total_tokens = final_text_tokens + pdf_data["image_tokens"]
-                    logging.info(
-                        f"Final text tokens: {final_text_tokens}, total tokens: {total_tokens}"
-                    )
-                else:
-                    total_tokens = pdf_data["total_tokens"]
+                
+                # Подсчитываем токены для текста
+                text_tokens = count_text_tokens(extracted_text) if extracted_text else 0
+                
+                # Подсчитываем токены для изображений
+                image_tokens = 0
+                if pdf_data["images"]:
+                    for img_data in pdf_data["images"]:
+                        image_tokens += calculate_image_tokens(
+                            img_data["width"], 
+                            img_data["height"]
+                        )
+                
+                # Общее количество токенов
+                total_tokens = text_tokens + image_tokens
 
                 dto["tokens"] = total_tokens
                 dto["kind"] = "complex"
 
-                # Добавляем обработанный текст и изображения в dto
-                if extracted_text:
-                    logging.info(
-                        f"Adding text file to dto (length: {len(extracted_text)} chars)"
-                    )
-                    text_filename = f"{material_id}_text.txt"
-                    text_bytes = extracted_text.encode("utf-8")
-                    dto["textFile"] = FileUpload((text_filename, text_bytes))
-
+                # Сначала загружаем изображения в материал
                 images_list = []
                 if pdf_data["images"]:
-                    logging.info(f"Adding {len(pdf_data['images'])} images to dto")
                     for img_data in pdf_data["images"]:
                         images_list.append(
                             (
@@ -137,25 +108,97 @@ async def upload_material(
                         )
                     dto["images"] = FileUpload(*images_list)
 
-                logging.info(f"DTO prepared with keys: {list(dto.keys())}")
-
             except Exception as e:
-                logging.error(
-                    f"Error while parsing PDF {file.filename}: {e}", exc_info=True
-                )
                 # Если парсинг не удался, сохраняем как обычный файл
                 dto["kind"] = "simple"
                 pdf_data = None
         else:
-            logging.info(f"Processing non-PDF file: {file.filename}")
-            # Для текстовых файлов
-            token_count = count_text_tokens(file_bytes.decode("utf-8"))
-            dto["tokens"] = token_count
-            dto["kind"] = "simple"
+            # Проверяем, является ли файл изображением
+            is_image = False
+            if file.filename:
+                image_extensions = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".svg", ".ico")
+                is_image = file.filename.lower().endswith(image_extensions)
+            
+            if is_image:
+                # Для изображений подсчитываем токены на основе размера
+                # Примерная оценка: используем фиксированное количество токенов для изображений
+                # или можно добавить реальный подсчет через PIL если нужно
+                dto["tokens"] = 0  # Для простых изображений можно не считать текстовые токены
+                dto["kind"] = "simple"
+            else:
+                # Для текстовых файлов
+                try:
+                    text_content = file_bytes.decode("utf-8")
+                    token_count = count_text_tokens(text_content)
+                    dto["tokens"] = token_count
+                    dto["kind"] = "simple"
+                except UnicodeDecodeError:
+                    # Если не удается декодировать как текст, это бинарный файл
+                    dto["tokens"] = 0
+                    dto["kind"] = "simple"
 
-        logging.info(f"Creating material in PocketBase...")
+        # Создаем материал в БД
         material = await admin_pb.collection("materials").create(dto)
-        logging.info(f"Material created successfully with id: {material.get('id')}")
+
+        # Если это PDF с извлеченным текстом, сохраняем textFile и contents
+        if pdf_data and pdf_data.get("text"):
+            extracted_text = pdf_data["text"]
+            
+            # Получаем ID материала
+            material_id_str = material.get("id")
+            if not material_id_str:
+                raise HTTPException(500, "Material ID not found after creation")
+            
+            # Если есть изображения, заменяем маркеры на реальные URLs
+            if pdf_data.get("images"):
+                image_files = material.get("images", [])
+                
+                # Создаем словарь маркер -> URL
+                marker_to_url = {}
+                pb_base_url = settings.pb_url.rstrip("/")
+                
+                for idx, img_data in enumerate(pdf_data["images"]):
+                    marker = img_data.get("marker")
+                    if marker and idx < len(image_files):
+                        # Формируем URL изображения
+                        image_filename = image_files[idx]
+                        image_url = f"{pb_base_url}/api/files/materials/{material_id_str}/{image_filename}"
+                        marker_to_url[marker] = image_url
+                
+                # Заменяем все маркеры на URLs с уникальным префиксом
+                for marker, url in marker_to_url.items():
+                    extracted_text = extracted_text.replace(marker, f"\n{{quizbee_unique_image_url:{url}}}\n")
+            
+            # Обновляем материал с текстом (независимо от наличия изображений)
+            text_filename = f"{material_id_str}_text.txt"
+            text_bytes = extracted_text.encode("utf-8")
+            
+            
+            await admin_pb.collection("materials").update(
+                material_id_str,
+                {"textFile": FileUpload((text_filename, text_bytes))}
+            )
+            
+            # Если есть оглавление из parse_pdf, сохраняем его
+
+
+            if pdf_data.get("isBook"):
+                is_book_doc = pdf_data["isBook"]
+                await admin_pb.collection("materials").update(
+                    material_id_str,
+                    {"isBook": True if is_book_doc else False}
+                )
+                
+            if pdf_data.get("contents"):
+                import json
+                toc_json = json.dumps(pdf_data["contents"])
+                await admin_pb.collection("materials").update(
+                    material_id_str,
+                    {"contents": toc_json}
+                )
+            
+            # Обновляем объект material для ответа
+            material = await admin_pb.collection("materials").get_one(material_id_str)
 
         response_data = {
             "id": material.get("id"),
@@ -172,7 +215,6 @@ async def upload_material(
         return JSONResponse(content=response_data)
 
     except Exception as e:
-        logging.error(f"Error while uploading material: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Error while uploading material: {str(e)}"
         )

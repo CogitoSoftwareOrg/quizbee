@@ -24,13 +24,28 @@
 		quizTemplateId = $bindable('')
 	}: Props = $props();
 
+	const maxTokensWithABook = 400000;
+	const maxTokensWithoutABook = 160000;
+
+	const totalTokensAttached = $derived(
+		attachedFiles.reduce((sum, file) => sum + (file.tokens || 0), 0)
+	);
+
+	const hasBook = $derived(attachedFiles.some((file) => file.isBook));
+
+	
+
 	let inputElement: HTMLInputElement;
 	let isDragging = $state(false);
 	let isMaterialsListOpen = $state(false);
 	let searchQuery = $state('');
-	let warningTextInput = $state(false);
+	let warningTooBigQuery = $state(false);
 	let warningTooBigFile = $state<string | null>(null);
 	let warningUnsupportedFile = $state<string | null>(null);
+	let warningMaxTokensExceeded = $derived(
+		attachedFiles.length >= 2 &&
+			(hasBook ? totalTokensAttached > maxTokensWithABook : totalTokensAttached > maxTokensWithoutABook)
+	);
 
 	let buttonElement = $state<HTMLButtonElement>();
 	let menuElement = $state<HTMLDivElement>();
@@ -118,6 +133,8 @@
 							warningTooBigFile = null;
 						}, 5000);
 					} else if (foundMaterial.status === 'uploaded') {
+						attachedFile.tokens = foundMaterial.tokens;
+						attachedFile.isBook = foundMaterial.isBook;
 						attachedFile.isUploading = false;
 					}
 				}
@@ -248,9 +265,9 @@
 		if (target.value.length > 100000) {
 			target.value = target.value.slice(0, 100000);
 			inputText = target.value;
-			warningTextInput = true;
+			warningTooBigQuery = true;
 		} else {
-			warningTextInput = false;
+			warningTooBigQuery = false;
 		}
 	}
 
@@ -259,20 +276,15 @@
 
 		const iconMap: Record<string, string> = {
 			pdf: 'pdf',
-			doc: 'doc',
-			docx: 'doc',
-			xls: 'xls',
-			xlsx: 'xls',
-			ppt: 'ppt',
-			pptx: 'ppt',
+			md: 'md',
 			txt: 'txt',
 			js: 'js',
 			ts: 'js',
 			html: 'html',
 			css: 'css',
 			json: 'json',
-			xml: 'xml',
-			svg: 'svg'
+			
+			
 		};
 
 		return iconMap[extension || ''] || 'unknown';
@@ -443,7 +455,7 @@
 			style="display: none;"
 		/>
 	</div>
-	{#if warningTextInput}
+	{#if warningTooBigQuery}
 		<div class="text-md mt-2 text-red-500">Maximum input length is 100.000 symbols.</div>
 	{/if}
 	{#if warningTooBigFile}
@@ -454,6 +466,12 @@
 	{#if warningUnsupportedFile}
 		<div class="text-md mt-2 text-red-500">
 			File "{warningUnsupportedFile}" has an unsupported format and cannot be uploaded.
+		</div>
+	{/if}
+	{#if warningMaxTokensExceeded}
+		<div class="text-md mt-2 text-orange-500">
+			You have attached too much material. You can still start the quiz, but the quality may be
+			degraded.
 		</div>
 	{/if}
 	{#if attachedFiles.length > 0}
@@ -476,7 +494,7 @@
 								class="file-icon h-10 w-10"
 							/>
 							<span
-								class="line-clamp-3 break-words text-[14px] leading-tight"
+								class="line-clamp-3 break-all text-[14px] leading-tight"
 								title={attachedFile.name}>{attachedFile.name}</span
 							>
 						</div>
