@@ -24,8 +24,8 @@
 		quizTemplateId = $bindable('')
 	}: Props = $props();
 
-	const maxTokensWithABook = 400.000;
-	const maxTokensWithoutABook = 160.000;
+	const maxTokensWithABook = 400000;
+	const maxTokensWithoutABook = 160000;
 
 	const totalTokensAttached = $derived(
 		attachedFiles.reduce((sum, file) => sum + (file.tokens || 0), 0)

@@ -186,7 +186,7 @@ async def upload_material(
                 is_book_doc = pdf_data["isBook"]
                 await admin_pb.collection("materials").update(
                     material_id_str,
-                    {"isBook": "true" if is_book_doc else "false"}
+                    {"isBook": True if is_book_doc else False}
                 )
                 
             if pdf_data.get("contents"):
