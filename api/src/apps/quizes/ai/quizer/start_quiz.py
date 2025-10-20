@@ -254,7 +254,17 @@ async def start_generating_quiz_task(
         # Recalculate tokens after summarization
         tokens = ENCODERS[LLMS.GPT_5_MINI].encode(concatenated_texts[0])
         logging.info(f"After summarization: {len(tokens)} tokens")
-    
+    elif total_tokens > 6000: 
+        concatenated_texts = summarize_to_fixed_tokens(
+            concatenated_texts, 
+            target_token_count=int(total_tokens/1.15), 
+            summary_token_count=6000,
+        )
+    elif total_tokens > 0:
+        concatenated_texts = (concatenated_texts, concatenated_texts)
+    else:
+        concatenated_texts = ("User provided no additional material.", "")
+
     # Use the processed text (full summary with context)
     texts = concatenated_texts[0]
 
