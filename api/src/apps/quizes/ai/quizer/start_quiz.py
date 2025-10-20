@@ -149,13 +149,13 @@ async def start_generating_quiz_task(
     total_tokens = len(tokens)
     
     logging.info(f"Total tokens from all materials: {total_tokens}")
-    
-    # If exceeds 80k tokens and has books, use trimming
+
+    # If exceeds 70k tokens and has books, use trimming
     material_page_ranges = {}  # Dictionary to store page ranges: {material_id: page_ranges}
     
-    if total_tokens > 80_000 and has_book:
-        logging.info(f"Token count ({total_tokens}) exceeds 80k and books detected, applying trim_content...")
-        
+    if total_tokens > 70_000 and has_book:
+        logging.info(f"Token count ({total_tokens}) exceeds 70k and books detected, applying trim_content...")
+
         # Get table of contents for book materials
         book_materials = [m for m in materials if m.get("isBook", True)]
         
@@ -242,13 +242,12 @@ async def start_generating_quiz_task(
         tokens = ENCODERS[LLMS.GPT_5_MINI].encode(concatenated_texts)
         total_tokens = len(tokens)
         logging.info(f"After trimming: {total_tokens} tokens")
-    
-    # If still exceeds 80k tokens, use important_sentences
-    if total_tokens > 80_000:
-        logging.info(f"Token count ({total_tokens}) exceeds 80k, applying summarization to 52k tokens...")
+
+    if total_tokens > 70_000:
+        logging.info(f"Token count ({total_tokens}) exceeds 70k, applying summarization to 52k tokens...")
         concatenated_texts = summarize_to_fixed_tokens(
             concatenated_texts, 
-            target_token_count=80000, 
+            target_token_count=70000, 
             summary_token_count=6000,
         )
         # Recalculate tokens after summarization
