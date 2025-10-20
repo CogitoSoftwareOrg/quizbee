@@ -226,9 +226,6 @@ def is_book(doc: fitz.Document) -> bool:
         text_length = len(text.strip())
         total_text_length += text_length
         
-        # 2. Подсчет изображений
-        images = page.get_images(full=True)  # type: ignore
-        total_images += len(images)
         
         # 3. Проверка ориентации (книги обычно в портретной ориентации)
         rect = page.rect  # type: ignore
@@ -238,8 +235,6 @@ def is_book(doc: fitz.Document) -> bool:
     # Средняя длина текста на страницу
     avg_text_length = total_text_length / len(sample_pages) if sample_pages else 0
     
-    # Среднее количество изображений на страницу
-    avg_images = total_images / len(sample_pages) if sample_pages else 0
     
     # Процент страниц в портретной ориентации
     portrait_ratio = portrait_pages / len(sample_pages) if sample_pages else 0
@@ -247,7 +242,6 @@ def is_book(doc: fitz.Document) -> bool:
     logging.info(
         f"Анализ документа: страниц={page_count}, "
         f"средняя_длина_текста={avg_text_length:.0f}, "
-        f"среднее_изображений={avg_images:.1f}, "
         f"портретных_страниц={portrait_ratio:.1%}"
     )
     
@@ -259,7 +253,6 @@ def is_book(doc: fitz.Document) -> bool:
     
     is_book_candidate = (
         avg_text_length > 1000 and  # Высокая плотность текста
-        avg_images < 5 and  # Мало изображений
         portrait_ratio > 0.8 and  # Портретная ориентация
         page_count > 100  # Достаточно страниц
     )
