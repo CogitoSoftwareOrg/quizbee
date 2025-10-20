@@ -113,6 +113,7 @@
 
 	// if there are no drafts of this user -> create one. otherwise take the first draft he has
 	onMount(() => {
+		
 		if (quizesStore.quizes.filter((q) => q.status === 'draft').length == 0) {
 			const newDraft = createDraft();
 			quizTemplateId = newDraft.id;
@@ -176,15 +177,13 @@
 </script>
 
 {#if previousQuizes.length > 0}
-	<div class="mt-2 flex justify-center">
-		<button
-			class="btn btn-xs btn-outline flex items-center text-sm"
-			onclick={() => (showModal = true)}
-		>
-			<FilePlus class="mb-0.5 h-4 w-4" />
-			<span class=" ">Use previous quiz settings</span>
-		</button>
-	</div>
+	<button
+		class="btn btn-outline rounded-lg flex items-center gap-2 text-lg whitespace-nowrap shadow-lg mr-2 mt-1"
+		onclick={() => (showModal = true)}
+	>
+		<FilePlus class="h-5 w-5" />
+		<span>Use previous quiz</span>
+	</button>
 {/if}
 
 {#if showModal}

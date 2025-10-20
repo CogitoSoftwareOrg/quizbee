@@ -47,6 +47,7 @@
 		tick().then(() => {
 			updateInputWidth();
 		});
+		console.log('Mounted New Quiz Page');
 
 		// Пересчитываем при изменении размера окна
 		const handleResize = () => updateInputWidth();
@@ -63,6 +64,22 @@
 </svelte:head>
 
 <main class="relative flex h-full flex-row overflow-x-hidden">
+	<!-- Use Previous Quiz Settings Button - Fixed in top right corner -->
+	
+	<div class="fixed right-4 top-4 z-50">
+		<Draft
+			bind:title
+			bind:quizTemplateId
+			bind:inputText
+			bind:attachedFiles
+			bind:selectedDifficulty
+			bind:questionCount
+			bind:previousQuizes
+			bind:avoidRepeat
+		/>
+	</div>
+	
+
 	<div class="relative flex-1 overflow-x-hidden">
 		<div class="flex items-start justify-center overflow-x-hidden">
 			<div class="quiz-container w-full max-w-3xl px-4">
@@ -103,17 +120,6 @@
 						<p class="text-base-content/60 -mt-3 text-lg">
 							Customize your quiz settings and get started
 						</p>
-						<!-- Draft Component -->
-						<Draft
-							bind:title
-							bind:quizTemplateId
-							bind:inputText
-							bind:attachedFiles
-							bind:selectedDifficulty
-							bind:questionCount
-							bind:previousQuizes
-							bind:avoidRepeat
-						/>
 					{/if}
 				</div>
 

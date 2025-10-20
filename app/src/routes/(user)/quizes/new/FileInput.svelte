@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
-	import { TextArea } from '@cogisoft/ui-svelte-daisy';
+	// import { TextArea } from '@cogisoft/ui-svelte-daisy';
 
 	import { computeApiUrl } from '$lib/api/compute-url';
 	import { materialsStore } from '$lib/apps/materials/materials.svelte';
@@ -52,12 +52,7 @@
 
 	const allowedExtensions = [
 		'pdf',
-		'doc',
-		'docx',
-		'xls',
-		'xlsx',
-		'ppt',
-		'pptx',
+		'md',
 		'txt',
 		'js',
 		'ts',
@@ -69,9 +64,6 @@
 		'jpg',
 		'jpeg',
 		'png',
-		'gif',
-		'webp',
-		'bmp'
 	];
 	onMount(() => {
 		document.addEventListener('click', handleClickOutside);
@@ -313,7 +305,7 @@
 
 <div
 	class={[
-		'flex w-full flex-col gap-2.5 overflow-x-hidden rounded-lg font-sans transition-colors duration-200',
+		'flex w-full flex-col gap-2.5 rounded-lg font-sans transition-colors duration-200',
 		isDragging && 'border-primary bg-primary/10 border-2 border-dashed'
 	]}
 	ondragover={handleDragOver}
@@ -351,9 +343,9 @@
 		{#if isMaterialsListOpen}
 			<div
 				bind:this={menuElement}
-				class="border-base-300 bg-base-100 absolute left-0 right-0 top-full z-10 mt-2 max-h-[70vh] max-w-full overflow-y-auto rounded-lg border shadow-lg sm:left-0 sm:right-auto sm:w-80"
+				class="border-base-300 bg-base-100 absolute left-0 right-0 top-full z-10 mt-2 max-h-[70vh] overflow-y-auto rounded-lg border-2 shadow-xl sm:left-0 sm:right-auto sm:w-80"
 			>
-				<div class="p-2">
+				<div class="p-4">
 					<button
 						onclick={() => {
 							openFileDialog();
@@ -376,7 +368,7 @@
 						<span class="mt-1">Add Files from PC</span>
 					</button>
 				</div>
-				<div class="border-base-300 border-t p-2">
+				<div class="border-base-300 border-t p-3">
 					<div class="text-base-content/70 mb-2 text-center text-lg font-medium">
 						Previous Materials
 					</div>
@@ -384,7 +376,7 @@
 						<input
 							bind:value={searchQuery}
 							placeholder="Search materials..."
-							class="border-base-300 focus:border-primary w-full rounded border py-1 pl-8 pr-2 text-sm focus:outline-none"
+							class="border-base-300 focus:border-primary w-full rounded border py-2 pl-8 pr-2 text-sm focus:outline-none"
 						/>
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
@@ -405,7 +397,7 @@
 								.toLowerCase()
 								.includes(searchQuery.toLowerCase())) as material}
 							<button
-								class="hover:bg-primary flex w-full cursor-pointer items-center justify-between gap-2 p-2 text-left transition-colors duration-200"
+								class="hover:bg-primary flex w-full cursor-pointer items-center justify-between gap-2 p-3 text-left transition-colors duration-200 rounded"
 								onclick={() => {
 									toggleMaterial(material);
 								}}
@@ -477,16 +469,16 @@
 	{#if attachedFiles.length > 0}
 		<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
 			{#each attachedFiles as attachedFile, index}
-				<div class="bg-base-300 group relative aspect-square w-full rounded-lg">
+				<div class="bg-base-300 group relative aspect-square w-full rounded-lg border-2 border-base-content/20 p-2">
 					{#if attachedFile.previewUrl}
 						<img
 							src={attachedFile.previewUrl}
 							alt={attachedFile.name}
-							class="h-full w-full object-cover"
+							class="h-full w-full object-cover rounded"
 						/>
 					{:else}
 						<div
-							class="text-base-content/60 flex h-full w-full flex-col items-center gap-5 p-2 text-center"
+							class="text-base-content/60 flex h-full w-full flex-col items-center gap-5 text-center"
 						>
 							<img
 								src="/file-format-icons/{getFileIcon(attachedFile.name)}.svg"
