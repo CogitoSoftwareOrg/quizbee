@@ -248,22 +248,22 @@ async def start_generating_quiz_task(
         logging.info(f"Token count ({total_tokens}) exceeds 80k, applying summarization to 52k tokens...")
         concatenated_texts = summarize_to_fixed_tokens(
             concatenated_texts, 
-            target_token_count=50000, 
+            target_token_count=80000, 
+            summary_token_count=6000,
         )
         # Recalculate tokens after summarization
-        tokens = ENCODERS[LLMS.GPT_5_MINI].encode(concatenated_texts)
+        tokens = ENCODERS[LLMS.GPT_5_MINI].encode(concatenated_texts[0])
         logging.info(f"After summarization: {len(tokens)} tokens")
     
-    # Use the processed text
-    texts = concatenated_texts
+    # Use the processed text (full summary with context)
+    texts = concatenated_texts[0]
 
-    # Create estimated summary from beginning and end
-    estimated = tokens[:3000] + tokens[-3000:]
-    estimated_summary = ENCODERS[LLMS.GPT_5_MINI].decode(estimated)
+    # Create estimated summary from brief summary (without context)
+    estimated_summary = concatenated_texts[1]
+    estimated_summary_tokens = ENCODERS[LLMS.GPT_5_MINI].encode(estimated_summary)
+    logging.info(f"Estimated summary: {len(estimated_summary)} chars, {len(estimated_summary_tokens)} tokens")
 
     q = f"Query: {quiz.get('query', '')}\n\nEstimated summary: {estimated_summary}"
-
-    logging.info("Estimated summary: %s", len(estimated_summary))
     search_result = await summaries_index.search(
         query=q,
         hybrid=Hybrid(
