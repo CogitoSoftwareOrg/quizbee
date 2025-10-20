@@ -39,7 +39,7 @@
 
 <div class="mx-auto mt-8 max-w-md px-4">
 	<ThemeController />
-	<h1 class="mb-6 text-center text-3xl font-bold">Sign In to Your Account</h1>
+	<h1 class="mb-6 text-center text-3xl font-bold">Welcome Back!</h1>
 
 	<!-- OAuth buttons -->
 	<div class="mb-4">

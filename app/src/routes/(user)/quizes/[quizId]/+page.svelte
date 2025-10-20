@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { Clock, Search, BookOpen, Play } from 'lucide-svelte';
+	import { Clock, Search, BookOpen, Play, ChevronDown, ChevronRight } from 'lucide-svelte';
 
 	import { Button, Input } from '@cogisoft/ui-svelte-daisy';
 
@@ -41,6 +41,9 @@
 			(attempt) => attempt.quiz === quiz?.id //&& attempt.feedback
 		)
 	);
+
+	// Check if there's at least one completed attempt
+	const hasCompletedAttempt = $derived(quizAttempts.some((attempt) => Boolean(attempt.feedback)));
 
 	// Search for quiz items
 	let searchQuery = $state('');
@@ -160,14 +163,39 @@
 					<ul class="flex flex-1 flex-col gap-2 pr-1 sm:min-h-0 sm:overflow-y-auto">
 						{#each filteredItems as item, index}
 							<li
-								class="hover:bg-base-200 border-base-300 flex items-start gap-3 rounded-lg border p-3 transition"
+								class="hover:bg-base-200 border-base-300 flex flex-col rounded-lg border transition"
 							>
-								<span class="text-base-content/50 min-w-6 text-sm font-medium">
-									{index + 1}.
-								</span>
-								<p class="text-base-content/80 flex-1 text-sm leading-relaxed">
-									{item.question}
-								</p>
+								<div class="flex items-start gap-3 p-3">
+									<span class="text-base-content/50 min-w-6 text-sm font-medium">
+										{index + 1}.
+									</span>
+									<p class="text-base-content/80 flex-1 text-sm leading-relaxed">
+										{item.question}
+									</p>
+								</div>
+
+								{#if item.answers && Array.isArray(item.answers)}
+									<div class="border-base-200 border-t px-3 pb-3 pt-2">
+										<ul class="space-y-2">
+											{#each item.answers as answer, answerIndex}
+												{@const shouldHighlight = hasCompletedAttempt && answer.correct}
+												<li
+													class="pl-6 text-sm leading-relaxed {shouldHighlight
+														? 'text-success font-medium'
+														: 'text-base-content/70'}"
+												>
+													<span class="mr-2 font-medium"
+														>{String.fromCharCode(65 + answerIndex)}.</span
+													>
+													{answer.content}
+													{#if shouldHighlight}
+														<span class="text-success ml-2">✓</span>
+													{/if}
+												</li>
+											{/each}
+										</ul>
+									</div>
+								{/if}
 							</li>
 						{/each}
 					</ul>
@@ -239,7 +267,7 @@
 
 							{#if hasCompleted}
 								<div class="text-base-content/70 text-sm">
-									<p>✓ Completed with feedback</p>
+									<p>✓ Completed</p>
 								</div>
 							{:else}
 								<div class="text-base-content/70 text-sm">

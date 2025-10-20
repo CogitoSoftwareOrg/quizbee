@@ -1,3 +1,4 @@
+from enum import StrEnum
 from typing import Annotated, Literal
 from pydantic import BaseModel, Field
 from dataclasses import dataclass
@@ -14,6 +15,18 @@ class SummarizerDeps:
     quiz: Record
 
 
+class QuizCategory(StrEnum):
+    stem = "stem"
+    general = "general"
+    math = "math"
+    history = "history"
+    law = "law"
+    language = "language"
+    art = "art"
+    popCulture = "popCulture"
+    psychology = "psychology"
+
+
 class Additional(BaseModel):
     quiz_title: Annotated[
         str, Field(title="Quiz Title", description="The title of the quiz.")
@@ -26,7 +39,21 @@ class Additional(BaseModel):
         ),
     ]
     quiz_tags: Annotated[
-        list[str], Field(title="Quiz Tags", description="The topic tags of the quiz.")
+        list[str],
+        Field(
+            title="Quiz Tags",
+            description="The topic tags of the quiz. More than 3 tags and less than 10 tags.",
+            # min_length=3,
+            # max_length=10,
+        ),
+    ]
+    quiz_category: Annotated[
+        QuizCategory,
+        Field(
+            title="Quiz Category",
+            description="The category of the quiz.",
+            default=QuizCategory.general,
+        ),
     ]
 
 

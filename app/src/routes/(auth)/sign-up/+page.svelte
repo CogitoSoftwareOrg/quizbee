@@ -1,4 +1,5 @@
 <script lang="ts">
+	import env from '$env/dynamic/public';
 	import { goto, invalidate } from '$app/navigation';
 	import { page } from '$app/state';
 
@@ -137,8 +138,10 @@
 				/>
 				<span class="label-text">
 					I agree to the
-					<a target="_blank" href="/terms-and-privacy" class="link link-primary"
-						>Terms and Privacy</a
+					<a
+						target="_blank"
+						href={`${env.PUBLIC_WEB_URL}terms-and-privacy`}
+						class="link link-primary">Terms and Privacy</a
 					>
 				</span>
 			</label>

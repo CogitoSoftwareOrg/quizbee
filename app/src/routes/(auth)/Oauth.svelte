@@ -7,6 +7,7 @@
 	interface Props {
 		error?: any | null;
 		loading?: boolean;
+		disabled?: boolean;
 	}
 
 	let { error = $bindable(null), loading = $bindable(false) }: Props = $props();
