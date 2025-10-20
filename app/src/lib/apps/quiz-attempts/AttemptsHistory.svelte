@@ -128,7 +128,7 @@
 	<section class="flex min-h-0 flex-1 flex-col gap-4">
 		{#if filteredHistory.length === 0}
 			<div
-				class="border-base-200 bg-base-100 flex flex-col items-center gap-3 rounded-xl border px-6 text-center shadow-sm"
+				class="border-base-200 bg-base-100 flex flex-col items-center gap-3 rounded-xl border px-6 py-8 text-center shadow-sm"
 			>
 				<Search class="opacity-40" size={32} />
 				<div>

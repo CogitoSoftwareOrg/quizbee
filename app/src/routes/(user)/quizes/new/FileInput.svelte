@@ -33,8 +33,6 @@
 
 	const hasBook = $derived(attachedFiles.some((file) => file.isBook));
 
-	
-
 	let inputElement: HTMLInputElement;
 	let isDragging = $state(false);
 	let isMaterialsListOpen = $state(false);
@@ -44,7 +42,9 @@
 	let warningUnsupportedFile = $state<string | null>(null);
 	let warningMaxTokensExceeded = $derived(
 		attachedFiles.length >= 2 &&
-			(hasBook ? totalTokensAttached > maxTokensWithABook : totalTokensAttached > maxTokensWithoutABook)
+			(hasBook
+				? totalTokensAttached > maxTokensWithABook
+				: totalTokensAttached > maxTokensWithoutABook)
 	);
 
 	let buttonElement = $state<HTMLButtonElement>();
@@ -282,9 +282,7 @@
 			ts: 'js',
 			html: 'html',
 			css: 'css',
-			json: 'json',
-			
-			
+			json: 'json'
 		};
 
 		return iconMap[extension || ''] || 'unknown';

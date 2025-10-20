@@ -1,5 +1,5 @@
 <script lang="ts">
-	import env from '$env/dynamic/public';
+	import { env } from '$env/dynamic/public';
 	import { goto, invalidate } from '$app/navigation';
 	import { page } from '$app/state';
 
@@ -44,9 +44,8 @@
 			await pb!.collection('users').authWithPassword(email, password, {
 				expand: ''
 			});
-			const redirectUrl = sessionStorage.getItem('postLoginPath') || '/home';
 			// await invalidate('global:user');
-			await goto(redirectUrl);
+			await goto('/verify-email');
 			await pb!.collection('users').requestVerification(email);
 		} catch (err) {
 			console.error(err);

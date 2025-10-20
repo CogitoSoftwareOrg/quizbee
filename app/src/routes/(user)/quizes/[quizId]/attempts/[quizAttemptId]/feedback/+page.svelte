@@ -180,7 +180,12 @@
 
 	<section class="flex flex-1 flex-col gap-3 sm:min-h-0">
 		<div class="flex">
-			<Button color="neutral" style="ghost" href={`/quizes/${quiz?.id}`} class="underline">
+			<Button
+				color="neutral"
+				style="ghost"
+				href={`/quizes/${quiz?.id}`}
+				class="hidden underline sm:block"
+			>
 				<ChevronLeft /> Back to quiz
 			</Button>
 			{#if quiz}
