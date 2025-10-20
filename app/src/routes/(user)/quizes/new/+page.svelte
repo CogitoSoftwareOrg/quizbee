@@ -47,6 +47,7 @@
 		tick().then(() => {
 			updateInputWidth();
 		});
+		console.log('Mounted New Quiz Page');
 
 		// Пересчитываем при изменении размера окна
 		const handleResize = () => updateInputWidth();
@@ -64,20 +65,20 @@
 
 <main class="relative flex h-full flex-row overflow-x-hidden">
 	<!-- Use Previous Quiz Settings Button - Fixed in top right corner -->
-	{#if previousQuizes.length > 0}
-		<div class="fixed right-4 top-4 z-50">
-			<Draft
-				bind:title
-				bind:quizTemplateId
-				bind:inputText
-				bind:attachedFiles
-				bind:selectedDifficulty
-				bind:questionCount
-				bind:previousQuizes
-				bind:avoidRepeat
-			/>
-		</div>
-	{/if}
+	
+	<div class="fixed right-4 top-4 z-50">
+		<Draft
+			bind:title
+			bind:quizTemplateId
+			bind:inputText
+			bind:attachedFiles
+			bind:selectedDifficulty
+			bind:questionCount
+			bind:previousQuizes
+			bind:avoidRepeat
+		/>
+	</div>
+	
 
 	<div class="relative flex-1 overflow-x-hidden">
 		<div class="flex items-start justify-center overflow-x-hidden">

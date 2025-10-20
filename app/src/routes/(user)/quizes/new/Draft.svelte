@@ -113,6 +113,7 @@
 
 	// if there are no drafts of this user -> create one. otherwise take the first draft he has
 	onMount(() => {
+		
 		if (quizesStore.quizes.filter((q) => q.status === 'draft').length == 0) {
 			const newDraft = createDraft();
 			quizTemplateId = newDraft.id;
