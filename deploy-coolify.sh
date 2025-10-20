@@ -4,7 +4,7 @@ set -euo pipefail
 COOLIFY_URL="${COOLIFY_URL:-https://app.coolify.io/api/v1}"
 COOLIFY_TOKEN="${1:-}"  
 GIT_SHA="${2:-}"                 
-TAG="${3:-}"
+TAG="${3:-quizbee}"
 
 if [[ -z "$GIT_SHA" ]]; then
   echo "❌ Usage: $0 <git_commit_sha>"
