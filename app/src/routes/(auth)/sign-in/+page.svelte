@@ -21,11 +21,14 @@
 		loading = true;
 
 		try {
-			await pb!.collection('users').authWithPassword(email, password, {
+			const res = await pb!.collection('users').authWithPassword(email, password, {
 				expand: ''
 			});
+			const user = res.record;
 
-			const redirectUrl = sessionStorage.getItem('postLoginPath') || '/home';
+			const redirectUrl = !user.verified
+				? '/verify-email'
+				: sessionStorage.getItem('postLoginPath') || '/home';
 			// await invalidate('global:user');
 			await goto(redirectUrl);
 		} catch (err) {
