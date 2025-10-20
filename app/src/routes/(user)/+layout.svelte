@@ -108,7 +108,7 @@
 
 <!-- Mobile Sidebar Modal -->
 <Modal
-	class="h-full"
+	fullHeight
 	backdrop
 	open={uiStore.globalSidebarOpen && mobile.current}
 	onclose={() => {

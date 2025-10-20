@@ -39,6 +39,10 @@
 	const HINT_DURATION = 4000; // Длительность анимации подсказки
 	const TAP_THRESHOLD = 5; // Максимальное движение для распознавания как клика (не свайпа)
 	const BOTTOM_ZONE_HEIGHT = 150; // Высота зоны внизу экрана для открытия чата
+	const HANDLE_HEIGHT = 48; // Высота области для свайпа на закрытом чате
+
+	let handleElement: HTMLElement | undefined = $state();
+	let touchStartedOnHandle = $state(false); // отслеживаем, началось ли касание на handle
 
 	// Показываем анимацию только первые 4 секунды И если не было взаимодействия
 	let showPulse = $state(true);
@@ -56,6 +60,7 @@
 			isDragging = false;
 			hasMoved = false;
 			touchStartedOnBottom = false;
+			touchStartedOnHandle = false;
 		}
 	});
 
@@ -65,14 +70,20 @@
 			// Не блокируем touch на кнопках - различаем клик от свайпа по движению (hasMoved)
 			const touchY = e.touches[0].clientY;
 			const windowHeight = window.innerHeight;
+			const target = e.target as HTMLElement;
 
 			if (open) {
-				// Когда чат открыт - ловим любые касания
-				touchStartY = touchY;
-				touchCurrentY = touchY;
-				isDragging = true;
-				hasMoved = false;
-				touchStartedOnBottom = false;
+				// Когда чат открыт - ловим только касания на handle
+				const isOnHandle =
+					handleElement && (target === handleElement || handleElement.contains(target));
+
+				if (isOnHandle) {
+					touchStartY = touchY;
+					touchCurrentY = touchY;
+					isDragging = true;
+					hasMoved = false;
+					touchStartedOnHandle = true;
+				}
 			} else if (itemDecision) {
 				// Когда чат закрыт - ловим только касания в нижней зоне
 				if (touchY > windowHeight - BOTTOM_ZONE_HEIGHT) {
@@ -101,8 +112,8 @@
 			}
 
 			// Применяем визуальные эффекты всегда, но preventDefault только при реальном свайпе
-			if (open) {
-				// Когда открыт - можно только закрыть свайпом вниз
+			if (open && touchStartedOnHandle) {
+				// Когда открыт и касание на handle - можно только закрыть свайпом вниз
 				if (diff > 0) {
 					if (hasMoved) {
 						e.preventDefault();
@@ -131,7 +142,7 @@
 			const diff = touchCurrentY - touchStartY;
 
 			if (hasMoved) {
-				if (open) {
+				if (open && touchStartedOnHandle) {
 					if (diff > SWIPE_THRESHOLD) {
 						open = false;
 					}
@@ -148,6 +159,7 @@
 			touchStartY = 0;
 			touchCurrentY = 0;
 			touchStartedOnBottom = false;
+			touchStartedOnHandle = false;
 		};
 
 		// Добавляем глобальные обработчики
@@ -206,7 +218,10 @@
 	style:transition-duration={isDragging ? '0ms' : '300ms'}
 >
 	<!-- Handle для свайпа -->
-	<div class="flex cursor-grab items-center justify-center py-3 active:cursor-grabbing">
+	<div
+		bind:this={handleElement}
+		class="flex cursor-grab items-center justify-center py-3 active:cursor-grabbing"
+	>
 		<div class="bg-base-300 h-1.5 w-12 rounded-full"></div>
 	</div>
 

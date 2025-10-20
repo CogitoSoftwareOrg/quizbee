@@ -17,6 +17,7 @@
 	// 	});
 	// });
 
+	//@ts-ignore
 	import { registerSW } from 'virtual:pwa-register';
 	onMount(() => {
 		const updateSW = registerSW({
@@ -37,6 +38,7 @@
 		// при необходимости: updateSW(true) чтобы применить обновление
 	});
 
+	//@ts-ignore
 	import { pwaInfo } from 'virtual:pwa-info';
 	const webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : '');
 </script>
