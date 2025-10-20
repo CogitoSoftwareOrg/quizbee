@@ -179,11 +179,16 @@
 	{/if}
 
 	<section class="flex flex-1 flex-col gap-3 sm:min-h-0">
-		{#if quiz}
-			<h1 class="text-center text-2xl font-bold leading-tight">{quiz?.title || 'Quiz'}</h1>
-		{:else}
-			<h1 class="text-center text-2xl font-bold leading-tight">Loading...</h1>
-		{/if}
+		<div class="flex">
+			<Button color="neutral" style="ghost" href={`/quizes/${quiz?.id}`} class="underline">
+				<ChevronLeft /> Back to quiz
+			</Button>
+			{#if quiz}
+				<h1 class="text-center text-2xl font-bold leading-tight">{quiz?.title || 'Quiz'}</h1>
+			{:else}
+				<h1 class="text-center text-2xl font-bold leading-tight">Loading...</h1>
+			{/if}
+		</div>
 
 		<Input
 			class="w-full sm:shrink-0"

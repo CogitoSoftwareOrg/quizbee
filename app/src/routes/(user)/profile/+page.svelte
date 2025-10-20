@@ -78,41 +78,23 @@
 <div class="mx-auto w-full max-w-7xl space-y-4 p-4 sm:space-y-6 sm:p-6 lg:p-8">
 	<!-- Header -->
 	<div class="flex items-center justify-between">
-		<h1 class="text-2xl font-bold sm:text-3xl">Profile & Settings</h1>
+		<h1 class="mx-auto text-2xl font-bold sm:text-3xl">Profile & Settings</h1>
 	</div>
 
 	<!-- Main Grid Layout -->
-	<div class="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3">
-		<!-- Left Column: Profile Info -->
-		<div class="space-y-4 sm:space-y-6 lg:col-span-1">
-			<ProfileCard />
 
-			<div class="divider"></div>
+	<!-- Left Column: Profile Info -->
+	<div class="mx-auto max-w-xl space-y-4 sm:space-y-6 lg:col-span-1">
+		<ProfileCard />
 
-			<SubscriptionCard />
+		<div class="divider"></div>
 
-			<!-- Logout Button -->
-			<Button onclick={logout} color="error" style="soft" block>
-				<X class="h-4 w-4" />
-				Logout
-			</Button>
-		</div>
+		<SubscriptionCard />
 
-		<!-- Right Column: Stats & Settings -->
-		<div class="hidden space-y-4 sm:block sm:space-y-6 lg:col-span-2">
-			<!-- Statistics Cards Grid -->
-			<div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-				<StreakCard {streak} />
-				<WeeklyQuestionsCard {weeklyQuestionCount} />
-				<TotalQuizzesCard {totalQuizzes} />
-				<AverageScoreCard {averageScore} />
-			</div>
-
-			<!-- Learning Goals -->
-			<LearningGoalsCard {weeklyQuestionCount} {weeklyProgress} />
-
-			<!-- Learning Topics -->
-			<!-- <LearningTopicsCard {topics} /> -->
-		</div>
+		<!-- Logout Button -->
+		<Button onclick={logout} color="error" style="soft" block>
+			<X class="h-4 w-4" />
+			Logout
+		</Button>
 	</div>
 </div>

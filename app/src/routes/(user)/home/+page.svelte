@@ -248,16 +248,4 @@
 			</a>
 		</div>
 	</section>
-
-	<!-- History Section -->
-	<section
-		class="border-base-300 bg-base-100 rounded-2xl border p-4 shadow-lg sm:rounded-3xl sm:p-2 md:p-4 lg:p-5"
-	>
-		<AttemptsHistory
-			class="h-[600px] sm:h-[680px] md:h-[720px]"
-			{quizAttempts}
-			{quizes}
-			{materials}
-		/>
-	</section>
 </div>

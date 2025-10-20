@@ -59,6 +59,20 @@
 			: items;
 	});
 
+	let expandedItems = $state<Record<string, boolean>>({});
+
+	function setItemExpanded(itemId: string, expanded: boolean) {
+		expandedItems = { ...expandedItems, [itemId]: expanded };
+	}
+
+	function toggleItemExpanded(itemId: string) {
+		setItemExpanded(itemId, !isItemExpanded(itemId));
+	}
+
+	function isItemExpanded(itemId: string): boolean {
+		return !!expandedItems[itemId];
+	}
+
 	function formatDateTime(value: string): string {
 		if (!value) return '';
 		try {
@@ -102,7 +116,7 @@
 	<!-- Left column: Quiz info and questions -->
 	<section class="flex flex-1 flex-col gap-4 sm:min-h-0">
 		{#if quiz}
-			<div class="space-y-4">
+			<div class="bg-base-200 space-y-4 rounded-2xl p-4">
 				<div class="flex flex-wrap items-start justify-between gap-3">
 					<h1 class="text-3xl font-bold leading-tight">{quiz.title || 'Quiz'}</h1>
 					{#if quiz.visibility === QuizesVisibilityOptions.public || quiz.visibility === QuizesVisibilityOptions.search}
@@ -138,43 +152,137 @@
 				</div>
 			</div>
 
-			<div class="flex flex-1 flex-col gap-3 sm:min-h-0">
-				<h2 class="text-xl font-semibold">Questions</h2>
-
-				<Input
-					class="w-full sm:shrink-0"
-					placeholder="Search questions..."
-					value={searchQuery}
-					oninput={(e) => {
-						const t = e.target as HTMLInputElement;
-						searchQuery = t.value;
-					}}
-				>
-					{#snippet children()}
-						<Search class="opacity-50" size={18} />
-					{/snippet}
-				</Input>
-
-				{#if filteredItems.length === 0}
-					<p class="py-6 text-center opacity-70">
-						{searchQuery ? 'Nothing found' : 'No questions yet'}
+			<div class="bg-base-200 flex flex-1 flex-col gap-3 rounded-2xl p-4 sm:min-h-0">
+				<div class="sm:shrink-0">
+					<h2 class="text-2xl font-semibold">Attempts History</h2>
+					<div class="py-2 sm:shrink-0">
+						<Button block color="primary" onclick={startQuiz}>
+							<Play size={18} />
+							Start New Attempt
+						</Button>
+					</div>
+					<p class="text-base-content/70 mt-1 text-sm">
+						{quizAttempts.length}
+						{quizAttempts.length === 1 ? 'attempt' : 'attempts'}
 					</p>
-				{:else}
-					<ul class="flex flex-1 flex-col gap-2 pr-1 sm:min-h-0 sm:overflow-y-auto">
-						{#each filteredItems as item, index}
-							<li
-								class="hover:bg-base-200 border-base-300 flex flex-col rounded-lg border transition"
-							>
-								<div class="flex items-start gap-3 p-3">
-									<span class="text-base-content/50 min-w-6 text-sm font-medium">
-										{index + 1}.
-									</span>
-									<p class="text-base-content/80 flex-1 text-sm leading-relaxed">
-										{item.question}
-									</p>
-								</div>
+				</div>
 
-								{#if item.answers && Array.isArray(item.answers)}
+				{#if quizAttempts.length === 0}
+					<div
+						class="border-base-200 bg-base-100 flex flex-col items-center gap-3 rounded-xl border p-8 text-center shadow-sm"
+					>
+						<BookOpen class="opacity-40" size={48} />
+						<div>
+							<p class="font-medium">No attempts yet</p>
+							<p class="text-base-content/70 text-sm">
+								Start your first quiz attempt to see it here.
+							</p>
+						</div>
+					</div>
+				{:else}
+					<ul class="flex flex-1 flex-col gap-3 pr-1 sm:min-h-0 sm:overflow-y-auto">
+						{#each quizAttempts as attempt}
+							{@const score = getAttemptScore(attempt)}
+							{@const hasCompleted = Boolean(attempt.feedback)}
+							<li>
+								<a
+									class="border-base-200 hover:bg-base-200/60 bg-base-100 group flex flex-col gap-3 rounded-xl border p-4 no-underline shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+									href={hasCompleted
+										? `/quizes/${quiz?.id}/attempts/${attempt.id}/feedback`
+										: `/quizes/${quiz?.id}/attempts/${attempt.id}`}
+								>
+									<div class="flex items-start justify-between gap-3">
+										<div class="flex-1">
+											<div class="text-base-content/70 flex items-center gap-2 text-sm">
+												<Clock size={14} class="opacity-60" />
+												<span>{formatDateTime(attempt.updated)}</span>
+											</div>
+										</div>
+										<div class="flex items-center gap-2">
+											{#if hasCompleted}
+												<span class="badge badge-primary badge-lg">
+													{score.correct} / {score.total}
+												</span>
+											{:else}
+												<span class="badge badge-outline badge-lg"> In Progress </span>
+											{/if}
+										</div>
+									</div>
+
+									{#if hasCompleted}
+										<div class="text-base-content/70 text-sm">
+											<p>✓ Completed</p>
+										</div>
+									{:else}
+										<div class="text-base-content/70 text-sm">
+											<p>Continue where you left off</p>
+										</div>
+									{/if}
+								</a>
+							</li>
+						{/each}
+					</ul>
+				{/if}
+			</div>
+		{:else}
+			<div class="flex flex-1 items-center justify-center">
+				<p class="loading loading-spinner loading-lg"></p>
+			</div>
+		{/if}
+	</section>
+
+	<!-- Right column: Quiz attempts history -->
+	<section class="bg-base-200 flex flex-1 flex-col gap-4 rounded-2xl p-4 sm:min-h-0">
+		<h2 class="text-xl font-semibold">Questions</h2>
+
+		<Input
+			class="w-full sm:shrink-0"
+			placeholder="Search questions..."
+			value={searchQuery}
+			oninput={(e) => {
+				const t = e.target as HTMLInputElement;
+				searchQuery = t.value;
+			}}
+		>
+			{#snippet children()}
+				<Search class="opacity-50" size={18} />
+			{/snippet}
+		</Input>
+
+		{#if filteredItems.length === 0}
+			<p class="py-6 text-center opacity-70">
+				{searchQuery ? 'Nothing found' : 'No questions yet'}
+			</p>
+		{:else}
+			<ul class="flex flex-1 flex-col gap-2 pr-1 sm:min-h-0 sm:overflow-y-auto">
+				{#each filteredItems as item, index}
+					<li class="hover:bg-base-200 border-base-300 flex flex-col rounded-lg border transition">
+						<button
+							type="button"
+							class="focus-visible:ring-primary/60 flex w-full items-start gap-3 p-3 text-left transition focus-visible:outline-none focus-visible:ring-2"
+							onclick={() => toggleItemExpanded(item.id)}
+						>
+							<span class="text-base-content/50 min-w-6 text-sm font-medium">
+								{index + 1}.
+							</span>
+							<p class="text-base-content/80 flex-1 text-sm leading-relaxed">
+								{item.question}
+							</p>
+							<span class="ml-2 shrink-0">
+								{#if isItemExpanded(item.id)}
+									<ChevronDown size={20} />
+								{:else}
+									<ChevronRight size={20} />
+								{/if}
+							</span>
+						</button>
+
+						{#if item.answers && Array.isArray(item.answers)}
+							<div
+								class="grid transition-[grid-template-rows] duration-200 ease-out"
+								style={`grid-template-rows: ${isItemExpanded(item.id) ? '1fr' : '0fr'}`}
+							>
+								<div class="min-h-0 overflow-hidden">
 									<div class="border-base-200 border-t px-3 pb-3 pt-2">
 										<ul class="space-y-2">
 											{#each item.answers as answer, answerIndex}
@@ -195,86 +303,9 @@
 											{/each}
 										</ul>
 									</div>
-								{/if}
-							</li>
-						{/each}
-					</ul>
-				{/if}
-			</div>
-
-			<div class="pt-4 sm:shrink-0">
-				<Button block color="primary" onclick={startQuiz}>
-					<Play size={18} />
-					Start New Attempt
-				</Button>
-			</div>
-		{:else}
-			<div class="flex flex-1 items-center justify-center">
-				<p class="loading loading-spinner loading-lg"></p>
-			</div>
-		{/if}
-	</section>
-
-	<!-- Right column: Quiz attempts history -->
-	<section class="flex flex-1 flex-col gap-4 sm:min-h-0">
-		<div class="sm:shrink-0">
-			<h2 class="text-2xl font-semibold">Attempts History</h2>
-			<p class="text-base-content/70 mt-1 text-sm">
-				{quizAttempts.length}
-				{quizAttempts.length === 1 ? 'attempt' : 'attempts'}
-			</p>
-		</div>
-
-		{#if quizAttempts.length === 0}
-			<div
-				class="border-base-200 bg-base-100 flex flex-col items-center gap-3 rounded-xl border p-8 text-center shadow-sm"
-			>
-				<BookOpen class="opacity-40" size={48} />
-				<div>
-					<p class="font-medium">No attempts yet</p>
-					<p class="text-base-content/70 text-sm">Start your first quiz attempt to see it here.</p>
-				</div>
-			</div>
-		{:else}
-			<ul class="flex flex-1 flex-col gap-3 pr-1 sm:min-h-0 sm:overflow-y-auto">
-				{#each quizAttempts as attempt}
-					{@const score = getAttemptScore(attempt)}
-					{@const hasCompleted = Boolean(attempt.feedback)}
-					<li>
-						<a
-							class="border-base-200 hover:bg-base-200/60 bg-base-100 group flex flex-col gap-3 rounded-xl border p-4 no-underline shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-							href={hasCompleted
-								? `/quizes/${quiz?.id}/attempts/${attempt.id}/feedback`
-								: `/quizes/${quiz?.id}/attempts/${attempt.id}`}
-						>
-							<div class="flex items-start justify-between gap-3">
-								<div class="flex-1">
-									<div class="text-base-content/70 flex items-center gap-2 text-sm">
-										<Clock size={14} class="opacity-60" />
-										<span>{formatDateTime(attempt.updated)}</span>
-									</div>
-								</div>
-								<div class="flex items-center gap-2">
-									{#if hasCompleted}
-										<span class="badge badge-primary badge-lg">
-											{score.correct} / {score.total}
-										</span>
-									{:else}
-										<span class="badge badge-outline badge-lg"> In Progress </span>
-									{/if}
 								</div>
 							</div>
-
-							{#if hasCompleted}
-								<div class="text-base-content/70 text-sm">
-									<p>✓ Completed</p>
-								</div>
-							{:else}
-								<div class="text-base-content/70 text-sm">
-									<p>Continue where you left off</p>
-								</div>
-							{/if}
-						</a>
+						{/if}
 					</li>
 				{/each}
 			</ul>
