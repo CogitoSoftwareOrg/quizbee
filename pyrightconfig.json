@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/pyright/main/packages/pyright/schema/pyrightconfig.schema.json",
-  "venvPath": "./api",
+  "venvPath": "./apps/api",
   "venv": ".venv",
   "pythonVersion": "3.13",
   "executionEnvironments": [

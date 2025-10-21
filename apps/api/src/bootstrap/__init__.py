@@ -12,7 +12,8 @@ from apps.messages import messages_router
 from apps.quizes import quizes_router
 from apps.materials import materials_router
 from lib.clients import init_meilisearch, ensure_admin_pb, init_admin_pb
-from lib.settings import settings
+
+from .cors import cors_middleware
 
 mcp = FastMCP("MCP", stateless_http=True)
 
@@ -51,40 +52,7 @@ def create_app():
     app.include_router(materials_router)
     app.include_router(quiz_attempts_router)
 
-    # CORS: allow credentials from specific app origins (including PR subdomains)
-    allowed_origins: list[str] = []
-    allow_origin_regex: str | None = None
-
-    if settings.env == "local":
-        allowed_origins = [
-            "http://localhost:5173",
-            "http://127.0.0.1:5173",
-            "http://localhost:4321",
-            "http://127.0.0.1:4321",
-        ]
-    elif settings.env == "preview":
-        pr = settings.pr_id
-        assert pr is not None
-        allowed_origins = [
-            f"https://{pr}-app.quizbee.academy",
-            f"https://{pr}-web.quizbee.academy",
-        ]
-    elif settings.env == "production":
-        # Production/base
-        allowed_origins = [
-            "https://app.quizbee.academy",
-            "https://web.quizbee.academy",
-        ]
-
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=allowed_origins,
-        allow_origin_regex=allow_origin_regex,
-        allow_methods=["GET", "POST", "OPTIONS", "PATCH", "PUT"],
-        allow_credentials=True,
-        allow_headers=["*"],
-        # expose_headers=["Mcp-Session-Id"], # Only for stateful mode
-    )
+    cors_middleware(app)
 
     mcp.settings.streamable_http_path = "/"
     app.mount("/mcp", mcp.streamable_http_app())
