@@ -1,7 +1,7 @@
-from langfuse import Langfuse
-
 from typing import Any
+from langfuse import Langfuse
 from langfuse import LangfuseSpan
+from pydantic_ai import AgentRunResult
 from pydantic_ai.result import StreamedRunResult
 
 
@@ -10,14 +10,19 @@ from lib.config.llms import LLMCosts
 
 async def update_span_with_result(
     lf: Langfuse,
-    result: StreamedRunResult | Any,
+    result: StreamedRunResult | AgentRunResult | Any,
     span: LangfuseSpan,
     user_id: str,
     session_id: str,
     model: str,
     # costs: LLMCosts,
 ):
-    output = await result.get_output()
+    if isinstance(result, StreamedRunResult):
+        output = await result.get_output()
+    elif isinstance(result, AgentRunResult):
+        output = result.output
+    else:
+        raise ValueError(f"Unexpected result type: {type(result)}")
 
     usage = result.usage()
     input_nc = usage.input_tokens - usage.cache_read_tokens
