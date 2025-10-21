@@ -21,6 +21,6 @@ STRIPE_MONTHLY_LIMITS_MAP = {
     "pro": {
         "quizItemsLimit": 2000,
         "messagesLimit": 2000,
-        "bytesLimit": 83_886_080,  # 100GB
+        "bytesLimit": 83_886_080,  # 10GB
     },
 }

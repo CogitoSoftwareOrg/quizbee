@@ -9,6 +9,16 @@
 /* View transition только для page-root */
 #page-root {
 	view-transition-name: page;
+	/* Оптимизация для анимаций */
+	will-change: transform, opacity;
+}
+
+/* Оптимизация для мобильных устройств */
+@media (max-width: 640px) {
+	#page-root {
+		/* Упрощаем анимации на мобильных для лучшей производительности */
+		will-change: transform;
+	}
 }
 
 ::view-transition-old(root),
@@ -16,30 +26,29 @@
 	animation: none;
 }
 
-/* Slide */
+/* Slide - оптимизирована для мобильных */
 :root[data-vt='slide']::view-transition-old(page) {
-	animation: vt-slide-out 0.45s cubic-bezier(0.2, 0.9, 0.1, 1) forwards;
+	animation: vt-slide-out 0.3s cubic-bezier(0.2, 0.9, 0.1, 1) forwards;
 }
 :root[data-vt='slide']::view-transition-new(page) {
-	animation: vt-slide-in 0.45s cubic-bezier(0.2, 0.9, 0.1, 1) forwards;
+	animation: vt-slide-in 0.3s cubic-bezier(0.2, 0.9, 0.1, 1) forwards;
 }
 @keyframes vt-slide-out {
 	to {
-		transform: translateX(-3.5rem);
+		transform: translateX(-2rem);
 		opacity: 0;
-		filter: blur(2px);
+		/* Убрали blur для лучшей производительности на мобильных */
 	}
 }
 @keyframes vt-slide-in {
 	from {
-		transform: translateX(3.5rem);
+		transform: translateX(2rem);
 		opacity: 0;
-		filter: blur(2px);
+		/* Убрали blur для лучшей производительности на мобильных */
 	}
 	to {
 		transform: none;
 		opacity: 1;
-		filter: none;
 	}
 }
 
