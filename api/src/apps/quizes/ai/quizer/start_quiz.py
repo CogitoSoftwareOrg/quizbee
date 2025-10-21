@@ -63,30 +63,32 @@ async def start_generating_quiz_task(
             if txt:
                 content = await load_file_text(http, "materials", mid, txt)
                 texts.append((txt, content))
-    
+
     # Concatenate all texts with file separators
     formatted_texts = []
     for filename, content in texts:
         formatted_texts.append(f"-------NEW FILE {filename}-------------\n{content}")
     concatenated_texts = "\n\n".join(formatted_texts)
-    
+
     # Check total token count
     tokens = ENCODERS[LLMS.GPT_5_MINI].encode(concatenated_texts)
     total_tokens = len(tokens)
-    
+
     logging.info(f"Total tokens from all materials: {total_tokens}")
-    
+
     # If exceeds 100k tokens, use important_sentences to reduce to 50k
     if total_tokens > 80_000:
-        logging.info(f"Token count ({total_tokens}) exceeds 100k, applying summarization to 50k tokens...")
+        logging.info(
+            f"Token count ({total_tokens}) exceeds 100k, applying summarization to 50k tokens..."
+        )
         concatenated_texts = summarize_to_fixed_tokens(
-            concatenated_texts, 
-            target_token_count=52000, 
+            concatenated_texts,
+            target_token_count=52000,
         )
         # Recalculate tokens after summarization
         tokens = ENCODERS[LLMS.GPT_5_MINI].encode(concatenated_texts)
         logging.info(f"After summarization: {len(tokens)} tokens")
-    
+
     # Use the processed text
     texts = concatenated_texts
 
@@ -110,7 +112,6 @@ async def start_generating_quiz_task(
     hits = search_result.hits
     quiz_ids = [hit.get("quizId", "") for hit in hits]
     questions = []
-
 
     # Avoid repeating questions from similar quizzes
     if quiz.get("avoidRepeat"):

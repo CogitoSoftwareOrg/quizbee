@@ -3,7 +3,7 @@ import logging
 import httpx
 from pocketbase.models.dtos import Record
 from lib.clients import AdminPB, HTTPAsyncClient, langfuse_client
-from lib.utils import cache_key
+from lib.utils import cache_key, update_span_with_result
 from lib.ai.models import QuizerDeps
 
 from .agent import (
@@ -119,29 +119,7 @@ async def generate_quiz_task(
 
                         seen = len(items)
 
-            usage = result.usage()
-            input_nc = usage.input_tokens - usage.cache_read_tokens
-            input_cah = usage.cache_read_tokens
-            outp = usage.output_tokens
-
-            costs = QUIZER_PRIORITY_COSTS if priority else QUIZER_COSTS
-
-            input_nc_price = round(input_nc * costs.input_nc, 4)
-            input_cah_price = round(input_cah * costs.input_cah, 4)
-            outp_price = round(outp * costs.output, 4)
-
-            span.update_trace(
-                input=f"NC: {input_nc_price} + CAH: {input_cah_price} => {input_nc_price + input_cah_price}",
-                output=f"OUTP: {outp_price} => Total: {input_nc_price + input_cah_price + outp_price}",
-                user_id=user_id,
-                session_id=attempt_id,
-                metadata={
-                    "input_nc_price": input_nc_price,
-                    "input_cah_price": input_cah_price,
-                    "outp_price": outp_price,
-                    "total_price": input_nc_price + input_cah_price + outp_price,
-                },
-            )
+            await update_span_with_result(result, span, user_id, attempt_id)
 
     except httpx.ReadError as e:
         if cancelled:
@@ -250,24 +228,7 @@ async def generate_oneshot(
                         "question": qi.question,
                     },
                 )
-            usage = res.usage()
-            input_nc = usage.input_tokens - usage.cache_read_tokens
-            input_cah = usage.cache_read_tokens
-            outp = usage.output_tokens
-
-            input_nc_price = round(input_nc * QUIZER_COSTS.input_nc, 4)
-            input_cah_price = round(input_cah * QUIZER_COSTS.input_cah, 4)
-            outp_price = round(outp * QUIZER_COSTS.output, 4)
-
-            span.update_trace(
-                input=f"NC: {input_nc_price} + CAH: {input_cah_price} + OUTP: {outp_price} =>",
-                output=f"Total: {input_nc_price + input_cah_price + outp_price}",
-                user_id=user_id,
-                session_id=attempt_id,
-                metadata={
-                    "quiz_id": quiz_id,
-                },
-            )
+            await update_span_with_result(res, span, user_id, attempt_id)
 
     except Exception as e:
         logging.exception("Agent run failed for quiz %s: %s", quiz_id, e)

@@ -47,35 +47,39 @@
 	const quizList: QuizItem[] = $derived.by(() => {
 		const materialMap = new Map(materials.map((material) => [material.id, material.title]));
 
-		return quizes.map((quiz) => {
-			const quizItems =
-				(quizItemsStore.quizItemsMap.get(quiz.id) as QuizItemsResponse[]) ||
-				((quiz.expand as QuizExpand)?.quizItems_via_quiz as QuizItemsResponse[]) ||
-				[];
+		return quizes
+			.filter((quiz) => quiz.status === 'final')
+			.map((quiz) => {
+				const quizItems =
+					(quizItemsStore.quizItemsMap.get(quiz.id) as QuizItemsResponse[]) ||
+					((quiz.expand as QuizExpand)?.quizItems_via_quiz as QuizItemsResponse[]) ||
+					[];
 
-			const attempts = quizAttemptsStore.quizAttempts.filter((attempt) => attempt.quiz === quiz.id);
+				const attempts = quizAttemptsStore.quizAttempts.filter(
+					(attempt) => attempt.quiz === quiz.id
+				);
 
-			const materialTitles = (quiz.materials || [])
-				.map((id) => materialMap.get(id))
-				.filter((title): title is string => Boolean(title));
+				const materialTitles = (quiz.materials || [])
+					.map((id) => materialMap.get(id))
+					.filter((title): title is string => Boolean(title));
 
-			const tags = Array.isArray(quiz.tags) ? (quiz.tags as string[]) : [];
+				const tags = Array.isArray(quiz.tags) ? (quiz.tags as string[]) : [];
 
-			return {
-				quizId: quiz.id,
-				title: quiz.title || 'Untitled quiz',
-				summary: quiz.summary || '',
-				difficulty: quiz.difficulty || 'intermediate',
-				status: quiz.status || 'draft',
-				visibility: quiz.visibility || 'private',
-				tags,
-				created: quiz.created,
-				updated: quiz.updated,
-				materials: materialTitles,
-				questionsCount: quizItems.length,
-				attemptsCount: attempts.length
-			} satisfies QuizItem;
-		});
+				return {
+					quizId: quiz.id,
+					title: quiz.title || 'Untitled quiz',
+					summary: quiz.summary || '',
+					difficulty: quiz.difficulty || 'intermediate',
+					status: quiz.status || 'draft',
+					visibility: quiz.visibility || 'private',
+					tags,
+					created: quiz.created,
+					updated: quiz.updated,
+					materials: materialTitles,
+					questionsCount: quizItems.length,
+					attemptsCount: attempts.length
+				} satisfies QuizItem;
+			});
 	});
 
 	// Filter state

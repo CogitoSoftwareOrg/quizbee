@@ -7,7 +7,7 @@ from apps.auth import User, auth_user
 from apps.billing import load_subscription, Subscription
 from apps.quizes.ai import summary_and_index
 from lib.clients import AdminPB, langfuse_client, HTTPAsyncClient, MeilisearchClient
-from lib.utils import cache_key
+from lib.utils import cache_key, update_span_with_result
 
 from .ai import FEEDBACKER_COSTS, FeedbackerDeps, feedbacker_agent
 
@@ -52,27 +52,7 @@ async def _generate_feedback_task(
         if payload.mode != "feedback":
             raise ValueError(f"Unexpected output type: {type(res.output)}")
 
-        usage = res.usage()
-        input_nc = usage.input_tokens - usage.cache_read_tokens
-        input_cah = usage.cache_read_tokens
-        outp = usage.output_tokens
-
-        input_nc_price = round(input_nc * FEEDBACKER_COSTS.input_nc, 4)
-        input_cah_price = round(input_cah * FEEDBACKER_COSTS.input_cah, 4)
-        outp_price = round(outp * FEEDBACKER_COSTS.output, 4)
-
-        span.update_trace(
-            input=f"NC: {input_nc_price} + CAH: {input_cah_price} => {input_nc_price + input_cah_price}",
-            output=f"OUTP: {outp_price} => Total: {input_nc_price + input_cah_price + outp_price}",
-            user_id=user_id,
-            session_id=attempt_id,
-            metadata={
-                "input_nc_price": input_nc_price,
-                "input_cah_price": input_cah_price,
-                "outp_price": outp_price,
-                "total_price": input_nc_price + input_cah_price + outp_price,
-            },
-        )
+        await update_span_with_result(res, span, user_id, attempt_id)
 
     await admin_pb.collection("quizAttempts").update(
         attempt_id,
@@ -105,12 +85,6 @@ async def update_quiz_attempt_with_feedback(
 
     # Only summarize and index if quiz is not final
     if quiz.get("status") != "final":
-        if sub.get("tariff") == "free":
-            await admin_pb.collection("quizes").update(
-                quiz.get("id", ""),
-                {"visibility": "search"},
-            )
-
         background.add_task(
             summary_and_index,
             admin_pb,

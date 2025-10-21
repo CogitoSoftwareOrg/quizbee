@@ -3,7 +3,7 @@ import json
 
 from lib.ai.models import SummarizerDeps
 from lib.clients import AdminPB, HTTPAsyncClient, MeilisearchClient, langfuse_client
-from lib.utils import cache_key
+from lib.utils import cache_key, update_span_with_result
 
 from apps.materials.utils import load_file_text
 
@@ -73,27 +73,7 @@ async def summary_and_index(
 
         summary = payload.summary
 
-        usage = res.usage()
-        input_nc = usage.input_tokens - usage.cache_read_tokens
-        input_cah = usage.cache_read_tokens
-        outp = usage.output_tokens
-
-        input_nc_price = round(input_nc * SUMMARIZER_COSTS.input_nc, 4)
-        input_cah_price = round(input_cah * SUMMARIZER_COSTS.input_cah, 4)
-        outp_price = round(outp * SUMMARIZER_COSTS.output, 4)
-
-        span.update_trace(
-            input=f"NC: {input_nc_price} + CAH: {input_cah_price} => {input_nc_price + input_cah_price}",
-            output=f"OUTP: {outp_price} => Total: {input_nc_price + input_cah_price + outp_price}",
-            user_id=user_id,
-            session_id=attempt_id,
-            metadata={
-                "input_nc_price": input_nc_price,
-                "input_cah_price": input_cah_price,
-                "outp_price": outp_price,
-                "total_price": input_nc_price + input_cah_price + outp_price,
-            },
-        )
+        await update_span_with_result(res, span, user_id, attempt_id)
 
     adds = payload.additional
     await admin_pb.collection("quizes").update(

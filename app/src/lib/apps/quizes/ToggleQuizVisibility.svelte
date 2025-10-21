@@ -4,32 +4,20 @@
 	import { Modal, Button } from '@cogisoft/ui-svelte-daisy';
 
 	import { pb } from '$lib/pb/client';
-	import { QuizesVisibilityOptions, SubscriptionsTariffOptions } from '$lib/pb/pocketbase-types';
+	import { QuizesVisibilityOptions } from '$lib/pb/pocketbase-types';
 	import { uiStore } from '$lib/apps/users/ui.svelte';
 
 	interface Props {
 		quizId: string;
 		visibility: QuizesVisibilityOptions;
-		tariff?: SubscriptionsTariffOptions;
-		onPaywallClick?: () => void;
 		onchange?: (visibility: QuizesVisibilityOptions) => void;
 	}
 
-	const {
-		quizId,
-		visibility,
-		tariff = SubscriptionsTariffOptions.free,
-		onPaywallClick,
-		onchange
-	}: Props = $props();
+	const { quizId, visibility, onchange }: Props = $props();
 
 	let currentVisibility = $state<QuizesVisibilityOptions>(visibility);
 	let showSearchConfirmModal = $state(false);
 	let isUpdating = $state(false);
-
-	const isPaidUser = $derived(
-		tariff === SubscriptionsTariffOptions.plus || tariff === SubscriptionsTariffOptions.pro
-	);
 
 	// Derived states
 	const isPublic = $derived(
@@ -98,112 +86,78 @@
 </script>
 
 <div class="flex flex-col gap-3">
-	{#if !isPaidUser}
-		<!-- Free User: Show badge with paywall trigger -->
-		<button
-			onclick={() => uiStore.setPaywallOpen(true)}
-			class="border-primary/20 bg-primary/5 hover:border-primary/40 hover:bg-primary/10 group flex cursor-pointer items-center justify-between gap-3 rounded-lg border p-3 shadow-sm transition-all"
-		>
-			<div class="flex flex-1 items-center gap-2.5">
-				<div class="bg-primary/20 text-primary rounded-lg p-1.5">
+	<!-- Paid User: Show full toggle controls -->
+	<!-- Main Toggle: Private <-> Public -->
+	<div
+		class="border-base-300 bg-base-100 flex items-center justify-between gap-3 rounded-lg border p-3 shadow-sm"
+	>
+		<div class="flex flex-1 items-center gap-2.5">
+			{#if isPublic}
+				<div class="bg-success/10 text-success rounded-lg p-1.5">
 					<Globe size={18} />
 				</div>
-
-				<div class="flex-1 text-left">
-					<div class="flex items-center gap-2">
-						<h4 class="text-sm font-semibold">Public & Searchable</h4>
-						<span class="badge badge-primary badge-xs">Free</span>
-					</div>
-					<p class="text-base-content/70 text-xs">Everyone can find and access this quiz</p>
+			{:else}
+				<div class="bg-base-300 text-base-content/60 rounded-lg p-1.5">
+					<Lock size={18} />
 				</div>
-			</div>
+			{/if}
 
-			<div
-				class="bg-warning/20 text-warning rounded-lg p-1.5 transition-transform group-hover:scale-110"
-			>
-				<Crown size={18} />
+			<div class="flex-1">
+				<div class="flex items-center gap-2">
+					<h4 class="text-sm font-semibold">
+						{isPublic ? 'Public' : 'Private'}
+					</h4>
+					{#if currentVisibility === QuizesVisibilityOptions.search}
+						<span class="badge badge-primary badge-xs">Searchable</span>
+					{/if}
+				</div>
+				<p class="text-base-content/70 text-xs">
+					{isPublic ? 'Anyone with the link can access' : 'Only you can access'}
+				</p>
 			</div>
-		</button>
-
-		<div class="bg-warning/10 border-warning/20 rounded-lg border p-2.5">
-			<p class="text-warning text-xs font-medium">
-				💡 Upgrade to control quiz visibility and make it private
-			</p>
 		</div>
-	{:else}
-		<!-- Paid User: Show full toggle controls -->
-		<!-- Main Toggle: Private <-> Public -->
+
+		<input
+			type="checkbox"
+			class="toggle toggle-success toggle-md"
+			checked={isPublic}
+			disabled={isUpdating}
+			onchange={(e) => handleMainToggle(e.currentTarget.checked)}
+			style="--tglbg: oklch(var(--b3));"
+		/>
+	</div>
+
+	<!-- Search Toggle: Public <-> Search (only visible when public) -->
+	{#if isPublic}
 		<div
-			class="border-base-300 bg-base-100 flex items-center justify-between gap-3 rounded-lg border p-3 shadow-sm"
+			class="border-primary/20 bg-primary/5 flex items-center justify-between gap-3 rounded-lg border p-3 shadow-sm transition-all"
 		>
 			<div class="flex flex-1 items-center gap-2.5">
-				{#if isPublic}
-					<div class="bg-success/10 text-success rounded-lg p-1.5">
-						<Globe size={18} />
-					</div>
-				{:else}
-					<div class="bg-base-300 text-base-content/60 rounded-lg p-1.5">
-						<Lock size={18} />
-					</div>
-				{/if}
+				<div
+					class={isSearchable
+						? 'bg-primary/20 text-primary rounded-lg p-1.5'
+						: 'bg-base-300 text-base-content/60 rounded-lg p-1.5'}
+				>
+					<Search size={18} />
+				</div>
 
 				<div class="flex-1">
-					<div class="flex items-center gap-2">
-						<h4 class="text-sm font-semibold">
-							{isPublic ? 'Public' : 'Private'}
-						</h4>
-						{#if currentVisibility === QuizesVisibilityOptions.search}
-							<span class="badge badge-primary badge-xs">Searchable</span>
-						{/if}
-					</div>
+					<h4 class="text-sm font-semibold">Make Searchable</h4>
 					<p class="text-base-content/70 text-xs">
-						{isPublic ? 'Anyone with the link can access' : 'Only you can access'}
+						{isSearchable ? 'Appears in search results' : 'Direct link only'}
 					</p>
 				</div>
 			</div>
 
 			<input
 				type="checkbox"
-				class="toggle toggle-success toggle-md"
-				checked={isPublic}
+				class="toggle toggle-primary toggle-md"
+				checked={isSearchable}
 				disabled={isUpdating}
-				onchange={(e) => handleMainToggle(e.currentTarget.checked)}
+				onclick={handleSearchToggleClick}
 				style="--tglbg: oklch(var(--b3));"
 			/>
 		</div>
-
-		<!-- Search Toggle: Public <-> Search (only visible when public) -->
-		{#if isPublic}
-			<div
-				class="border-primary/20 bg-primary/5 flex items-center justify-between gap-3 rounded-lg border p-3 shadow-sm transition-all"
-			>
-				<div class="flex flex-1 items-center gap-2.5">
-					<div
-						class={isSearchable
-							? 'bg-primary/20 text-primary rounded-lg p-1.5'
-							: 'bg-base-300 text-base-content/60 rounded-lg p-1.5'}
-					>
-						<Search size={18} />
-					</div>
-
-					<div class="flex-1">
-						<h4 class="text-sm font-semibold">Make Searchable</h4>
-						<p class="text-base-content/70 text-xs">
-							{isSearchable ? 'Appears in search results' : 'Direct link only'}
-						</p>
-					</div>
-				</div>
-
-				<input
-					type="checkbox"
-					class="toggle toggle-primary toggle-md"
-					checked={isSearchable}
-					disabled={isUpdating}
-					onclick={handleSearchToggleClick}
-					style="--tglbg: oklch(var(--b3));"
-				/>
-			</div>
-		{/if}
 	{/if}
 </div>
 

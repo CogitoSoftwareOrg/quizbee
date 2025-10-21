@@ -10,7 +10,7 @@ from apps.billing import (
     explainer_call_quota_protection,
 )
 from lib.clients import AdminPB, HTTPAsyncClient, langfuse_client
-from lib.utils import sse
+from lib.utils import sse, update_span_with_result
 from apps.auth import User
 from lib.utils.cache_key import cache_key
 
@@ -124,27 +124,8 @@ async def sse_messages(
                     yield sse(
                         "chunk", json.dumps({"text": text, "msg_id": ai_msg_id, "i": i})
                     )
-            usage = run.usage()
-            input_nc = usage.input_tokens - usage.cache_read_tokens
-            input_cah = usage.cache_read_tokens
-            outp = usage.output_tokens
+            await update_span_with_result(run, span, user_id, attempt_id)
 
-            input_nc_price = round(input_nc * EXPLAINER_COSTS.input_nc, 4)
-            input_cah_price = round(input_cah * EXPLAINER_COSTS.input_cah, 4)
-            outp_price = round(outp * EXPLAINER_COSTS.output, 4)
-
-            span.update_trace(
-                input=f"NC: {input_nc_price} + CAH: {input_cah_price} => {input_nc_price + input_cah_price}",
-                output=f"OUTP: {outp_price} => Total: {input_nc_price + input_cah_price + outp_price}",
-                user_id=user_id,
-                session_id=attempt_id,
-                metadata={
-                    "input_nc_price": input_nc_price,
-                    "input_cah_price": input_cah_price,
-                    "outp_price": outp_price,
-                    "total_price": input_nc_price + input_cah_price + outp_price,
-                },
-            )
         await admin_pb.collection("messages").update(
             ai_msg_id,
             {
@@ -240,27 +221,7 @@ async def create_message(
         if payload.mode != "explanation":
             raise ValueError(f"Unexpected output type: {type(res.output)}")
 
-        usage = res.usage()
-        input_nc = usage.input_tokens - usage.cache_read_tokens
-        input_cah = usage.cache_read_tokens
-        outp = usage.output_tokens
-
-        input_nc_price = round(input_nc * EXPLAINER_COSTS.input_nc, 4)
-        input_cah_price = round(input_cah * EXPLAINER_COSTS.input_cah, 4)
-        outp_price = round(outp * EXPLAINER_COSTS.output, 4)
-
-        span.update_trace(
-            input=f"NC: {input_nc_price} + CAH: {input_cah_price} + OUTP: {outp_price} =>",
-            output=f"Total: {input_nc_price + input_cah_price + outp_price}",
-            user_id=user_id,
-            session_id=attempt_id,
-            metadata={
-                "input_nc_price": input_nc_price,
-                "input_cah_price": input_cah_price,
-                "outp_price": outp_price,
-                "total_price": input_nc_price + input_cah_price + outp_price,
-            },
-        )
+        await update_span_with_result(res, span, user_id, attempt_id)
 
     await admin_pb.collection("messages").update(
         ai_msg_id,

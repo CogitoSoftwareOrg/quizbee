@@ -75,7 +75,7 @@
 				<GlobalHeader />
 			</header>
 
-			<div class={['h-full min-w-0 flex-1 overflow-auto', !attemptingQuiz && 'pb-0 sm:pb-16']}>
+			<div class={['h-full min-w-0 flex-1 overflow-auto', !attemptingQuiz && '']}>
 				<div id="page-root" class={['h-full min-h-full', !attemptingQuiz && 'p-4 sm:p-3']}>
 					{@render children?.()}
 				</div>

@@ -117,7 +117,7 @@
 
 				<!-- Main Card -->
 				<div
-					class="card bg-base-100 border-base-300 overflow-x-hidden border-2 pb-12 shadow-xl backdrop-blur-sm md:pb-0"
+					class="card bg-base-100 border-base-300 overflow-x-hidden border-2 shadow-xl backdrop-blur-sm md:pb-0"
 				>
 					<div class="card-body p-6.5 overflow-x-hidden">
 						<!-- Description Section -->

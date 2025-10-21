@@ -93,20 +93,21 @@
 		};
 	}
 
-	async function startQuiz() {
+	async function startQuiz(force = false) {
 		if (!user || !quiz) return;
 		sessionStorage.removeItem('postLoginPath');
 		const attempt = await pb!.collection('quizAttempts').create({
 			user: user.id,
 			quiz: quiz.id
 		});
-		quizAttemptsStore.add(attempt);
+		if (force) quizAttemptsStore.add(attempt);
+
 		await goto(`/quizes/${quiz.id}/attempts/${attempt.id}`);
 	}
 
 	onMount(async () => {
 		if (!forceStart || !user || !quiz) return;
-		await startQuiz();
+		await startQuiz(true);
 	});
 </script>
 
@@ -128,7 +129,6 @@
 					<ToggleQuizVisibility
 						quizId={quiz.id}
 						visibility={quiz.visibility || QuizesVisibilityOptions.private}
-						tariff={subscription?.tariff}
 					/>
 				{/if}
 
@@ -156,7 +156,7 @@
 				<div class="sm:shrink-0">
 					<h2 class="text-2xl font-semibold">Attempts History</h2>
 					<div class="py-2 sm:shrink-0">
-						<Button block color="primary" onclick={startQuiz}>
+						<Button block color="primary" onclick={() => startQuiz(false)}>
 							<Play size={18} />
 							Start New Attempt
 						</Button>

@@ -10,4 +10,5 @@ langfuse_client = Langfuse(
     environment=settings.env,
 )
 
-Agent.instrument_all()
+if settings.env != "production":
+    Agent.instrument_all()
