@@ -26,9 +26,9 @@ QUIZER_PRIORITY_COSTS = LLMSCosts.GPT_5_MINI_PRIORITY
 
 
 quizer_agent = Agent(
+    # instrument=True,
     model=QUIZER_LLM,
     deps_type=QuizerDeps,
-    instrument=True,
     output_type=AgentEnvelope,
     history_processors=[inject_request_prompt],
     retries=3,

@@ -70,9 +70,9 @@ FEEDBACKER_COSTS = LLMSCosts.GPT_5_MINI
 # FEEDBACKER_COSTS = LLMSCosts.GROK_4_FAST
 
 feedbacker_agent = Agent(
+    # instrument=True,
     model=FEEDBACKER_LLM,
     deps_type=FeedbackerDeps,
-    instrument=True,
     output_type=AgentEnvelope,
     history_processors=[inject_request_prompt],
     retries=3,

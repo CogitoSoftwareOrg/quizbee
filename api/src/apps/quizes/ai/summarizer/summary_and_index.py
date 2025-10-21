@@ -7,7 +7,7 @@ from lib.utils import cache_key, update_span_with_result
 
 from apps.materials.utils import load_file_text
 
-from .agent import SUMMARIZER_COSTS, summarizer_agent
+from .agent import SUMMARIZER_COSTS, SUMMARIZER_LLM, summarizer_agent
 
 
 async def summary_and_index(
@@ -73,7 +73,9 @@ async def summary_and_index(
 
         summary = payload.summary
 
-        await update_span_with_result(res, span, user_id, attempt_id)
+        await update_span_with_result(
+            langfuse_client, res, span, user_id, attempt_id, SUMMARIZER_LLM
+        )
 
     adds = payload.additional
     await admin_pb.collection("quizes").update(

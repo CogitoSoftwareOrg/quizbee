@@ -15,7 +15,7 @@ from apps.auth import User
 from lib.utils.cache_key import cache_key
 
 from .pb_to_ai import pb_to_ai
-from .ai import EXPLAINER_COSTS, ExplainerDeps, explainer_agent
+from .ai import EXPLAINER_COSTS, EXPLAINER_LLM, ExplainerDeps, explainer_agent
 
 messages_router = APIRouter(
     prefix="/messages",
@@ -124,7 +124,9 @@ async def sse_messages(
                     yield sse(
                         "chunk", json.dumps({"text": text, "msg_id": ai_msg_id, "i": i})
                     )
-            await update_span_with_result(run, span, user_id, attempt_id)
+            await update_span_with_result(
+                langfuse_client, run, span, user_id, attempt_id, EXPLAINER_LLM
+            )
 
         await admin_pb.collection("messages").update(
             ai_msg_id,
@@ -221,7 +223,9 @@ async def create_message(
         if payload.mode != "explanation":
             raise ValueError(f"Unexpected output type: {type(res.output)}")
 
-        await update_span_with_result(res, span, user_id, attempt_id)
+        await update_span_with_result(
+            langfuse_client, res, span, user_id, attempt_id, EXPLAINER_LLM
+        )
 
     await admin_pb.collection("messages").update(
         ai_msg_id,

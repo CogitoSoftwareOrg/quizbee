@@ -41,9 +41,9 @@ async def inject_system_prompt(
 
 
 explainer_agent = Agent(
+    # instrument=True,
     model=EXPLAINER_LLM,
     deps_type=ExplainerDeps,
-    instrument=True,
     history_processors=[inject_system_prompt],
     output_type=AgentEnvelope,
 )

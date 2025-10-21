@@ -9,7 +9,7 @@ from apps.quizes.ai import summary_and_index
 from lib.clients import AdminPB, langfuse_client, HTTPAsyncClient, MeilisearchClient
 from lib.utils import cache_key, update_span_with_result
 
-from .ai import FEEDBACKER_COSTS, FeedbackerDeps, feedbacker_agent
+from .ai import FEEDBACKER_COSTS, FEEDBACKER_LLM, FeedbackerDeps, feedbacker_agent
 
 
 quiz_attempts_router = APIRouter(
@@ -52,7 +52,9 @@ async def _generate_feedback_task(
         if payload.mode != "feedback":
             raise ValueError(f"Unexpected output type: {type(res.output)}")
 
-        await update_span_with_result(res, span, user_id, attempt_id)
+        await update_span_with_result(
+            langfuse_client, res, span, user_id, attempt_id, FEEDBACKER_LLM
+        )
 
     await admin_pb.collection("quizAttempts").update(
         attempt_id,

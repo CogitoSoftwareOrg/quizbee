@@ -9,6 +9,7 @@ from lib.ai.models import QuizerDeps
 from .agent import (
     QUIZER_COSTS,
     QUIZER_PRIORITY_COSTS,
+    QUIZER_LLM,
     quizer_agent,
     event_stream_handler,
 )
@@ -119,7 +120,7 @@ async def generate_quiz_task(
 
                         seen = len(items)
 
-            await update_span_with_result(result, span, user_id, attempt_id)
+            await update_span_with_result(langfuse_client, result, span, user_id, attempt_id, QUIZER_LLM)
 
     except httpx.ReadError as e:
         if cancelled:
@@ -228,7 +229,7 @@ async def generate_oneshot(
                         "question": qi.question,
                     },
                 )
-            await update_span_with_result(res, span, user_id, attempt_id)
+            await update_span_with_result(langfuse_client, res, span, user_id, attempt_id, QUIZER_LLM)
 
     except Exception as e:
         logging.exception("Agent run failed for quiz %s: %s", quiz_id, e)

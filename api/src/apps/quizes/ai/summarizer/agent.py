@@ -32,10 +32,10 @@ async def inject_request_prompt(
 
 
 summarizer_agent = Agent(
+    # instrument=True,
     model=SUMMARIZER_LLM,
     deps_type=SummarizerDeps,
     output_type=AgentEnvelope,
-    instrument=True,
     retries=3,
     history_processors=[inject_request_prompt],
 )
