@@ -27,14 +27,16 @@
 	);
 
 	// Enable View Transitions API for smooth page transitions
+	// Optimized for mobile responsiveness - resolve immediately to prevent click delay
 	onNavigate((navigation) => {
 		if (!document.startViewTransition) return;
 
 		return new Promise((resolve) => {
+			// Resolve BEFORE starting transition to avoid blocking navigation
+			resolve();
+			
 			document.startViewTransition(async () => {
 				document.documentElement.setAttribute('data-vt', mobile.current ? 'slide' : 'parallax');
-
-				resolve();
 				await navigation.complete;
 			});
 		});
@@ -81,7 +83,7 @@
 
 			{#if !attemptingQuiz}
 				<footer class="mobile-dock-footer dock dock-sm z-50 sm:hidden">
-					<a href="/home">
+					<a href="/home" data-sveltekit-preload-data="tap" class="dock-item">
 						<House class={page.url.pathname === '/home' ? 'text-primary' : 'text-neutral'} />
 					</a>
 					<div>
@@ -91,11 +93,12 @@
 							size="lg"
 							href="/quizes/new"
 							circle
+							data-sveltekit-preload-data="tap"
 						>
 							<Plus size={32} />
 						</Button>
 					</div>
-					<a href="/profile">
+					<a href="/profile" data-sveltekit-preload-data="tap" class="dock-item">
 						<Settings class={page.url.pathname === '/profile' ? 'text-primary' : 'text-neutral'} />
 					</a>
 				</footer>
@@ -144,6 +147,21 @@
 	/* Исключить footer, header и sidebar из анимации */
 	.mobile-dock-footer {
 		view-transition-name: mobile-dock;
+		/* Критично для производительности на мобильных */
+		touch-action: manipulation;
+		-webkit-tap-highlight-color: transparent;
+	}
+
+	/* Добавляем активное состояние для тактильной обратной связи */
+	.mobile-dock-footer .dock-item {
+		touch-action: manipulation;
+		-webkit-tap-highlight-color: transparent;
+		transition: transform 0.1s ease-out, opacity 0.1s ease-out;
+	}
+
+	.mobile-dock-footer .dock-item:active {
+		transform: scale(0.92);
+		opacity: 0.7;
 	}
 
 	.mobile-header {
