@@ -47,7 +47,7 @@ Based on the table of contents above and the user's query, determine which page 
 trimmer_agent = Agent(
     model=TRIMMER_LLM,
     deps_type=TrimmerDeps,
-    output_type=AgentEnvelope,
+    output_type=TrimmerOutput,
     instrument=True,
     retries=3,
     history_processors=[inject_request_prompt],

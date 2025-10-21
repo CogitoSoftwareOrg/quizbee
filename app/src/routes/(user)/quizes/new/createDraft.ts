@@ -8,6 +8,7 @@ import { createAttachedFileFromMaterial } from './createAttachedFileFromMaterial
 function createDraft(
 	quizTemplateId?: string // if there is an ID -> we are creating a draft from an existing quiz, if there isn't -> we are creating a new blank draft,
 ) {
+	console.log('createDraft called with quizTemplateId:', quizTemplateId);
 	let currentQuiz;
 	if (quizTemplateId) {
 		currentQuiz = quizesStore.quizes.find((q) => q.id === quizTemplateId);

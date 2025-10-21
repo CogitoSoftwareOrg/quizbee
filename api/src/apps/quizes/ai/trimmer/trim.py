@@ -35,9 +35,7 @@ async def trim_content(
             ),
         )
         
-        payload = res.output.data
-        if payload.mode != "trim":
-            raise ValueError(f"Unexpected output type: {type(res.output)}")
+        payload = res.output
         
         page_ranges = [
             {"start": pr.start, "end": pr.end} 
