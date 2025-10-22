@@ -34,11 +34,14 @@ export const getStaticPaths = async () => {
   return paths;
 };
 
-const { meta, sections } = Astro.props;
+const { meta: metaRaw, sections: sectionsRaw } = Astro.props;
 
 const appUrl = urlWithPR(import.meta.env.PUBLIC_APP_URL) as string;
-const parsed = JSON.parse(
-  JSON.stringify(sections).replaceAll("{{APP_URL}}", appUrl)
+const sections = JSON.parse(
+  JSON.stringify(sectionsRaw).replaceAll("{{APP_URL}}", appUrl)
+);
+const meta = JSON.parse(
+  JSON.stringify(metaRaw).replaceAll("{{APP_URL}}", appUrl)
 );
 ---
 
@@ -51,7 +54,7 @@ const parsed = JSON.parse(
   structuredData={meta.structuredData}
 >
   {
-    parsed.map((section: any, idx: number) => {
+    sections.map((section: any, idx: number) => {
       switch (section.type) {
         case "Hero":
           return <Hero {...section.props} />;
