@@ -2,48 +2,55 @@
 import type { GetStaticPaths, Page } from "astro";
 
 import Root from "@/layouts/Root.astro";
-import { QuizesCategoryOptions } from "@/lib/pocketbase-types";
 import { pb } from "@/lib";
 import { languages } from "@/i18n/ui";
 import { Image } from "astro:assets";
 import beeCover from "@/assets/bee1.svg";
 
+type CatInfo = {
+  name: string;
+  count: number;
+};
+
 export const getStaticPaths = (async ({ paginate }) => {
   const pageSize = 20;
-  const categories = Object.values(QuizesCategoryOptions);
 
-  const paths = [];
-  for (const category of categories) {
-    const res = await pb.collection("quizes").getList(1, 1000, {
-      filter: `category = "${category}" && visibility = "search" && status = "final"`,
-      sort: "-created",
-    });
+  // Fetch all quizes
+  const res = await pb.collection("quizes").getList(1, 1000, {
+    filter: 'visibility = "search" && status = "final"',
+    sort: "-created",
+  });
 
-    for (const language in languages) {
-      paths.push(
-        ...paginate(res.items, {
-          pageSize,
-          params: { locale: language, category },
-          props: { category },
-        })
-      );
-    }
+  // Count quizes per category
+  const catMap = new Map<string, number>();
+  for (const quiz of res.items) {
+    const cat = quiz.category ?? "general";
+    catMap.set(cat, (catMap.get(cat) ?? 0) + 1);
   }
 
-  return paths;
+  const categories = Array.from(catMap.entries())
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count);
+
+  return paginate(res.items, {
+    pageSize,
+    props: { categories },
+  });
 }) satisfies GetStaticPaths;
 
-const { category } = Astro.params;
-const { page } = Astro.props as { page: Page };
+const { page, categories } = Astro.props as {
+  page: Page;
+  categories: CatInfo[];
+};
+
 const quizes = page.data;
 
 // SEO
-const title = `Quizes · ${category}`;
-const desc = `Quizes in "${category}" (${page.currentPage} of ${page.lastPage})`;
+const title = "Quizes";
+const desc = `All quizes (${page.currentPage} of ${page.lastPage})`;
 
 // Links for pagination
-const pageHref = (n: number) =>
-  n === 1 ? `/quizes/${category}` : `/quizes/${category}/${n}`;
+const pageHref = (n: number) => (n === 1 ? `/quizes` : `/quizes/${n}`);
 ---
 
 <Root title={title} description={desc} active="quizes">
@@ -55,43 +62,58 @@ const pageHref = (n: number) =>
       class="flex flex-col md:flex-row md:items-center md:justify-between gap-3"
     >
       <div>
-        <h1 class="text-3xl md:text-4xl font-bold tracking-tight capitalize">
-          {category}
-        </h1>
+        <h1 class="text-3xl md:text-4xl font-bold tracking-tight">Quizes</h1>
         <p class="mt-2 text-sm text-muted-foreground">{desc}</p>
       </div>
       <nav class="text-sm text-muted-foreground">
         <a href="/" class="hover:underline">Home</a>
         <span class="mx-1">/</span>
-        <a href="/quizes" class="hover:underline">Quizes</a>
-        <span class="mx-1">/</span>
-        <span class="capitalize">{category}</span>
+        <span>Quizes</span>
       </nav>
     </div>
 
-    <div
-      class="relative w-full h-full aspect-video max-h-[calc(40vh)] mx-auto mt-6"
-    >
-      <Image
-        src={beeCover}
-        alt={category}
-        width={1920}
-        height={1080}
-        widths={[480, 768, 1024, 1280, 1600, 1920]}
-        sizes="(min-width: 1024px) 800px, 100vw"
-        fit="cover"
-        class="h-full w-full object-cover rounded-2xl shadow-sm"
-        fetchpriority="high"
-        loading="eager"
-      />
-    </div>
+    <!-- Category grid -->
+    {
+      categories.length > 0 && (
+        <div class="mt-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {categories.slice(0, 8).map((c) => (
+            <a
+              href={`/quizes/${c.name}`}
+              class="group overflow-hidden rounded-xl border bg-card shadow-sm hover:shadow-md transition"
+            >
+              <div class="relative aspect-video bg-muted">
+                <div class="relative w-full h-full aspect-video max-h-[calc(20vh)] mx-auto mt-6">
+                  <Image
+                    src={beeCover}
+                    alt={c.name}
+                    width={1920}
+                    height={1080}
+                    widths={[480, 768, 1024]}
+                    sizes="(min-width: 1024px) 800px, 100vw"
+                    fit="cover"
+                    class="h-full w-full object-cover rounded-2xl shadow-sm"
+                    loading="eager"
+                  />
+                </div>
+              </div>
+              <div class="p-3">
+                <div class="flex items-center justify-between">
+                  <h3 class="capitalize font-medium">{c.name}</h3>
+                  <span class="text-xs text-muted-foreground">{c.count}</span>
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      )
+    }
   </section>
 
   <!-- Grid of quizes -->
   <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
     {
       quizes.map((quiz: any) => {
-        const href = `/quizes/${category}${quiz.slug ? `/${quiz.slug}` : `${quiz.id}`}`;
+        const href = `/quizes/${quiz.category}/${quiz.slug || quiz.id}`;
         const difficulty = quiz.difficulty ?? "beginner";
         const itemsCount = quiz.itemsLimit ?? 0;
 
@@ -103,13 +125,11 @@ const pageHref = (n: number) =>
             <div class="p-4">
               <div class="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
                 <span class="capitalize inline-block px-2 py-1 bg-muted rounded-full">
+                  {quiz.category}
+                </span>
+                <span class="capitalize inline-block px-2 py-1 bg-muted rounded-full">
                   {difficulty}
                 </span>
-                {quiz.generation && (
-                  <span class="capitalize inline-block px-2 py-1 bg-muted rounded-full">
-                    v{quiz.generation}
-                  </span>
-                )}
               </div>
 
               <h2 class="text-base md:text-lg font-semibold leading-snug group-hover:underline line-clamp-2">
@@ -140,17 +160,6 @@ const pageHref = (n: number) =>
       })
     }
   </section>
-
-  <!-- Empty state -->
-  {
-    quizes.length === 0 && (
-      <div class="text-center py-12">
-        <p class="text-muted-foreground">
-          No quizes found in this category yet.
-        </p>
-      </div>
-    )
-  }
 
   <!-- Pagination -->
   {
