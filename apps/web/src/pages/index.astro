@@ -17,23 +17,24 @@ import { defaultLang } from "@/i18n/ui";
 const landing = await getEntry("landings", `${defaultLang}/quizbee-base`);
 
 const appUrl = urlWithPR(import.meta.env.PUBLIC_APP_URL) as string;
-const parsed = JSON.parse(
+const sections = JSON.parse(
   JSON.stringify(landing?.data.sections).replaceAll("{{APP_URL}}", appUrl)
 );
-
-const { meta } = landing?.data ?? {};
+const meta = JSON.parse(
+  JSON.stringify(landing?.data.meta).replaceAll("{{APP_URL}}", appUrl)
+);
 ---
 
 <Root
-  title={meta.title}
-  description={meta.description}
-  image={meta.image}
-  active={meta.active || "home"}
-  headerCtaHref={meta.headerCtaHref}
-  structuredData={meta.structuredData}
+  title={meta?.title || "QuizBee"}
+  description={meta?.description}
+  image={meta?.image}
+  active={meta?.active || "home"}
+  headerCtaHref={meta?.headerCtaHref}
+  structuredData={meta?.structuredData}
 >
   {
-    parsed.map((section: any, idx: number) => {
+    sections.map((section: any, idx: number) => {
       switch (section.type) {
         case "Hero":
           return <Hero {...section.props} />;
