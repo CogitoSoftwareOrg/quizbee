@@ -2,7 +2,6 @@ export const showDefaultLang = true;
 
 export const languages = {
   en: "English",
-  ru: "Русский",
   es: "Español",
   fr: "Français",
   de: "Deutsch",
@@ -18,13 +17,6 @@ export const ui = {
     "nav.blog": "Blog",
     "nav.quizes": "Quizes",
     "cta.start_for_free": "Start for free",
-  },
-  ru: {
-    "nav.home": "Главная",
-    "nav.about": "О нас",
-    "nav.blog": "Блог",
-    "nav.quizes": "Тесты",
-    "cta.start_for_free": "Начать бесплатно",
   },
   es: {
     "nav.home": "Inicio",

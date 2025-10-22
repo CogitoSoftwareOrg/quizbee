@@ -1,0 +1,58 @@
+---
+import Root from "@/layouts/Root.astro";
+import { getCollection } from "astro:content";
+
+export const getStaticPaths = async () => {
+  const entries = await getCollection("pages");
+  const filteredEntries = entries.filter((entry) =>
+    entry.id.includes("privacy")
+  );
+
+  const paths = filteredEntries.map((entry) => {
+    const locale = entry.id.split("/")[0];
+
+    return {
+      params: {
+        locale,
+      },
+      props: {
+        entry,
+      },
+    };
+  });
+
+  return paths;
+};
+
+const { entry } = Astro.props;
+const pageHtml = entry.rendered?.html ?? "";
+const data = entry.data;
+---
+
+<Root title={data.title} active="home">
+  <div class="max-w-4xl mx-auto px-4 py-16">
+    <!-- Header -->
+    <header class="mb-12 text-center">
+      <h1 class="text-4xl lg:text-5xl font-bold mb-4">{data.title}</h1>
+      <p class="text-base-content/60">
+        Last Updated: {data.lastUpdated}
+      </p>
+    </header>
+
+    <!-- Content -->
+    <article
+      set:html={pageHtml}
+      class="prose prose-neutral max-w-none prose-headings:scroll-mt-24 prose-h2:text-3xl prose-h2:font-bold prose-h2:mb-6 prose-h2:text-primary prose-h2:border-b-2 prose-h2:border-primary prose-h2:pb-2 prose-h3:text-xl prose-h3:font-bold prose-h3:mb-3 prose-p:text-lg prose-p:text-base-content/80 prose-p:leading-relaxed prose-a:link prose-a:link-primary prose-ul:text-base-content/80 prose-li:text-base-content/80 prose-table:w-full prose-table:border-collapse prose-th:border prose-th:border-base-300 prose-th:bg-base-200 prose-th:px-4 prose-th:py-2 prose-th:text-left prose-td:border prose-td:border-base-300 prose-td:px-4 prose-td:py-2"
+    />
+
+    <!-- Footer -->
+    <footer class="mt-16 pt-8 border-t border-base-200 text-center">
+      <p class="text-base-content/60">
+        If you have any questions, please contact us at{" "}
+        <a href="mailto:cogitoteamdev@gmail.com" class="link link-primary">
+          cogitoteamdev@gmail.com
+        </a>
+      </p>
+    </footer>
+  </div>
+</Root>
