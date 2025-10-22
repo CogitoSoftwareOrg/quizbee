@@ -12,7 +12,7 @@
 	let email = $state('');
 	let password = $state('');
 	let passwordConfirm = $state('');
-	let agreed = $state(false);
+	let agreed = $state(true);
 	let loading = $state(false);
 	let error: any | null = $state(null);
 
@@ -127,7 +127,7 @@
 		</div>
 
 		<!-- Terms Checkbox -->
-		<div class="form-control w-full">
+		<!-- <div class="form-control w-full">
 			<label for="agree" class="label flex cursor-pointer items-center">
 				<input
 					id="agree"
@@ -152,7 +152,17 @@
 					</span>
 				</span>
 			</label>
-		</div>
+		</div> -->
+		<p class="mt-2 text-sm">
+			By creating an account, you agree to the <a
+				href={`${env.PUBLIC_WEB_URL}legal/terms-and-privacy`}
+				class="link link-primary">terms and conditions</a
+			>
+			and
+			<a href="${env.PUBLIC_WEB_URL}legal/privacy-policy" class="link link-primary"
+				>privacy policy</a
+			>.
+		</p>
 
 		<!-- Submit Button -->
 		<div class="form-control mt-2 w-full">

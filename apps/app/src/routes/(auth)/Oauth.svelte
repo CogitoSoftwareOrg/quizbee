@@ -64,7 +64,18 @@
 			</li>
 		{/each}
 	</ul>
-	{#if !agreed}
+	{#if agreed}
+		<p class="mt-2 text-sm">
+			By signing in with, you agree to the <a
+				href={`${env.PUBLIC_WEB_URL}legal/terms-and-privacy`}
+				class="link link-primary">terms and conditions</a
+			>
+			and
+			<a href="${env.PUBLIC_WEB_URL}legal/privacy-policy" class="link link-primary"
+				>privacy policy</a
+			>.
+		</p>
+	{:else if !agreed}
 		<p class="text-warning mt-2 text-sm">
 			You must agree to the terms and conditions to sign in with
 		</p>
