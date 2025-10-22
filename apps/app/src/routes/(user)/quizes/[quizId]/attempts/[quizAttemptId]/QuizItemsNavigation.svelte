@@ -22,7 +22,7 @@
 		$props();
 </script>
 
-<div class="flex justify-between gap-4 -mb-2 px-3 pt-6 sm:px-12">
+<div class="md:flex justify-between gap-4 -mb-2 px-3 pt-6 hidden sm:px-12 ">
 	<div class="flex-1">
 		{#if itemDecision}
 			<ExplainMore sender={userSender} quizAttemptId={quizAttempt.id} {itemId} bind:chatOpen />

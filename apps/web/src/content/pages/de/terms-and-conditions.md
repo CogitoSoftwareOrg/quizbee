@@ -379,4 +379,4 @@ Durch die Nutzung des Quizbee-Service stimmen Sie zu, dass wir die folgenden Dri
 
 ---
 
-Bei Fragen wenden Sie sich bitte an uns unter [cogitoteamdev@gmail.com](mailto:cogitoteamdev@gmail.com).
+Bei Fragen wenden Sie sich bitte an uns unter [contact@quizbee.academy](mailto:contact@quizbee.academy).

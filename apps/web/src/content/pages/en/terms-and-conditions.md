@@ -73,7 +73,7 @@ To access our paid subscription plans, you must pay a fee, which will be billed 
 
 **Price Changes:** We reserve the right to change our Subscription Fees. We will provide you with at least 30 days' notice of any price changes before they take effect. Your continued use of the Service after a price change constitutes your agreement to pay the new amount.
 
-**Taxes:** All fees are stated in euros (€) and are exclusive of Value Added Tax (VAT) and other applicable taxes, which will be added to your bill as required by law.
+**Taxes:** All fees are stated in euros (€) and are inclusive of Value Added Tax (VAT) and other applicable taxes.
 
 Should you exceed the usage limits of your current plan, you may be required to upgrade to a higher-tier plan to continue using the Service or certain features.
 
@@ -379,4 +379,4 @@ By using the Quizbee Service, you agree that we may engage the following third-p
 
 ---
 
-If you have any questions, please contact us at [cogitoteamdev@gmail.com](mailto:cogitoteamdev@gmail.com).
+If you have any questions, please contact us at [contact@quizbee.academy](mailto:contact@quizbee.academy).

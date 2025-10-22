@@ -379,4 +379,4 @@ En utilisant le Service Quizbee, vous acceptez que nous puissions engager les so
 
 ---
 
-Si vous avez des questions, veuillez nous contacter à [cogitoteamdev@gmail.com](mailto:cogitoteamdev@gmail.com).
+Si vous avez des questions, veuillez nous contacter à [contact@quizbee.academy](mailto:contact@quizbee.academy).

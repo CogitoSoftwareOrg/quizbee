@@ -379,4 +379,4 @@ Ao usar o Serviço Quizbee, você concorda que podemos engajar as seguintes empr
 
 ---
 
-Se tiver dúvidas, entre em contato conosco em [cogitoteamdev@gmail.com](mailto:cogitoteamdev@gmail.com).
+Se tiver dúvidas, entre em contato conosco em [contact@quizbee.academy](mailto:contact@quizbee.academy).
