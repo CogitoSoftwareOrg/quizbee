@@ -153,7 +153,7 @@
 				</span>
 			</label>
 		</div> -->
-		<p class="mt-2 text-sm">
+		<p class="text-neutral mt-2 text-sm">
 			By creating an account, you agree to the <a
 				href={`${env.PUBLIC_WEB_URL}legal/terms-and-privacy`}
 				class="link link-primary">terms and conditions</a

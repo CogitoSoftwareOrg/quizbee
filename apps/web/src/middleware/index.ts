@@ -28,15 +28,15 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   const [, firstSegment] = pathname.split("/");
 
-  // Redirect root to default language
+  // If root path, redirect to default language
   if (pathname === "/") {
-    return context.redirect(`/${defaultLang}/`, 302);
+    return context.redirect(`/${defaultLang}/`, 307);
   }
 
   // Check if first segment is a valid locale
   if (firstSegment && !(firstSegment in languages)) {
     // If it's not a valid locale, redirect to default locale
-    return context.redirect(`/${defaultLang}${pathname}`, 302);
+    return context.redirect(`/${defaultLang}${pathname}`, 307);
   }
 
   return next();

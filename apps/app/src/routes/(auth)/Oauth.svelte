@@ -14,7 +14,7 @@
 	let {
 		error = $bindable(null),
 		loading = $bindable(false),
-		agreed = $bindable(false)
+		agreed = $bindable(true)
 	}: Props = $props();
 
 	const providers = [
@@ -25,7 +25,7 @@
 	];
 
 	const onClick = async (e: MouseEvent) => {
-		loading = true;
+		loading = false;
 		try {
 			const target = e.currentTarget as HTMLElement;
 			await pb!.collection('users').authWithOAuth2({
@@ -65,7 +65,7 @@
 		{/each}
 	</ul>
 	{#if agreed}
-		<p class="mt-2 text-sm">
+		<p class="text-neutral mt-2 text-sm">
 			By signing in with, you agree to the <a
 				href={`${env.PUBLIC_WEB_URL}legal/terms-and-privacy`}
 				class="link link-primary">terms and conditions</a
