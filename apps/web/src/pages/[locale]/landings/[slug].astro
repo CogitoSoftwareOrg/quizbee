@@ -18,8 +18,9 @@ import Root from "@/layouts/Root.astro";
 import { urlWithPR } from "@/lib";
 
 export const getStaticPaths = async () => {
-  const landings = await getCollection("landings");
-  return landings.map((landing) => {
+  const landings = await getCollection("landingsPb");
+
+  const paths = landings.map((landing) => {
     return {
       params: { locale: landing.data.locale, slug: landing.data.slug },
       props: {
@@ -28,6 +29,8 @@ export const getStaticPaths = async () => {
       },
     };
   });
+
+  return paths;
 };
 
 const { meta, sections } = Astro.props;

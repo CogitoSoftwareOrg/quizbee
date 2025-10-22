@@ -11,7 +11,7 @@ import type { languages } from "@/i18n/ui";
 
 // Страницы категории c SSG-пагинацией
 export const getStaticPaths: GetStaticPaths = async ({ paginate }) => {
-  const all = await getCollection("blog");
+  const all = await getCollection("blogPb");
 
   // Группируем по locale -> category
   const map = new Map<string, Map<string, any[]>>();

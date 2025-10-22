@@ -1,166 +1,118 @@
 ---
-// src/pages/[locale]/blog/[page].astro
+// src/pages/[locale]/blog/[category]/[page].astro
 import type { GetStaticPaths, Page } from "astro";
-import { getCollection } from "astro:content";
 import { Image } from "astro:assets";
+import { getCollection } from "astro:content";
 
+import CategoryCover from "@/assets/images/pchel.png";
 import Root from "@/layouts/Root.astro";
 import { useTranslatedPath } from "@/i18n/utils";
 import type { languages } from "@/i18n/ui";
+import { defaultLang } from "@/i18n/ui";
 
-type CatInfo = {
-  name: string;
-  count: number;
-  cover?: string | null;
-  description?: string | null;
-};
-
-// SSG пагинация по всем категориям внутри локали + сбор категорийного грида
+// Страницы категории c SSG-пагинацией
 export const getStaticPaths: GetStaticPaths = async ({ paginate }) => {
-  const all = await getCollection("blogPb");
+  const all = await getCollection("blogPb", (post) =>
+    post.id.includes(defaultLang)
+  );
 
-  // группируем по локали
-  const byLocale = new Map<string, any[]>();
+  // Группируем по locale -> category
+  const map = new Map<string, Map<string, any[]>>();
   for (const p of all) {
     const loc = p.data.locale;
-    if (!byLocale.has(loc)) byLocale.set(loc, []);
-    byLocale.get(loc)!.push(p);
+    const cat = p.data.category ?? "general";
+    if (!map.has(loc)) map.set(loc, new Map());
+    const byCat = map.get(loc)!;
+    if (!byCat.has(cat)) byCat.set(cat, []);
+    byCat.get(cat)!.push(p);
   }
 
   const pageSize = 12;
   const paths: any[] = [];
 
-  for (const [locale, list] of byLocale.entries()) {
-    // сортировка по дате (новые сверху)
-    list.sort((a, b) => {
-      const da = new Date(
-        a.data.article?.datePublished ?? a.data.article?.dateModified ?? 0
-      ).getTime();
-      const db = new Date(
-        b.data.article?.datePublished ?? b.data.article?.dateModified ?? 0
-      ).getTime();
-      return db - da;
-    });
+  for (const [locale, byCat] of map.entries()) {
+    for (const [category, list] of byCat.entries()) {
+      list.sort((a, b) => {
+        const da = new Date(
+          a.data.article?.datePublished ?? a.data.article?.dateModified ?? 0
+        ).getTime();
+        const db = new Date(
+          b.data.article?.datePublished ?? b.data.article?.dateModified ?? 0
+        ).getTime();
+        return db - da;
+      });
 
-    // собрать категории для грида (count + обложка из самого свежего поста)
-    const catMap = new Map<string, CatInfo>();
-    for (const p of list) {
-      const cat = p.data.category ?? "general";
-      const meta = catMap.get(cat);
-      if (!meta) {
-        catMap.set(cat, {
-          name: cat,
-          count: 1,
-          cover: p.data.article?.coverUrl ?? null,
-          description: p.data.meta?.description ?? null,
-        });
-      } else {
-        meta.count += 1;
-        // обложка — оставляем от самого свежего (т.к. list уже отсортирован)
-      }
+      paths.push(
+        ...paginate(list, {
+          pageSize,
+          params: { locale, category },
+          props: { category, locale },
+        })
+      );
     }
-    const categories = Array.from(catMap.values()).sort(
-      (a, b) => b.count - a.count
-    );
-
-    paths.push(
-      ...paginate(list, {
-        pageSize,
-        params: { locale },
-        props: { locale, categories },
-      })
-    );
   }
 
   return paths;
 };
 
-const { page, locale, categories } = Astro.props as {
+const { page, category, locale } = Astro.props as {
   page: Page;
+  category: string;
   locale: keyof typeof languages;
-  categories: CatInfo[];
 };
 
-const posts = page.data;
 const tp = useTranslatedPath(locale);
 
-// SEO
-const title = "Blog";
-const desc = `All articles (${page.currentPage} of ${page.lastPage})`;
+const posts = page.data;
+const title = `Blog · ${category}`;
+const desc = `Articles in “${category}” (${page.currentPage} of ${page.lastPage})`;
 
-// ссылки для пагинации
-const pageHref = (n: number) => tp(`/blog/${n}`);
+// Вспом. форматтер ссылки (если нужен canonical/индексация первой страницы — добавь index.astro)
+const pageHref = (n: number) => tp(`/blog/${category}/${n}`);
 ---
 
 <Root title={title} description={desc} active="blog">
-  <!-- HERO -->
+  <!-- HERO категории -->
   <section
-    class="mb-8 rounded-2xl bg-gradient-to-r from-primary-70 to-secondary-70 border p-6 md:p-8"
+    class="mb-8 rounded-2xl bg-gradient-to-r from-primary-70 to-secondary-70 border p-6 md:p-8 border-base-300"
   >
     <div
       class="flex flex-col md:flex-row md:items-center md:justify-between gap-3"
     >
       <div>
-        <h1 class="text-3xl md:text-4xl font-bold tracking-tight">Blog</h1>
-        <p class="mt-2 text-sm text-muted-foreground">{desc}</p>
+        <h1 class="text-3xl md:text-4xl font-bold tracking-tight capitalize">
+          {category}
+        </h1>
+        <p class="mt-2 text-sm text-muted-foreground">
+          {desc}
+        </p>
       </div>
       <nav class="text-sm text-muted-foreground">
-        <a href={tp("/")} class="hover:underline">Home</a>
+        <a href={tp("/blog")} class="hover:underline">Blog</a>
         <span class="mx-1">/</span>
-        <span>Blog</span>
+        <span class="capitalize">{category}</span>
       </nav>
     </div>
 
-    <!-- Грид категорий (топ-8, можно больше) -->
-    {
-      categories.length > 0 && (
-        <div class="mt-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {categories.slice(0, 8).map((c) => (
-            <a
-              href={tp(`/blog/${c.name}`)}
-              class="group overflow-hidden rounded-xl border bg-card shadow-sm hover:shadow-md transition"
-            >
-              <div class="relative aspect-[16/9] bg-muted">
-                {c.cover ? (
-                  <div class="relative w-full h-full aspect-[16/9] max-h-[calc(20vh)] mx-auto mt-6">
-                    <Image
-                      src={c.cover}
-                      alt={c.name}
-                      width={1920}
-                      height={1080}
-                      widths={[480, 768, 1024, 1280, 1600, 1920]}
-                      sizes="(min-width: 1024px) 800px, 100vw"
-                      fit="cover"
-                      class="h-full w-full object-cover rounded-2xl shadow-sm"
-                      fetchpriority="high"
-                      loading="eager"
-                    />
-                  </div>
-                ) : (
-                  <div class="absolute inset-0 grid place-items-center text-xs text-muted-foreground">
-                    {c.name}
-                  </div>
-                )}
-              </div>
-              <div class="p-3">
-                <div class="flex items-center justify-between">
-                  <h3 class="capitalize font-medium">{c.name}</h3>
-                  <span class="text-xs text-muted-foreground">{c.count}</span>
-                </div>
-                {c.description && (
-                  <p class="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                    {c.description}
-                  </p>
-                )}
-              </div>
-            </a>
-          ))}
-        </div>
-      )
-    }
+    <div
+      class="relative w-full h-full aspect-[16/9] max-h-[calc(40vh)] mx-auto mt-6"
+    >
+      <Image
+        src={CategoryCover}
+        alt={category}
+        width={1920}
+        height={1080}
+        widths={[480, 768, 1024, 1280, 1600, 1920]}
+        sizes="(min-width: 1024px) 800px, 100vw"
+        fit="cover"
+        class="h-full w-full object-cover rounded-2xl shadow-sm"
+        fetchpriority="high"
+        loading="eager"
+      />
+    </div>
   </section>
 
-  <!-- Грид постов -->
+  <!-- GRID карточек -->
   <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
     {
       posts.map((post: any) => {
@@ -173,8 +125,9 @@ const pageHref = (n: number) => tp(`/blog/${n}`);
         return (
           <a
             href={href}
-            class="group rounded-2xl border bg-card shadow-sm overflow-hidden hover:shadow-md transition"
+            class="group rounded-2xl border bg-card shadow-sm overflow-hidden hover:shadow-md transition border-base-300"
           >
+            {/* preview image (надёжно для любых remote URL) */}
             <div class="relative aspect-[16/9] bg-muted overflow-hidden">
               {cover ? (
                 <div class="relative w-full h-full aspect-[16/9] max-h-[calc(50vh)] mx-auto mt-6">
@@ -241,13 +194,14 @@ const pageHref = (n: number) => tp(`/blog/${n}`);
     }
   </section>
 
-  <!-- Пагинация -->
+  <!-- PAGINATION -->
   {
     page.lastPage > 1 && (
       <nav
         class="mt-10 flex items-center justify-center gap-2"
         aria-label="Pagination"
       >
+        {/* Prev */}
         {page.url.prev ? (
           <a
             href={page.url.prev}
@@ -262,6 +216,7 @@ const pageHref = (n: number) => tp(`/blog/${n}`);
           </span>
         )}
 
+        {/* Pages window */}
         {Array.from({ length: page.lastPage }, (_, i) => i + 1).map((n) => {
           const isActive = n === page.currentPage;
           return isActive ? (
@@ -281,6 +236,7 @@ const pageHref = (n: number) => tp(`/blog/${n}`);
           );
         })}
 
+        {/* Next */}
         {page.url.next ? (
           <a
             href={page.url.next}

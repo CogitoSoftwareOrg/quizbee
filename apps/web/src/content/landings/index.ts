@@ -4,6 +4,35 @@ import { setByPath } from "@cogisoft/ui-astro";
 
 import { pb } from "@/lib";
 
+const LandingSchema = z.object({
+  locale: z.string(),
+  slug: z.string(),
+  meta: z.object({
+    active: z.string().optional(),
+    headerCtaHref: z.string().optional(),
+    structuredData: z.record(z.string(), z.any()).optional(),
+    title: z.string(),
+    description: z.string().optional(),
+    image: z.string().optional(),
+  }),
+  sections: z.array(
+    z.object({
+      type: z.enum([
+        "Hero",
+        "Pains",
+        "Features",
+        "HowItWorks",
+        "Products",
+        "Testimonials",
+        "Pricing",
+        "FAQ",
+        "CTA",
+      ]),
+      props: z.any(), // можно детализировать по типам секций, если хочешь
+    })
+  ),
+});
+
 export const landingsCollectionPb = defineCollection({
   loader: async () => {
     if (!pb.authStore.isValid) {
@@ -53,32 +82,10 @@ export const landingsCollectionPb = defineCollection({
       });
     });
   },
-  schema: z.object({
-    locale: z.string(),
-    slug: z.string(),
-    meta: z.object({
-      active: z.string().optional(),
-      headerCtaHref: z.string().optional(),
-      structuredData: z.record(z.string(), z.any()).optional(),
-      title: z.string(),
-      description: z.string().optional(),
-      image: z.string().optional(),
-    }),
-    sections: z.array(
-      z.object({
-        type: z.enum([
-          "Hero",
-          "Pains",
-          "Features",
-          "HowItWorks",
-          "Products",
-          "Testimonials",
-          "Pricing",
-          "FAQ",
-          "CTA",
-        ]),
-        props: z.any(), // можно детализировать по типам секций, если хочешь
-      })
-    ),
-  }),
+  schema: LandingSchema,
+});
+
+export const landingsCollection = defineCollection({
+  type: "data",
+  schema: LandingSchema,
 });

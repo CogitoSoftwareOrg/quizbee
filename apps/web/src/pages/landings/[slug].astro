@@ -6,24 +6,26 @@ import {
   Pains,
   Features,
   HowItWorks,
+  Products,
+  Testimonials,
+  Pricing,
   FAQ,
   CTA,
+  setByPath,
 } from "@cogisoft/ui-astro";
 
 import Root from "@/layouts/Root.astro";
 import { urlWithPR } from "@/lib";
+import { defaultLang } from "@/i18n/ui";
 
 export const getStaticPaths = async () => {
-  const landings = await getCollection("landings");
-  const filteredLandings = landings.filter((landing) =>
-    landing.id.includes("quizbee-base")
+  const landings = await getCollection("landings", (landing) =>
+    landing.id.includes(defaultLang)
   );
 
-  const paths = filteredLandings.map((landing) => {
+  const paths = landings.map((landing) => {
     return {
-      params: {
-        locale: landing.data.locale,
-      },
+      params: { locale: landing.data.locale, slug: landing.data.slug },
       props: {
         meta: landing.data.meta,
         sections: landing.data.sections,
@@ -36,8 +38,8 @@ export const getStaticPaths = async () => {
 
 const { meta, sections } = Astro.props;
 
-const appUrl = urlWithPR(import.meta.env.PUBLIC_APP_URL) as string;
-const parsed = JSON.parse(
+const appUrl = urlWithPR(import.meta.env.PUBLIC_APP_URL);
+const parsed: typeof sections = JSON.parse(
   JSON.stringify(sections).replaceAll("{{APP_URL}}", appUrl)
 );
 ---
@@ -51,7 +53,7 @@ const parsed = JSON.parse(
   structuredData={meta.structuredData}
 >
   {
-    parsed.map((section: any, idx: number) => {
+    parsed.map((section, idx) => {
       switch (section.type) {
         case "Hero":
           return <Hero {...section.props} />;
@@ -61,15 +63,21 @@ const parsed = JSON.parse(
           return <Features {...section.props} />;
         case "HowItWorks":
           return <HowItWorks {...section.props} />;
+        case "Products":
+          return <Products {...section.props} />;
+        case "Testimonials":
+          return <Testimonials {...section.props} />;
+        case "Pricing":
+          return <Pricing {...section.props} />;
         case "FAQ":
           return <FAQ {...section.props} />;
         case "CTA":
           return <CTA {...section.props} />;
         default:
           return (
-            <>
-              {`<!-- Unknown section type: ${(section as any).type} at index ${idx} -->`}
-            </>
+            <Fragment
+              set:html={`<!-- Unknown section type: ${(section as any).type} at index ${idx} -->`}
+            />
           );
       }
     })

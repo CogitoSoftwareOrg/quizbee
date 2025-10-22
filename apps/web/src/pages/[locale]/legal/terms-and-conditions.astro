@@ -3,12 +3,11 @@ import Root from "@/layouts/Root.astro";
 import { getCollection } from "astro:content";
 
 export const getStaticPaths = async () => {
-  const entries = await getCollection("pages");
-  const filteredEntries = entries.filter((entry) =>
-    entry.id.includes("terms-and-conditions")
+  const entries = await getCollection("pages", (page) =>
+    page.id.includes("terms-and-conditions")
   );
 
-  const paths = filteredEntries.map((entry) => {
+  const paths = entries.map((entry) => {
     const locale = entry.id.split("/")[0];
 
     return {

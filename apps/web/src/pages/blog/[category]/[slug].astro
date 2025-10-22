@@ -4,9 +4,12 @@ import { Image } from "astro:assets";
 
 import Root from "@/layouts/Root.astro";
 import { useTranslatedPath } from "@/i18n/utils";
+import { defaultLang } from "@/i18n/ui";
 
 export const getStaticPaths = async () => {
-  const posts = await getCollection("blog");
+  const posts = await getCollection("blogPb", (post) =>
+    post.id.includes(defaultLang)
+  );
 
   const groups = new Map<string, any[]>();
   for (const p of posts) {

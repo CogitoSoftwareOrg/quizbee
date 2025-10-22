@@ -13,31 +13,5 @@ export const onRequest = defineMiddleware(async (context, next) => {
       );
   }
 
-  // Handle locale routing
-  const pathname = context.url.pathname;
-
-  // Skip static files and assets
-  if (
-    pathname.startsWith("/_") ||
-    pathname.includes(".") ||
-    pathname.startsWith("/fonts/") ||
-    pathname.startsWith("/file-format-icons/")
-  ) {
-    return next();
-  }
-
-  const [, firstSegment] = pathname.split("/");
-
-  // If root path, redirect to default language
-  if (pathname === "/") {
-    return context.redirect(`/${defaultLang}/`, 307);
-  }
-
-  // Check if first segment is a valid locale
-  if (firstSegment && !(firstSegment in languages)) {
-    // If it's not a valid locale, redirect to default locale
-    return context.redirect(`/${defaultLang}${pathname}`, 307);
-  }
-
   return next();
 });

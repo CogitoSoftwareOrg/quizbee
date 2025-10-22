@@ -86,7 +86,7 @@ export const blogCollectionPb = defineCollection({
         const rawHtml = i18n.content ?? "";
         const contentHtml = ensureHeadingIds(rawHtml);
         const toc = buildTocFromHtml(contentHtml);
-        console.log("toc", toc);
+
         const coverUrl = post.cover
           ? urlWithPR(pb.files.getURL(post, post.cover))
           : null;

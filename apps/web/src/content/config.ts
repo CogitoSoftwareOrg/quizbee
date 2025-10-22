@@ -1,9 +1,11 @@
 import { blogCollectionPb } from "./blog";
-import { landingsCollectionPb } from "./landings";
+import { landingsCollection, landingsCollectionPb } from "./landings";
 import { pagesCollection } from "./pages";
 
 export const collections = {
   pages: pagesCollection,
-  blog: blogCollectionPb,
-  landings: landingsCollectionPb,
+  landings: landingsCollection,
+  // blog: blogCollection,
+  blogPb: blogCollectionPb,
+  landingsPb: landingsCollectionPb,
 };

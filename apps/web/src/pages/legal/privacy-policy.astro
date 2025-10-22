@@ -1,34 +1,15 @@
 ---
+import { getEntry } from "astro:content";
+
 import Root from "@/layouts/Root.astro";
-import { getCollection } from "astro:content";
+import { defaultLang } from "@/i18n/ui";
 
-export const getStaticPaths = async () => {
-  const entries = await getCollection("pages", (page) =>
-    page.id.includes("privacy-policy")
-  );
-
-  const paths = entries.map((entry) => {
-    const locale = entry.id.split("/")[0];
-
-    return {
-      params: {
-        locale,
-      },
-      props: {
-        entry,
-      },
-    };
-  });
-
-  return paths;
-};
-
-const { entry } = Astro.props;
-const pageHtml = entry.rendered?.html ?? "";
-const data = entry.data;
+const entry = await getEntry("pages", `${defaultLang}/privacy-policy`);
+const pageHtml = entry?.rendered?.html ?? "";
+const data = entry?.data ?? {};
 ---
 
-<Root title={data.title} active="home">
+<Root title={data?.title} active="home">
   <div class="max-w-4xl mx-auto px-4 py-16">
     <!-- Header -->
     <header class="mb-12 text-center">
