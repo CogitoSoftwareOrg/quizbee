@@ -93,7 +93,7 @@
 
 <div class={[className, 'min-w-0']}>
 	{#if item.status === 'final' || item.status === 'generated'}
-		<ul class={['flex flex-col gap-6 px-3 sm:px-12']}>
+		<ul class={['flex flex-col gap-6 px-3 mt-1 mb-1 sm:px-12']}>
 			{#each answers as answer, index}
 				<li class="min-w-0">
 					<article
@@ -110,7 +110,7 @@
 					>
 						<button
 							type="button"
-							class="focus-visible:ring-primary/60 flex w-full min-w-0 items-start gap-3 p-4 text-left transition focus-visible:outline-none focus-visible:ring-2"
+							class="focus-visible:ring-primary/60 flex w-full min-w-0 items-start gap-3 p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 cursor-pointer"
 							onclick={async () => {
 								const toAnswer = readyItemsWithoutAnswers.length;
 								if (!itemDecision) {

@@ -45,14 +45,14 @@
 		color="neutral"
 		style="soft"
 	>
-		Manage Quiz
+		Adjust Quiz
 		<Crown size={16} />
 	</Button>
 </div>
 
 <Modal backdrop bind:open={showModal}>
 	<div class="flex flex-col gap-6 p-4">
-		<h3 class="mb-2 text-center text-xl font-bold">Manage Quiz</h3>
+		<h3 class="mb-2 text-center text-xl font-bold">Adjust Quiz</h3>
 		<div class="flex flex-col gap-2">
 			<h4 class="text-lg font-medium">Difficulty</h4>
 			<div class="flex gap-2">

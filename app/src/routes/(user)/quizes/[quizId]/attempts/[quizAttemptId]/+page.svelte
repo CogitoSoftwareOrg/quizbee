@@ -129,6 +129,18 @@
 	const itemToAnswer = $derived(
 		quizItems.find((qi) => !quizDecisions.some((d) => d.itemId === qi.id))
 	);
+	const showManage = $derived(
+		Boolean(
+			quiz?.status !== 'final' &&
+			user?.id === quiz?.author &&
+			lastFinalItem?.id === item?.id &&
+			item &&
+			!item?.managed &&
+			itemDecision &&
+			quiz &&
+			quizAttempt
+		)
+	);
 </script>
 
 <div class="flex h-full flex-col">
@@ -171,18 +183,6 @@
 					onSwipeRight={handleSwipeRight}
 					class="relative h-full overflow-x-hidden"
 				>
-					{#if item && quiz && quizAttempt}
-						<QuizItemsNavigation
-							{quizAttempt}
-							{quizItems}
-							{order}
-							{itemDecision}
-							{chatOpen}
-							onPrevious={handleSwipeLeft}
-							onNext={handleSwipeRight}
-						/>
-					{/if}
-
 					<div class="mx-auto flex h-full min-w-0 max-w-3xl flex-col py-2">
 						<div class="flex min-w-0 items-start justify-between gap-4 px-3">
 							<p class="min-w-0 flex-1 break-words text-center text-2xl font-bold leading-snug">
@@ -203,8 +203,31 @@
 							/>
 						{/if}
 
+						{#if item && quiz && quizAttempt}
+							<QuizItemsNavigation
+								{quizAttempt}
+								{quizItems}
+								{order}
+								{itemDecision}
+								bind:chatOpen
+								{userSender}
+								itemId={item.id}
+								onPrevious={handleSwipeLeft}
+								onNext={handleSwipeRight}
+							/>
+						{/if}
+
 						{#if quiz?.status !== 'final' && user?.id === quiz?.author && lastFinalItem?.id === item?.id && item && !item?.managed && itemDecision && quiz && quizAttempt}
 							<ManageQuiz {item} {quiz} {quizAttempt} />
+						{:else if item && quiz && quizAttempt}   <!-- invisible placeholder to maintain layout -->
+							<div class="mt-6 flex gap-2" aria-hidden="true">
+								<Button
+									class="invisible pointer-events-none"
+									style="soft"
+								>
+									Adjust Quiz
+								</Button>
+							</div>
 						{/if}
 					</div>
 				</SwipeableContent>
