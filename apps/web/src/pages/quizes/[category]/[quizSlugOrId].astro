@@ -1,0 +1,177 @@
+---
+export const prerender = false;
+
+import { ArrowRight } from "@lucide/astro";
+
+import Root from "@/layouts/Root.astro";
+import { pb, urlWithPR } from "@/lib";
+import { useTranslatedPath } from "@/i18n/utils";
+import { defaultLang } from "@/i18n/ui";
+import type { QuizExpand } from "@/lib/expands";
+import type { QuizesResponse } from "@/lib/pocketbase-types";
+
+const { quizSlugOrId, category } = Astro.params;
+
+let quiz: QuizesResponse;
+try {
+  quiz = await pb
+    .collection("quizes")
+    .getFirstListItem(
+      `(slug = "${quizSlugOrId}" || id = "${quizSlugOrId}") && (visibility = "public" || visibility = "search") && (category = "${category}")`,
+      { expand: "quizItems_via_quiz", sort: "quizItems_via_quiz.order" }
+    );
+} catch {
+  return Astro.redirect(`/quizes/${category}`, 302);
+}
+const items = (quiz.expand as QuizExpand)!.quizItems_via_quiz || [];
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Quiz",
+  name: quiz.title,
+  description: quiz.summary || "",
+  // educationalLevel: quiz.level || "intermediate",
+  numberOfQuestions: items.length,
+};
+
+const tp = useTranslatedPath(defaultLang);
+
+const appUrl = urlWithPR(import.meta.env.PUBLIC_APP_URL);
+const quizUrl = `${appUrl}quizes/${quizSlugOrId}?forceStart=true`;
+---
+
+<Root
+  title={quiz.title}
+  description={quiz.summary ||
+    `Interactive quiz with ${items.length} questions`}
+  active="quizes"
+  structuredData={jsonLd}
+>
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+    <!-- HEADER -->
+    <header class="mb-10 text-center">
+      <nav
+        class="text-sm text-muted-foreground mb-4 flex justify-center space-x-1"
+      >
+        <a href={tp("/quizes")} class="hover:underline">Quizzes</a>
+        <span>/</span>
+        <a href={tp(`/quizes/${category}`)} class="hover:underline capitalize">
+          {category}
+        </a>
+      </nav>
+
+      <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-4">
+        {quiz.title}
+      </h1>
+
+      {
+        quiz.summary && (
+          <p class="text-left text-muted-foreground max-w-3xl mx-auto mb-6">
+            {quiz.summary.slice(0, 500)}...
+          </p>
+        )
+      }
+
+      <div class="flex flex-wrap items-center justify-center gap-3 mb-8">
+        {
+          quiz.difficulty && (
+            <span class="badge badge-soft badge-info text-sm px-4 py-2">
+              {quiz.difficulty}
+            </span>
+          )
+        }
+        <span class="badge badge-soft badge-neutral text-sm px-4 py-2">
+          {items.length}
+          {items.length === 1 ? "question" : "questions"}
+        </span>
+      </div>
+
+      <div class="flex justify-center">
+        <a
+          target="_blank"
+          href={quizUrl}
+          class="btn btn-primary btn-lg px-8 py-3 text-base font-semibold shadow-lg hover:shadow-xl transition-all"
+        >
+          Start Quiz
+          <ArrowRight size={20} />
+        </a>
+      </div>
+
+      {
+        quiz.tags && Array.isArray(quiz.tags) && quiz.tags.length > 0 && (
+          <div class="mt-8 flex flex-wrap justify-center gap-2">
+            {quiz.tags.map((tag: string) => (
+              <span class="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground badge badge-soft badge-neutral">
+                #{tag}
+              </span>
+            ))}
+          </div>
+        )
+      }
+    </header>
+
+    <!-- QUESTIONS PREVIEW -->
+    <section class="max-w-4xl mx-auto">
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold mb-2">Questions Preview</h2>
+        <p class="text-muted-foreground">
+          Get a glimpse of what you'll be answering
+        </p>
+      </div>
+
+      <div class="space-y-4">
+        {
+          items.map((item: any, index: number) => (
+            <div class="rounded-xl border bg-card p-6 shadow-sm hover:shadow-md transition-shadow">
+              <div class="flex items-start gap-4">
+                <div class="shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm">
+                  {index + 1}
+                </div>
+                <div class="flex-1">
+                  <h3 class="font-medium text-base leading-relaxed mb-3">
+                    {item.question}
+                  </h3>
+                  {item.answers && Array.isArray(item.answers) && (
+                    <div class="space-y-2">
+                      {item.answers.slice(0, 4).map((answer: any) => (
+                        <a
+                          target="_blank"
+                          href={quizUrl}
+                          class="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-muted/50 hover:bg-muted/50 hover:border-muted transition-all cursor-pointer no-underline"
+                        >
+                          <div class="w-4 h-4 rounded-full border-2 border-muted-foreground/40" />
+                          <span class="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                            {answer.content || "Answer option"}
+                          </span>
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+
+      <!-- BOTTOM CTA -->
+      <div
+        class="mt-10 text-center p-8 rounded-2xl bg-linear-to-br from-primary/10 to-transparent border"
+      >
+        <h3 class="text-2xl font-bold mb-3">Ready to test your knowledge?</h3>
+        <p class="text-muted-foreground mb-6 max-w-xl mx-auto">
+          Start the quiz now and see how well you understand the material. Track
+          your progress and get instant feedback.
+        </p>
+        <a
+          target="_blank"
+          href={quizUrl}
+          class="btn btn-primary btn-lg px-8 py-3 text-base font-semibold shadow-lg hover:shadow-xl transition-all"
+        >
+          Start Quiz Now
+          <ArrowRight size={20} />
+        </a>
+      </div>
+    </section>
+  </div>
+</Root>

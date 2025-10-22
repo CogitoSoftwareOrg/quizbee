@@ -1,0 +1,33 @@
+{
+  "name": "",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "build:gen-types": "npx pocketbase-typegen --db ../pb/pb_data/data.db --out src/lib/pocketbase-types.ts"
+  },
+  "dependencies": {
+    "@astrojs/node": "^9.5.0",
+    "@astrojs/sitemap": "^3.6.0",
+    "@astrojs/svelte": "^7.2.0",
+    "@cogisoft/ui-astro": "^0.1.18",
+    "@cogisoft/ui-svelte-daisy": "^0.1.16",
+    "@lucide/astro": "^0.545.0",
+    "@tailwindcss/typography": "^0.5.19",
+    "@tailwindcss/vite": "^4.1.14",
+    "astro": "^5.14.6",
+    "daisyui": "^5.3.7",
+    "lucide-svelte": "^0.544.0",
+    "pocketbase": "^0.26.2",
+    "posthog-js": "^1.276.0",
+    "sharp": "^0.34.4",
+    "svelte": "^5.41.0",
+    "tailwindcss": "^4.1.14",
+    "theme-change": "^2.5.0",
+    "typescript": "^5.9.3"
+  },
+  "packageManager": "pnpm@10.18.3+sha512.bbd16e6d7286fd7e01f6b3c0b3c932cda2965c06a908328f74663f10a9aea51f1129eea615134bf992831b009eabe167ecb7008b597f40ff9bc75946aadfb08d"
+}

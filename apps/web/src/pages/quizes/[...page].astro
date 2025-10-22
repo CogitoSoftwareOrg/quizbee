@@ -1,0 +1,219 @@
+---
+import type { GetStaticPaths, Page } from "astro";
+import Root from "@/layouts/Root.astro";
+import { QuizesCategoryOptions } from "@/lib/pocketbase-types";
+import { pb } from "@/lib";
+import { Image } from "astro:assets";
+import beeCover from "@/assets/bee1.svg";
+
+type CatInfo = {
+  name: string;
+  count: number;
+};
+
+export const getStaticPaths = (async ({ paginate }) => {
+  const pageSize = 20;
+
+  // Fetch all quizes
+  const res = await pb.collection("quizes").getList(1, 1000, {
+    filter: 'visibility = "search" && status = "final"',
+    sort: "-created",
+  });
+
+  // Count quizes per category
+  const catMap = new Map<string, number>();
+  for (const quiz of res.items) {
+    const cat = quiz.category ?? "general";
+    catMap.set(cat, (catMap.get(cat) ?? 0) + 1);
+  }
+
+  const categories = Array.from(catMap.entries())
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count);
+
+  return paginate(res.items, {
+    pageSize,
+    props: { categories },
+  });
+}) satisfies GetStaticPaths;
+
+const { page, categories } = Astro.props as {
+  page: Page;
+  categories: CatInfo[];
+};
+
+const quizes = page.data;
+
+// SEO
+const title = "Quizes";
+const desc = `All quizes (${page.currentPage} of ${page.lastPage})`;
+
+// Links for pagination
+const pageHref = (n: number) => (n === 1 ? `/quizes` : `/quizes/${n}`);
+---
+
+<Root title={title} description={desc} active="quizes">
+  <!-- HERO -->
+  <section
+    class="mb-8 rounded-2xl bg-linear-to-r from-primary-70 to-secondary-70 border p-6 md:p-8"
+  >
+    <div
+      class="flex flex-col md:flex-row md:items-center md:justify-between gap-3"
+    >
+      <div>
+        <h1 class="text-3xl md:text-4xl font-bold tracking-tight">Quizes</h1>
+        <p class="mt-2 text-sm text-muted-foreground">{desc}</p>
+      </div>
+      <nav class="text-sm text-muted-foreground">
+        <a href="/" class="hover:underline">Home</a>
+        <span class="mx-1">/</span>
+        <span>Quizes</span>
+      </nav>
+    </div>
+
+    <!-- Category grid -->
+    {
+      categories.length > 0 && (
+        <div class="mt-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {categories.slice(0, 8).map((c) => (
+            <a
+              href={`/quizes/${c.name}`}
+              class="group overflow-hidden rounded-xl border bg-card shadow-sm hover:shadow-md transition"
+            >
+              <div class="relative aspect-video bg-muted">
+                <div class="relative w-full h-full aspect-video max-h-[calc(20vh)] mx-auto mt-6">
+                  <Image
+                    src={beeCover}
+                    alt={c.name}
+                    width={1920}
+                    height={1080}
+                    widths={[480, 768, 1024]}
+                    sizes="(min-width: 1024px) 800px, 100vw"
+                    fit="cover"
+                    class="h-full w-full object-cover rounded-2xl shadow-sm"
+                    loading="eager"
+                  />
+                </div>
+              </div>
+              <div class="p-3">
+                <div class="flex items-center justify-between">
+                  <h3 class="capitalize font-medium">{c.name}</h3>
+                  <span class="text-xs text-muted-foreground">{c.count}</span>
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      )
+    }
+  </section>
+
+  <!-- Grid of quizes -->
+  <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+    {
+      quizes.map((quiz: any) => {
+        const href = `/quizes/${quiz.category}/${quiz.slug || quiz.id}`;
+        const difficulty = quiz.difficulty ?? "beginner";
+        const itemsCount = quiz.itemsLimit ?? 0;
+
+        return (
+          <a
+            href={href}
+            class="group rounded-2xl border bg-card shadow-sm overflow-hidden hover:shadow-md hover:border-primary/50 transition"
+          >
+            <div class="p-4">
+              <div class="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
+                <span class="capitalize inline-block px-2 py-1 bg-muted rounded-full">
+                  {quiz.category}
+                </span>
+                <span class="capitalize inline-block px-2 py-1 bg-muted rounded-full">
+                  {difficulty}
+                </span>
+              </div>
+
+              <h2 class="text-base md:text-lg font-semibold leading-snug group-hover:underline line-clamp-2">
+                {quiz.title ?? quiz.slug}
+              </h2>
+
+              {quiz.summary && (
+                <p class="mt-2 text-sm text-muted-foreground line-clamp-2">
+                  {quiz.summary}
+                </p>
+              )}
+
+              <div class="mt-4 flex items-center justify-between text-xs text-muted-foreground">
+                <span>{itemsCount} questions</span>
+                {Array.isArray(quiz.tags) && quiz.tags.length > 0 && (
+                  <ul class="flex flex-wrap gap-1 justify-end">
+                    {quiz.tags.slice(0, 2).map((t: string) => (
+                      <li class="rounded-full bg-muted px-2 py-0.5 text-[11px]">
+                        #{t}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+          </a>
+        );
+      })
+    }
+  </section>
+
+  <!-- Pagination -->
+  {
+    page.lastPage > 1 && (
+      <nav
+        class="mt-10 flex items-center justify-center gap-2"
+        aria-label="Pagination"
+      >
+        {page.url.prev ? (
+          <a
+            href={page.url.prev}
+            rel="prev"
+            class="rounded-md border px-3 py-2 text-sm hover:bg-muted/60"
+          >
+            ← Prev
+          </a>
+        ) : (
+          <span class="rounded-md border px-3 py-2 text-sm opacity-40 cursor-not-allowed">
+            ← Prev
+          </span>
+        )}
+
+        {Array.from({ length: page.lastPage }, (_, i) => i + 1).map((n) => {
+          const isActive = n === page.currentPage;
+          return isActive ? (
+            <span
+              class="rounded-md px-3 py-2 text-sm font-medium bg-foreground text-background border border-foreground"
+              aria-current="page"
+            >
+              {n}
+            </span>
+          ) : (
+            <a
+              href={pageHref(n)}
+              class="rounded-md border px-3 py-2 text-sm hover:bg-muted/60"
+            >
+              {n}
+            </a>
+          );
+        })}
+
+        {page.url.next ? (
+          <a
+            href={page.url.next}
+            rel="next"
+            class="rounded-md border px-3 py-2 text-sm hover:bg-muted/60"
+          >
+            Next →
+          </a>
+        ) : (
+          <span class="rounded-md border px-3 py-2 text-sm opacity-40 cursor-not-allowed">
+            Next →
+          </span>
+        )}
+      </nav>
+    )
+  }
+</Root>
