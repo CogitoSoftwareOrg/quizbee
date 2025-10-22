@@ -15,6 +15,7 @@ type CatInfo = {
 export const getStaticPaths = (async ({ paginate }) => {
   const pageSize = 20;
 
+  const paths = [];
   // Fetch all quizes
   const res = await pb.collection("quizes").getList(1, 1000, {
     filter: 'visibility = "search" && status = "final"',
@@ -32,10 +33,17 @@ export const getStaticPaths = (async ({ paginate }) => {
     .map(([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count);
 
-  return paginate(res.items, {
-    pageSize,
-    props: { categories },
-  });
+  for (const language in languages) {
+    paths.push(
+      ...paginate(res.items, {
+        params: { locale: language },
+        pageSize,
+        props: { categories },
+      })
+    );
+  }
+
+  return paths;
 }) satisfies GetStaticPaths;
 
 const { page, categories } = Astro.props as {
