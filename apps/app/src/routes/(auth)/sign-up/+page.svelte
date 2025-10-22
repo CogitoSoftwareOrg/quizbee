@@ -60,7 +60,7 @@
 	<h1 class="mb-6 text-center text-3xl font-bold">Create New Account</h1>
 
 	<div class="mb-4">
-		<Oauth bind:loading bind:error />
+		<Oauth bind:loading bind:error bind:agreed />
 	</div>
 
 	<div class="divider">OR</div>
