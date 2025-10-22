@@ -3,6 +3,8 @@ import type { GetStaticPaths, Page } from "astro";
 import Root from "@/layouts/Root.astro";
 import { QuizesCategoryOptions } from "@/lib/pocketbase-types";
 import { pb } from "@/lib";
+import { Image } from "astro:assets";
+import beeCover from "@/assets/bee1.svg";
 
 type CatInfo = {
   name: string;
@@ -78,6 +80,21 @@ const pageHref = (n: number) => (n === 1 ? `/quizes` : `/quizes/${n}`);
               href={`/quizes/${c.name}`}
               class="group overflow-hidden rounded-xl border bg-card shadow-sm hover:shadow-md transition"
             >
+              <div class="relative aspect-video bg-muted">
+                <div class="relative w-full h-full aspect-video max-h-[calc(20vh)] mx-auto mt-6">
+                  <Image
+                    src={beeCover}
+                    alt={c.name}
+                    width={1920}
+                    height={1080}
+                    widths={[480, 768, 1024]}
+                    sizes="(min-width: 1024px) 800px, 100vw"
+                    fit="cover"
+                    class="h-full w-full object-cover rounded-2xl shadow-sm"
+                    loading="eager"
+                  />
+                </div>
+              </div>
               <div class="p-3">
                 <div class="flex items-center justify-between">
                   <h3 class="capitalize font-medium">{c.name}</h3>
