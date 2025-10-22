@@ -34,17 +34,8 @@
 	});
 
 	// Check if this is an AI message waiting for response (incoming = true means AI message)
-	const isWaitingForResponse = incoming && (msg.status === 'streaming' || !msg.content || msg.content.trim() === '');
-	
-	// Debug
-	console.log('Message Debug:', {
-		role: msg.role,
-		incoming,
-		status: msg.status,
-		content: msg.content,
-		contentLength: msg.content?.length,
-		isWaitingForResponse
-	});
+	const isWaitingForResponse =
+		incoming && (msg.status === 'streaming' || !msg.content || msg.content.trim() === '');
 </script>
 
 <!-- DIVIDER HAS COMPLETELY DIFFERENT UI -->
