@@ -74,7 +74,7 @@ const pageHref = (n: number) => tp(`/blog/${category}/${n}`);
 <Root title={title} description={desc} active="blog">
   <!-- HERO категории -->
   <section
-    class="mb-8 rounded-2xl bg-gradient-to-r from-primary-70 to-secondary-70 border p-6 md:p-8 border-base-300"
+    class="mb-8 rounded-2xl bg-linear-to-r from-primary-70 to-secondary-70 border p-6 md:p-8 border-base-300"
   >
     <div
       class="flex flex-col md:flex-row md:items-center md:justify-between gap-3"
@@ -95,7 +95,7 @@ const pageHref = (n: number) => tp(`/blog/${category}/${n}`);
     </div>
 
     <div
-      class="relative w-full h-full aspect-[16/9] max-h-[calc(40vh)] mx-auto mt-6"
+      class="relative w-full h-full aspect-video max-h-[calc(40vh)] mx-auto mt-6"
     >
       <Image
         src={CategoryCover}
@@ -128,9 +128,9 @@ const pageHref = (n: number) => tp(`/blog/${category}/${n}`);
             class="group rounded-2xl border bg-card shadow-sm overflow-hidden hover:shadow-md transition border-base-300"
           >
             {/* preview image (надёжно для любых remote URL) */}
-            <div class="relative aspect-[16/9] bg-muted overflow-hidden">
+            <div class="relative aspect-video bg-muted overflow-hidden">
               {cover ? (
-                <div class="relative w-full h-full aspect-[16/9] max-h-[calc(50vh)] mx-auto mt-6">
+                <div class="relative w-full h-full aspect-video max-h-[calc(50vh)] mx-auto mt-6">
                   <Image
                     src={cover}
                     alt={post.data.meta?.title}

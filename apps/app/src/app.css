@@ -8,7 +8,7 @@
 @import './lib/styles/theme.css';
 @import './lib/styles/fonts.css';
 @import './lib/styles/scroll.css';
-@import './lib/styles/transitions.css';
+/* @import './lib/styles/transitions.css'; */
 
 /* Prevent horizontal scroll globally */
 html,

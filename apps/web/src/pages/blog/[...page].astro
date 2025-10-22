@@ -6,7 +6,7 @@ import { Image } from "astro:assets";
 
 import Root from "@/layouts/Root.astro";
 import { useTranslatedPath } from "@/i18n/utils";
-import type { languages } from "@/i18n/ui";
+import { defaultLang, type languages } from "@/i18n/ui";
 
 type CatInfo = {
   name: string;
@@ -97,7 +97,7 @@ const pageHref = (n: number) => tp(`/blog/${n}`);
 <Root title={title} description={desc} active="blog">
   <!-- HERO -->
   <section
-    class="mb-8 rounded-2xl bg-gradient-to-r from-primary-70 to-secondary-70 border p-6 md:p-8"
+    class="mb-8 rounded-2xl bg-linear-to-r from-primary-70 to-secondary-70 border p-6 md:p-8"
   >
     <div
       class="flex flex-col md:flex-row md:items-center md:justify-between gap-3"
@@ -122,9 +122,9 @@ const pageHref = (n: number) => tp(`/blog/${n}`);
               href={tp(`/blog/${c.name}`)}
               class="group overflow-hidden rounded-xl border bg-card shadow-sm hover:shadow-md transition"
             >
-              <div class="relative aspect-[16/9] bg-muted">
+              <div class="relative aspect-video bg-muted">
                 {c.cover ? (
-                  <div class="relative w-full h-full aspect-[16/9] max-h-[calc(20vh)] mx-auto mt-6">
+                  <div class="relative w-full h-full aspect-video max-h-[calc(20vh)] mx-auto mt-6">
                     <Image
                       src={c.cover}
                       alt={c.name}
@@ -177,9 +177,9 @@ const pageHref = (n: number) => tp(`/blog/${n}`);
             href={href}
             class="group rounded-2xl border bg-card shadow-sm overflow-hidden hover:shadow-md transition"
           >
-            <div class="relative aspect-[16/9] bg-muted overflow-hidden">
+            <div class="relative aspect-video bg-muted overflow-hidden">
               {cover ? (
-                <div class="relative w-full h-full aspect-[16/9] max-h-[calc(50vh)] mx-auto mt-6">
+                <div class="relative w-full h-full aspect-video max-h-[calc(50vh)] mx-auto mt-6">
                   <Image
                     src={cover}
                     alt={post.data.meta?.title}

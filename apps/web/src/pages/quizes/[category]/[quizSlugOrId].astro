@@ -1,34 +1,40 @@
 ---
+export const prerender = false;
+
 import { ArrowRight } from "@lucide/astro";
 
 import Root from "@/layouts/Root.astro";
 import { pb, urlWithPR } from "@/lib";
 import { useTranslatedPath } from "@/i18n/utils";
-import { languages } from "@/i18n/ui";
+import { defaultLang } from "@/i18n/ui";
+import type { QuizExpand } from "@/lib/expands";
+import type { QuizesResponse } from "@/lib/pocketbase-types";
 
-export const prerender = false;
+const { quizSlugOrId, category } = Astro.params;
 
-const { quizSlugOrId, category, locale } = Astro.params;
-
-const quiz = await pb
-  .collection("quizes")
-  .getFirstListItem(
-    `(slug = "${quizSlugOrId}" || id = "${quizSlugOrId}") && (visibility = "public" || visibility = "search") && (category = "${category}")`,
-    { expand: "quizItems_via_quiz", sort: "quizItems_via_quiz.order" }
-  );
-const items = quiz.expand!.quizItems_via_quiz || [];
+let quiz: QuizesResponse;
+try {
+  quiz = await pb
+    .collection("quizes")
+    .getFirstListItem(
+      `(slug = "${quizSlugOrId}" || id = "${quizSlugOrId}") && (visibility = "public" || visibility = "search") && (category = "${category}")`,
+      { expand: "quizItems_via_quiz", sort: "quizItems_via_quiz.order" }
+    );
+} catch {
+  return Astro.redirect(`/quizes/${category}`, 302);
+}
+const items = (quiz.expand as QuizExpand)!.quizItems_via_quiz || [];
 
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "Quiz",
   name: quiz.title,
-  description: quiz.description || "",
-  educationalLevel: quiz.level || "intermediate",
+  description: quiz.summary || "",
+  // educationalLevel: quiz.level || "intermediate",
   numberOfQuestions: items.length,
 };
 
-if (!(locale && locale in languages)) return;
-const tp = useTranslatedPath(locale as keyof typeof languages);
+const tp = useTranslatedPath(defaultLang);
 
 const appUrl = urlWithPR(import.meta.env.PUBLIC_APP_URL);
 const quizUrl = `${appUrl}quizes/${quizSlugOrId}?forceStart=true`;
@@ -36,7 +42,7 @@ const quizUrl = `${appUrl}quizes/${quizSlugOrId}?forceStart=true`;
 
 <Root
   title={quiz.title}
-  description={quiz.description ||
+  description={quiz.summary ||
     `Interactive quiz with ${items.length} questions`}
   active="quizes"
   structuredData={jsonLd}
@@ -49,7 +55,9 @@ const quizUrl = `${appUrl}quizes/${quizSlugOrId}?forceStart=true`;
       >
         <a href={tp("/quizes")} class="hover:underline">Quizzes</a>
         <span>/</span>
-        <span class="capitalize">{category}</span>
+        <a href={tp(`/quizes/${category}`)} class="hover:underline capitalize">
+          {category}
+        </a>
       </nav>
 
       <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-4">
@@ -64,19 +72,11 @@ const quizUrl = `${appUrl}quizes/${quizSlugOrId}?forceStart=true`;
         )
       }
 
-      {
-        quiz.description && (
-          <p class="text-lg text-muted-foreground max-w-3xl mx-auto mb-6">
-            {quiz.description}
-          </p>
-        )
-      }
-
       <div class="flex flex-wrap items-center justify-center gap-3 mb-8">
         {
-          quiz.level && (
+          quiz.difficulty && (
             <span class="badge badge-soft badge-info text-sm px-4 py-2">
-              {quiz.level}
+              {quiz.difficulty}
             </span>
           )
         }
@@ -84,13 +84,6 @@ const quizUrl = `${appUrl}quizes/${quizSlugOrId}?forceStart=true`;
           {items.length}
           {items.length === 1 ? "question" : "questions"}
         </span>
-        {
-          quiz.duration && (
-            <span class="badge badge-soft badge-neutral text-sm px-4 py-2">
-              ~{quiz.duration} min
-            </span>
-          )
-        }
       </div>
 
       <div class="flex justify-center">
@@ -131,7 +124,7 @@ const quizUrl = `${appUrl}quizes/${quizSlugOrId}?forceStart=true`;
           items.map((item: any, index: number) => (
             <div class="rounded-xl border bg-card p-6 shadow-sm hover:shadow-md transition-shadow">
               <div class="flex items-start gap-4">
-                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm">
+                <div class="shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm">
                   {index + 1}
                 </div>
                 <div class="flex-1">
@@ -163,7 +156,7 @@ const quizUrl = `${appUrl}quizes/${quizSlugOrId}?forceStart=true`;
 
       <!-- BOTTOM CTA -->
       <div
-        class="mt-10 text-center p-8 rounded-2xl bg-gradient-to-br from-primary/10 to-transparent border"
+        class="mt-10 text-center p-8 rounded-2xl bg-linear-to-br from-primary/10 to-transparent border"
       >
         <h3 class="text-2xl font-bold mb-3">Ready to test your knowledge?</h3>
         <p class="text-muted-foreground mb-6 max-w-xl mx-auto">
