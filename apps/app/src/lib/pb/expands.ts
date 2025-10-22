@@ -4,7 +4,7 @@ import type {
 	QuizAttemptsResponse,
 	QuizItemsResponse,
 	SubscriptionsResponse
-} from './pocketbase-types';
+} from '@quizbee/pb-types';
 
 export type QuizExpand = {
 	quizItems_via_quiz: QuizItemsResponse[] | undefined;

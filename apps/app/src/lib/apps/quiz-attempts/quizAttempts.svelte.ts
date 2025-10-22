@@ -1,5 +1,5 @@
 import { pb } from '$lib/pb';
-import type { QuizAttemptsResponse } from '$lib/pb/pocketbase-types';
+import type { QuizAttemptsResponse } from '@quizbee/pb-types';
 
 class QuizAttemptsStore {
 	private _quizAttempts: QuizAttemptsResponse[] = $state([]);

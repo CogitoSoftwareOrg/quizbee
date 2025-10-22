@@ -4,7 +4,7 @@
 	import { Modal, Button } from '@cogisoft/ui-svelte-daisy';
 
 	import { pb } from '$lib/pb/client';
-	import { QuizesVisibilityOptions } from '$lib/pb/pocketbase-types';
+	import { QuizesVisibilityOptions } from '@quizbee/pb-types';
 	import { uiStore } from '$lib/apps/users/ui.svelte';
 
 	interface Props {

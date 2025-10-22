@@ -1,7 +1,10 @@
 FROM node:24.3.0
 
-WORKDIR /app
+WORKDIR /workspace
 
-RUN corepack enable && corepack prepare pnpm@10.15.0 --activate
+ENV PNPM_HOME=/pnpm
+ENV PATH="$PNPM_HOME:$PATH"
 
-COPY ./package.json ./pnpm-lock.yaml ./
+RUN corepack enable \
+ && corepack prepare pnpm@10.18.3 --activate \
+ && pnpm config set store-dir /pnpm-store

@@ -7,7 +7,7 @@
 	import { materialsStore } from '$lib/apps/materials/materials.svelte';
 	import type { AttachedFile } from '$lib/types/attached-file';
 	import { pb } from '$lib/pb';
-	import type { MaterialsResponse } from '$lib/pb/pocketbase-types';
+	import type { MaterialsResponse } from '@quizbee/pb-types';
 	import { generateId } from '$lib/utils/generate-id';
 	import { removeFile } from '../new/removeFile';
 	import { addExistingMaterial } from '../new/addExistingMaterial';
@@ -63,7 +63,7 @@
 		'svg',
 		'jpg',
 		'jpeg',
-		'png',
+		'png'
 	];
 	onMount(() => {
 		document.addEventListener('click', handleClickOutside);
@@ -395,7 +395,7 @@
 								.toLowerCase()
 								.includes(searchQuery.toLowerCase())) as material}
 							<button
-								class="hover:bg-primary flex w-full cursor-pointer items-center justify-between gap-2 p-3 text-left transition-colors duration-200 rounded"
+								class="hover:bg-primary flex w-full cursor-pointer items-center justify-between gap-2 rounded p-3 text-left transition-colors duration-200"
 								onclick={() => {
 									toggleMaterial(material);
 								}}
@@ -467,12 +467,14 @@
 	{#if attachedFiles.length > 0}
 		<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
 			{#each attachedFiles as attachedFile, index}
-				<div class="bg-base-300 group relative aspect-square w-full rounded-lg border-2 border-base-content/20 p-2">
+				<div
+					class="bg-base-300 border-base-content/20 group relative aspect-square w-full rounded-lg border-2 p-2"
+				>
 					{#if attachedFile.previewUrl}
 						<img
 							src={attachedFile.previewUrl}
 							alt={attachedFile.name}
-							class="h-full w-full object-cover rounded"
+							class="h-full w-full rounded object-cover"
 						/>
 					{:else}
 						<div

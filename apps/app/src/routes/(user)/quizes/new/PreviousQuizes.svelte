@@ -3,7 +3,7 @@
 	import { materialsStore } from '$lib/apps/materials/materials.svelte';
 	import type { AttachedFile } from '$lib/types/attached-file';
 	import { type QuizExpand } from '$lib/pb';
-	import { type QuizesResponse } from '$lib/pb/pocketbase-types';
+	import { type QuizesResponse } from '@quizbee/pb-types';
 	import { generateId } from '$lib/utils/generate-id';
 	import { pb } from '$lib/pb';
 	import { createAttachedFileFromMaterial } from '../new/createAttachedFileFromMaterial';
@@ -11,8 +11,7 @@
 	import { generateUniqueTitle } from '$lib/utils/generate-unique-title';
 	import { createDraft } from '../new/createDraft';
 	import { addExistingMaterial } from '../new/addExistingMaterial';
-	import {removeFile} from '../new/removeFile';
-
+	import { removeFile } from '../new/removeFile';
 
 	interface Props {
 		quizTemplateId: string;
@@ -35,7 +34,7 @@
 		selectedDifficulty = $bindable(),
 		draftSwitch = $bindable(),
 		questionCount = $bindable(),
-		
+
 		searchQuery,
 
 		onQuizSelected = () => {}
@@ -51,11 +50,9 @@
 	);
 
 	async function handleQuizClick(quiz: any) {
-		
-		
 		title = quiz.title;
 		inputText = quiz.query;
-		
+
 		for (const [index, file] of attachedFiles.entries()) {
 			await removeFile(index, attachedFiles, quizTemplateId);
 		}
@@ -66,11 +63,10 @@
 				attachedFiles = [...attachedFiles, attachedFile];
 			}
 		}
-		
+
 		selectedDifficulty = quiz.selectedDifficulty;
 		questionCount = quiz.itemsLimit;
 		onQuizSelected();
-		
 	}
 </script>
 
@@ -93,7 +89,7 @@
 					<h3 class="mb-1 truncate text-left font-medium" title={quiz.title || `Quiz ${quiz.id}`}>
 						{quiz.title || `Quiz ${quiz.id}`}
 					</h3>
-					
+
 					{#if quiz.query}
 						<p class="text-primary mb-1 text-left text-xs">
 							<span class="font-medium">Query:</span>
