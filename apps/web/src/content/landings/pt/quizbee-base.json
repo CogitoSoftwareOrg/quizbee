@@ -1,0 +1,209 @@
+{
+  "locale": "pt",
+  "slug": "quizbee-base",
+  "meta": {
+    "title": "QuizBee - Aprenda de Forma Mais Inteligente com Quizzes Alimentados por IA",
+    "description": "Transforme seus materiais de estudo em questionários interativos alimentados por IA. Aprendizado adaptativo, tutoria com IA e rastreamento de progresso para alunos e profissionais.",
+    "image": "/bee_final.svg",
+    "active": "home",
+    "headerCtaHref": "{{APP_URL}}",
+    "structuredData": {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "QuizBee",
+      "description": "Plataforma de geração de questionários alimentada por IA que transforma materiais de estudo em quizzes interativos",
+      "applicationCategory": "EducationalApplication",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "5",
+        "ratingCount": "6",
+        "reviewCount": "6"
+      }
+    }
+  },
+  "sections": [
+    {
+      "type": "Hero",
+      "props": {
+        "title": "Transforme Seus Materiais de Estudo em Questionários Interativos",
+        "description": "QuizBee transforma seus documentos em questionários envolventes alimentados por IA. Estude de forma mais inteligente, não mais difícil, com aprendizado personalizado que se adapta às suas necessidades.",
+        "buttonText": "Começar Grátis",
+        "image": "/bee_final.svg",
+        "position": "right",
+        "overlay": false,
+        "href": "{{APP_URL}}"
+      }
+    },
+    {
+      "type": "Pains",
+      "props": {
+        "title": "Está Tendo Dificuldade em Se Manter Engajado Enquanto Estuda?",
+        "theme": "gradient",
+        "pains": [
+          {
+            "title": "Leitura Passiva é Ineficaz",
+            "description": "Simplesmente ler materiais não ajuda você a reter informações. Você precisa de engajamento ativo para realmente aprender.",
+            "icon": "bed"
+          },
+          {
+            "title": "Testes Genéricos Não Correspondem aos Seus Materiais",
+            "description": "Questionários pré-fabricados raramente se alinham com seu conteúdo de estudo específico, deixando lacunas em sua preparação.",
+            "icon": "book-open"
+          },
+          {
+            "title": "Sem Feedback Quando Você Está Preso",
+            "description": "Métodos de estudo tradicionais deixam você sozinho quando precisa de ajuda para entender conceitos difíceis.",
+            "icon": "circle-help"
+          },
+          {
+            "title": "Difícil Rastrear o Progresso Real",
+            "description": "Sem dificuldade adaptativa, você não pode dizer se está realmente dominando o material ou apenas memorizando.",
+            "icon": "chart-no-axes-combined"
+          }
+        ]
+      }
+    },
+    {
+      "type": "Features",
+      "props": {
+        "title": "Recursos Poderosos para Aprendizado Mais Inteligente",
+        "subtitle": "O Que Torna QuizBee Especial",
+        "theme": "default",
+        "features": [
+          {
+            "title": "Questionários Gerados por IA",
+            "description": "Carregue seus materiais de estudo e obtenha instantaneamente questionários personalizados adaptados ao seu conteúdo. PDFs, documentos, notas - nós lidamos com tudo.",
+            "icon": "bot",
+            "impact": {
+              "metric": "Criação de Quiz",
+              "value": "30",
+              "unit": "segundos"
+            }
+          },
+          {
+            "title": "Ajuste Dinâmico de Dificuldade",
+            "description": "Controle a dificuldade em tempo real enquanto faz os questionários. Muito fácil? Aumente. Muito difícil? Diminua. O questionário se adapta ao seu ritmo de aprendizado.",
+            "icon": "sliders-horizontal",
+            "impact": {
+              "metric": "Melhoria na Retenção",
+              "value": "3x",
+              "unit": "melhor"
+            }
+          },
+          {
+            "title": "Conversas com Tutor de IA",
+            "description": "Após cada pergunta, converse com um tutor de IA que conhece seus materiais. Obtenha explicações, esclarecimentos e insights mais profundos instantaneamente.",
+            "icon": "message-circle",
+            "impact": {
+              "metric": "Compreensão",
+              "value": "100%",
+              "unit": "clareza"
+            }
+          },
+          {
+            "title": "Refinamento de Tópicos",
+            "description": "Ajuste o foco do seu questionário no meio da sessão. Quer aprofundar em um tópico específico? Apenas peça, e o questionário se adapta.",
+            "icon": "target"
+          },
+          {
+            "title": "Rastreamento de Progresso",
+            "description": "Monitore seu desempenho ao longo do tempo. Veja quais tópicos você dominou e quais precisam de mais atenção.",
+            "icon": "trending-up"
+          }
+        ],
+        "stats": {
+          "total": "10.000+",
+          "label": "Questionários Gerados Diariamente",
+          "description": "Junte-se a milhares de estudantes e profissionais usando QuizBee para dominar seus materiais"
+        }
+      }
+    },
+    {
+      "type": "HowItWorks",
+      "props": {
+        "title": "Comece em 4 Passos Simples",
+        "subtitle": "Como QuizBee Funciona",
+        "theme": "gradient",
+        "steps": [
+          {
+            "number": 1,
+            "title": "Carregue Seus Materiais",
+            "description": "Solte seus PDFs, documentos ou notas no QuizBee. Nossa IA analisa o conteúdo e se prepara para criar questionários personalizados baseados em seus materiais."
+          },
+          {
+            "number": 2,
+            "title": "Faça Questionários Adaptativos",
+            "description": "Comece seu questionário e ajuste a dificuldade em tempo real. Refine tópicos, mude a complexidade e aprenda no seu próprio ritmo. Cada pergunta é gerada com base em seus materiais de estudo reais."
+          },
+          {
+            "number": 3,
+            "title": "Aprenda com Tutoria de IA",
+            "description": "Preso em uma pergunta? Inicie uma conversa com seu tutor de IA. Obtenha explicações detalhadas, explore conceitos relacionados e realmente compreenda o material - não apenas memorize as respostas."
+          },
+          {
+            "number": 4,
+            "title": "Cresça ao Longo do Tempo",
+            "description": "QuizBee aprende com sua jornada. À medida que você progride, identifica seus pontos fracos e lacunas de conhecimento, adaptando futuras perguntas para se concentrar em áreas que precisam melhorar. Construa domínio duradouro através de reforço contínuo e personalizado."
+          }
+        ]
+      }
+    },
+    {
+      "type": "FAQ",
+      "props": {
+        "title": "Perguntas Frequentes",
+        "subtitle": "Tem Alguma Pergunta?",
+        "theme": "gradient",
+        "questions": [
+          {
+            "question": "Como o QuizBee é diferente do Quizlet ou de outros aplicativos de questionários?",
+            "answer": "Ao contrário dos aplicativos tradicionais de cartões, QuizBee usa IA para gerar perguntas diretamente de SEUS materiais - não de decks pré-fabricados. Além disso, você obtém um tutor de IA pessoal que pode explicar qualquer conceito de seus materiais em tempo real. É como ter um parceiro de estudo que leu tudo o que você tem."
+          },
+          {
+            "question": "Quais formatos de arquivo vocês suportam?",
+            "answer": "Suportamos PDF, DOCX, TXT e muito mais. Você pode fazer upload de notas de aula, livros didáticos, guias de estudo, artigos - praticamente qualquer material de estudo baseado em texto. Nossa IA analisa o conteúdo e gera perguntas relevantes."
+          },
+          {
+            "question": "Como o tutor de IA funciona?",
+            "answer": "Após cada pergunta do quiz, você pode iniciar uma conversa com nosso tutor de IA. Ele tem contexto completo de seus materiais de estudo e pode explicar conceitos, fornecer exemplos, esclarecer tópicos confusos e responder perguntas de acompanhamento - tudo baseado em SEUS materiais específicos."
+          },
+          {
+            "question": "Posso usar QuizBee no meu telefone?",
+            "answer": "Sim! QuizBee funciona em qualquer dispositivo com um navegador web - desktop, tablet ou celular. Estude em qualquer lugar, a qualquer hora. Seu progresso é sincronizado automaticamente em todos os dispositivos."
+          },
+          {
+            "question": "Como funciona a dificuldade adaptativa?",
+            "answer": "Você pode ajustar a dificuldade durante o quiz se as perguntas forem muito fáceis ou muito difíceis. Além disso, QuizBee aprende com seus erros ao longo do tempo, focando futuros questionários em tópicos com os quais você tem dificuldade. É aprendizado personalizado que cresce com você."
+          },
+          {
+            "question": "Meus dados são seguros e privados?",
+            "answer": "Absolutamente. Seus materiais de estudo e histórico de quizzes são criptografados e privados. Nunca compartilhamos seus dados com terceiros. Você é dono do seu conteúdo e pode deletá-lo a qualquer momento."
+          },
+          {
+            "question": "Posso cancelar minha inscrição a qualquer momento?",
+            "answer": "Sim! Sem contratos de longo prazo ou compromissos. Cancele com um clique nas configurações da sua conta. Você manterá acesso até o final de seu período de faturamento, e oferecemos uma garantia de reembolso de 14 dias."
+          },
+          {
+            "question": "Vocês oferecem descontos para estudantes?",
+            "answer": "Sim! Estudantes com um endereço de e-mail .edu válido recebem 20% de desconto nos planos Pro. Simplesmente inscreva-se com seu e-mail de estudante para receber automaticamente o desconto."
+          }
+        ]
+      }
+    },
+    {
+      "type": "CTA",
+      "props": {
+        "headline": "Pronto para Transformar Seu Aprendizado?",
+        "subheadline": "Junte-se a 50.000+ estudantes que estão aprendendo de forma mais inteligente com quizzes alimentados por IA. Faça upload do seu primeiro material e crie um quiz em segundos. Nenhum cartão de crédito necessário.",
+        "buttonText": "Começar Grátis - Nenhum Cartão de Crédito Necessário",
+        "buttonHref": "{{APP_URL}}",
+        "theme": "gradient"
+      }
+    }
+  ]
+}

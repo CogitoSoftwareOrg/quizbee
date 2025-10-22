@@ -1,0 +1,94 @@
+name: quizbee-local
+
+services:
+  pb:
+    build:
+      context: ../apps/pb
+      dockerfile: Dockerfile
+    env_file:
+      - ../envs/.env
+    volumes:
+      - ../apps/pb/pb_data:/pb/pb_data
+      - ../apps/pb/pb_migrations:/pb/pb_migrations
+      - ../apps/pb/pb_hooks:/pb/pb_hooks
+    ports:
+      - "8090:8090"
+
+  api:
+    build:
+      context: ../apps/api
+      dockerfile: Dockerfile.local
+    ports:
+      - "8000:8000"
+    env_file:
+      - ../envs/.env
+    volumes:
+      - ../apps/api/src:/app/src:ro
+    depends_on:
+      - pb
+
+  app:
+    build:
+      context: ../apps/app
+      dockerfile: Dockerfile.local
+    volumes:
+      - ../apps/app:/app
+      - app_node_modules:/app/node_modules
+    env_file:
+      - ../envs/.env
+    command: >
+      sh -lc 'set -e;
+      pnpm install --frozen-lockfile;
+      pnpm run dev --host 0.0.0.0 --port 5173'
+    ports:
+      - "5173:5173"
+
+  web:
+    build:
+      context: ../apps/web
+      dockerfile: Dockerfile.local
+    volumes:
+      - ../apps/web:/app
+      - web_node_modules:/app/node_modules
+    env_file:
+      - ../envs/.env
+    command: >
+      sh -lc 'set -e;
+      pnpm install --frozen-lockfile;
+      pnpm astro dev --host 0.0.0.0 --port 4321'
+    ports:
+      - "4321:4321"
+  meilisearch:
+    image: getmeili/meilisearch:latest
+    ports:
+      - "7700:7700"
+    volumes:
+      - ../apps/meilisearch/data:/meili_data
+    env_file:
+      - ../envs/.env
+
+  dragonfly:
+    image: docker.dragonflydb.io/dragonflydb/dragonfly:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - ../apps/dragonfly/data:/data
+    env_file:
+      - ../envs/.env
+
+volumes:
+  app_node_modules:
+  web_node_modules:
+
+  # worker:
+  #   build:
+  #     context: api
+  #     dockerfile: Dockerfile.worker
+  #   depends_on:
+  #     - redis
+  #   env_file:
+  #     - api/.env
+  #   volumes:
+  #     - api/src:/app/src:ro
+  #   command: >
+  #     sh -lc 'uv run python -m watchfiles --filter python -- "uv run arq -v api.worker.WorkerSettings"'

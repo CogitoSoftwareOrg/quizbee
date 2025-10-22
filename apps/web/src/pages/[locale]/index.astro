@@ -1,0 +1,77 @@
+---
+import { getCollection } from "astro:content";
+
+import {
+  Hero,
+  Pains,
+  Features,
+  HowItWorks,
+  FAQ,
+  CTA,
+} from "@cogisoft/ui-astro";
+
+import Root from "@/layouts/Root.astro";
+import { urlWithPR } from "@/lib";
+
+export const getStaticPaths = async () => {
+  const landings = await getCollection("landings");
+  const filteredLandings = landings.filter((landing) =>
+    landing.id.includes("quizbee-base")
+  );
+
+  const paths = filteredLandings.map((landing) => {
+    return {
+      params: {
+        locale: landing.data.locale,
+      },
+      props: {
+        meta: landing.data.meta,
+        sections: landing.data.sections,
+      },
+    };
+  });
+
+  return paths;
+};
+
+const { meta, sections } = Astro.props;
+
+const appUrl = urlWithPR(import.meta.env.PUBLIC_APP_URL) as string;
+const parsed = JSON.parse(
+  JSON.stringify(sections).replaceAll("{{APP_URL}}", appUrl)
+);
+---
+
+<Root
+  title={meta.title}
+  description={meta.description}
+  image={meta.image}
+  active={meta.active || "home"}
+  headerCtaHref={meta.headerCtaHref}
+  structuredData={meta.structuredData}
+>
+  {
+    parsed.map((section: any, idx: number) => {
+      switch (section.type) {
+        case "Hero":
+          return <Hero {...section.props} />;
+        case "Pains":
+          return <Pains {...section.props} />;
+        case "Features":
+          return <Features {...section.props} />;
+        case "HowItWorks":
+          return <HowItWorks {...section.props} />;
+        case "FAQ":
+          return <FAQ {...section.props} />;
+        case "CTA":
+          return <CTA {...section.props} />;
+        default:
+          return (
+            <>
+              {`<!-- Unknown section type: ${(section as any).type} at index ${idx} -->`}
+            </>
+          );
+      }
+    })
+  }
+</Root>

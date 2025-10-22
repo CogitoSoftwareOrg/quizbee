@@ -8,8 +8,9 @@
 **/.env.local
 **/.env.preview
 
-pb/pb_data
-meilisearch/data
+**/pb/pb_data
+**/meilisearch/data
+**/dragonfly/data
 
 **/.pnpm-store
 **/node_modules

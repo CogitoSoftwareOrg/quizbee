@@ -1,0 +1,209 @@
+{
+  "locale": "de",
+  "slug": "quizbee-base",
+  "meta": {
+    "title": "QuizBee - Lernen Sie Intelligenter mit KI-gestützten Quiz",
+    "description": "Verwandeln Sie Ihre Lernmaterialien in interaktive KI-gestützte Quiz. Adaptives Lernen, KI-Nachhilfe und Fortschrittsänderung für Schüler und Fachleute.",
+    "image": "/bee_final.svg",
+    "active": "home",
+    "headerCtaHref": "{{APP_URL}}",
+    "structuredData": {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "QuizBee",
+      "description": "KI-gestützte Quiz-Generierungsplattform, die Lernmaterialien in interaktive Quiz umwandelt",
+      "applicationCategory": "EducationalApplication",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "5",
+        "ratingCount": "6",
+        "reviewCount": "6"
+      }
+    }
+  },
+  "sections": [
+    {
+      "type": "Hero",
+      "props": {
+        "title": "Verwandeln Sie Ihre Lernmaterialien in Interaktive Quiz",
+        "description": "QuizBee verwandelt Ihre Dokumente in ansprechende, KI-gestützte Quiz. Lernen Sie intelligenter, nicht härter, mit personalisiertem Lernen, das sich an Ihre Bedürfnisse anpasst.",
+        "buttonText": "Kostenlos Starten",
+        "image": "/bee_final.svg",
+        "position": "right",
+        "overlay": false,
+        "href": "{{APP_URL}}"
+      }
+    },
+    {
+      "type": "Pains",
+      "props": {
+        "title": "Haben Sie Schwierigkeiten, Beim Lernen Engagiert zu Bleiben?",
+        "theme": "gradient",
+        "pains": [
+          {
+            "title": "Passives Lesen ist Ineffektiv",
+            "description": "Einfaches Lesen von Materialien hilft Ihnen nicht, Informationen zu behalten. Sie brauchen aktives Engagement, um wirklich zu lernen.",
+            "icon": "bed"
+          },
+          {
+            "title": "Generische Tests Passen Nicht zu Ihren Materialien",
+            "description": "Vorgefertigte Quiz stimmen selten mit Ihrem spezifischen Lerninhalt überein und hinterlassen Lücken in Ihrer Vorbereitung.",
+            "icon": "book-open"
+          },
+          {
+            "title": "Kein Feedback, Wenn Sie Feststecken",
+            "description": "Traditionelle Lernmethoden lassen Sie allein, wenn Sie Hilfe beim Verständnis schwieriger Konzepte benötigen.",
+            "icon": "circle-help"
+          },
+          {
+            "title": "Schwer, Echten Fortschritt zu Verfolgen",
+            "description": "Ohne adaptive Schwierigkeit können Sie nicht sagen, ob Sie das Material wirklich beherrschen oder nur auswendig lernen.",
+            "icon": "chart-no-axes-combined"
+          }
+        ]
+      }
+    },
+    {
+      "type": "Features",
+      "props": {
+        "title": "Leistungsstarke Funktionen für Intelligenteres Lernen",
+        "subtitle": "Was QuizBee Besonders Macht",
+        "theme": "default",
+        "features": [
+          {
+            "title": "KI-Generierte Quiz",
+            "description": "Laden Sie Ihre Lernmaterialien hoch und erhalten Sie sofort maßgeschneiderte Quiz, die auf Ihre Inhalte zugeschnitten sind. PDFs, Dokumente, Notizen - wir verarbeiten alles.",
+            "icon": "bot",
+            "impact": {
+              "metric": "Quiz-Erstellung",
+              "value": "30",
+              "unit": "Sekunden"
+            }
+          },
+          {
+            "title": "Dynamische Schwierigkeitsanpassung",
+            "description": "Steuern Sie die Schwierigkeit in Echtzeit, während Sie Quiz durchführen. Zu einfach? Erhöhen Sie die Schwierigkeit. Zu schwer? Senken Sie sie. Das Quiz passt sich Ihrem Lerntempo an.",
+            "icon": "sliders-horizontal",
+            "impact": {
+              "metric": "Behaltensverbesserung",
+              "value": "3x",
+              "unit": "besser"
+            }
+          },
+          {
+            "title": "KI-Tutor-Gespräche",
+            "description": "Nach jeder Frage chatten Sie mit einem KI-Tutor, der Ihre Materialien kennt. Erhalten Sie Erklärungen, Klarstellungen und tiefere Einblicke sofort.",
+            "icon": "message-circle",
+            "impact": {
+              "metric": "Verständnis",
+              "value": "100%",
+              "unit": "Klarheit"
+            }
+          },
+          {
+            "title": "Themenverfeinerung",
+            "description": "Passen Sie den Fokus Ihres Quiz während der Sitzung an. Möchten Sie tiefer in ein bestimmtes Thema eintauchen? Fragen Sie einfach, und das Quiz passt sich an.",
+            "icon": "target"
+          },
+          {
+            "title": "Fortschrittsverfolgung",
+            "description": "Überwachen Sie Ihre Leistung im Laufe der Zeit. Sehen Sie, welche Themen Sie gemeistert haben und welche mehr Aufmerksamkeit benötigen.",
+            "icon": "trending-up"
+          }
+        ],
+        "stats": {
+          "total": "10.000+",
+          "label": "Täglich Erstellte Quiz",
+          "description": "Schließen Sie sich Tausenden von Studenten und Fachleuten an, die QuizBee nutzen, um ihre Materialien zu meistern"
+        }
+      }
+    },
+    {
+      "type": "HowItWorks",
+      "props": {
+        "title": "Beginnen Sie in 4 Einfachen Schritten",
+        "subtitle": "Wie QuizBee Funktioniert",
+        "theme": "gradient",
+        "steps": [
+          {
+            "number": 1,
+            "title": "Laden Sie Ihre Materialien Hoch",
+            "description": "Legen Sie Ihre PDFs, Dokumente oder Notizen in QuizBee ab. Unsere KI analysiert den Inhalt und bereitet sich darauf vor, personalisierte Quiz basierend auf Ihren Materialien zu erstellen."
+          },
+          {
+            "number": 2,
+            "title": "Machen Sie Adaptive Quiz",
+            "description": "Starten Sie Ihr Quiz und passen Sie die Schwierigkeit im laufenden Betrieb an. Verfeinern Sie Themen, ändern Sie die Komplexität und lernen Sie in Ihrem eigenen Tempo. Jede Frage wird basierend auf Ihren tatsächlichen Lernmaterialien generiert."
+          },
+          {
+            "number": 3,
+            "title": "Lernen Sie mit KI-Nachhilfe",
+            "description": "Stecken Sie bei einer Frage fest? Starten Sie eine Konversation mit Ihrem KI-Tutor. Erhalten Sie detaillierte Erklärungen, erforschen Sie verwandte Konzepte und verstehen Sie das Material wirklich - nicht nur Antworten auswendig lernen."
+          },
+          {
+            "number": 4,
+            "title": "Wachsen Sie Mit der Zeit",
+            "description": "QuizBee lernt von Ihrer Reise. Mit Ihrem Fortschritt identifiziert es Ihre schwachen Punkte und Wissenslücken und passt zukünftige Fragen an, um sich auf Bereiche zu konzentrieren, die Verbesserung benötigen. Bauen Sie durch kontinuierliche, personalisierte Verstärkung dauerhafte Beherrschung auf."
+          }
+        ]
+      }
+    },
+    {
+      "type": "FAQ",
+      "props": {
+        "title": "Häufig Gestellte Fragen",
+        "subtitle": "Fragen?",
+        "theme": "gradient",
+        "questions": [
+          {
+            "question": "Wie unterscheidet sich QuizBee von Quizlet oder anderen Quiz-Apps?",
+            "answer": "Im Gegensatz zu herkömmlichen Kartenflip-Apps nutzt QuizBee KI, um Fragen direkt aus IHREN Materialien zu generieren - nicht aus vorgefertigten Decks. Außerdem bekommen Sie einen persönlichen KI-Tutor, der jeden Konzept aus Ihren Materialien in Echtzeit erklären kann. Es ist wie einen Studienfreund zu haben, der alles gelesen hat, was Sie haben."
+          },
+          {
+            "question": "Welche Dateiformate unterstützen Sie?",
+            "answer": "Wir unterstützen PDF, DOCX, TXT und mehr. Sie können Vorlesungsnotizen, Lehrbücher, Lernratgeber, Artikel - praktisch alle textbasierten Lernmaterialien hochladen. Unsere KI analysiert den Inhalt und generiert relevante Fragen."
+          },
+          {
+            "question": "Wie funktioniert der KI-Tutor?",
+            "answer": "Nach jeder Quiz-Frage können Sie mit unserem KI-Tutor ein Gespräch starten. Er hat vollständigen Kontext Ihrer Lernmaterialien und kann Konzepte erklären, Beispiele geben, verwirrendende Themen klären und Follow-up-Fragen beantworten - alles auf Basis IHRER spezifischen Materialien."
+          },
+          {
+            "question": "Kann ich QuizBee auf meinem Telefon nutzen?",
+            "answer": "Ja! QuizBee funktioniert auf jedem Gerät mit einem Webbrowser - Desktop, Tablet oder Mobiltelefon. Lernen Sie überall, jederzeit. Ihr Fortschritt wird auf allen Geräten automatisch synchronisiert."
+          },
+          {
+            "question": "Wie funktioniert die adaptive Schwierigkeit?",
+            "answer": "Sie können die Schwierigkeit während eines Quiz anpassen, wenn Fragen zu einfach oder zu schwer sind. Darüber hinaus lernt QuizBee aus Ihren Fehlern im Laufe der Zeit und konzentriert sich auf Themen, mit denen Sie kämpfen. Es ist personalisiertes Lernen, das mit Ihnen wächst."
+          },
+          {
+            "question": "Sind meine Daten sicher und privat?",
+            "answer": "Absolut. Ihre Lernmaterialien und Quiz-Geschichte sind verschlüsselt und privat. Wir geben Ihre Daten niemals an Dritte weiter. Sie besitzen Ihren Inhalt und können ihn jederzeit löschen."
+          },
+          {
+            "question": "Kann ich mein Abonnement jederzeit kündigen?",
+            "answer": "Ja! Keine langfristigen Verträge oder Verpflichtungen. Kündigen Sie mit einem Klick aus Ihren Kontoeinstellungen. Sie behalten Zugriff bis zum Ende Ihres Abrechnungszeitraums und wir bieten eine 14-tägige Geld-zurück-Garantie."
+          },
+          {
+            "question": "Bieten Sie Studentenrabatte an?",
+            "answer": "Ja! Studenten mit einer gültigen .edu-E-Mail-Adresse erhalten 20% Rabatt auf Pro-Pläne. Melden Sie sich einfach mit Ihrer Student-E-Mail an und erhalten Sie automatisch den Rabatt."
+          }
+        ]
+      }
+    },
+    {
+      "type": "CTA",
+      "props": {
+        "headline": "Bereit, Ihr Lernen zu Transformieren?",
+        "subheadline": "Schließen Sie sich 50.000+ Schülern an, die mit KI-gestützten Quiz intelligenter studieren. Laden Sie Ihr erstes Material hoch und erstellen Sie in Sekunden ein Quiz. Keine Kreditkarte erforderlich.",
+        "buttonText": "Kostenlos Starten - Keine Kreditkarte Erforderlich",
+        "buttonHref": "{{APP_URL}}",
+        "theme": "gradient"
+      }
+    }
+  ]
+}
