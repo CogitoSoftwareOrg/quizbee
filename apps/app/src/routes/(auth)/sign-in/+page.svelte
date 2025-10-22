@@ -40,7 +40,7 @@
 	}
 </script>
 
-<div class="mx-auto mt-8 max-w-md px-4">
+<div class="mx-auto mt-8 max-w-lg px-4">
 	<ThemeController />
 	<h1 class="mb-6 text-center text-3xl font-bold">Welcome Back!</h1>
 

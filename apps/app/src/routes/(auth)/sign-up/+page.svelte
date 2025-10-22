@@ -55,7 +55,7 @@
 	};
 </script>
 
-<div class="mx-auto mt-8 max-w-md px-4">
+<div class="mx-auto mt-8 max-w-lg px-4">
 	<ThemeController />
 	<h1 class="mb-6 text-center text-3xl font-bold">Create New Account</h1>
 
@@ -137,11 +137,19 @@
 				/>
 				<span class="label-text">
 					I agree to the
-					<a
-						target="_blank"
-						href={`${env.PUBLIC_WEB_URL}terms-and-privacy`}
-						class="link link-primary">Terms and Privacy</a
-					>
+					<span>
+						<a
+							target="_blank"
+							href={`${env.PUBLIC_WEB_URL}legal/terms-and-privacy`}
+							class="link link-primary">Terms and Conditions</a
+						>
+						&nbsp;and&nbsp;
+						<a
+							target="_blank"
+							href={`${env.PUBLIC_WEB_URL}legal/privacy-policy`}
+							class="link link-primary">Privacy Policy</a
+						>
+					</span>
 				</span>
 			</label>
 		</div>
