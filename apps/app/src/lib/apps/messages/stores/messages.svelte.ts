@@ -1,7 +1,7 @@
 import { postApi } from '$lib/api/call-api';
 import { computeApiUrl } from '$lib/api/compute-url';
 import { pb } from '$lib/pb';
-import type { Collections, MessagesResponse } from '@quizbee/pb-types';
+import type { Collections, MessagesResponse } from '$lib/pb';
 import { nanoid } from '$lib/utils/nanoid';
 
 import type { Sender } from '../types';

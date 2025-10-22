@@ -3,7 +3,7 @@
 	import { materialsStore } from '$lib/apps/materials/materials.svelte';
 	import type { AttachedFile } from '$lib/types/attached-file';
 	import { type QuizExpand } from '$lib/pb';
-	import { type QuizesResponse } from '@quizbee/pb-types';
+	import { type QuizesResponse } from '$lib/pb';
 	import { generateId } from '$lib/utils/generate-id';
 	import { pb } from '$lib/pb';
 	import { createAttachedFileFromMaterial } from '../new/createAttachedFileFromMaterial';

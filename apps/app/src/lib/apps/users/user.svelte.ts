@@ -1,7 +1,7 @@
 import type { AuthRecord } from 'pocketbase';
 
 import { pb } from '$lib/pb';
-import type { UsersResponse } from '@quizbee/pb-types';
+import type { UsersResponse } from '$lib/pb';
 import type { UserExpand } from '$lib/pb/expands';
 import type { Sender } from '$lib/apps/messages/types';
 import Man from '$lib/assets/images/Man.jpg';

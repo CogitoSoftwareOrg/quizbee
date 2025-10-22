@@ -6,10 +6,10 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "build:gen-types": "npx pocketbase-typegen --db ../pb/pb_data/data.db --out src/lib/pocketbase-types.ts"
   },
   "dependencies": {
-    "@quizbee/pb-types": "workspace:*",
     "@astrojs/node": "^9.5.0",
     "@astrojs/sitemap": "^3.6.0",
     "@astrojs/svelte": "^7.2.0",

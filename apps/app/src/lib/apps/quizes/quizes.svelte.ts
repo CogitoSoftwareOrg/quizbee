@@ -1,5 +1,5 @@
 import { pb, type QuizExpand } from '$lib/pb';
-import type { QuizesResponse } from '@quizbee/pb-types';
+import type { QuizesResponse } from '$lib/pb';
 
 class QuizesStore {
 	_quizes: QuizesResponse<QuizExpand>[] = $state([]);

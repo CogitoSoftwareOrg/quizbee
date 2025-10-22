@@ -1,5 +1,5 @@
 import { pb } from '$lib/pb';
-import type { MaterialsResponse } from '@quizbee/pb-types';
+import type { MaterialsResponse } from '$lib/pb';
 
 class MaterialsStore {
 	private _materials: MaterialsResponse[] = $state([]);

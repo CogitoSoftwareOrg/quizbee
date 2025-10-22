@@ -14,7 +14,7 @@
 	import ToggleQuizVisibility from '$lib/apps/quizes/ToggleQuizVisibility.svelte';
 	import type { QuizExpand, QuizItemsResponse } from '$lib/pb';
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
-	import { QuizesVisibilityOptions } from '@quizbee/pb-types';
+	import { QuizesVisibilityOptions } from '$lib/pb';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
 	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
 

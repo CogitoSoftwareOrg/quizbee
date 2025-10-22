@@ -7,7 +7,7 @@
 	import { materialsStore } from '$lib/apps/materials/materials.svelte';
 	import type { AttachedFile } from '$lib/types/attached-file';
 	import { pb } from '$lib/pb';
-	import type { MaterialsResponse } from '@quizbee/pb-types';
+	import type { MaterialsResponse } from '$lib/pb';
 	import { generateId } from '$lib/utils/generate-id';
 	import { removeFile } from '../new/removeFile';
 	import { addExistingMaterial } from '../new/addExistingMaterial';

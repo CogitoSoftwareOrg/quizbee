@@ -1,8 +1,7 @@
 import PocketBase from "pocketbase";
 
-import type { TypedPocketBase } from "@quizbee/pb-types";
-
 import { urlWithPR } from "./pr-url";
+import type { TypedPocketBase } from "./pocketbase-types";
 
 const adminUrl = urlWithPR(
   import.meta.env.PB_URL ?? process.env.RUNTIME_PB_URL

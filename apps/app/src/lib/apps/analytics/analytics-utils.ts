@@ -1,4 +1,4 @@
-import type { QuizAttemptsResponse, QuizesResponse } from '@quizbee/pb-types';
+import type { QuizAttemptsResponse, QuizesResponse } from '$lib/pb';
 
 /**
  * Ensures value is an array of choices

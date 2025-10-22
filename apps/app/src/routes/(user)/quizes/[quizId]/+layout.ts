@@ -1,5 +1,5 @@
 import { pb } from '$lib/pb/client.js';
-import type { QuizesResponse } from '@quizbee/pb-types';
+import type { QuizesResponse } from '$lib/pb';
 import type { QuizExpand } from '$lib/pb/expands';
 
 export async function load({ params }) {

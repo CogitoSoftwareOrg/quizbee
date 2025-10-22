@@ -1,5 +1,5 @@
 import { pb } from '$lib/pb';
-import type { SubscriptionsResponse } from '@quizbee/pb-types';
+import type { SubscriptionsResponse } from '$lib/pb';
 
 class SubscriptionStore {
 	_subscription: SubscriptionsResponse | null = $state(null);

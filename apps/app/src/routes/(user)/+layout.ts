@@ -1,7 +1,7 @@
 export const prerender = false;
 
 import { pb } from '$lib/pb';
-import type { UsersResponse, QuizesResponse } from '@quizbee/pb-types';
+import type { UsersResponse, QuizesResponse } from '$lib/pb';
 import type { QuizExpand, UserExpand } from '$lib/pb/expands';
 
 import { materialsStore } from '$lib/apps/materials/materials.svelte';

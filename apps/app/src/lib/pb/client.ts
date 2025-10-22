@@ -2,9 +2,9 @@ import { Preferences } from '@capacitor/preferences';
 import PocketBase, { AsyncAuthStore } from 'pocketbase';
 import { env } from '$env/dynamic/public';
 
-import type { TypedPocketBase } from '@quizbee/pb-types';
-
 import { computeEnvUrl } from '$lib/utils/compute-env-url';
+
+import type { TypedPocketBase } from './pocketbase-types';
 
 async function createPb(): Promise<TypedPocketBase> {
 	const initial = (await Preferences.get({ key: 'pb_auth' })).value ?? '';

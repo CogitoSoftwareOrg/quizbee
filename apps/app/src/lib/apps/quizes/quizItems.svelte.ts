@@ -1,5 +1,5 @@
 import { pb } from '$lib/pb';
-import type { QuizItemsResponse } from '@quizbee/pb-types';
+import type { QuizItemsResponse } from '$lib/pb';
 import { SvelteMap } from 'svelte/reactivity';
 
 class QuizItemsStore {

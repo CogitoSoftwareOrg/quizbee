@@ -31,24 +31,15 @@ services:
     build:
       context: ../apps/app
       dockerfile: Dockerfile.local
-    working_dir: /workspace/apps/app
     volumes:
-      - ../:/workspace
+      - ../apps/app:/app
       - app_node_modules:/app/node_modules
-      - pnpm_store:/pnpm-store
     env_file:
       - ../envs/.env
-    environment:
-      PNPM_HOME: /pnpm
-      CI: "true"
     command: >
-      sh -lc '
-        set -e
-        corepack enable
-        pnpm config set store-dir /pnpm-store
-        pnpm -C /workspace install --no-frozen-lockfile
-        pnpm -C /workspace/apps/app run dev --host 0.0.0.0 --port 5173
-      '
+      sh -lc 'set -e;
+      pnpm install --frozen-lockfile;
+      pnpm run dev --host 0.0.0.0 --port 5173'
     ports:
       - "5173:5173"
 
@@ -56,24 +47,15 @@ services:
     build:
       context: ../apps/web
       dockerfile: Dockerfile.local
-    working_dir: /workspace/apps/web
     volumes:
-      - ../:/workspace
+      - ../apps/web:/app
       - web_node_modules:/app/node_modules
-      - pnpm_store:/pnpm-store
     env_file:
       - ../envs/.env
-    environment:
-      PNPM_HOME: /pnpm
-      CI: "true"
     command: >
-      sh -lc '
-        set -e
-        corepack enable
-        pnpm config set store-dir /pnpm-store
-        pnpm -C /workspace install --frozen-lockfile
-        pnpm -C /workspace/apps/web run dev --host 0.0.0.0 --port 4321
-      '
+      sh -lc 'set -e;
+      pnpm install --frozen-lockfile;
+      pnpm astro dev --host 0.0.0.0 --port 4321'
     ports:
       - "4321:4321"
   meilisearch:
@@ -97,7 +79,6 @@ services:
 volumes:
   app_node_modules:
   web_node_modules:
-  pnpm_store:
 
   # worker:
   #   build:
