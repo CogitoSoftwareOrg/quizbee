@@ -1,4 +1,5 @@
 <script lang="ts">
+	import posthog from 'posthog-js';
 	import { env } from '$env/dynamic/public';
 	import { goto, invalidate } from '$app/navigation';
 	import { page } from '$app/state';
@@ -7,7 +8,6 @@
 	import ThemeController from '$lib/features/ThemeController.svelte';
 
 	import Oauth from '../Oauth.svelte';
-
 	let username = $state('');
 	let email = $state('');
 	let password = $state('');
@@ -35,7 +35,12 @@
 		}
 
 		try {
-			await pb!.collection('users').create({
+			posthog.capture('sign_up_started', {
+				email,
+				username
+			});
+
+			const user = await pb!.collection('users').create({
 				email,
 				password,
 				passwordConfirm,
@@ -43,6 +48,12 @@
 			});
 			await pb!.collection('users').authWithPassword(email, password, {
 				expand: ''
+			});
+
+			posthog.capture('sign_up_completed', {
+				email,
+				userId: user.id,
+				username
 			});
 			// await invalidate('global:user');
 			await goto('/verify-email');

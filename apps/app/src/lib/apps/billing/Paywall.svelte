@@ -1,9 +1,9 @@
 <script lang="ts">
+	import posthog from 'posthog-js';
 	import { page } from '$app/state';
 	import { Check, Sparkles } from 'lucide-svelte';
 
 	import { Button } from '@cogisoft/ui-svelte-daisy';
-
 	import { computeApiUrl } from '$lib/api/compute-url';
 
 	type Price = 'plus_monthly' | 'pro_monthly' | 'plus_yearly' | 'pro_yearly';
@@ -69,6 +69,12 @@
 		const price: Price = `${priceKey}_${billingPeriod}` as Price;
 
 		try {
+			posthog.capture('checkout_started', {
+				price,
+				return_url: page.url.pathname.slice(1),
+				plan: priceKey
+			});
+
 			const response = await fetch(`${computeApiUrl()}billing/stripe/checkout`, {
 				method: 'POST',
 				body: JSON.stringify({ price, return_url: page.url.pathname.slice(1) }),
@@ -78,6 +84,11 @@
 				credentials: 'include'
 			});
 			const data = await response.json();
+			posthog.capture('checkout_completed', {
+				price,
+				...data
+			});
+
 			window.location.href = data.url;
 		} finally {
 			loading = false;

@@ -11,6 +11,7 @@
 	import SendMessage from '$lib/apps/messages/SendMessage.svelte';
 	import { Crown, X } from 'lucide-svelte';
 	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
+	import { uiStore } from '$lib/apps/users/ui.svelte';
 
 	interface Props {
 		class?: ClassValue;
@@ -69,11 +70,28 @@
 		</section>
 
 		<footer class="border-base-200 border-t px-3 py-4">
-			{#if isFreePlan}
-				<div class="flex items-center justify-center gap-2">
-					<p class="text-center text-sm font-semibold">Only premium users can use chat with AI</p>
+			{#if quizAttempt.feedback}
+				<Button
+					size="lg"
+					color="neutral"
+					style="soft"
+					block
+					href={`/quizes/${quizAttempt?.quiz}/attempts/${quizAttempt?.id}/feedback`}
+				>
+					View Feedback
+				</Button>
+			{:else if isFreePlan}
+				<Button
+					size="lg"
+					color="neutral"
+					style="soft"
+					block
+					onclick={() => uiStore.setPaywallOpen(true)}
+					class="flex items-center justify-center gap-2"
+				>
+					<p class="text-center font-semibold">Only premium users can use chat with AI</p>
 					<Crown class="block" size={24} />
-				</div>
+				</Button>
 			{:else}
 				<MessageField bind:inputText={query} {item} attempt={quizAttempt} sender={userSender} />
 				<div class="flex justify-end">

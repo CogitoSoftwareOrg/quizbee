@@ -1,4 +1,5 @@
 <script lang="ts">
+	import posthog from 'posthog-js';
 	import { goto, invalidate } from '$app/navigation';
 	import { page } from '$app/state';
 	import { env } from '$env/dynamic/public';
@@ -28,7 +29,11 @@
 		loading = false;
 		try {
 			const target = e.currentTarget as HTMLElement;
-			await pb!.collection('users').authWithOAuth2({
+			posthog.capture('oauth_started', {
+				provider: target.dataset.provider!
+			});
+
+			const res = await pb!.collection('users').authWithOAuth2({
 				provider: target.dataset.provider!,
 				query: { expand: '', requestKey: 'oauth2' },
 				createData: {
@@ -36,6 +41,10 @@
 						provider: target.dataset.provider!
 					}
 				}
+			});
+
+			posthog.capture('oauth_completed', {
+				provider: target.dataset.provider!
 			});
 			const redirectUrl = sessionStorage.getItem('postLoginPath') || '/home';
 			// await invalidate('global:user');

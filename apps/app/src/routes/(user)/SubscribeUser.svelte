@@ -1,4 +1,6 @@
 <script lang="ts">
+	import posthog from 'posthog-js';
+
 	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
 	import { materialsStore } from '$lib/apps/materials/materials.svelte';
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte';
@@ -8,6 +10,18 @@
 
 	const user = $derived(userStore.user);
 	const sub = $derived(subscriptionStore.subscription);
+
+	$effect(() => {
+		console.log(user);
+		console.log(sub);
+
+		if (!user || !sub) return;
+		posthog.identify(user.id);
+		posthog.people.set({
+			...user,
+			plan: sub.tariff
+		});
+	});
 
 	$effect(() => {
 		const userId = user?.id;

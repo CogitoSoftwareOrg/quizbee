@@ -65,7 +65,7 @@
 
 <main class="relative flex h-full flex-row overflow-x-hidden">
 	<!-- Use Previous Quiz Settings Button - Fixed in top right corner -->
-	
+
 	<div class="fixed right-4 top-4 z-50">
 		<Draft
 			bind:title
@@ -78,7 +78,6 @@
 			bind:avoidRepeat
 		/>
 	</div>
-	
 
 	<div class="relative flex-1 overflow-x-hidden">
 		<div class="flex items-start justify-center overflow-x-hidden">
@@ -162,13 +161,13 @@
 											appearing again
 										</p>
 									</div>
-									<label class="flex flex-shrink-0 cursor-pointer items-center gap-3">
+									<label class="flex shrink-0 cursor-pointer items-center gap-3">
 										<span
 											class="label-text font-medium {avoidRepeat
 												? 'text-base-content/50'
 												: 'text-base-content'}">No</span
 										>
-										<div class="toggle toggle-lg !bg-transparent [&:before]:bg-current">
+										<div class="toggle toggle-lg bg-transparent! [&:before]:bg-current">
 											<input type="checkbox" bind:checked={avoidRepeat} class="sr-only" />
 										</div>
 										<span

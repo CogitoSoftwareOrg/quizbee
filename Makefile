@@ -1,4 +1,4 @@
-.PHONY: dev clear-deps
+.PHONY: dev clear-deps pr
 
 dev:
 	@echo "Running all services in local docker environment"
@@ -7,3 +7,6 @@ dev:
 clear-deps:
 	@echo "Clearing dependencies"
 	docker volume rm quizbee-local_app_node_modules quizbee-local_web_node_modules
+
+pr:
+	gh pr create --base main --draft --fill

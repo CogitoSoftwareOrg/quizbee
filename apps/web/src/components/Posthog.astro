@@ -1,8 +1,8 @@
 ---
-
+const POSTHOG_TOKEN = import.meta.env.PUBLIC_POSTHOG;
 ---
 
-<script is:inline>
+<script is:inline define:vars={{ POSTHOG_TOKEN }}>
   !(function (t, e) {
     var o, n, p, r;
     e.__SV ||
@@ -50,8 +50,9 @@
       }),
       (e.__SV = 1));
   })(document, window.posthog || []);
-  posthog.init("phc_d13j4oIyubPnDVvRyALOBtoTqj0jkXcoJwDGeYjlCXV", {
+  posthog.init(POSTHOG_TOKEN, {
     api_host: "https://eu.i.posthog.com",
+    cross_subdomain_cookie: true,
     defaults: "2025-05-24",
   });
 </script>

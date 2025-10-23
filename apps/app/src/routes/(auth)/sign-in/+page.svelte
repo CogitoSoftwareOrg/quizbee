@@ -1,4 +1,5 @@
 <script lang="ts">
+	import posthog from 'posthog-js';
 	import { goto, invalidate } from '$app/navigation';
 	import { page } from '$app/state';
 
@@ -6,7 +7,6 @@
 	import { pb } from '$lib/pb';
 
 	import Oauth from '../Oauth.svelte';
-
 	let email = $state('');
 	let password = $state('');
 	let loading = $state(false);
@@ -21,10 +21,20 @@
 		loading = true;
 
 		try {
+			posthog.capture('sign_in_started', {
+				email,
+				password
+			});
+
 			const res = await pb!.collection('users').authWithPassword(email, password, {
 				expand: ''
 			});
 			const user = res.record;
+
+			posthog.capture('sign_in_completed', {
+				email,
+				user: user.id
+			});
 
 			const redirectUrl = !user.verified
 				? '/verify-email'

@@ -1,7 +1,7 @@
 <script lang="ts">
 	let { value = $bindable(10) }: { value: number } = $props();
 
-	const numbers = [10, 20, 30, 50];
+	const numbers = [10, 20, 30, 40];
 </script>
 
 <div class="grid grid-cols-2 gap-3">

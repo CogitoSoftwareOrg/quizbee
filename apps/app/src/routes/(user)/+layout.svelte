@@ -34,7 +34,7 @@
 		return new Promise((resolve) => {
 			// Resolve BEFORE starting transition to avoid blocking navigation
 			resolve();
-			
+
 			document.startViewTransition(async () => {
 				document.documentElement.setAttribute('data-vt', mobile.current ? 'slide' : 'parallax');
 				await navigation.complete;
@@ -72,7 +72,9 @@
 			<SidebarContent />
 		</aside>
 
-		<main class={['flex h-full min-w-0 flex-1 flex-col sm:pt-4', 'pb-12 sm:pb-0']}>
+		<main
+			class={['flex h-full min-w-0 flex-1 flex-col sm:pt-4', !attemptingQuiz && 'pb-12 sm:pb-0']}
+		>
 			<header class="mobile-header sm:hidden">
 				<GlobalHeader />
 			</header>
@@ -158,7 +160,9 @@
 	.mobile-dock-footer .dock-item {
 		touch-action: manipulation;
 		-webkit-tap-highlight-color: transparent;
-		transition: transform 0.1s ease-out, opacity 0.1s ease-out;
+		transition:
+			transform 0.1s ease-out,
+			opacity 0.1s ease-out;
 	}
 
 	.mobile-dock-footer .dock-item:active {
