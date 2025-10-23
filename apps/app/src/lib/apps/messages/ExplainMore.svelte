@@ -34,21 +34,27 @@
 		style = 'outline',
 		chatOpen = $bindable(false)
 	}: Props = $props();
+
+	const messages = $derived(
+		messagesStore.messages.filter(
+			(m) => m.quizAttempt === quizAttemptId && (m.metadata as any)?.itemId === itemId
+		)
+	);
 </script>
 
 <Button
+	disabled={messages.length !== 0}
 	onclick={async () => {
-		
 		if (!quizAttemptId || !itemId) return;
 		chatOpen = true;
 		messagesStore.sendMessage(sender, 'Explain this question', quizAttemptId, itemId);
 	}}
 	size="lg"
-	class={`min-w-40 dark:!text-base-content/90 ${className || ''}`}
+	class={`dark:text-base-content/90 min-w-40 ${className || ''}`}
 	{color}
 	{style}
 >
-	<MessageCirclePlus class='mb-0.5' size={20} />
-	
-	Explain 
+	<MessageCirclePlus class="mb-0.5" size={20} />
+
+	Explain
 </Button>

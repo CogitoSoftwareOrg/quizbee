@@ -35,7 +35,7 @@
 
 	// Check if this is an AI message waiting for response (incoming = true means AI message)
 	const isWaitingForResponse =
-		incoming && (msg.status === 'streaming' || !msg.content || msg.content.trim() === '');
+		incoming && (!msg.content || msg.content.trim() === '') && msg.status === 'streaming';
 </script>
 
 <!-- DIVIDER HAS COMPLETELY DIFFERENT UI -->
