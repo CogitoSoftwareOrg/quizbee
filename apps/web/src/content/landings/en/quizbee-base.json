@@ -30,13 +30,21 @@
     {
       "type": "Hero",
       "props": {
-        "title": "Transform Your Study Materials into Interactive Quizzes",
-        "description": "QuizBee turns your documents into engaging, AI-powered quizzes. Study smarter, not harder, with personalized learning that adapts to your needs.",
-        "buttonText": "Start Learning for Free",
+        "title": "Transform Your Study Materials into",
+        "titleHighlight": "Interactive Quizzes",
+        "description": "Upload your lecture notes, textbooks, or study guides. QuizBee uses AI to generate personalized quizzes that help you ace your midterms and exams.",
+        "buttonText": "Start Creating Quizzes",
+        "footerText": "Free to start • No credit card required ",
+        "href": "{{APP_URL}}",
         "image": "",
+        "titleAlign": "center",
+        "descriptionAlign": "center",
+        "footerAlign": "center",
         "position": "right",
-        "overlay": false,
-        "href": "{{APP_URL}}"
+        "center": true,
+        "textWidth": "max-w-4xl",
+        "titleSize": "text-7xl 2xl:text-8xl",
+        "descriptionSize": "text-xl 2xl:text-2xl py-6"
       }
     },
     {
@@ -190,7 +198,7 @@
         "subheadline": "Join hundres of students who are studying smarter with AI-powered quizzes. Upload your first material and create a quiz in seconds. No credit card required.",
         "buttonText": "Start Free - No Credit Card Required",
         "buttonHref": "{{APP_URL}}",
-        "theme": "gradient"
+        "theme": ""
       }
     }
   ]

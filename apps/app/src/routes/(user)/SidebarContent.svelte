@@ -20,7 +20,7 @@
 		{#if isExpanded}
 			<a href="/home" class="relative mb-4 flex select-none items-center justify-center">
 				<span class="absolute -right-7 top-2">
-					<span class="badge badge-outline badge-xs badge-info">BETA</span>
+					<span class="badge badge-outline mb-1  badge-xs badge-info">BETA</span>
 				</span>
 				<img src={Logo} alt="Quizbee" class="size-14 rounded-full" />
 				<p class="text-primary mt-2 text-3xl font-semibold">Quizbee</p>
