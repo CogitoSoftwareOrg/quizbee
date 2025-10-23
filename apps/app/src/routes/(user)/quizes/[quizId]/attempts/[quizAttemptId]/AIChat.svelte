@@ -70,7 +70,17 @@
 		</section>
 
 		<footer class="border-base-200 border-t px-3 py-4">
-			{#if isFreePlan}
+			{#if quizAttempt.feedback}
+				<Button
+					size="lg"
+					color="neutral"
+					style="soft"
+					block
+					href={`/quizes/${quizAttempt?.quiz}/attempts/${quizAttempt?.id}/feedback`}
+				>
+					View Feedback
+				</Button>
+			{:else if isFreePlan}
 				<Button
 					size="lg"
 					color="neutral"

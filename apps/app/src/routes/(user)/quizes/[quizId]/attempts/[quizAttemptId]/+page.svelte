@@ -11,7 +11,6 @@
 	import type { Sender } from '$lib/apps/messages/types';
 	import { messagesStore } from '$lib/apps/messages/stores/messages.svelte';
 	import { userStore } from '$lib/apps/users/user.svelte';
-	import { patchApi } from '$lib/api/call-api';
 	import type { QuizExpand } from '$lib/pb';
 
 	import AIChat from './AIChat.svelte';
@@ -231,7 +230,7 @@
 
 		<!-- Desktop AI Chat -->
 		<div
-			class="hidden h-full min-w-0 flex-shrink-0 overflow-hidden transition-[width] duration-300 ease-out sm:block"
+			class="hidden h-full min-w-0 shrink-0 overflow-hidden transition-[width] duration-300 ease-out sm:block"
 			style:pointer-events={!chatOpen ? 'none' : 'auto'}
 			style:width={chatColumnWidth}
 		>
