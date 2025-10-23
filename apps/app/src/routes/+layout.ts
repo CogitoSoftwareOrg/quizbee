@@ -13,6 +13,7 @@ export const load = async () => {
 	if (POSTHOG_TOKEN)
 		posthog.init(POSTHOG_TOKEN, {
 			api_host: 'https://eu.i.posthog.com',
+			capture_pageview: 'history_change',
 			defaults: '2025-05-24'
 		});
 };

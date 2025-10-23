@@ -7,15 +7,8 @@
 
 	import favicon from '$lib/assets/icons/bee_final.svg';
 	import ThemeLoad from '$lib/features/ThemeLoad.svelte';
-	// import posthog from 'posthog-js';
 
 	let { children } = $props();
-
-	// afterNavigate(() => {
-	// 	posthog.capture('page_view', {
-	// 		path: page.url.pathname
-	// 	});
-	// });
 
 	//@ts-ignore
 	import { registerSW } from 'virtual:pwa-register';
