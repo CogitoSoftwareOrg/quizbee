@@ -1,3 +1,5 @@
+import posthog from 'posthog-js';
+
 import { postApi } from '$lib/api/call-api';
 import { computeApiUrl } from '$lib/api/compute-url';
 import { pb } from '$lib/pb';
@@ -53,6 +55,12 @@ class MessagesStore {
 		this.messages.push(clientMsg);
 
 		if (mode === 'sse') {
+			posthog.capture('message_sse_started', {
+				content,
+				attemptId,
+				itemId
+			});
+
 			const es = new EventSource(
 				`${computeApiUrl()}messages/sse?q=${encodeURIComponent(content)}&attempt=${attemptId}&item=${itemId}`,
 				{
@@ -80,6 +88,10 @@ class MessagesStore {
 				es.close();
 			});
 			es.addEventListener('done', () => {
+				posthog.capture('message_sse_completed', {
+					attemptId,
+					itemId
+				});
 				es.close();
 			});
 		} else if (mode === 'post') {

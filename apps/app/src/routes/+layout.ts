@@ -1,10 +1,10 @@
 export const ssr = false;
 export const prerender = true;
 
+import posthog from 'posthog-js';
 import { env } from '$env/dynamic/public';
 
 import { uiStore } from '$lib/apps/users/ui.svelte';
-import posthog from 'posthog-js';
 
 export const load = async () => {
 	await uiStore.loadState();

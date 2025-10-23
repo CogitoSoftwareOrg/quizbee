@@ -1,4 +1,5 @@
 <script lang="ts">
+	import posthog from 'posthog-js';
 	import { Crown } from 'lucide-svelte';
 
 	import { Modal, Button, TextArea } from '@cogisoft/ui-svelte-daisy';
@@ -185,6 +186,14 @@
 					console.log(upd);
 					await pb!.collection('quizes').update(quiz.id, upd);
 
+					posthog.capture('quiz_management_started', {
+						quizId: quiz.id,
+						quizAttemptId: quizAttempt.id,
+						itemId: item.id,
+						difficulty,
+						topic,
+						additionalQuery
+					});
 					await patchApi(`quizes/${quiz.id}`, {
 						attempt_id: quizAttempt.id,
 						limit: 5,

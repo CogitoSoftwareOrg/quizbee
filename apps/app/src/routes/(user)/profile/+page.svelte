@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { X } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
+	import posthog from 'posthog-js';
 
 	import { Button } from '@cogisoft/ui-svelte-daisy';
 
@@ -70,6 +71,7 @@
 	});
 
 	function logout() {
+		posthog.reset();
 		pb!.authStore.clear();
 		goto('/sign-in');
 	}

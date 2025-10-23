@@ -1,4 +1,5 @@
 <script lang="ts">
+	import posthog from 'posthog-js';
 	import type { ClassValue } from 'svelte/elements';
 
 	import {
@@ -14,7 +15,6 @@
 	import { patchApi, putApi } from '$lib/api/call-api';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-
 	interface Props {
 		class?: ClassValue;
 		answers: Answer[];
@@ -85,6 +85,11 @@
 	});
 
 	async function createFeedback() {
+		posthog.capture('quiz_feedback_started', {
+			quizId: quiz.id,
+			quizAttemptId: quizAttempt.id,
+			itemId: item.id
+		});
 		if (!quizAttempt.id || quizAttempt.feedback) return;
 		const res = await putApi(`quiz_attempts/${quizAttempt.id}`, {});
 		console.log(res);
@@ -167,7 +172,7 @@
 								{/if}
 							{/if}
 							<div class="min-w-0 flex-1">
-								<p class="break-words leading-relaxed">{@html answer.content}</p>
+								<p class="wrap-break-words leading-relaxed">{@html answer.content}</p>
 							</div>
 							{#if itemDecision}
 								<div class="ml-2 shrink-0">
@@ -203,7 +208,7 @@
 												<p class="text-xs font-semibold uppercase tracking-wide opacity-60">
 													Explanation
 												</p>
-												<p class="break-words text-sm leading-relaxed opacity-80">
+												<p class="wrap-break-words text-sm leading-relaxed opacity-80">
 													{@html answer.explanation}
 												</p>
 											</div>

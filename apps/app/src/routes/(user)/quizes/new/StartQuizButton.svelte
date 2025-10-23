@@ -1,4 +1,5 @@
 <script lang="ts">
+	import posthog from 'posthog-js';
 	import { goto } from '$app/navigation';
 	import { Button } from '@cogisoft/ui-svelte-daisy';
 
@@ -46,6 +47,11 @@
 
 			const { quiz_id: quizId, quiz_attempt_id: quizAttemptsId } = await postApi('quizes', {
 				quiz_id: quizTemplateId
+			});
+
+			posthog.capture('quiz_creation_started', {
+				quizId,
+				quizAttemptsId
 			});
 
 			console.log('Quiz created:', quizId, 'Attempt created:', quizAttemptsId);
