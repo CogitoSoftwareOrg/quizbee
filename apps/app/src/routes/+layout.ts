@@ -1,14 +1,25 @@
 export const ssr = false;
 export const prerender = true;
 
+import { env } from '$env/dynamic/public';
+
 import { uiStore } from '$lib/apps/users/ui.svelte';
 import posthog from 'posthog-js';
 
 export const load = async () => {
 	await uiStore.loadState();
 
-	posthog.init('phc_d13j4oIyubPnDVvRyALOBtoTqj0jkXcoJwDGeYjlCXV', {
-		api_host: 'https://eu.i.posthog.com',
-		defaults: '2025-05-24'
-	});
+	const ENV = env.PUBLIC_ENV;
+	const POSTHOG_TOKEN =
+		ENV === 'production'
+			? env.PUBLIC_POSTHOG_PROD
+			: ENV === 'quality-assurance'
+				? env.PUBLIC_POSTHOG_QA
+				: env.PUBLIC_POSTHOG_LOCAL;
+
+	if (POSTHOG_TOKEN)
+		posthog.init(POSTHOG_TOKEN, {
+			api_host: 'https://eu.i.posthog.com',
+			defaults: '2025-05-24'
+		});
 };

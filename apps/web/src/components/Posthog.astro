@@ -1,8 +1,14 @@
 ---
-
+const ENV = import.meta.env.PUBLIC_ENV;
+const POSTHOG_TOKEN =
+  ENV === "production"
+    ? import.meta.env.PUBLIC_POSTHOG_PROD
+    : ENV === "quality-assurance"
+      ? import.meta.env.PUBLIC_POSTHOG_QA
+      : import.meta.env.PUBLIC_POSTHOG_LOCAL;
 ---
 
-<script is:inline>
+<script is:inline define:vars={{ POSTHOG_TOKEN }}>
   !(function (t, e) {
     var o, n, p, r;
     e.__SV ||
@@ -50,7 +56,7 @@
       }),
       (e.__SV = 1));
   })(document, window.posthog || []);
-  posthog.init("phc_d13j4oIyubPnDVvRyALOBtoTqj0jkXcoJwDGeYjlCXV", {
+  posthog.init(POSTHOG_TOKEN, {
     api_host: "https://eu.i.posthog.com",
     defaults: "2025-05-24",
   });
