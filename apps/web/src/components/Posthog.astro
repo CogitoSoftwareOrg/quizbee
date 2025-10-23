@@ -52,6 +52,7 @@ const POSTHOG_TOKEN = import.meta.env.PUBLIC_POSTHOG;
   })(document, window.posthog || []);
   posthog.init(POSTHOG_TOKEN, {
     api_host: "https://eu.i.posthog.com",
+    cross_subdomain_cookie: true,
     defaults: "2025-05-24",
   });
 </script>
