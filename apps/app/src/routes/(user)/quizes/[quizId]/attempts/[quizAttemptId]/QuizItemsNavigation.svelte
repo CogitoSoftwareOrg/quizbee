@@ -1,64 +1,77 @@
 <script lang="ts">
-	import { ChevronLeft, ChevronRight } from 'lucide-svelte';
-
 	import { Button } from '@cogisoft/ui-svelte-daisy';
 
 	import type { QuizAttemptsResponse, QuizItemsResponse } from '$lib/pb';
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
+	import type { Sender } from '$lib/apps/messages/types';
+	import ExplainMore from '$lib/apps/messages/ExplainMore.svelte';
 
 	interface Props {
 		quizAttempt: QuizAttemptsResponse;
 		quizItems: QuizItemsResponse[];
 		order: number;
 		itemDecision: Decision | null;
-		chatOpen: boolean;
+		chatOpen?: boolean;
+		userSender: Sender;
+		itemId: string;
 		onPrevious: () => void;
 		onNext: () => void;
 	}
 
-	const { quizAttempt, quizItems, order, itemDecision, chatOpen, onPrevious, onNext }: Props =
+	let { quizAttempt, quizItems, order, itemDecision, chatOpen = $bindable(false), userSender, itemId, onPrevious, onNext }: Props =
 		$props();
-
-	const leftClass = $derived(chatOpen ? 'left-2' : 'left-8 lg:left-16 xl:left-24');
-	const rightClass = $derived(chatOpen ? 'right-2' : 'right-8 lg:right-16 xl:right-24');
 </script>
 
-{#if order > 0}
-	<div
-		class="pointer-events-none absolute {leftClass} top-1/2 z-10 hidden -translate-y-1/2 transition-all duration-300 md:block"
-	>
-		<Button
-			class="pointer-events-auto"
-			color="neutral"
-			style="ghost"
-			circle
-			size="lg"
-			onclick={(e) => {
-				e.preventDefault();
-				onPrevious();
-			}}
-		>
-			<ChevronLeft size={40} />
-		</Button>
+<div class="md:flex justify-between gap-4 -mb-2 px-3 pt-6 hidden sm:px-12 ">
+	<div class="flex-1">
+		{#if itemDecision}
+			<ExplainMore sender={userSender} quizAttemptId={quizAttempt.id} {itemId} bind:chatOpen />
+		{/if}
 	</div>
-{/if}
+	
+	<div class="flex gap-4">
+		{#if order > 0}
+			<Button
+				color="neutral"
+				style="outline"
+				size="lg"
+				class="dark:!text-base-content/90"
+				onclick={(e) => {
+					e.preventDefault();
+					onPrevious();
+				}}
+			>
+				Previous
+			</Button>
+		{:else}
+			<Button
+				
+				size="lg"
+				class="invisible pointer-events-none"
+			>
+				Previous
+			</Button>
+		{/if}
 
-{#if itemDecision}
-	<div
-		class="pointer-events-none absolute {rightClass} top-1/2 z-10 hidden -translate-y-1/2 transition-all duration-300 md:block"
-	>
-		<Button
-			class="pointer-events-auto"
-			color="neutral"
-			style="ghost"
-			circle
-			size="lg"
-			onclick={(e) => {
-				e.preventDefault();
-				onNext();
-			}}
-		>
-			<ChevronRight size={40} />
-		</Button>
+		{#if itemDecision}
+			<Button
+				color="primary"
+				size="lg"
+				onclick={(e) => {
+					e.preventDefault();
+					onNext();
+				}}
+			>
+				Next
+			</Button>
+		{:else}
+			<Button
+				
+				size="lg"
+				class="invisible pointer-events-none"
+			>
+				Next
+			</Button>
+		{/if}
 	</div>
-{/if}
+</div>

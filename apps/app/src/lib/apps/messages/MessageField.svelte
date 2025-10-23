@@ -39,12 +39,14 @@
 	}
 </script>
 
-<TextArea
-	class="max-h-32 w-full resize-none overflow-y-auto"
-	bind:el={inputEl}
-	bind:value={inputText}
-	grow
-	{onkeydown}
-	placeholder="Type your message…"
-	rows={0}
-></TextArea>
+
+	<TextArea
+		class="max-h-32 mb-2 px-5 w-full resize-none overflow-y-auto"
+		bind:el={inputEl}
+		bind:value={inputText}
+		grow
+		{onkeydown}
+		placeholder="Type your message…"
+		rows={0}
+	></TextArea>
+

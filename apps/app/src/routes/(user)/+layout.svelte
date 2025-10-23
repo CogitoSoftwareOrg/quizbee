@@ -57,7 +57,7 @@
 {#await data.userLoadPromise}
 	<div class="flex h-screen items-center justify-center">
 		<div class="loading loading-spinner loading-xl"></div>
-		<p>We are loading app for you... :3</p>
+		<p>We are loading app for you...</p>
 	</div>
 {:then}
 	<div class="flex h-dvh w-full overflow-hidden">

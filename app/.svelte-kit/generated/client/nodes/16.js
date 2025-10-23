@@ -1,0 +1,1 @@
+export { default as component } from "../../../../src/routes/(user)/quizes/[quizId]/attempts/[quizAttemptId]/feedback/+page.svelte";

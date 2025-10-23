@@ -379,4 +379,4 @@ Al usar el Servicio Quizbee, acepta que podemos contratar a las siguientes empre
 
 ---
 
-Si tiene preguntas, contáctenos en [cogitoteamdev@gmail.com](mailto:cogitoteamdev@gmail.com).
+Si tiene preguntas, contáctenos en [contact@quizbee.academy](mailto:contact@quizbee.academy).

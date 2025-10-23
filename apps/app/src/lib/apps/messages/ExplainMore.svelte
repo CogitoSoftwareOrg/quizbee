@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ClassValue } from 'svelte/elements';
+	import { MessageCirclePlus } from 'lucide-svelte';
 
 	import { Button } from '@cogisoft/ui-svelte-daisy';
 
@@ -21,28 +22,39 @@
 		sender: Sender;
 		quizAttemptId: string;
 		itemId: string;
+		chatOpen?: boolean;
 	};
 
-	const {
+	let {
 		sender,
 		quizAttemptId,
 		itemId,
 		class: className,
-		color = 'info',
-		style = 'soft'
+		color = 'neutral',
+		style = 'outline',
+		chatOpen = $bindable(false)
 	}: Props = $props();
+
+	const messages = $derived(
+		messagesStore.messages.filter(
+			(m) => m.quizAttempt === quizAttemptId && (m.metadata as any)?.itemId === itemId
+		)
+	);
 </script>
 
 <Button
+	disabled={messages.length !== 0}
 	onclick={async () => {
 		if (!quizAttemptId || !itemId) return;
+		chatOpen = true;
 		messagesStore.sendMessage(sender, 'Explain this question', quizAttemptId, itemId);
 	}}
-	wide
-	size="xl"
-	class={className}
+	size="lg"
+	class={`dark:text-base-content/90 min-w-40 ${className || ''}`}
 	{color}
 	{style}
 >
-	Explain More
+	<MessageCirclePlus class="mb-0.5" size={20} />
+
+	Explain
 </Button>

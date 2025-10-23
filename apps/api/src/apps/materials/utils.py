@@ -130,13 +130,12 @@ async def parse_text_with_images(
     last_end = 0
     
     # Паттерн для уникальных маркеров: {quizbee_unique_image_url:url}
-    pattern_unique = r"\{quizbee_unique_image_url:([^}]+)\}"
+    pattern_unique = r"\{quizbee_unique_image_url:(?P<url_unique>[^}]+)\}"
     
-    # Паттерн для Markdown: ![...](url)
-    pattern_markdown = r"!\[([^\]]*)\]\(([^)]+)\)"
+   
     
     # Объединяем оба паттерна с использованием именованных групп
-    combined_pattern = f"(?P<unique>{pattern_unique})|(?P<markdown>{pattern_markdown})"
+    combined_pattern = f"(?P<unique>{pattern_unique})"
     
     for match in re.finditer(combined_pattern, text):
         # Добавляем текст перед изображением
@@ -145,13 +144,9 @@ async def parse_text_with_images(
             if text_part.strip():  # Добавляем только непустой текст
                 parts.append(text_part)
         
-        # Определяем, какой паттерн сработал и извлекаем URL
-        if match.group('unique'):
-            # Уникальный маркер {quizbee_unique_image_url:url}
-            image_url = match.group(1)
-        else:
-            # Markdown ![...](url)
-            image_url = match.group(3)
+       
+        image_url = match.group('url_unique')
+       
         
         try:
             res = await http.get(image_url)

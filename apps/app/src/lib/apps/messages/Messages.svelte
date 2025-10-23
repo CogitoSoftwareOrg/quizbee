@@ -9,7 +9,6 @@
 
 	import type { Sender } from './types';
 	import Message from './Message.svelte';
-	import ExplainMore from './ExplainMore.svelte';
 
 	interface Props {
 		quizAttemptId: string;
@@ -54,27 +53,25 @@
 			<div class="flex h-full flex-col items-center justify-center text-center">
 				<div class="mb-4 text-6xl">💬</div>
 				<p class="text-base-content/70 text-lg font-medium">No messages yet, waiting...</p>
-				<div class="mt-6">
-					<ExplainMore sender={userSender} {quizAttemptId} {itemId} />
-				</div>
 			</div>
 		{:else}
 			{#each messages as msg (msg)}
 				{@const incoming = msg.role !== 'user'}
 				{@const sender = msg.role === 'user' ? userSender : assistantSender}
-				<Message {msg} {incoming} {sender} />
+				<Message {msg} {incoming} {sender} showHeader={msg.role === 'user'} />
 			{/each}
 		{/if}
 
 		{#if showScrollButton}
-			<div class="absolute bottom-6 right-1/2 z-10 translate-x-1/2" transition:fade>
+			<div class="absolute bottom-2 right-1/2 z-10 translate-x-1/2" transition:fade>
 				<Button
 					circle
-					color="secondary"
-					size="sm"
+					color="neutral"
+					size="xs"
+					class="opacity-40 hover:opacity-70"
 					onclick={() => scrollToBottom(messagesContainer)}
 				>
-					<ChevronsDown size={20} />
+					<ChevronsDown size={16} />
 				</Button>
 			</div>
 		{/if}
