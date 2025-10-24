@@ -242,9 +242,99 @@
 			{/each}
 		</ul>
 	{:else}
-		<div class="flex h-full flex-col items-center justify-center gap-4">
-			<p class="loading loading-spinner loading-xl"></p>
-			<p class="text-center font-semibold">We are building your quiz...</p>
+		<div class="flex h-full flex-col items-center justify-center gap-8 px-4 py-16">
+			<!-- Main Loading Container -->
+			<div class="w-full max-w-md">
+				<!-- Animated Header -->
+				<div class="mb-8 text-center">
+					<div class="mb-4 flex justify-center">
+						<div class="relative h-24 w-24">
+							<!-- Outer rotating ring -->
+							<div
+								class="border-t-primary border-r-primary absolute inset-0 animate-spin rounded-full border-4 border-transparent opacity-70"
+							></div>
+							<!-- Middle pulsing ring -->
+							<div
+								class="border-primary/30 absolute inset-2 animate-pulse rounded-full border-2"
+							></div>
+							<!-- Inner icon -->
+							<div class="absolute inset-0 flex items-center justify-center">
+								<div
+									class="bg-primary/10 flex h-full w-full items-center justify-center rounded-full"
+								>
+									<span class="text-3xl">✨</span>
+								</div>
+							</div>
+						</div>
+					</div>
+					<h2 class="text-base-content mb-2 text-2xl font-bold">Building Your Quiz</h2>
+					<p class="text-base-content/70">We're preparing personalized questions just for you...</p>
+				</div>
+
+				<!-- Progress Indicators -->
+				<div class="mb-8 hidden space-y-4 sm:block">
+					<div class="flex items-center gap-3">
+						<div
+							class="bg-success/20 flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+						>
+							<span class="text-success">✓</span>
+						</div>
+						<div class="flex-1">
+							<p class="text-base-content text-sm font-medium">Quiz initialized</p>
+							<p class="text-base-content/60 text-xs">Ready to generate questions</p>
+						</div>
+					</div>
+
+					<div class="flex items-center gap-3">
+						<div
+							class="bg-primary/20 flex h-8 w-8 shrink-0 animate-pulse items-center justify-center rounded-full"
+						>
+							<span class="text-primary">⚡</span>
+						</div>
+						<div class="flex-1">
+							<p class="text-base-content text-sm font-medium">Generating questions</p>
+							<p class="text-base-content/60 text-xs">Using AI to create unique challenges</p>
+						</div>
+					</div>
+
+					<div class="flex items-center gap-3 opacity-50">
+						<div
+							class="border-base-300 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-dashed"
+						>
+							<span class="text-base-content/40">3</span>
+						</div>
+						<div class="flex-1">
+							<p class="text-base-content text-sm font-medium">Ready to answer</p>
+							<p class="text-base-content/60 text-xs">Questions will appear shortly</p>
+						</div>
+					</div>
+				</div>
+
+				<!-- Timeline Info -->
+				<div class="bg-base-200/50 rounded-lg p-4 text-center">
+					<p class="text-base-content/70 text-sm">
+						<span class="text-base-content font-semibold">Usually takes less than 1 minute</span>
+						<br />
+						<span class="text-xs">Your AI tutor is working hard! ⏱️</span>
+					</p>
+				</div>
+
+				<!-- Animated dots -->
+				<div class="mt-8 flex justify-center gap-2">
+					<div
+						class="bg-primary h-2 w-2 animate-bounce rounded-full"
+						style="animation-delay: 0s"
+					></div>
+					<div
+						class="bg-primary h-2 w-2 animate-bounce rounded-full"
+						style="animation-delay: 0.2s"
+					></div>
+					<div
+						class="bg-primary h-2 w-2 animate-bounce rounded-full"
+						style="animation-delay: 0.4s"
+					></div>
+				</div>
+			</div>
 		</div>
 	{/if}
 </div>
