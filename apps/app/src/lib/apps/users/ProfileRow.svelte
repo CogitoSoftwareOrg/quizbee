@@ -17,6 +17,9 @@
 	const user = $derived(userStore.user);
 	const avatar = $derived(user?.avatar ? pb!.files.getURL(user, user.avatar) : Man);
 	const sub = $derived(subscriptionStore.subscription);
+
+	const limit = $derived(sub?.quizItemsLimit ?? 0);
+	const usage = $derived(sub?.quizItemsUsage ?? 0);
 </script>
 
 <div class={className}>
@@ -38,9 +41,9 @@
 
 				<div class="flex items-center gap-1">
 					<p class="badge-primary badge badge-sm font-semibold">{sub?.tariff}</p>
-					<!-- <p class="badge-primary badge badge-sm font-semibold">
-				q: <span class="text-xs">{sub?.quizItemsUsage} / {sub?.quizItemsLimit}</span>
-				</p> -->
+					<p class="badge-primary badge badge-sm font-semibold">
+						<span class="text-xs">{limit - usage}</span>
+					</p>
 				</div>
 			</div>
 

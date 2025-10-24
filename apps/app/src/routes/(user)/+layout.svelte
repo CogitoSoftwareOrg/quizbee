@@ -13,6 +13,7 @@
 	import SidebarContent from './SidebarContent.svelte';
 	import GlobalHeader from './GlobalHeader.svelte';
 	import SubscribeUser from './SubscribeUser.svelte';
+	import Splash from './Splash.svelte';
 	import { onMount } from 'svelte';
 	import { pb } from '$lib/pb';
 
@@ -55,10 +56,7 @@
 <SubscribeUser />
 
 {#await data.userLoadPromise}
-	<div class="flex h-screen items-center justify-center">
-		<div class="loading loading-spinner loading-xl"></div>
-		<p>We are loading app for you...</p>
-	</div>
+	<Splash />
 {:then}
 	<div class="flex h-dvh w-full overflow-hidden">
 		<!-- Desktop Sidebar -->

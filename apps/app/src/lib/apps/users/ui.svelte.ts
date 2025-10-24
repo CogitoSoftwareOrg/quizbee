@@ -53,7 +53,6 @@ class UIStore {
 	}
 
 	async loadState() {
-		console.log('loadState');
 		const raw = await Preferences.get({ key: 'uiState' });
 		if (raw.value) {
 			try {
