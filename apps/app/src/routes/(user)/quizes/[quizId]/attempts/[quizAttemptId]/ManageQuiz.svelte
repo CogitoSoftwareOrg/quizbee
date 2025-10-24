@@ -146,6 +146,9 @@
 					showModal = false;
 					if (item.managed) return;
 
+					// Optimistic update
+					item.managed = true;
+
 					await pb!.collection('quizItems').update(item.id, {
 						managed: true
 					});

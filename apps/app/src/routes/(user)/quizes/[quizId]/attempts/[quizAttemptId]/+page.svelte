@@ -31,7 +31,39 @@
 	);
 
 	const quizDecisions = $derived((quizAttempt?.choices as Decision[]) || []);
-	let itemDecision = $derived(quizDecisions.find((d) => d.itemId === item?.id) || null);
+
+	// Stable itemDecision - preserve optimistic updates, only sync when server data differs
+	let itemDecision = $state<Decision | null>(null);
+	$effect(() => {
+		const foundDecision = quizDecisions.find((d) => d.itemId === item?.id) || null;
+
+		// If nothing found and nothing set, do nothing
+		if (!foundDecision && !itemDecision) return;
+
+		// If we have optimistic decision but server hasn't confirmed yet, keep optimistic
+		if (!foundDecision && itemDecision) {
+			// Only clear if we switched to a different item
+			if (itemDecision.itemId !== item?.id) {
+				itemDecision = null;
+			}
+			return;
+		}
+
+		// If no optimistic decision, take server value
+		if (!itemDecision) {
+			itemDecision = foundDecision;
+			return;
+		}
+
+		// If both exist, only update if data actually changed
+		if (
+			itemDecision.itemId !== foundDecision!.itemId ||
+			itemDecision.answerIndex !== foundDecision!.answerIndex ||
+			itemDecision.correct !== foundDecision!.correct
+		) {
+			itemDecision = foundDecision;
+		}
+	});
 
 	const pageQuiz = $derived(data?.pageQuiz?.id === quizAttempt?.quiz ? data.pageQuiz : null);
 	const quiz = $derived(quizesStore.quizes.find((q) => q.id === quizAttempt?.quiz) || pageQuiz);
@@ -131,13 +163,13 @@
 	const showManage = $derived(
 		Boolean(
 			quiz?.status !== 'final' &&
-			user?.id === quiz?.author &&
-			lastFinalItem?.id === item?.id &&
-			item &&
-			!item?.managed &&
-			itemDecision &&
-			quiz &&
-			quizAttempt
+				user?.id === quiz?.author &&
+				lastFinalItem?.id === item?.id &&
+				item &&
+				!item?.managed &&
+				itemDecision &&
+				quiz &&
+				quizAttempt
 		)
 	);
 </script>
@@ -220,14 +252,10 @@
 
 						{#if quiz?.status !== 'final' && user?.id === quiz?.author && lastFinalItem?.id === item?.id && item && !item?.managed && itemDecision && quiz && quizAttempt}
 							<ManageQuiz {item} {quiz} {quizAttempt} />
-						{:else if item && quiz && quizAttempt}   <!-- invisible placeholder to maintain layout -->
+						{:else if item && quiz && quizAttempt}
+							<!-- invisible placeholder to maintain layout -->
 							<div class="mt-6 flex gap-2" aria-hidden="true">
-								<Button
-									class="invisible pointer-events-none"
-									style="soft"
-								>
-									Adjust Quiz
-								</Button>
+								<Button class="pointer-events-none invisible" style="soft">Adjust Quiz</Button>
 							</div>
 						{/if}
 					</div>

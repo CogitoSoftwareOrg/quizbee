@@ -1,13 +1,20 @@
 <script lang="ts">
-	import { Search, Filter, BookOpen, Clock, FileText } from 'lucide-svelte';
+	import { Search, Filter, BookOpen, Clock, FileText, Crown } from 'lucide-svelte';
 
 	import { Input, Button } from '@cogisoft/ui-svelte-daisy';
 
-	import type { MaterialsResponse, QuizesResponse, QuizExpand, QuizItemsResponse } from '$lib/pb';
+	import type {
+		MaterialsResponse,
+		QuizesResponse,
+		QuizExpand,
+		QuizItemsResponse,
+		QuizAttemptsResponse,
+		QuizAttemptExpand
+	} from '$lib/pb';
 
 	import type { ClassValue } from 'svelte/elements';
 	import { quizItemsStore } from './quizItems.svelte';
-	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte';
+	import { quizesStore } from './quizes.svelte';
 
 	interface QuizItem {
 		quizId: string;
@@ -22,15 +29,18 @@
 		materials: string[];
 		questionsCount: number;
 		attemptsCount: number;
+		lastAttemptDate: string;
+		isAuthor: boolean;
 	}
 
 	interface Props {
 		class?: ClassValue;
-		quizes: QuizesResponse<QuizExpand>[];
+		quizAttempts: QuizAttemptsResponse<unknown, unknown, QuizAttemptExpand>[];
 		materials: MaterialsResponse[];
+		userId: string;
 	}
 
-	const { class: className = '', quizes, materials }: Props = $props();
+	const { class: className = '', quizAttempts, materials, userId }: Props = $props();
 
 	function formatDateTime(value: string): string {
 		if (!value) return '';
@@ -47,45 +57,92 @@
 	const quizList: QuizItem[] = $derived.by(() => {
 		const materialMap = new Map(materials.map((material) => [material.id, material.title]));
 
-		return quizes
-			.filter((quiz) => quiz.status === 'final')
-			.map((quiz) => {
-				const quizItems =
-					(quizItemsStore.quizItemsMap.get(quiz.id) as QuizItemsResponse[]) ||
-					((quiz.expand as QuizExpand)?.quizItems_via_quiz as QuizItemsResponse[]) ||
-					[];
+		// Filter only completed attempts (with feedback) and valid quiz statuses
+		const completedAttempts = quizAttempts.filter((attempt) => {
+			const quiz = attempt.expand?.quiz;
+			const hasFeedback = Boolean(attempt.feedback);
+			const hasValidStatus = quiz?.status === 'final' || quiz?.status === 'answered';
+			return hasFeedback && hasValidStatus;
+		});
 
-				const attempts = quizAttemptsStore.quizAttempts.filter(
-					(attempt) => attempt.quiz === quiz.id
-				);
+		// Group completed attempts by quiz ID
+		const quizAttemptsMap = new Map<
+			string,
+			QuizAttemptsResponse<unknown, unknown, QuizAttemptExpand>[]
+		>();
 
-				const materialTitles = (quiz.materials || [])
-					.map((id) => materialMap.get(id))
-					.filter((title): title is string => Boolean(title));
+		for (const attempt of completedAttempts) {
+			const quizId = attempt.quiz;
+			if (!quizAttemptsMap.has(quizId)) {
+				quizAttemptsMap.set(quizId, []);
+			}
+			quizAttemptsMap.get(quizId)!.push(attempt);
+		}
 
-				const tags = Array.isArray(quiz.tags) ? (quiz.tags as string[]) : [];
+		// Extract unique quizzes from completed attempts
+		const uniqueQuizzes = new Map<string, QuizesResponse<QuizExpand>>();
 
-				return {
-					quizId: quiz.id,
-					title: quiz.title || 'Untitled quiz',
-					summary: quiz.summary || '',
-					difficulty: quiz.difficulty || 'intermediate',
-					status: quiz.status || 'draft',
-					visibility: quiz.visibility || 'private',
-					tags,
-					created: quiz.created,
-					updated: quiz.updated,
-					materials: materialTitles,
-					questionsCount: quizItems.length,
-					attemptsCount: attempts.length
-				} satisfies QuizItem;
-			});
+		// Create a map of user's quizzes from store for quick lookup
+		const userQuizzesMap = new Map(quizesStore.quizes.map((quiz) => [quiz.id, quiz]));
+
+		for (const attempt of completedAttempts) {
+			const quiz = attempt.expand?.quiz;
+			if (quiz && !uniqueQuizzes.has(quiz.id)) {
+				// Use reactive quiz from store if it's user's quiz, otherwise use expanded quiz
+				const quizToUse = quiz.author === userId ? userQuizzesMap.get(quiz.id) || quiz : quiz;
+				uniqueQuizzes.set(quiz.id, quizToUse);
+			}
+		}
+
+		// Create quiz items from unique quizzes
+		const items = Array.from(uniqueQuizzes.values()).map((quiz) => {
+			const quizItems =
+				(quizItemsStore.quizItemsMap.get(quiz.id) as QuizItemsResponse[]) ||
+				((quiz.expand as QuizExpand)?.quizItems_via_quiz as QuizItemsResponse[]) ||
+				[];
+
+			const attempts = quizAttemptsMap.get(quiz.id) || [];
+			const isAuthor = quiz.author === userId;
+
+			// Materials only for author's quizzes
+			const materialTitles = isAuthor
+				? (quiz.materials || [])
+						.map((id) => materialMap.get(id))
+						.filter((title): title is string => Boolean(title))
+				: [];
+
+			const tags = Array.isArray(quiz.tags) ? (quiz.tags as string[]) : [];
+
+			// Find last attempt date
+			const lastAttempt = attempts.toSorted((a, b) => b.updated.localeCompare(a.updated))[0];
+			const lastAttemptDate = lastAttempt?.updated || quiz.updated;
+
+			return {
+				quizId: quiz.id,
+				title: quiz.title || 'Untitled quiz',
+				summary: quiz.summary || '',
+				difficulty: quiz.difficulty || 'intermediate',
+				status: quiz.status || 'draft',
+				visibility: quiz.visibility || 'private',
+				tags,
+				created: quiz.created,
+				updated: quiz.updated,
+				materials: materialTitles,
+				questionsCount: quizItems.length,
+				attemptsCount: attempts.length,
+				lastAttemptDate,
+				isAuthor
+			} satisfies QuizItem;
+		});
+
+		// Sort by last attempt date (most recent first)
+		return items.toSorted((a, b) => b.lastAttemptDate.localeCompare(a.lastAttemptDate));
 	});
 
 	// Filter state
 	let searchQuery = $state('');
-	let selectedDifficulty = $state<string>('all');
-	let selectedStatus = $state<string>('all');
+	let selectedDifficulties = $state<string[]>([]);
+	let selectedOwnership = $state<'all' | 'mine' | 'others'>('all');
 	let showFilters = $state(false);
 
 	const filteredQuizes = $derived.by(() => {
@@ -103,51 +160,53 @@
 			});
 		}
 
-		// Difficulty filter
-		if (selectedDifficulty !== 'all') {
-			result = result.filter((item) => item.difficulty === selectedDifficulty);
+		// Difficulty filter (multiple choice)
+		if (selectedDifficulties.length > 0) {
+			result = result.filter((item) => selectedDifficulties.includes(item.difficulty));
 		}
 
-		// Status filter
-		if (selectedStatus !== 'all') {
-			result = result.filter((item) => item.status === selectedStatus);
+		// Ownership filter
+		if (selectedOwnership === 'mine') {
+			result = result.filter((item) => item.isAuthor);
+		} else if (selectedOwnership === 'others') {
+			result = result.filter((item) => !item.isAuthor);
 		}
 
-		return result.toSorted((a, b) => b.updated.localeCompare(a.updated));
+		return result.toSorted((a, b) => b.lastAttemptDate.localeCompare(a.lastAttemptDate));
 	});
 
 	const difficultyColors: Record<string, string> = {
-		easy: 'badge-success',
-		intermediate: 'badge-info',
-		hard: 'badge-warning',
+		beginner: 'badge-success',
+		intermediate: 'badge-warning',
 		expert: 'badge-error'
-	};
-
-	const statusColors: Record<string, string> = {
-		draft: 'badge-ghost',
-		ready: 'badge-info',
-		public: 'badge-success',
-		search: 'badge-primary'
 	};
 
 	function resetFilters() {
 		searchQuery = '';
-		selectedDifficulty = 'all';
-		selectedStatus = 'all';
+		selectedDifficulties = [];
+		selectedOwnership = 'all';
+	}
+
+	function toggleDifficulty(difficulty: string) {
+		if (selectedDifficulties.includes(difficulty)) {
+			selectedDifficulties = selectedDifficulties.filter((d) => d !== difficulty);
+		} else {
+			selectedDifficulties = [...selectedDifficulties, difficulty];
+		}
 	}
 
 	const hasActiveFilters = $derived(
-		searchQuery || selectedDifficulty !== 'all' || selectedStatus !== 'all'
+		searchQuery || selectedDifficulties.length > 0 || selectedOwnership !== 'all'
 	);
 </script>
 
-<div class={['flex h-full flex-col gap-6', className]}>
-	<header class="flex flex-col gap-3">
+<div class={['flex h-full flex-col gap-6 overflow-y-auto md:overflow-y-visible', className]}>
+	<header class="flex shrink-0 flex-col gap-3">
 		<div class="flex items-start justify-between gap-4">
 			<div>
 				<h1 class="text-3xl font-semibold tracking-tight">My Quizes</h1>
 				<p class="text-base-content/70 mt-1 text-sm">
-					Create, manage, and share your custom quizzes.
+					View all quizzes you've attempted, sorted by most recent activity.
 				</p>
 			</div>
 		</div>
@@ -182,55 +241,80 @@
 		</div>
 
 		{#if showFilters}
-			<div class="bg-base-200/50 border-base-300 flex flex-col gap-4 rounded-xl border p-4">
-				<div class="grid gap-4 sm:grid-cols-2">
-					<div>
-						<label class="label" for="difficulty-select">
-							<span class="label-text font-medium">Difficulty</span>
-						</label>
-						<select
-							id="difficulty-select"
-							class="select select-bordered w-full"
-							bind:value={selectedDifficulty}
-							onchange={() => {}}
+			<div class="bg-base-200/50 border-base-300 flex flex-col gap-5 rounded-xl border p-5">
+				<!-- Ownership Filter -->
+				<div class="flex flex-col gap-2">
+					<span class="label-text font-medium">Quiz ownership</span>
+					<div class="flex flex-wrap gap-2">
+						<Button
+							size="sm"
+							color={selectedOwnership === 'all' ? 'primary' : 'neutral'}
+							style={selectedOwnership === 'all' ? 'solid' : 'outline'}
+							onclick={() => (selectedOwnership = 'all')}
 						>
-							<option value="all">All difficulties</option>
-							<option value="easy">Easy</option>
-							<option value="intermediate">Intermediate</option>
-							<option value="hard">Hard</option>
-							<option value="expert">Expert</option>
-						</select>
+							All Quizzes
+						</Button>
+						<Button
+							size="sm"
+							color={selectedOwnership === 'mine' ? 'accent' : 'neutral'}
+							style={selectedOwnership === 'mine' ? 'solid' : 'outline'}
+							onclick={() => (selectedOwnership = 'mine')}
+						>
+							<Crown size={14} />
+							My Quizzes
+						</Button>
+						<Button
+							size="sm"
+							color={selectedOwnership === 'others' ? 'neutral' : 'neutral'}
+							style={selectedOwnership === 'others' ? 'solid' : 'outline'}
+							onclick={() => (selectedOwnership = 'others')}
+						>
+							Other Quizzes
+						</Button>
 					</div>
+				</div>
 
-					<div>
-						<label class="label" for="status-select">
-							<span class="label-text font-medium">Status</span>
-						</label>
-						<select
-							id="status-select"
-							class="select select-bordered w-full"
-							bind:value={selectedStatus}
-							onchange={() => {}}
+				<!-- Difficulty Filter -->
+				<div class="flex flex-col gap-2">
+					<span class="label-text font-medium">Difficulty (multiple choice)</span>
+					<div class="flex flex-wrap gap-2">
+						<Button
+							size="sm"
+							color={selectedDifficulties.includes('beginner') ? 'success' : 'neutral'}
+							style={selectedDifficulties.includes('beginner') ? 'solid' : 'outline'}
+							onclick={() => toggleDifficulty('beginner')}
 						>
-							<option value="all">All statuses</option>
-							<option value="draft">Draft</option>
-							<option value="ready">Ready</option>
-							<option value="public">Public</option>
-							<option value="search">Search</option>
-						</select>
+							Beginner
+						</Button>
+						<Button
+							size="sm"
+							color={selectedDifficulties.includes('intermediate') ? 'info' : 'neutral'}
+							style={selectedDifficulties.includes('intermediate') ? 'solid' : 'outline'}
+							onclick={() => toggleDifficulty('intermediate')}
+						>
+							Intermediate
+						</Button>
+						<Button
+							size="sm"
+							color={selectedDifficulties.includes('expert') ? 'error' : 'neutral'}
+							style={selectedDifficulties.includes('expert') ? 'solid' : 'outline'}
+							onclick={() => toggleDifficulty('expert')}
+						>
+							Expert
+						</Button>
 					</div>
 				</div>
 
 				{#if hasActiveFilters}
-					<div class="flex justify-end">
-						<Button size="sm" style="ghost" onclick={resetFilters}>Reset filters</Button>
+					<div class="border-base-300 flex justify-end border-t pt-3">
+						<Button size="sm" style="ghost" onclick={resetFilters}>Reset all filters</Button>
 					</div>
 				{/if}
 			</div>
 		{/if}
 	</header>
 
-	<section class="flex min-h-0 flex-1 flex-col gap-4">
+	<section class="flex flex-col gap-4 md:min-h-0 md:flex-1">
 		{#if filteredQuizes.length === 0}
 			<div
 				class="border-base-200 bg-base-100 flex flex-col items-center gap-3 rounded-xl border p-8 text-center shadow-sm"
@@ -253,8 +337,8 @@
 				{/if}
 			</div>
 		{:else}
-			<!-- Make only the quiz list scrollable -->
-			<ul class="grid gap-4 overflow-y-auto py-2 pr-1">
+			<!-- Make only the quiz list scrollable on desktop -->
+			<ul class="grid gap-4 py-2 pr-1 md:overflow-y-auto">
 				{#each filteredQuizes as item}
 					<li>
 						<a
@@ -275,20 +359,23 @@
 									{/if}
 									<div class="text-base-content/70 mt-2 flex items-center gap-2 text-xs">
 										<Clock size={12} class="opacity-60" />
-										<span>{formatDateTime(item.updated)}</span>
+										<span>Last attempt: {formatDateTime(item.lastAttemptDate)}</span>
 									</div>
 								</div>
 							</div>
 
 							<div class="flex flex-wrap items-center gap-2">
+								<!-- Author badge -->
+								{#if item.isAuthor}
+									<span class="badge badge-accent">
+										<Crown size={12} />
+										My Quiz
+									</span>
+								{/if}
+
 								<!-- Difficulty -->
 								<span class={['badge', difficultyColors[item.difficulty] || 'badge-ghost']}>
 									{item.difficulty.charAt(0).toUpperCase() + item.difficulty.slice(1)}
-								</span>
-
-								<!-- Status -->
-								<span class={['badge', statusColors[item.status] || 'badge-ghost']}>
-									{item.status.charAt(0).toUpperCase() + item.status.slice(1)}
 								</span>
 
 								<!-- Questions count -->

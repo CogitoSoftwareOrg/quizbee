@@ -1,8 +1,8 @@
 export const prerender = false;
 
 import { pb } from '$lib/pb';
-import type { UsersResponse, QuizesResponse } from '$lib/pb';
-import type { QuizExpand, UserExpand } from '$lib/pb/expands';
+import type { UsersResponse, QuizesResponse, QuizAttemptsResponse } from '$lib/pb';
+import type { QuizExpand, UserExpand, QuizAttemptExpand } from '$lib/pb/expands';
 
 import { materialsStore } from '$lib/apps/materials/materials.svelte';
 import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte';
@@ -36,8 +36,11 @@ export async function load({ depends }) {
 					.catch(() => []),
 				pb!
 					.collection('quizAttempts')
-					.getFullList({ filter: `user="${user.id}"` })
-					.catch(() => []),
+					.getFullList<QuizAttemptsResponse<unknown, unknown, QuizAttemptExpand>>({
+						filter: `user="${user.id}"`,
+						expand: 'quiz,quiz.quizItems_via_quiz'
+					})
+					.catch(() => [] as QuizAttemptsResponse<unknown, unknown, QuizAttemptExpand>[]),
 				pb!
 					.collection('quizes')
 					.getFullList<QuizesResponse<unknown, unknown, unknown, QuizExpand>>({
@@ -47,12 +50,29 @@ export async function load({ depends }) {
 					.catch(() => [] as QuizesResponse<unknown, unknown, unknown, QuizExpand>[])
 			]);
 
-			const quizItems = quizesWithExpand.map((q) => q.expand?.quizItems_via_quiz || []).flat();
+			// Collect quizItems from both author quizes and quiz attempts
+			const authorQuizItems = quizesWithExpand
+				.map((q) => q.expand?.quizItems_via_quiz || [])
+				.flat();
+			const attemptQuizItems = quizAttempts
+				.map((attempt) => {
+					const quiz = attempt.expand?.quiz as
+						| QuizesResponse<unknown, unknown, unknown, QuizExpand>
+						| undefined;
+					return quiz?.expand?.quizItems_via_quiz || [];
+				})
+				.flat();
+
+			// Combine and deduplicate quizItems
+			const allQuizItems = [...authorQuizItems, ...attemptQuizItems];
+			const uniqueQuizItems = Array.from(
+				new Map(allQuizItems.map((item) => [item.id, item])).values()
+			);
 
 			materialsStore.materials = materials;
 			quizAttemptsStore.quizAttempts = quizAttempts;
 			subscriptionStore.subscription = subscription;
-			quizItemsStore.quizItems = quizItems;
+			quizItemsStore.quizItems = uniqueQuizItems;
 
 			// Remove expand from quizes to avoid storing too much data
 			const quizes = quizesWithExpand.map((q) => {

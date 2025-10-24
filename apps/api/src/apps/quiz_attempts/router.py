@@ -87,6 +87,11 @@ async def update_quiz_attempt_with_feedback(
 
     # Only summarize and index if quiz is not final
     if quiz.get("status") != "final":
+        await admin_pb.collection("quizes").update(
+            quiz.get("id", ""),
+            {"status": "answered"},
+        )
+
         background.add_task(
             summary_and_index,
             admin_pb,
@@ -97,13 +102,17 @@ async def update_quiz_attempt_with_feedback(
         )
 
     # No feedback -> generate feedback
-    if quiz_attempt.get("feedback") is None:
+    feedback = quiz_attempt.get("feedback")
+    logging.info(f"Feedback: {feedback}")
+    if feedback is None:
         if sub.get("tariff") == "free":
             await admin_pb.collection("quizAttempts").update(
                 attempt_id, {"feedback": {}}
             )
         else:
             background.add_task(_generate_feedback_task, admin_pb, http, attempt_id)
+    else:
+        logging.info(f"Feedback already exists: {feedback}")
 
     return JSONResponse(
         content={"scheduled": True, "attempt_id": attempt_id},

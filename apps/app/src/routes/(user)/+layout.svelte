@@ -97,7 +97,6 @@
 							size="lg"
 							href="/quizes/new"
 							circle
-							data-sveltekit-preload-data="tap"
 						>
 							<Plus size={32} />
 						</Button>
@@ -125,6 +124,7 @@
 	}}
 	placement="left"
 	noPadding
+	class="min-w-[66vw]"
 >
 	<SidebarContent />
 </Modal>

@@ -18,24 +18,33 @@
 		onNext: () => void;
 	}
 
-	let { quizAttempt, quizItems, order, itemDecision, chatOpen = $bindable(false), userSender, itemId, onPrevious, onNext }: Props =
-		$props();
+	let {
+		quizAttempt,
+		quizItems,
+		order,
+		itemDecision,
+		chatOpen = $bindable(false),
+		userSender,
+		itemId,
+		onPrevious,
+		onNext
+	}: Props = $props();
 </script>
 
-<div class="md:flex justify-between gap-4 -mb-2 px-3 pt-6 hidden sm:px-12 ">
+<div class="-mb-2 hidden justify-between gap-4 px-3 pt-6 sm:px-12 md:flex">
 	<div class="flex-1">
 		{#if itemDecision}
 			<ExplainMore sender={userSender} quizAttemptId={quizAttempt.id} {itemId} bind:chatOpen />
 		{/if}
 	</div>
-	
+
 	<div class="flex gap-4">
 		{#if order > 0}
 			<Button
 				color="neutral"
 				style="outline"
 				size="lg"
-				class="dark:!text-base-content/90"
+				class="dark:text-base-content/90"
 				onclick={(e) => {
 					e.preventDefault();
 					onPrevious();
@@ -44,13 +53,7 @@
 				Previous
 			</Button>
 		{:else}
-			<Button
-				
-				size="lg"
-				class="invisible pointer-events-none"
-			>
-				Previous
-			</Button>
+			<Button size="lg" class="pointer-events-none invisible">Previous</Button>
 		{/if}
 
 		{#if itemDecision}
@@ -65,13 +68,7 @@
 				Next
 			</Button>
 		{:else}
-			<Button
-				
-				size="lg"
-				class="invisible pointer-events-none"
-			>
-				Next
-			</Button>
+			<Button size="lg" class="pointer-events-none invisible">Next</Button>
 		{/if}
 	</div>
 </div>
