@@ -14,6 +14,7 @@
 
 	import type { ClassValue } from 'svelte/elements';
 	import { quizItemsStore } from './quizItems.svelte';
+	import { quizesStore } from './quizes.svelte';
 
 	interface QuizItem {
 		quizId: string;
@@ -81,10 +82,15 @@
 		// Extract unique quizzes from completed attempts
 		const uniqueQuizzes = new Map<string, QuizesResponse<QuizExpand>>();
 
+		// Create a map of user's quizzes from store for quick lookup
+		const userQuizzesMap = new Map(quizesStore.quizes.map((quiz) => [quiz.id, quiz]));
+
 		for (const attempt of completedAttempts) {
 			const quiz = attempt.expand?.quiz;
 			if (quiz && !uniqueQuizzes.has(quiz.id)) {
-				uniqueQuizzes.set(quiz.id, quiz);
+				// Use reactive quiz from store if it's user's quiz, otherwise use expanded quiz
+				const quizToUse = quiz.author === userId ? userQuizzesMap.get(quiz.id) || quiz : quiz;
+				uniqueQuizzes.set(quiz.id, quizToUse);
 			}
 		}
 
