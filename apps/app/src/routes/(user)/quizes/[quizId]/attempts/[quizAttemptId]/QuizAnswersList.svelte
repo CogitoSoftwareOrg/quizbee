@@ -80,7 +80,13 @@
 			nextExpanded[idx] = answer.correct || idx === itemDecision!.answerIndex;
 		});
 
-		expandedAnswers = nextExpanded;
+		// Check if expandedAnswers actually need to be updated
+		const hasChanges = answers.some((answer, idx) => {
+			const shouldBeExpanded = answer.correct || idx === itemDecision!.answerIndex;
+			return isExpanded(idx) !== shouldBeExpanded;
+		});
+
+		if (hasChanges) expandedAnswers = nextExpanded;
 	});
 
 	async function createFeedback() {
