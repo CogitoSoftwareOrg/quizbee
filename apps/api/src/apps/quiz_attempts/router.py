@@ -87,6 +87,11 @@ async def update_quiz_attempt_with_feedback(
 
     # Only summarize and index if quiz is not final
     if quiz.get("status") != "final":
+        await admin_pb.collection("quizes").update(
+            quiz.get("id", ""),
+            {"status": "answered"},
+        )
+
         background.add_task(
             summary_and_index,
             admin_pb,

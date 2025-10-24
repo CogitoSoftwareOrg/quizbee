@@ -21,7 +21,7 @@ class QuizAttemptsStore {
 			'*',
 			(e) => {
 				console.log('quizAttempts', e);
-				const quizAttempt = e.record;
+				const quizAttempt = e.record as QuizAttemptsResponse;
 				switch (e.action) {
 					case 'create': {
 						this._quizAttempts.unshift(quizAttempt);
@@ -39,7 +39,8 @@ class QuizAttemptsStore {
 				}
 			},
 			{
-				filter: `user = "${userId}"`
+				filter: `user = "${userId}"`,
+				expand: 'quiz,quiz.quizItems_via_quiz'
 			}
 		);
 	}

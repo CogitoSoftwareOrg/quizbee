@@ -10,6 +10,10 @@ export type QuizExpand = {
 	quizItems_via_quiz: QuizItemsResponse[] | undefined;
 };
 
+export type QuizAttemptExpand = {
+	quiz: QuizesResponse<QuizExpand> | undefined;
+};
+
 export type UserExpand = {
 	subscriptions_via_user: SubscriptionsResponse[] | undefined;
 	materials_via_user: MaterialsResponse[] | undefined;
