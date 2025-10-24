@@ -33,7 +33,6 @@ class UserStore {
 
 	async subscribe(userId: string) {
 		return pb!.collection('users').subscribe(userId, (e) => {
-			console.log(e);
 			switch (e.action) {
 				case 'update':
 					pb!.authStore.save(pb!.authStore.token, e.record as AuthRecord);

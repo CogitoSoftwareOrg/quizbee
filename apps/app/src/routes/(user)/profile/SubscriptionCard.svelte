@@ -9,6 +9,11 @@
 
 	const subscription = $derived(subscriptionStore.subscription);
 	const paid = $derived(subscription?.status === 'active' && subscription.tariff !== 'free');
+	const quizItemsUsage = $derived(subscription?.quizItemsUsage ?? 0);
+	const quizItemsLimit = $derived(subscription?.quizItemsLimit ?? 0);
+	const questionsProgress = $derived(
+		quizItemsLimit > 0 ? (quizItemsUsage / quizItemsLimit) * 100 : 0
+	);
 </script>
 
 <div class="card bg-base-100 shadow-lg">
@@ -24,6 +29,35 @@
 				<div class="badge badge-ghost badge-sm">Free</div>
 			{/if}
 		</div>
+
+		<!-- Questions Usage Widget -->
+		{#if quizItemsLimit > 0}
+			<div class="mt-4 space-y-2">
+				<div class="flex items-center justify-between">
+					<span class="text-xs font-semibold">Questions</span>
+					<span class="text-base-content/70 text-xs font-medium">
+						{quizItemsUsage} / {quizItemsLimit}
+					</span>
+				</div>
+				<progress
+					class="progress {questionsProgress >= 90
+						? 'progress-error'
+						: questionsProgress >= 70
+							? 'progress-warning'
+							: 'progress-primary'}"
+					value={questionsProgress}
+					max="100"
+				></progress>
+				<div class="flex items-center justify-between gap-2">
+					<div class="text-base-content/60 text-xs">
+						{Math.round(questionsProgress)}% used
+					</div>
+					<div class="text-base-content/60 text-xs">
+						{quizItemsLimit - quizItemsUsage} remaining
+					</div>
+				</div>
+			</div>
+		{/if}
 
 		<div class="mt-3">
 			{#if paid}

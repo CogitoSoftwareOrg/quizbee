@@ -72,10 +72,10 @@ async def explainer_call_quota_protection(
     if not quiz_attempt:
         raise HTTPException(status_code=404, detail=f"Quiz attempt not found")
 
-    remained = remaining(subscription, "messages")
+    remained = remaining(subscription, "quizItems")
     if remained <= 0:
-        raise HTTPException(status_code=400, detail=f"Messages limit exceeded")
+        raise HTTPException(status_code=400, detail=f"Quiz items limit exceeded")
 
     await admin_pb.collection("subscriptions").update(
-        subscription_id, {"messagesUsage+": 1}
+        subscription_id, {"quizItemsUsage+": 1}
     )

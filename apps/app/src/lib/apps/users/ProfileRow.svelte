@@ -38,9 +38,11 @@
 
 				<div class="flex items-center gap-1">
 					<p class="badge-primary badge badge-sm font-semibold">{sub?.tariff}</p>
-					<!-- <p class="badge-primary badge badge-sm font-semibold">
-				q: <span class="text-xs">{sub?.quizItemsUsage} / {sub?.quizItemsLimit}</span>
-				</p> -->
+					{#if sub?.quizItemsLimit && sub?.quizItemsUsage}
+						<p class="badge-primary badge badge-sm font-semibold">
+							<span class="text-xs">{sub?.quizItemsLimit - sub?.quizItemsUsage}</span>
+						</p>
+					{/if}
 				</div>
 			</div>
 
