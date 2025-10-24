@@ -85,12 +85,13 @@
 	});
 
 	async function createFeedback() {
+		if (!quizAttempt.id || quizAttempt.feedback) return;
+
 		posthog.capture('quiz_feedback_started', {
 			quizId: quiz.id,
 			quizAttemptId: quizAttempt.id,
 			itemId: item.id
 		});
-		if (!quizAttempt.id || quizAttempt.feedback) return;
 		const res = await putApi(`quiz_attempts/${quizAttempt.id}`, {});
 		console.log(res);
 	}
