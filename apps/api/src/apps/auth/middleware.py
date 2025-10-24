@@ -1,3 +1,4 @@
+import json
 from typing import Annotated
 from fastapi import Depends, Request, HTTPException
 from pocketbase import PocketBase
@@ -14,7 +15,11 @@ User = Annotated[Record, Depends(get_user)]
 
 
 async def auth_user(request: Request):
-    pb_token = request.cookies.get("pb_token")
+    auth_str = request.cookies.get("pb_auth")
+    if not auth_str:
+        raise HTTPException(status_code=401, detail=f"Unauthorized: no pb_auth")
+
+    pb_token = json.loads(auth_str).get("token")
     if not pb_token:
         raise HTTPException(status_code=401, detail=f"Unauthorized: no pb_token")
     try:
