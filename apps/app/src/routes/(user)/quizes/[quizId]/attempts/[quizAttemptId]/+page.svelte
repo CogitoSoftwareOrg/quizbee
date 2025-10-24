@@ -31,7 +31,27 @@
 	);
 
 	const quizDecisions = $derived((quizAttempt?.choices as Decision[]) || []);
-	let itemDecision = $derived(quizDecisions.find((d) => d.itemId === item?.id) || null);
+
+	// Stable itemDecision - only update when actual data changes, not object reference
+	let itemDecision = $state<Decision | null>(null);
+	$effect(() => {
+		const foundDecision = quizDecisions.find((d) => d.itemId === item?.id) || null;
+
+		// Only update if meaningfully different (avoid reference changes causing re-renders)
+		if (!foundDecision && !itemDecision) return;
+		if (!foundDecision) {
+			itemDecision = null;
+			return;
+		}
+		if (
+			!itemDecision ||
+			itemDecision.itemId !== foundDecision.itemId ||
+			itemDecision.answerIndex !== foundDecision.answerIndex ||
+			itemDecision.correct !== foundDecision.correct
+		) {
+			itemDecision = foundDecision;
+		}
+	});
 
 	const pageQuiz = $derived(data?.pageQuiz?.id === quizAttempt?.quiz ? data.pageQuiz : null);
 	const quiz = $derived(quizesStore.quizes.find((q) => q.id === quizAttempt?.quiz) || pageQuiz);

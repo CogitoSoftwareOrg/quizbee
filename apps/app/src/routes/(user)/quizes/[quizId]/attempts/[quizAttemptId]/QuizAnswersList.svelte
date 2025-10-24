@@ -1,6 +1,7 @@
 <script lang="ts">
 	import posthog from 'posthog-js';
 	import type { ClassValue } from 'svelte/elements';
+	import { untrack } from 'svelte';
 
 	import {
 		pb,
@@ -62,31 +63,41 @@
 		return !!expandedAnswers[index];
 	}
 
+	// Track stable keys to avoid unnecessary recalculations
+	let lastItemId = $state<string | null>(null);
 	let lastDecisionKey = $state<string | null>(null);
 
+	// Auto-expand answers when decision is made
+	// Only react to item.id and itemDecision changes, not to object reference changes
 	$effect(() => {
-		if (!itemDecision) {
+		const currentItemId = item?.id ?? null;
+
+		// Reset when navigating to a new item (only by ID, not object reference)
+		if (currentItemId !== lastItemId) {
+			lastItemId = currentItemId;
 			lastDecisionKey = null;
 			expandedAnswers = {};
-			return;
 		}
 
-		const decisionKey = `${itemDecision.itemId ?? item?.id}:${itemDecision.answerIndex}`;
+		// Only process if there's a decision
+		if (!itemDecision) return;
+
+		// Create stable key from decision data
+		const decisionKey = `${itemDecision.itemId}:${itemDecision.answerIndex}:${itemDecision.correct}`;
+
+		// Skip if already processed this exact decision
 		if (decisionKey === lastDecisionKey) return;
 		lastDecisionKey = decisionKey;
 
-		const nextExpanded: Record<number, boolean> = {};
-		answers.forEach((answer, idx) => {
-			nextExpanded[idx] = answer.correct || idx === itemDecision!.answerIndex;
+		// Expand correct answer and user's choice
+		// Use untrack to read answers without creating dependency
+		untrack(() => {
+			const nextExpanded: Record<number, boolean> = {};
+			answers.forEach((answer, idx) => {
+				nextExpanded[idx] = answer.correct || idx === itemDecision!.answerIndex;
+			});
+			expandedAnswers = nextExpanded;
 		});
-
-		// Check if expandedAnswers actually need to be updated
-		const hasChanges = answers.some((answer, idx) => {
-			const shouldBeExpanded = answer.correct || idx === itemDecision!.answerIndex;
-			return isExpanded(idx) !== shouldBeExpanded;
-		});
-
-		if (hasChanges) expandedAnswers = nextExpanded;
 	});
 
 	async function createFeedback() {
