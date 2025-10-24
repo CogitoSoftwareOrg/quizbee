@@ -32,22 +32,34 @@
 
 	const quizDecisions = $derived((quizAttempt?.choices as Decision[]) || []);
 
-	// Stable itemDecision - only update when actual data changes, not object reference
+	// Stable itemDecision - preserve optimistic updates, only sync when server data differs
 	let itemDecision = $state<Decision | null>(null);
 	$effect(() => {
 		const foundDecision = quizDecisions.find((d) => d.itemId === item?.id) || null;
 
-		// Only update if meaningfully different (avoid reference changes causing re-renders)
+		// If nothing found and nothing set, do nothing
 		if (!foundDecision && !itemDecision) return;
-		if (!foundDecision) {
-			itemDecision = null;
+
+		// If we have optimistic decision but server hasn't confirmed yet, keep optimistic
+		if (!foundDecision && itemDecision) {
+			// Only clear if we switched to a different item
+			if (itemDecision.itemId !== item?.id) {
+				itemDecision = null;
+			}
 			return;
 		}
+
+		// If no optimistic decision, take server value
+		if (!itemDecision) {
+			itemDecision = foundDecision;
+			return;
+		}
+
+		// If both exist, only update if data actually changed
 		if (
-			!itemDecision ||
-			itemDecision.itemId !== foundDecision.itemId ||
-			itemDecision.answerIndex !== foundDecision.answerIndex ||
-			itemDecision.correct !== foundDecision.correct
+			itemDecision.itemId !== foundDecision!.itemId ||
+			itemDecision.answerIndex !== foundDecision!.answerIndex ||
+			itemDecision.correct !== foundDecision!.correct
 		) {
 			itemDecision = foundDecision;
 		}
