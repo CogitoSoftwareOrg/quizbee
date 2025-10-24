@@ -131,13 +131,13 @@
 	const showManage = $derived(
 		Boolean(
 			quiz?.status !== 'final' &&
-			user?.id === quiz?.author &&
-			lastFinalItem?.id === item?.id &&
-			item &&
-			!item?.managed &&
-			itemDecision &&
-			quiz &&
-			quizAttempt
+				user?.id === quiz?.author &&
+				lastFinalItem?.id === item?.id &&
+				item &&
+				!item?.managed &&
+				itemDecision &&
+				quiz &&
+				quizAttempt
 		)
 	);
 </script>
@@ -220,14 +220,10 @@
 
 						{#if quiz?.status !== 'final' && user?.id === quiz?.author && lastFinalItem?.id === item?.id && item && !item?.managed && itemDecision && quiz && quizAttempt}
 							<ManageQuiz {item} {quiz} {quizAttempt} />
-						{:else if item && quiz && quizAttempt}   <!-- invisible placeholder to maintain layout -->
+						{:else if item && quiz && quizAttempt}
+							<!-- invisible placeholder to maintain layout -->
 							<div class="mt-6 flex gap-2" aria-hidden="true">
-								<Button
-									class="invisible pointer-events-none"
-									style="soft"
-								>
-									Adjust Quiz
-								</Button>
+								<Button class="pointer-events-none invisible" style="soft">Adjust Quiz</Button>
 							</div>
 						{/if}
 					</div>

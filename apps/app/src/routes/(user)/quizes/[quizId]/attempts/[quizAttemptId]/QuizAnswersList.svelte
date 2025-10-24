@@ -10,11 +10,10 @@
 	} from '$lib/pb';
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
 	import type { Answer } from '$lib/apps/quizes/types';
-	import { computeApiUrl } from '$lib/api/compute-url';
 	import { ChevronDown, ChevronRight, Info } from 'lucide-svelte';
 	import { patchApi, putApi } from '$lib/api/call-api';
-	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
+	import { QuizItemsStatusOptions } from '$lib/pb/pocketbase-types';
+
 	interface Props {
 		class?: ClassValue;
 		answers: Answer[];
@@ -126,6 +125,9 @@
 										correct: answer.correct
 									};
 									const newDecisions = [...quizDecisions, itemDecision];
+
+									item.status = QuizItemsStatusOptions.final;
+
 									await Promise.all([
 										pb!.collection('quizAttempts').update(quizAttempt!.id, {
 											choices: newDecisions
