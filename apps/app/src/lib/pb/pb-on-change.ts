@@ -30,13 +30,25 @@ pb!.authStore.onChange((token, record) => {
 function setPBCookie() {
 	const host = typeof window !== 'undefined' ? window.location.hostname : '';
 	const isQuizbee = host.endsWith('quizbee.academy');
-	const domain = isQuizbee ? '.quizbee.academy' : undefined;
+	const domainAttr = isQuizbee ? 'Domain=.quizbee.academy' : undefined;
+	const maxAge = 100 * 24 * 60 * 60;
+
+	document.cookie = [
+		`pb_token=${pb!.authStore.token}`,
+		domainAttr,
+		'Secure',
+		'Path=/',
+		`Max-Age=${maxAge}`,
+		'SameSite=None'
+	]
+		.filter(Boolean)
+		.join('; ');
 
 	document.cookie = pb!.authStore.exportToCookie({
 		httpOnly: false,
 		secure: true,
 		sameSite: 'Lax',
-		domain,
+		domain: isQuizbee ? '.quizbee.academy' : undefined,
 		path: '/'
 	});
 }
