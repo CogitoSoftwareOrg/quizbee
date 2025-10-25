@@ -27,6 +27,51 @@
 			!page.url.pathname.includes('/feedback')
 	);
 
+	// Sidebar swipe gesture tracking
+	let rootElement = $state<HTMLDivElement | null>(null);
+	let sidebarSwipeStartX = $state(0);
+	let sidebarSwipeStartY = $state(0);
+
+	const SIDEBAR_SWIPE_THRESHOLD = 70; // Minimum swipe distance to trigger
+	const SIDEBAR_EDGE_THRESHOLD = 50; // Area from left edge to detect swipe start
+
+	function handleSidebarSwipeStart(e: TouchEvent) {
+		// Only on mobile, not during quiz, and if sidebar not already open
+		if (!mobile.current || attemptingQuiz || uiStore.globalSidebarOpen) return;
+
+		sidebarSwipeStartX = e.touches[0].clientX;
+		sidebarSwipeStartY = e.touches[0].clientY;
+	}
+
+	function handleSidebarSwipeEnd(e: TouchEvent) {
+		// Guard: only process if conditions are met
+		if (!mobile.current || attemptingQuiz || uiStore.globalSidebarOpen || !sidebarSwipeStartX)
+			return;
+
+		// Guard: must start from left edge
+		if (sidebarSwipeStartX >= SIDEBAR_EDGE_THRESHOLD) {
+			sidebarSwipeStartX = 0;
+			sidebarSwipeStartY = 0;
+			return;
+		}
+
+		const diffX = e.changedTouches[0].clientX - sidebarSwipeStartX;
+		const diffY = Math.abs(e.changedTouches[0].clientY - sidebarSwipeStartY);
+
+		// Check if it's a horizontal rightward swipe (not vertical scroll)
+		if (diffX > SIDEBAR_SWIPE_THRESHOLD && diffX > diffY) {
+			uiStore.setGlobalSidebarOpen(true);
+			// Haptic feedback for better UX
+			if ('vibrate' in navigator) {
+				navigator.vibrate(10);
+			}
+		}
+
+		// Reset
+		sidebarSwipeStartX = 0;
+		sidebarSwipeStartY = 0;
+	}
+
 	// Enable View Transitions API for smooth page transitions
 	// Optimized for mobile responsiveness - resolve immediately to prevent click delay
 	onNavigate((navigation) => {
@@ -58,7 +103,12 @@
 {#await data.userLoadPromise}
 	<Splash />
 {:then}
-	<div class="flex h-dvh w-full overflow-hidden">
+	<div
+		bind:this={rootElement}
+		class="flex h-dvh w-full overflow-hidden"
+		ontouchstart={handleSidebarSwipeStart}
+		ontouchend={handleSidebarSwipeEnd}
+	>
 		<!-- Desktop Sidebar -->
 		<aside
 			class={[
