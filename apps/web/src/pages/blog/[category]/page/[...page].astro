@@ -1,0 +1,14 @@
+---
+import type { Page } from "astro";
+
+import BlogCategoryPage from "@/components/pages/BlogCategory.astro";
+import { getStaticBlogCategoryPaths } from "@/ssg/blog";
+
+export const getStaticPaths = getStaticBlogCategoryPaths;
+
+const { page } = Astro.props as {
+  page: Page;
+};
+---
+
+<BlogCategoryPage page={page} />

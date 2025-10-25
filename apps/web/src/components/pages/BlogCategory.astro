@@ -1,64 +1,20 @@
 ---
-// src/pages/[locale]/blog/[category]/[page].astro
-import type { GetStaticPaths, Page } from "astro";
+import type { Page } from "astro";
 import { Image } from "astro:assets";
-import { getCollection } from "astro:content";
 
-import CategoryCover from "@/assets/images/pchel.png";
 import Root from "@/layouts/Root.astro";
 import { useTranslatedPath } from "@/i18n/utils";
-import type { languages } from "@/i18n/ui";
-import { defaultLang } from "@/i18n/ui";
+import { defaultLang, type languages } from "@/i18n/ui";
 
-// Страницы категории c SSG-пагинацией
-export const getStaticPaths: GetStaticPaths = async ({ paginate }) => {
-  const all = await getCollection("blogPb", (post) =>
-    post.id.includes(defaultLang)
-  );
+import CategoryCover from "@/assets/images/pchel.png";
 
-  // Группируем по locale -> category
-  const map = new Map<string, Map<string, any[]>>();
-  for (const p of all) {
-    const loc = p.data.locale;
-    const cat = p.data.category ?? "general";
-    if (!map.has(loc)) map.set(loc, new Map());
-    const byCat = map.get(loc)!;
-    if (!byCat.has(cat)) byCat.set(cat, []);
-    byCat.get(cat)!.push(p);
-  }
-
-  const pageSize = 12;
-  const paths: any[] = [];
-
-  for (const [locale, byCat] of map.entries()) {
-    for (const [category, list] of byCat.entries()) {
-      list.sort((a, b) => {
-        const da = new Date(
-          a.data.article?.datePublished ?? a.data.article?.dateModified ?? 0
-        ).getTime();
-        const db = new Date(
-          b.data.article?.datePublished ?? b.data.article?.dateModified ?? 0
-        ).getTime();
-        return db - da;
-      });
-
-      paths.push(
-        ...paginate(list, {
-          pageSize,
-          params: { locale, category },
-          props: { category, locale },
-        })
-      );
-    }
-  }
-
-  return paths;
+const { page } = Astro.props as {
+  page: Page;
 };
 
-const { page, category, locale } = Astro.props as {
-  page: Page;
+const { locale = defaultLang, category } = Astro.params as {
+  locale?: keyof typeof languages;
   category: string;
-  locale: keyof typeof languages;
 };
 
 const tp = useTranslatedPath(locale);
@@ -68,7 +24,7 @@ const title = `Blog · ${category}`;
 const desc = `Articles in “${category}” (${page.currentPage} of ${page.lastPage})`;
 
 // Вспом. форматтер ссылки (если нужен canonical/индексация первой страницы — добавь index.astro)
-const pageHref = (n: number) => tp(`/blog/${category}/${n}`);
+const pageHref = (n: number) => tp(`/blog/${category}/page/${n}`);
 ---
 
 <Root title={title} description={desc} active="blog">

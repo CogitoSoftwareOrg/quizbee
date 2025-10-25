@@ -62,9 +62,7 @@
 		if (diffX > SIDEBAR_SWIPE_THRESHOLD && diffX > diffY) {
 			uiStore.setGlobalSidebarOpen(true);
 			// Haptic feedback for better UX
-			if ('vibrate' in navigator) {
-				navigator.vibrate(10);
-			}
+			if ('vibrate' in navigator) navigator.vibrate(10);
 		}
 
 		// Reset
