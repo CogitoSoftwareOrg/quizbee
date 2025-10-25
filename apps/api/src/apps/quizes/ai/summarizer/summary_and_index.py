@@ -1,11 +1,11 @@
 import logging
 import json
 
-from lib.ai.models import SummarizerDeps
-from lib.clients import AdminPB, HTTPAsyncClient, MeilisearchClient, langfuse_client
-from lib.utils import cache_key, update_span_with_result
+from src.lib.ai.models import SummarizerDeps
+from src.lib.clients import AdminPB, HTTPAsyncClient, MeilisearchClient, langfuse_client
+from src.lib.utils import cache_key, update_span_with_result
 
-from apps.materials.utils import load_file_text
+from src.apps.materials.utils import load_file_text
 
 from .agent import SUMMARIZER_COSTS, SUMMARIZER_LLM, summarizer_agent
 

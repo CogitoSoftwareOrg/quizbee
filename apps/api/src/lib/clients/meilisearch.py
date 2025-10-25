@@ -5,8 +5,8 @@ from meilisearch_python_sdk import (
 )
 from meilisearch_python_sdk.models.settings import Embedders, OpenAiEmbedder
 
-from lib.config import LLMS
-from lib.settings import settings
+from src.lib.config import LLMS
+from src.lib.settings import settings
 
 meiliEmbeddings = {
     "quizSummaries": OpenAiEmbedder(

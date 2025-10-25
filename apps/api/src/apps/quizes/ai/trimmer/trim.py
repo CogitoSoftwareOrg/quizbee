@@ -1,8 +1,8 @@
 import logging
 from typing import List, Dict
 
-from lib.ai.models import TrimmerDeps
-from lib.clients import langfuse_client
+from src.lib.ai.models import TrimmerDeps
+from src.lib.clients import langfuse_client
 
 from .agent import trimmer_agent
 
@@ -15,18 +15,18 @@ async def trim_content(
 ) -> List[Dict[str, int]]:
     """
     Analyze table of contents and user query to determine which page ranges to include.
-    
+
     Args:
         contents: JSON string representing the table of contents
         query: User's query about what content to include
         user_id: Optional user ID for tracking
         session_id: Optional session ID for tracking
-        
+
     Returns:
         List of page ranges as dictionaries with 'start' and 'end' keys
         Example: [{'start': 100, 'end': 120}, {'start': 140, 'end': 170}]
     """
-    
+
     with langfuse_client.start_as_current_span(name="content-trim") as span:
         res = await trimmer_agent.run(
             deps=TrimmerDeps(
@@ -34,21 +34,18 @@ async def trim_content(
                 query=query,
             ),
         )
-        
+
         payload = res.output
-        
-        page_ranges = [
-            {"start": pr.start, "end": pr.end} 
-            for pr in payload.page_ranges
-        ]
-        
+
+        page_ranges = [{"start": pr.start, "end": pr.end} for pr in payload.page_ranges]
+
         usage = res.usage()
-        
+
         logging.info(
             f"Trimmer determined {len(page_ranges)} page range(s): {page_ranges}"
         )
         logging.info(f"Reasoning: {payload.reasoning}")
-        
+
         if span:
             span.update_trace(
                 input=f"Query: {query}",
@@ -62,5 +59,5 @@ async def trim_content(
                     "output_tokens": usage.output_tokens,
                 },
             )
-        
+
         return page_ranges

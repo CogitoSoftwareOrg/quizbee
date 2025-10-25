@@ -1,10 +1,10 @@
 from pydantic_ai import Agent, NativeOutput, RunContext
 from pydantic_ai.messages import ModelMessage, ModelRequest, SystemPromptPart
 
-from lib.config import LLMS, LLMSCosts
-from lib.clients import langfuse_client
-from lib.ai import build_pre_prompt, SummarizerDeps, AgentEnvelope
-from lib.settings import settings
+from src.lib.config import LLMS, LLMSCosts
+from src.lib.clients import langfuse_client
+from src.lib.ai import build_pre_prompt, SummarizerDeps, AgentEnvelope
+from src.lib.settings import settings
 
 
 SUMMARIZER_LLM = LLMS.GPT_5_MINI

@@ -3,11 +3,11 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 import httpx
 
-from apps.auth import User, auth_user
-from apps.billing import load_subscription, Subscription
-from apps.quizes.ai import summary_and_index
-from lib.clients import AdminPB, langfuse_client, HTTPAsyncClient, MeilisearchClient
-from lib.utils import cache_key, update_span_with_result
+from src.apps.auth import User, auth_user
+from src.apps.billing import load_subscription, Subscription
+from src.apps.quizes.ai import summary_and_index
+from src.lib.clients import AdminPB, langfuse_client, HTTPAsyncClient, MeilisearchClient
+from src.lib.utils import cache_key, update_span_with_result
 
 from .ai import FEEDBACKER_COSTS, FEEDBACKER_LLM, FeedbackerDeps, feedbacker_agent
 

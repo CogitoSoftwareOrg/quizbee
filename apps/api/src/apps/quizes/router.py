@@ -9,13 +9,13 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
 
-from apps.auth import User, auth_user
-from apps.billing import (
+from src.apps.auth import User, auth_user
+from src.apps.billing import (
     load_subscription,
     quiz_patch_quota_protection,
 )
-from apps.materials import user_owns_materials
-from lib.clients import AdminPB, HTTPAsyncClient, MeilisearchClient
+from src.apps.materials import user_owns_materials
+from src.lib.clients import AdminPB, HTTPAsyncClient, MeilisearchClient
 
 from .ai import (
     generate_quiz_task,

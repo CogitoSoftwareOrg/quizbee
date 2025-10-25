@@ -13,8 +13,8 @@ from pydantic_ai.messages import (
     ToolCallPartDelta,
     PartStartEvent,
 )
-from lib.ai import QuizerDeps, QuizerOutput, AgentEnvelope
-from lib.config import LLMS, LLMSCosts
+from src.lib.ai import QuizerDeps, QuizerOutput, AgentEnvelope
+from src.lib.config import LLMS, LLMSCosts
 
 from .prompts import inject_request_prompt
 

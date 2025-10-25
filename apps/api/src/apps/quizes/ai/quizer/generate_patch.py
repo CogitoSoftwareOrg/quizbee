@@ -2,9 +2,9 @@ from enum import StrEnum
 import logging
 import httpx
 from pocketbase.models.dtos import Record
-from lib.clients import AdminPB, HTTPAsyncClient, langfuse_client
-from lib.utils import cache_key, update_span_with_result
-from lib.ai.models import QuizerDeps
+from src.lib.clients import AdminPB, HTTPAsyncClient, langfuse_client
+from src.lib.utils import cache_key, update_span_with_result
+from src.lib.ai.models import QuizerDeps
 
 from .agent import (
     QUIZER_COSTS,
@@ -120,7 +120,9 @@ async def generate_quiz_task(
 
                         seen = len(items)
 
-            await update_span_with_result(langfuse_client, result, span, user_id, attempt_id, QUIZER_LLM)
+            await update_span_with_result(
+                langfuse_client, result, span, user_id, attempt_id, QUIZER_LLM
+            )
 
     except httpx.ReadError as e:
         if cancelled:
@@ -229,7 +231,9 @@ async def generate_oneshot(
                         "question": qi.question,
                     },
                 )
-            await update_span_with_result(langfuse_client, res, span, user_id, attempt_id, QUIZER_LLM)
+            await update_span_with_result(
+                langfuse_client, res, span, user_id, attempt_id, QUIZER_LLM
+            )
 
     except Exception as e:
         logging.exception("Agent run failed for quiz %s: %s", quiz_id, e)

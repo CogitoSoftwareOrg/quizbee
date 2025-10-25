@@ -2,8 +2,8 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, Request
 from pocketbase.models.dtos import Record
 
-from lib.clients import AdminPB
-from apps.auth.middleware import User
+from src.lib.clients import AdminPB
+from src.apps.auth.middleware import User
 
 from .utils import ensure_active_and_maybe_reset, remaining
 

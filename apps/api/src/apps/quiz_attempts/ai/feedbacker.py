@@ -6,10 +6,10 @@ from pydantic_ai.messages import (
 )
 
 
-from lib.ai import FeedbackerDeps, build_pre_prompt, FeedbackerOutput, AgentEnvelope
-from lib.settings import settings
-from lib.clients import langfuse_client
-from lib.config import LLMS, LLMSCosts
+from src.lib.ai import FeedbackerDeps, build_pre_prompt, FeedbackerOutput, AgentEnvelope
+from src.lib.settings import settings
+from src.lib.clients import langfuse_client
+from src.lib.config import LLMS, LLMSCosts
 
 
 async def inject_request_prompt(

@@ -6,10 +6,10 @@ from pydantic_ai.messages import (
     UserPromptPart,
 )
 
-from lib.clients import langfuse_client
-from lib.settings import settings
+from src.lib.clients import langfuse_client
+from src.lib.settings import settings
 
-from lib.ai import DynamicConfig, QuizerDeps, build_pre_prompt
+from src.lib.ai import DynamicConfig, QuizerDeps, build_pre_prompt
 
 
 async def inject_request_prompt(

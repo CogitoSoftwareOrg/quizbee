@@ -6,12 +6,12 @@ from starlette.middleware.cors import CORSMiddleware
 from mcp.server.fastmcp import FastMCP
 import httpx
 
-from apps.billing import billing_router
-from apps.quiz_attempts import quiz_attempts_router
-from apps.messages import messages_router
-from apps.quizes import quizes_router
-from apps.materials import materials_router
-from lib.clients import init_meilisearch, ensure_admin_pb, init_admin_pb
+from src.apps.billing import billing_router
+from src.apps.quiz_attempts import quiz_attempts_router
+from src.apps.messages import messages_router
+from src.apps.quizes import quizes_router
+from src.apps.materials import materials_router
+from src.lib.clients import init_meilisearch, ensure_admin_pb, init_admin_pb
 
 from .cors import cors_middleware
 

@@ -3,7 +3,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, Field
 from pocketbase.models.dtos import Record
 
-from lib.clients import HTTPAsyncClient
+from src.lib.clients import HTTPAsyncClient
 
 
 class DynamicConfig(BaseModel):

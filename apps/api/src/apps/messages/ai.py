@@ -7,10 +7,10 @@ from pydantic_ai import (
 
 from pydantic_ai.messages import ModelMessage, ModelRequest, SystemPromptPart
 
-from lib.ai import ExplainerDeps, build_pre_prompt, ExplainerOutput, AgentEnvelope
-from lib.clients import langfuse_client
-from lib.config import LLMS, LLMSCosts
-from lib.settings import settings
+from src.lib.ai import ExplainerDeps, build_pre_prompt, ExplainerOutput, AgentEnvelope
+from src.lib.clients import langfuse_client
+from src.lib.config import LLMS, LLMSCosts
+from src.lib.settings import settings
 
 EXPLAINER_LLM = LLMS.GPT_5_MINI
 EXPLAINER_COSTS = LLMSCosts.GPT_5_MINI

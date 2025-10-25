@@ -2,9 +2,9 @@ from pocketbase.models.dtos import Record
 from dataclasses import dataclass
 from pydantic_ai import Agent
 
-from lib.ai import AgentEnvelope
-from lib.clients import HTTPAsyncClient
-from lib.config import LLMS
+from src.lib.ai import AgentEnvelope
+from src.lib.clients import HTTPAsyncClient
+from src.lib.config import LLMS
 
 ORCHESTRATOR_LLM = LLMS.GPT_5_MINI
 
