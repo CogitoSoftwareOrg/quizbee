@@ -1,6 +1,6 @@
 import logging
 from typing import Annotated
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Request
 from collections.abc import AsyncIterable
 from pydantic_ai import Agent, ModelRetry, NativeOutput, PromptedOutput, RunContext
 from pydantic_ai.models.openai import OpenAIChatModel
@@ -38,8 +38,8 @@ def init_quizer(app: FastAPI):
     )
 
 
-def get_quizer(app: FastAPI) -> Agent:
-    return app.state.quizer_agent
+def get_quizer(request: Request) -> Agent:
+    return request.app.state.quizer_agent
 
 
 Quizer = Annotated[Agent[QuizerDeps, AgentEnvelope], Depends(get_quizer)]

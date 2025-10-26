@@ -9,8 +9,9 @@ from src.apps.quizes.ai import summary_and_index
 from src.lib.clients import AdminPB, langfuse_client, HTTPAsyncClient, MeilisearchClient
 from src.lib.utils import cache_key, update_span_with_result
 
-from .ai import FEEDBACKER_COSTS, FEEDBACKER_LLM, FeedbackerDeps, Feedbacker
+from src.apps.quizes.ai.summarizer.agent import Summarizer
 
+from .ai import FEEDBACKER_COSTS, FEEDBACKER_LLM, FeedbackerDeps, Feedbacker
 
 quiz_attempts_router = APIRouter(
     prefix="/quiz_attempts",
@@ -71,6 +72,7 @@ async def update_quiz_attempt_with_feedback(
     admin_pb: AdminPB,
     user: User,
     sub: Subscription,
+    summarizer: Summarizer,
     feedbacker: Feedbacker,
     meilisearch_client: MeilisearchClient,
     attempt_id: str,
@@ -98,6 +100,7 @@ async def update_quiz_attempt_with_feedback(
         background.add_task(
             summary_and_index,
             admin_pb,
+            summarizer,
             http,
             meilisearch_client,
             user.get("id", ""),

@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Request
 from pydantic_ai import Agent, RunContext
 from pydantic_ai.messages import (
     ModelMessage,
@@ -62,8 +62,8 @@ def init_trimmer(app: FastAPI):
     )
 
 
-def get_trimmer(app: FastAPI) -> Agent:
-    return app.state.trimmer_agent
+def get_trimmer(request: Request) -> Agent:
+    return request.app.state.trimmer_agent
 
 
 Trimmer = Annotated[Agent[TrimmerDeps, TrimmerOutput], Depends(get_trimmer)]

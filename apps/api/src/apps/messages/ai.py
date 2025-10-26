@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Request
 from pydantic_ai import (
     Agent,
     NativeOutput,
@@ -52,8 +52,8 @@ def init_explainer(app: FastAPI):
     )
 
 
-def get_explainer(app: FastAPI) -> Agent:
-    return app.state.explainer_agent
+def get_explainer(request: Request) -> Agent:
+    return request.app.state.explainer_agent
 
 
 Explainer = Annotated[Agent[ExplainerDeps, AgentEnvelope], Depends(get_explainer)]

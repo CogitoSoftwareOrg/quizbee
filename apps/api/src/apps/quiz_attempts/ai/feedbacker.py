@@ -1,5 +1,6 @@
 from typing import Annotated
 from fastapi import Depends, FastAPI
+from fastapi.requests import Request
 from pydantic_ai import Agent, NativeOutput, PromptedOutput, RunContext
 from pydantic_ai.messages import (
     ModelMessage,
@@ -83,8 +84,8 @@ def init_feedbacker(app: FastAPI):
     )
 
 
-def get_feedbacker(app: FastAPI) -> Agent:
-    return app.state.feedbacker_agent
+def get_feedbacker(request: Request) -> Agent:
+    return request.app.state.feedbacker_agent
 
 
 Feedbacker = Annotated[Agent[FeedbackerDeps, AgentEnvelope], Depends(get_feedbacker)]

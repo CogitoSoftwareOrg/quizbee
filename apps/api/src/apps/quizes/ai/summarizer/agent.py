@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Request
 from pydantic_ai import Agent, NativeOutput, RunContext
 from pydantic_ai.messages import ModelMessage, ModelRequest, SystemPromptPart
 
@@ -44,8 +44,8 @@ def init_summarizer(app: FastAPI):
     )
 
 
-def get_summarizer(app: FastAPI) -> Agent:
-    return app.state.summarizer_agent
+def get_summarizer(request: Request) -> Agent:
+    return request.app.state.summarizer_agent
 
 
 Summarizer = Annotated[Agent[SummarizerDeps, AgentEnvelope], Depends(get_summarizer)]
