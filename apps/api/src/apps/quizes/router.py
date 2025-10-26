@@ -20,7 +20,9 @@ from src.lib.clients import AdminPB, HTTPAsyncClient, MeilisearchClient
 from .ai import (
     generate_quiz_task,
     start_generating_quiz_task,
+    Quizer,
     GenMode,
+    Trimmer,
     generate_oneshot,
     summary_and_index,
 )
@@ -52,6 +54,8 @@ class CreateQuizDto(BaseModel):
 async def create_quiz(
     admin_pb: AdminPB,
     http: HTTPAsyncClient,
+    trimmer: Trimmer,
+    quizer: Quizer,
     meilisearch_client: MeilisearchClient,
     user: User,
     dto: CreateQuizDto,
@@ -76,6 +80,8 @@ async def create_quiz(
         start_generating_quiz_task,
         admin_pb,
         http,
+        trimmer,
+        quizer,
         meilisearch_client,
         user_id,
         attempt_id,
@@ -105,6 +111,7 @@ class GenerateQuizItems(BaseModel):
 async def generate_quiz_items(
     admin_pb: AdminPB,
     http: HTTPAsyncClient,
+    quizer: Quizer,
     meilisearch_client: MeilisearchClient,
     quiz_id: str,
     dto: GenerateQuizItems,
@@ -133,6 +140,7 @@ async def generate_quiz_items(
         generate_quiz_task,
         admin_pb,
         http,
+        quizer,
         user.get("id", ""),
         dto.attempt_id,
         quiz_id,

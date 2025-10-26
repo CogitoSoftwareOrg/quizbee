@@ -1,3 +1,5 @@
+from typing import Annotated
+from fastapi import Depends, FastAPI
 from pydantic_ai import Agent, NativeOutput, PromptedOutput, RunContext
 from pydantic_ai.messages import (
     ModelMessage,
@@ -69,11 +71,20 @@ FEEDBACKER_COSTS = LLMSCosts.GPT_5_MINI
 # FEEDBACKER_LLM = LLMS.GROK_4_FAST
 # FEEDBACKER_COSTS = LLMSCosts.GROK_4_FAST
 
-feedbacker_agent = Agent(
-    # instrument=True,
-    model=FEEDBACKER_LLM,
-    deps_type=FeedbackerDeps,
-    output_type=AgentEnvelope,
-    history_processors=[inject_request_prompt],
-    retries=3,
-)
+
+def init_feedbacker(app: FastAPI):
+    app.state.feedbacker_agent = Agent(
+        # instrument=True,
+        model=FEEDBACKER_LLM,
+        deps_type=FeedbackerDeps,
+        output_type=AgentEnvelope,
+        history_processors=[inject_request_prompt],
+        retries=3,
+    )
+
+
+def get_feedbacker(app: FastAPI) -> Agent:
+    return app.state.feedbacker_agent
+
+
+Feedbacker = Annotated[Agent[FeedbackerDeps, AgentEnvelope], Depends(get_feedbacker)]

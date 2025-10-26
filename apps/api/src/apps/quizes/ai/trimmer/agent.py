@@ -1,3 +1,5 @@
+from typing import Annotated
+from fastapi import Depends, FastAPI
 from pydantic_ai import Agent, RunContext
 from pydantic_ai.messages import (
     ModelMessage,
@@ -49,11 +51,19 @@ Based on the table of contents above and the user's query, determine which page 
     return messages + [ModelRequest(parts=post_parts)]
 
 
-trimmer_agent = Agent(
-    model=TRIMMER_LLM,
-    deps_type=TrimmerDeps,
-    output_type=TrimmerOutput,
-    instrument=True,
-    retries=3,
-    history_processors=[inject_request_prompt],
-)
+def init_trimmer(app: FastAPI):
+    app.state.trimmer_agent = Agent(
+        model=TRIMMER_LLM,
+        deps_type=TrimmerDeps,
+        output_type=TrimmerOutput,
+        instrument=True,
+        retries=3,
+        history_processors=[inject_request_prompt],
+    )
+
+
+def get_trimmer(app: FastAPI) -> Agent:
+    return app.state.trimmer_agent
+
+
+Trimmer = Annotated[Agent[TrimmerDeps, TrimmerOutput], Depends(get_trimmer)]

@@ -10,7 +10,7 @@ from .agent import (
     QUIZER_COSTS,
     QUIZER_PRIORITY_COSTS,
     QUIZER_LLM,
-    quizer_agent,
+    Quizer,
     event_stream_handler,
 )
 
@@ -23,6 +23,7 @@ class GenMode(StrEnum):
 async def generate_quiz_task(
     admin_pb: AdminPB,
     http: HTTPAsyncClient,
+    quizer: Quizer,
     user_id: str,
     attempt_id: str,
     quiz_id: str,
@@ -64,7 +65,7 @@ async def generate_quiz_task(
     prompt_cache_key = cache_key(attempt_id)
     try:
         with langfuse_client.start_as_current_span(name=f"quiz-patch") as span:
-            async with quizer_agent.run_stream(
+            async with quizer.run_stream(
                 deps=QuizerDeps(
                     quiz=quiz,
                     prev_quiz_items=prev_quiz_items,
@@ -167,6 +168,7 @@ async def generate_quiz_task(
 async def generate_oneshot(
     admin_pb: AdminPB,
     http: HTTPAsyncClient,
+    quizer: Quizer,
     user_id: str,
     attempt_id: str,
     expanded_quiz: Record,
@@ -195,7 +197,7 @@ async def generate_oneshot(
     prompt_cache_key = cache_key(attempt_id)
     try:
         with langfuse_client.start_as_current_span(name=f"quiz-patch") as span:
-            res = await quizer_agent.run(
+            res = await quizer.run(
                 deps=QuizerDeps(
                     quiz=expanded_quiz,
                     prev_quiz_items=prev_items,

@@ -7,9 +7,14 @@ from mcp.server.fastmcp import FastMCP
 import httpx
 
 from src.apps.billing import billing_router
-from src.apps.quiz_attempts import quiz_attempts_router
-from src.apps.messages import messages_router
-from src.apps.quizes import quizes_router
+from src.apps.quiz_attempts import init_feedbacker, quiz_attempts_router
+from src.apps.messages import init_explainer, messages_router
+from src.apps.quizes import (
+    init_quizer,
+    init_summarizer,
+    init_trimmer,
+    quizes_router,
+)
 from src.apps.materials import materials_router
 from src.lib.clients import init_meilisearch, ensure_admin_pb, init_admin_pb
 
@@ -26,6 +31,11 @@ async def lifespan(app: FastAPI):
     app.state.http = httpx.AsyncClient()
     init_admin_pb(app)
     await init_meilisearch(app)
+    init_explainer(app)
+    init_feedbacker(app)
+    init_quizer(app)
+    init_summarizer(app)
+    init_trimmer(app)
 
     async with contextlib.AsyncExitStack() as stack:
         await stack.enter_async_context(mcp.session_manager.run())

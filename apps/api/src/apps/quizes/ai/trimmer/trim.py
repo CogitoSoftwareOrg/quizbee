@@ -4,10 +4,11 @@ from typing import List, Dict
 from src.lib.ai.models import TrimmerDeps
 from src.lib.clients import langfuse_client
 
-from .agent import trimmer_agent
+from .agent import Trimmer
 
 
 async def trim_content(
+    trimmer: Trimmer,
     contents: str,
     query: str,
     user_id: str | None = None,
@@ -28,7 +29,7 @@ async def trim_content(
     """
 
     with langfuse_client.start_as_current_span(name="content-trim") as span:
-        res = await trimmer_agent.run(
+        res = await trimmer.run(
             deps=TrimmerDeps(
                 contents=contents,
                 query=query,

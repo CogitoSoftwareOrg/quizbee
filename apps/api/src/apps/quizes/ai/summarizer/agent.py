@@ -1,3 +1,5 @@
+from typing import Annotated
+from fastapi import Depends, FastAPI
 from pydantic_ai import Agent, NativeOutput, RunContext
 from pydantic_ai.messages import ModelMessage, ModelRequest, SystemPromptPart
 
@@ -31,11 +33,19 @@ async def inject_request_prompt(
     return [ModelRequest(parts=pre_parts)] + messages + [ModelRequest(parts=post_parts)]
 
 
-summarizer_agent = Agent(
-    # instrument=True,
-    model=SUMMARIZER_LLM,
-    deps_type=SummarizerDeps,
-    output_type=AgentEnvelope,
-    retries=3,
-    history_processors=[inject_request_prompt],
-)
+def init_summarizer(app: FastAPI):
+    app.state.summarizer_agent = Agent(
+        # instrument=True,
+        model=SUMMARIZER_LLM,
+        deps_type=SummarizerDeps,
+        output_type=AgentEnvelope,
+        retries=3,
+        history_processors=[inject_request_prompt],
+    )
+
+
+def get_summarizer(app: FastAPI) -> Agent:
+    return app.state.summarizer_agent
+
+
+Summarizer = Annotated[Agent[SummarizerDeps, AgentEnvelope], Depends(get_summarizer)]

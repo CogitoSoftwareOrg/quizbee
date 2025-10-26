@@ -9,7 +9,7 @@ from src.apps.quizes.ai import summary_and_index
 from src.lib.clients import AdminPB, langfuse_client, HTTPAsyncClient, MeilisearchClient
 from src.lib.utils import cache_key, update_span_with_result
 
-from .ai import FEEDBACKER_COSTS, FEEDBACKER_LLM, FeedbackerDeps, feedbacker_agent
+from .ai import FEEDBACKER_COSTS, FEEDBACKER_LLM, FeedbackerDeps, Feedbacker
 
 
 quiz_attempts_router = APIRouter(
@@ -20,7 +20,7 @@ quiz_attempts_router = APIRouter(
 
 
 async def _generate_feedback_task(
-    admin_pb: AdminPB, http: httpx.AsyncClient, attempt_id: str
+    admin_pb: AdminPB, http: HTTPAsyncClient, feedbacker: Feedbacker, attempt_id: str
 ):
     quiz_attempt = await admin_pb.collection("quizAttempts").get_one(
         attempt_id,
@@ -31,15 +31,17 @@ async def _generate_feedback_task(
     quiz = quiz_attempt.get("expand", {}).get("quiz", {})
     quiz_items = quiz.get("expand", {}).get("quizItems_via_quiz", [])
 
+    deps = FeedbackerDeps(
+        quiz=quiz,
+        quiz_items=quiz_items,
+        quiz_attempt=quiz_attempt,
+        http=http,
+    )
+
     prompt_cache_key = cache_key(attempt_id)
     with langfuse_client.start_as_current_span(name="feedbacker-agent") as span:
-        res = await feedbacker_agent.run(
-            deps=FeedbackerDeps(
-                quiz=quiz,
-                quiz_items=quiz_items,
-                quiz_attempt=quiz_attempt,
-                http=http,
-            ),
+        res = await feedbacker.run(
+            deps=deps,
             model_settings={
                 "extra_body": {
                     "reasoning_effort": "low",
@@ -69,6 +71,7 @@ async def update_quiz_attempt_with_feedback(
     admin_pb: AdminPB,
     user: User,
     sub: Subscription,
+    feedbacker: Feedbacker,
     meilisearch_client: MeilisearchClient,
     attempt_id: str,
     background: BackgroundTasks,
@@ -110,7 +113,9 @@ async def update_quiz_attempt_with_feedback(
                 attempt_id, {"feedback": {}}
             )
         else:
-            background.add_task(_generate_feedback_task, admin_pb, http, attempt_id)
+            background.add_task(
+                _generate_feedback_task, admin_pb, http, feedbacker, attempt_id
+            )
     else:
         logging.info(f"Feedback already exists: {feedback}")
 

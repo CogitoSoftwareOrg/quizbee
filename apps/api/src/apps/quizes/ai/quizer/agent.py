@@ -1,4 +1,6 @@
 import logging
+from typing import Annotated
+from fastapi import Depends, FastAPI
 from collections.abc import AsyncIterable
 from pydantic_ai import Agent, ModelRetry, NativeOutput, PromptedOutput, RunContext
 from pydantic_ai.models.openai import OpenAIChatModel
@@ -25,15 +27,22 @@ QUIZER_PRIORITY_COSTS = LLMSCosts.GPT_5_MINI_PRIORITY
 # QUIZER_COSTS = LLMSCosts.GROK_4_FAST
 
 
-quizer_agent = Agent(
-    # instrument=True,
-    model=QUIZER_LLM,
-    deps_type=QuizerDeps,
-    output_type=AgentEnvelope,
-    history_processors=[inject_request_prompt],
-    retries=3,
-)
+def init_quizer(app: FastAPI):
+    app.state.quizer_agent = Agent(
+        # instrument=True,
+        model=QUIZER_LLM,
+        deps_type=QuizerDeps,
+        output_type=AgentEnvelope,
+        history_processors=[inject_request_prompt],
+        retries=3,
+    )
 
+
+def get_quizer(app: FastAPI) -> Agent:
+    return app.state.quizer_agent
+
+
+Quizer = Annotated[Agent[QuizerDeps, AgentEnvelope], Depends(get_quizer)]
 
 # @quizer_agent.output_validator
 # async def validate_out(ctx: RunContext[QuizerDeps], out: AgentEnvelope):

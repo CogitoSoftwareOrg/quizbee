@@ -1,3 +1,5 @@
+from typing import Annotated
+from fastapi import Depends, FastAPI
 from pydantic_ai import (
     Agent,
     NativeOutput,
@@ -40,10 +42,18 @@ async def inject_system_prompt(
     return [ModelRequest(parts=pre_parts)] + messages
 
 
-explainer_agent = Agent(
-    # instrument=True,
-    model=EXPLAINER_LLM,
-    deps_type=ExplainerDeps,
-    history_processors=[inject_system_prompt],
-    output_type=AgentEnvelope,
-)
+def init_explainer(app: FastAPI):
+    app.state.explainer_agent = Agent(
+        # instrument=True,
+        model=EXPLAINER_LLM,
+        deps_type=ExplainerDeps,
+        history_processors=[inject_system_prompt],
+        output_type=AgentEnvelope,
+    )
+
+
+def get_explainer(app: FastAPI) -> Agent:
+    return app.state.explainer_agent
+
+
+Explainer = Annotated[Agent[ExplainerDeps, AgentEnvelope], Depends(get_explainer)]

@@ -9,7 +9,7 @@ from src.apps.materials.utils import (
     load_file_text,
 )
 from src.apps.materials.important_sentences import summarize_to_fixed_tokens
-from src.apps.quizes.ai.trimmer.trim import trim_content
+from src.apps.quizes.ai.trimmer import trim_content, Trimmer
 
 from src.lib.ai.models import DynamicConfig
 from src.lib.clients import (
@@ -22,6 +22,7 @@ from src.lib.clients import (
 from src.lib.config import LLMS
 
 from .generate_patch import GenMode, generate_oneshot, generate_quiz_task
+from .agent import Quizer
 
 
 def filter_content_by_page_ranges(content: str, page_ranges: list) -> str:
@@ -96,6 +97,8 @@ def filter_content_by_page_ranges(content: str, page_ranges: list) -> str:
 async def start_generating_quiz_task(
     admin_pb: AdminPB,
     http: HTTPAsyncClient,
+    trimmer: Trimmer,
+    quizer: Quizer,
     meilisearch_client: MeilisearchClient,
     user_id: str,
     attempt_id: str,
@@ -173,6 +176,7 @@ async def start_generating_quiz_task(
                         name=f"trim-material-{mid}"
                     ) as span:
                         page_ranges = await trim_content(
+                            trimmer,
                             contents=toc,
                             query=quiz.get("query", ""),
                             user_id=user_id,
@@ -343,7 +347,15 @@ async def start_generating_quiz_task(
     )
 
     await generate_quiz_task(
-        admin_pb, http, user_id, attempt_id, quiz_id, limit, 1, GenMode.Continue, True
+        admin_pb,
+        http,
+        quizer,
+        user_id,
+        attempt_id,
+        quiz_id,
+        limit,
+        1,
+        GenMode.Continue,
     )
     # await generate_oneshot(
     #     admin_pb, http, user_id, attempt_id, quiz, limit, GenMode.Continue
