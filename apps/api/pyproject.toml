@@ -27,6 +27,7 @@ dependencies = [
     "pypdfium2>=4.30.0",
     "meilisearch-python-sdk>=4.10.1",
     "fastapi-limiter>=0.1.6",
+    "pytest>=8.4.2",
 ]
 
 [tool.hatch.build.targets.wheel]
