@@ -1,12 +1,12 @@
 from dataclasses import dataclass
 
 
-@dataclass(frozen=True)
+@dataclass(slots=True, kw_only=True)
 class User:
     id: str
 
 
-@dataclass(frozen=True)
+@dataclass(slots=True, kw_only=True)
 class Subscription:
     id: str
     quiz_items_limit: int

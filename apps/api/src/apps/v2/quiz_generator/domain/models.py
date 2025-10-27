@@ -41,30 +41,26 @@ class QuizCategory(StrEnum):
     PSYCHOLOGY = "psychology"
     POP_CULTURE = "pop_culture"
     STEM = "stem"
-    # SCIENCE = "science"
-    # GEOGRAPHY = "geography"
-    # LITERATURE = "literature"
-    # MUSIC = "music"
 
 
-@dataclass
+@dataclass(slots=True, kw_only=True)
 class QuizGenConfig:
-    negative_questions: list[str]
-    additional_instructions: list[str]
-    more_on_topic: list[str]
-    less_on_topic: list[str]
-    extra_beginner: list[str]
-    extra_expert: list[str]
+    negative_questions: list[str] = field(default_factory=list)
+    additional_instructions: list[str] = field(default_factory=list)
+    more_on_topic: list[str] = field(default_factory=list)
+    less_on_topic: list[str] = field(default_factory=list)
+    extra_beginner: list[str] = field(default_factory=list)
+    extra_expert: list[str] = field(default_factory=list)
 
 
-@dataclass
+@dataclass(slots=True, kw_only=True)
 class QuizItemVariant:
     content: str
     is_correct: bool
     explanation: str
 
 
-@dataclass
+@dataclass(slots=True, kw_only=True)
 class QuizItem:
     id: str
     question: str
@@ -73,61 +69,56 @@ class QuizItem:
     status: QuizItemStatus
 
 
-@dataclass
+@dataclass(slots=True, kw_only=True)
 class Choice:
     idx: int
     correct: bool
     item_id: str
 
 
-@dataclass
+@dataclass(slots=True, kw_only=True)
 class Attempt:
-    id: str
+    id: str = field(default_factory=genID)
     choices: list[Choice] = field(default_factory=list)
+    quiz_id: str
+    user_id: str
+
+    @classmethod
+    def create(cls, quiz_id: str, user_id: str):
+        return cls(
+            quiz_id=quiz_id,
+            user_id=user_id,
+        )
 
 
 @dataclass(slots=True, kw_only=True)
 class Quiz:
-    id: str
     author_id: str
-    material_ids: list[str]
     title: str
-    length: int
     query: str
+    id: str = field(default_factory=genID)
+    material_ids: list[str] = field(default_factory=list)
+    length: int = 0
     difficulty: QuizDifficulty
-    status: QuizStatus
-    visibility: QuizVisibility
-    total_materials: str
-    avoid_repeat: bool
-    items: list[QuizItem]
+    visibility: QuizVisibility = QuizVisibility.PUBLIC
+    status: QuizStatus = QuizStatus.DRAFT
+    material_content: str = ""
+    avoid_repeat: bool = False
+    items: list[QuizItem] = field(default_factory=list)
 
-    gen_config: QuizGenConfig
+    gen_config: QuizGenConfig = field(default_factory=QuizGenConfig)
 
     summary: str | None = None
     tags: list[str] | None = None
     category: QuizCategory | None = None
 
     @classmethod
-    def create(cls, author_id: str) -> "Quiz":
+    def create(
+        cls, author_id: str, title: str, query: str, difficulty: QuizDifficulty
+    ) -> "Quiz":
         return cls(
-            id=genID(),
             author_id=author_id,
-            material_ids=[],
-            title="",
-            length=0,
-            query="",
-            difficulty=QuizDifficulty.INTERMEDIATE,
-            gen_config=QuizGenConfig(
-                negative_questions=[],
-                additional_instructions=[],
-                more_on_topic=[],
-                less_on_topic=[],
-                extra_beginner=[],
-                extra_expert=[],
-            ),
-            total_materials="",
-            avoid_repeat=False,
-            items=[],
-            visibility=QuizVisibility.PUBLIC,
-            status=QuizStatus.DRAFT,
+            title=title,
+            query=query,
+            difficulty=difficulty,
         )

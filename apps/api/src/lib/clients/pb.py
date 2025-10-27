@@ -10,10 +10,10 @@ def get_admin_pb(request: Request) -> PocketBase:
     return request.app.state.admin_pb
 
 
-AdminPB = Annotated[PocketBase, Depends(get_admin_pb)]
+AdminPBDeps = Annotated[PocketBase, Depends(get_admin_pb)]
 
 
-def init_admin_pb(app: FastAPI) -> None:
+def set_admin_pb(app: FastAPI) -> None:
     app.state.admin_pb = PocketBase(settings.pb_url)
 
 

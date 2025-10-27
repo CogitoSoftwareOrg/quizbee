@@ -23,7 +23,7 @@ from src.apps.quizes import (
     quizes_router,
 )
 from src.apps.materials import materials_router
-from src.lib.clients import init_meilisearch, ensure_admin_pb
+from src.lib.clients import ensure_admin_pb
 
 from src.apps.v2.material_search.adapters.in_.http.router import (
     material_search_router as v2_material_search_router,
@@ -37,36 +37,50 @@ from src.apps.v2.material_search.adapters.out.pb_repository import PBMaterialRep
 from src.apps.v2.material_search.adapters.out.fitz_pdf_parser import FitzPDFParser
 from src.apps.v2.material_search.adapters.out.meili_indexer import MeiliIndexer
 
-from .cors import cors_middleware
-from .errors import all_exceptions_handler
 
-mcp = FastMCP("MCP", stateless_http=True)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # INIT LOGIC
+    logging.info("Starting Quizbee API server")
 
+    http = httpx.AsyncClient()
+    admin_pb = PocketBase(settings.pb_url)
+    meili = AsyncClient(settings.meili_url, settings.meili_master_key)
 
-def create_app():
-    app = FastAPI(
-        lifespan=lifespan,
-        dependencies=[
-            Depends(ensure_admin_pb),
-        ],
+    # PYDANTIC AI
+    init_explainer(app)
+    init_feedbacker(app)
+    init_quizer(app)
+    init_summarizer(app)
+    init_trimmer(app)
+
+    # V2 LLM TOOLS
+    set_llm_tools(app)
+
+    # V2 USER AUTH
+    set_auth_user_app(app)
+
+    # V2 MATERIAL SEARCH
+    material_repository = PBMaterialRepository(admin_pb)
+    pdf_parser = FitzPDFParser()
+    indexer = MeiliIndexer(app.state.llm_tools, meili)
+    set_material_search_app(
+        app,
+        material_repository=material_repository,
+        pdf_parser=pdf_parser,
+        indexer=indexer,
+        llm_tools=app.state.llm_tools,
     )
-    app.add_exception_handler(Exception, all_exceptions_handler)
 
-    app.include_router(billing_router)
-    app.include_router(quizes_router)
-    app.include_router(messages_router)
-    app.include_router(materials_router)
-    app.include_router(quiz_attempts_router)
+    # V2 QUIZ GENERATOR
+    set_quiz_generator_app(app, admin_pb=admin_pb, http=http)
 
-    app.include_router(v2_material_search_router)
+    async with contextlib.AsyncExitStack() as stack:
+        await stack.enter_async_context(mcp.session_manager.run())
+        yield
 
-    cors_middleware(app)
-
-    mcp.settings.streamable_http_path = "/"
-    app.mount("/mcp", mcp.streamable_http_app())
-
-    # return socketio.ASGIApp(sio, app, socketio_path="/socket.io")
-    return app
-
-
-app = create_app()
+    # CLEANUP LOGIC
+    logging.info("Shutting down Quizbee API server")
+    # await app.state.meili_client.aclose()
+    await http.aclose()
+    await meili.aclose()
