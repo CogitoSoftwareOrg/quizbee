@@ -1,0 +1,24 @@
+name: meili-qa
+
+services:
+  meilisearch:
+    image: getmeili/meilisearch:latest
+    volumes:
+      - meili_data:/meili_data
+    environment:
+      - SERVICE_URL_MEILISEARCH_7700
+      - "MEILI_NO_ANALYTICS=${MEILI_NO_ANALYTICS:-true}"
+      - "MEILI_ENV=${MEILI_ENV:-production}"
+      - "MEILI_MASTER_KEY=${MEILI_MASTER_KEY}"
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - "-f"
+        - "http://127.0.0.1:7700/health"
+      interval: 2s
+      timeout: 10s
+      retries: 15
+
+volumes:
+  meili_data:

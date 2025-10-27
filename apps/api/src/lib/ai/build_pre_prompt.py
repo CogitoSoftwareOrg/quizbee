@@ -1,8 +1,12 @@
 from pocketbase.models.dtos import Record
 from pydantic_ai.messages import ModelRequestPart, SystemPromptPart, UserPromptPart
 
-from apps.materials import load_file_text, materials_to_ai_bytes, parse_text_with_images
-from lib.clients import HTTPAsyncClient
+from src.apps.materials import (
+    load_file_text,
+    materials_to_ai_bytes,
+    parse_text_with_images,
+)
+from src.lib.clients import HTTPAsyncClient
 
 from .models import DynamicConfig
 
@@ -27,7 +31,7 @@ async def build_pre_prompt(
     user_contents = []
     if q:
         user_contents.append(f"User query:\n{q}")
-    
+
     if text_materials:
         # Для complex материалов (PDF с текстом и изображениями)
         # парсим текст и встраиваем изображения из Markdown-ссылок
@@ -38,7 +42,7 @@ async def build_pre_prompt(
         else:
             # Если нет Markdown-ссылок (нет complex материалов)
             user_contents.append(f"Quiz materials:\n{text_materials}")
-    
+
     # Для simple материалов (отдельные изображения PNG/JPG)
     # добавляем их напрямую через materials_to_ai_bytes
     simple_materials = [m for m in materials if m.get("kind") == "simple"]
@@ -46,7 +50,7 @@ async def build_pre_prompt(
         ai_bytes = await materials_to_ai_bytes(http, simple_materials)
         if ai_bytes:
             user_contents.extend(ai_bytes)
-    
+
     # if summary:
     #     user_contents.append(f"Materials summary:\n{summary}")
 

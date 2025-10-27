@@ -23,16 +23,10 @@
 			icon: House
 		},
 		{
-			name: '/attempts',
-			label: 'Attempts',
-			href: '/attempts',
-			icon: History
-		},
-		{
 			name: '/quizes',
 			label: 'Quizes',
 			href: '/quizes',
-			icon: Pickaxe
+			icon: History
 		},
 		{
 			name: '/analytics',

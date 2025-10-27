@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from pocketbase.models.dtos import Record
 from typing import Any, Literal
 
-from lib.clients import HTTPAsyncClient
+from src.lib.clients import HTTPAsyncClient
 
 
 @dataclass

@@ -1,14 +1,27 @@
 import logging
+import os
+from pathlib import Path
 from urllib.parse import urlparse
 
 from pydantic import Field, model_validator
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 from .utils.extract_pr import extract_pr_id_from_coolify_url
 
+# Get absolute path to the .env file
+_ROOT_DIR = Path(__file__).parent.parent.parent.parent.parent
+_ENV_FILE = _ROOT_DIR / "envs" / ".env"
+
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=str(_ENV_FILE),
+        env_file_encoding="utf-8",
+        extra="ignore",
+        case_sensitive=False,
+    )
+
     env: str = Field(default="local")
     coolify_url: str | None = Field(default=None)
     pr_id: int | None = Field(default=None)
@@ -66,8 +79,18 @@ class Settings(BaseSettings):
 
         return self
 
-    class Config:
-        env_file = ".env"
+    def model_post_init(self, __context) -> None:
+        """Export all settings to environment variables after initialization."""
+        for field_name, field_info in self.model_fields.items():
+            # Get the actual value
+            value = getattr(self, field_name)
+
+            # Convert field name to uppercase for environment variable
+            env_var_name = field_name.upper()
+
+            # Only export non-None string values
+            if value is not None:
+                os.environ[env_var_name] = str(value)
 
 
 settings = Settings()

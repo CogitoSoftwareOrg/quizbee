@@ -1,3 +1,5 @@
+from typing import Annotated
+from fastapi import Depends, FastAPI, Request
 from pydantic_ai import (
     Agent,
     NativeOutput,
@@ -7,10 +9,10 @@ from pydantic_ai import (
 
 from pydantic_ai.messages import ModelMessage, ModelRequest, SystemPromptPart
 
-from lib.ai import ExplainerDeps, build_pre_prompt, ExplainerOutput, AgentEnvelope
-from lib.clients import langfuse_client
-from lib.config import LLMS, LLMSCosts
-from lib.settings import settings
+from src.lib.ai import ExplainerDeps, build_pre_prompt, ExplainerOutput, AgentEnvelope
+from src.lib.clients import langfuse_client
+from src.lib.config import LLMS, LLMSCosts
+from src.lib.settings import settings
 
 EXPLAINER_LLM = LLMS.GPT_5_MINI
 EXPLAINER_COSTS = LLMSCosts.GPT_5_MINI
@@ -40,10 +42,18 @@ async def inject_system_prompt(
     return [ModelRequest(parts=pre_parts)] + messages
 
 
-explainer_agent = Agent(
-    # instrument=True,
-    model=EXPLAINER_LLM,
-    deps_type=ExplainerDeps,
-    history_processors=[inject_system_prompt],
-    output_type=AgentEnvelope,
-)
+def init_explainer(app: FastAPI):
+    app.state.explainer_agent = Agent(
+        # instrument=True,
+        model=EXPLAINER_LLM,
+        deps_type=ExplainerDeps,
+        history_processors=[inject_system_prompt],
+        output_type=AgentEnvelope,
+    )
+
+
+def get_explainer(request: Request) -> Agent:
+    return request.app.state.explainer_agent
+
+
+Explainer = Annotated[Agent[ExplainerDeps, AgentEnvelope], Depends(get_explainer)]

@@ -7,6 +7,7 @@ alwaysApply: false
 - Use modern tailwind v4 for styles
 
 - Use daisyUI 5 if possible, use its semantic vars
+- Use lucide-svelte icons instead of inline svg icons
 - Never write dark:, never hardcode theme variants inside components
 - Global styles of app and web projects:
   [app-styles](../../app/src/app.css)

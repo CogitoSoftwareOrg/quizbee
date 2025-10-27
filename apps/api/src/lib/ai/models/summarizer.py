@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 from dataclasses import dataclass
 from pocketbase.models.dtos import Record
 
-from lib.clients import HTTPAsyncClient
+from src.lib.clients import HTTPAsyncClient
 
 
 @dataclass

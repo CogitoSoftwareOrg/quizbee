@@ -1,3 +1,6 @@
+from typing import Annotated
+from fastapi import Depends, FastAPI
+from fastapi.requests import Request
 from pydantic_ai import Agent, NativeOutput, PromptedOutput, RunContext
 from pydantic_ai.messages import (
     ModelMessage,
@@ -6,10 +9,10 @@ from pydantic_ai.messages import (
 )
 
 
-from lib.ai import FeedbackerDeps, build_pre_prompt, FeedbackerOutput, AgentEnvelope
-from lib.settings import settings
-from lib.clients import langfuse_client
-from lib.config import LLMS, LLMSCosts
+from src.lib.ai import FeedbackerDeps, build_pre_prompt, FeedbackerOutput, AgentEnvelope
+from src.lib.settings import settings
+from src.lib.clients import langfuse_client
+from src.lib.config import LLMS, LLMSCosts
 
 
 async def inject_request_prompt(
@@ -69,11 +72,20 @@ FEEDBACKER_COSTS = LLMSCosts.GPT_5_MINI
 # FEEDBACKER_LLM = LLMS.GROK_4_FAST
 # FEEDBACKER_COSTS = LLMSCosts.GROK_4_FAST
 
-feedbacker_agent = Agent(
-    # instrument=True,
-    model=FEEDBACKER_LLM,
-    deps_type=FeedbackerDeps,
-    output_type=AgentEnvelope,
-    history_processors=[inject_request_prompt],
-    retries=3,
-)
+
+def init_feedbacker(app: FastAPI):
+    app.state.feedbacker_agent = Agent(
+        # instrument=True,
+        model=FEEDBACKER_LLM,
+        deps_type=FeedbackerDeps,
+        output_type=AgentEnvelope,
+        history_processors=[inject_request_prompt],
+        retries=3,
+    )
+
+
+def get_feedbacker(request: Request) -> Agent:
+    return request.app.state.feedbacker_agent
+
+
+Feedbacker = Annotated[Agent[FeedbackerDeps, AgentEnvelope], Depends(get_feedbacker)]

@@ -1,10 +1,12 @@
+from typing import Annotated
+from fastapi import Depends, FastAPI, Request
 from pydantic_ai import Agent, NativeOutput, RunContext
 from pydantic_ai.messages import ModelMessage, ModelRequest, SystemPromptPart
 
-from lib.config import LLMS, LLMSCosts
-from lib.clients import langfuse_client
-from lib.ai import build_pre_prompt, SummarizerDeps, AgentEnvelope
-from lib.settings import settings
+from src.lib.config import LLMS, LLMSCosts
+from src.lib.clients import langfuse_client
+from src.lib.ai import build_pre_prompt, SummarizerDeps, AgentEnvelope
+from src.lib.settings import settings
 
 
 SUMMARIZER_LLM = LLMS.GPT_5_MINI
@@ -31,11 +33,19 @@ async def inject_request_prompt(
     return [ModelRequest(parts=pre_parts)] + messages + [ModelRequest(parts=post_parts)]
 
 
-summarizer_agent = Agent(
-    # instrument=True,
-    model=SUMMARIZER_LLM,
-    deps_type=SummarizerDeps,
-    output_type=AgentEnvelope,
-    retries=3,
-    history_processors=[inject_request_prompt],
-)
+def init_summarizer(app: FastAPI):
+    app.state.summarizer_agent = Agent(
+        # instrument=True,
+        model=SUMMARIZER_LLM,
+        deps_type=SummarizerDeps,
+        output_type=AgentEnvelope,
+        retries=3,
+        history_processors=[inject_request_prompt],
+    )
+
+
+def get_summarizer(request: Request) -> Agent:
+    return request.app.state.summarizer_agent
+
+
+Summarizer = Annotated[Agent[SummarizerDeps, AgentEnvelope], Depends(get_summarizer)]

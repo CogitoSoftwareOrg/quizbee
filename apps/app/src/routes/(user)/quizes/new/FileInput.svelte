@@ -153,7 +153,12 @@
 			formData.append('title', attachedFile.name);
 			formData.append('material_id', attachedFile.materialId!);
 
-			const response = await fetch(`${computeApiUrl()}materials/upload`, {
+			// const response = await fetch(`${computeApiUrl()}materials/upload`, {
+			// 	method: 'POST',
+			// 	body: formData,
+			// 	credentials: 'include'
+			// });
+			const response = await fetch(`${computeApiUrl()}v2/materials`, {
 				method: 'POST',
 				body: formData,
 				credentials: 'include'

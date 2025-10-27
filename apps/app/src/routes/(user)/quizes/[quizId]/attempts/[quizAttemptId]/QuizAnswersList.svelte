@@ -1,6 +1,7 @@
 <script lang="ts">
 	import posthog from 'posthog-js';
 	import type { ClassValue } from 'svelte/elements';
+	import { untrack } from 'svelte';
 
 	import {
 		pb,
@@ -10,11 +11,10 @@
 	} from '$lib/pb';
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
 	import type { Answer } from '$lib/apps/quizes/types';
-	import { computeApiUrl } from '$lib/api/compute-url';
 	import { ChevronDown, ChevronRight, Info } from 'lucide-svelte';
 	import { patchApi, putApi } from '$lib/api/call-api';
-	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
+	import { QuizItemsStatusOptions } from '$lib/pb/pocketbase-types';
+
 	interface Props {
 		class?: ClassValue;
 		answers: Answer[];
@@ -63,34 +63,51 @@
 		return !!expandedAnswers[index];
 	}
 
+	// Track stable keys to avoid unnecessary recalculations
+	let lastItemId = $state<string | null>(null);
 	let lastDecisionKey = $state<string | null>(null);
 
+	// Auto-expand answers when decision is made
+	// Only react to item.id and itemDecision changes, not to object reference changes
 	$effect(() => {
-		if (!itemDecision) {
+		const currentItemId = item?.id ?? null;
+
+		// Reset when navigating to a new item (only by ID, not object reference)
+		if (currentItemId !== lastItemId) {
+			lastItemId = currentItemId;
 			lastDecisionKey = null;
 			expandedAnswers = {};
-			return;
 		}
 
-		const decisionKey = `${itemDecision.itemId ?? item?.id}:${itemDecision.answerIndex}`;
+		// Only process if there's a decision
+		if (!itemDecision) return;
+
+		// Create stable key from decision data
+		const decisionKey = `${itemDecision.itemId}:${itemDecision.answerIndex}:${itemDecision.correct}`;
+
+		// Skip if already processed this exact decision
 		if (decisionKey === lastDecisionKey) return;
 		lastDecisionKey = decisionKey;
 
-		const nextExpanded: Record<number, boolean> = {};
-		answers.forEach((answer, idx) => {
-			nextExpanded[idx] = answer.correct || idx === itemDecision!.answerIndex;
+		// Expand correct answer and user's choice
+		// Use untrack to read answers without creating dependency
+		untrack(() => {
+			const nextExpanded: Record<number, boolean> = {};
+			answers.forEach((answer, idx) => {
+				nextExpanded[idx] = answer.correct || idx === itemDecision!.answerIndex;
+			});
+			expandedAnswers = nextExpanded;
 		});
-
-		expandedAnswers = nextExpanded;
 	});
 
 	async function createFeedback() {
+		if (!quizAttempt.id || quizAttempt.feedback) return;
+
 		posthog.capture('quiz_feedback_started', {
 			quizId: quiz.id,
 			quizAttemptId: quizAttempt.id,
 			itemId: item.id
 		});
-		if (!quizAttempt.id || quizAttempt.feedback) return;
 		const res = await putApi(`quiz_attempts/${quizAttempt.id}`, {});
 		console.log(res);
 	}
@@ -125,6 +142,9 @@
 										correct: answer.correct
 									};
 									const newDecisions = [...quizDecisions, itemDecision];
+
+									item.status = QuizItemsStatusOptions.final;
+
 									await Promise.all([
 										pb!.collection('quizAttempts').update(quizAttempt!.id, {
 											choices: newDecisions
@@ -222,9 +242,99 @@
 			{/each}
 		</ul>
 	{:else}
-		<div class="flex h-full flex-col items-center justify-center gap-4">
-			<p class="loading loading-spinner loading-xl"></p>
-			<p class="text-center font-semibold">We are building your quiz...</p>
+		<div class="flex h-full flex-col items-center justify-center gap-8 px-4 py-16">
+			<!-- Main Loading Container -->
+			<div class="w-full max-w-md">
+				<!-- Animated Header -->
+				<div class="mb-8 text-center">
+					<div class="mb-4 flex justify-center">
+						<div class="relative h-24 w-24">
+							<!-- Outer rotating ring -->
+							<div
+								class="border-t-primary border-r-primary absolute inset-0 animate-spin rounded-full border-4 border-transparent opacity-70"
+							></div>
+							<!-- Middle pulsing ring -->
+							<div
+								class="border-primary/30 absolute inset-2 animate-pulse rounded-full border-2"
+							></div>
+							<!-- Inner icon -->
+							<div class="absolute inset-0 flex items-center justify-center">
+								<div
+									class="bg-primary/10 flex h-full w-full items-center justify-center rounded-full"
+								>
+									<span class="text-3xl">✨</span>
+								</div>
+							</div>
+						</div>
+					</div>
+					<h2 class="text-base-content mb-2 text-2xl font-bold">Building Your Quiz</h2>
+					<p class="text-base-content/70">We're preparing personalized questions just for you...</p>
+				</div>
+
+				<!-- Progress Indicators -->
+				<div class="mb-8 hidden space-y-4 sm:block">
+					<div class="flex items-center gap-3">
+						<div
+							class="bg-success/20 flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+						>
+							<span class="text-success">✓</span>
+						</div>
+						<div class="flex-1">
+							<p class="text-base-content text-sm font-medium">Quiz initialized</p>
+							<p class="text-base-content/60 text-xs">Ready to generate questions</p>
+						</div>
+					</div>
+
+					<div class="flex items-center gap-3">
+						<div
+							class="bg-primary/20 flex h-8 w-8 shrink-0 animate-pulse items-center justify-center rounded-full"
+						>
+							<span class="text-primary">⚡</span>
+						</div>
+						<div class="flex-1">
+							<p class="text-base-content text-sm font-medium">Generating questions</p>
+							<p class="text-base-content/60 text-xs">Using AI to create unique challenges</p>
+						</div>
+					</div>
+
+					<div class="flex items-center gap-3 opacity-50">
+						<div
+							class="border-base-300 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-dashed"
+						>
+							<span class="text-base-content/40">3</span>
+						</div>
+						<div class="flex-1">
+							<p class="text-base-content text-sm font-medium">Ready to answer</p>
+							<p class="text-base-content/60 text-xs">Questions will appear shortly</p>
+						</div>
+					</div>
+				</div>
+
+				<!-- Timeline Info -->
+				<div class="bg-base-200/50 rounded-lg p-4 text-center">
+					<p class="text-base-content/70 text-sm">
+						<span class="text-base-content font-semibold">Usually takes less than 1 minute</span>
+						<br />
+						<span class="text-xs">Your AI tutor is working hard! ⏱️</span>
+					</p>
+				</div>
+
+				<!-- Animated dots -->
+				<div class="mt-8 flex justify-center gap-2">
+					<div
+						class="bg-primary h-2 w-2 animate-bounce rounded-full"
+						style="animation-delay: 0s"
+					></div>
+					<div
+						class="bg-primary h-2 w-2 animate-bounce rounded-full"
+						style="animation-delay: 0.2s"
+					></div>
+					<div
+						class="bg-primary h-2 w-2 animate-bounce rounded-full"
+						style="animation-delay: 0.4s"
+					></div>
+				</div>
+			</div>
 		</div>
 	{/if}
 </div>

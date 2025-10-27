@@ -3,7 +3,7 @@ from typing import Annotated, Literal
 from pocketbase.models.dtos import Record
 from pydantic import BaseModel, Field
 
-from lib.clients import HTTPAsyncClient
+from src.lib.clients import HTTPAsyncClient
 
 
 @dataclass

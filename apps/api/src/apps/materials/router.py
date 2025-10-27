@@ -14,10 +14,10 @@ from fastapi.responses import JSONResponse
 from .tokens_calculation import count_text_tokens, calculate_image_tokens
 from .pdf_parser import parse_pdf
 from .important_sentences import summarize_to_fixed_tokens
-from apps.auth import User
-from apps.auth import User, auth_user
-from lib.clients import AdminPB
-from lib.settings import settings
+from src.apps.auth import User
+from src.apps.auth import User, auth_user
+from src.lib.clients import AdminPB
+from src.lib.settings import settings
 
 materials_router = APIRouter(
     prefix="/materials", tags=["materials"], dependencies=[Depends(auth_user)]
@@ -77,19 +77,18 @@ async def upload_material(
 
                 # Обрабатываем текст (сократить если > 50k токенов)
                 extracted_text = pdf_data["text"]
-                
+
                 # Подсчитываем токены для текста
                 text_tokens = count_text_tokens(extracted_text) if extracted_text else 0
-                
+
                 # Подсчитываем токены для изображений
                 image_tokens = 0
                 if pdf_data["images"]:
                     for img_data in pdf_data["images"]:
                         image_tokens += calculate_image_tokens(
-                            img_data["width"], 
-                            img_data["height"]
+                            img_data["width"], img_data["height"]
                         )
-                
+
                 # Общее количество токенов
                 total_tokens = text_tokens + image_tokens
 
@@ -116,14 +115,25 @@ async def upload_material(
             # Проверяем, является ли файл изображением
             is_image = False
             if file.filename:
-                image_extensions = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".svg", ".ico")
+                image_extensions = (
+                    ".png",
+                    ".jpg",
+                    ".jpeg",
+                    ".gif",
+                    ".webp",
+                    ".bmp",
+                    ".svg",
+                    ".ico",
+                )
                 is_image = file.filename.lower().endswith(image_extensions)
-            
+
             if is_image:
                 # Для изображений подсчитываем токены на основе размера
                 # Примерная оценка: используем фиксированное количество токенов для изображений
                 # или можно добавить реальный подсчет через PIL если нужно
-                dto["tokens"] = 0  # Для простых изображений можно не считать текстовые токены
+                dto["tokens"] = (
+                    0  # Для простых изображений можно не считать текстовые токены
+                )
                 dto["kind"] = "simple"
             else:
                 # Для текстовых файлов
@@ -143,20 +153,20 @@ async def upload_material(
         # Если это PDF с извлеченным текстом, сохраняем textFile и contents
         if pdf_data and pdf_data.get("text"):
             extracted_text = pdf_data["text"]
-            
+
             # Получаем ID материала
             material_id_str = material.get("id")
             if not material_id_str:
                 raise HTTPException(500, "Material ID not found after creation")
-            
+
             # Если есть изображения, заменяем маркеры на реальные URLs
             if pdf_data.get("images"):
                 image_files = material.get("images", [])
-                
+
                 # Создаем словарь маркер -> URL
                 marker_to_url = {}
                 pb_base_url = settings.pb_url.rstrip("/")
-                
+
                 for idx, img_data in enumerate(pdf_data["images"]):
                     marker = img_data.get("marker")
                     if marker and idx < len(image_files):
@@ -164,39 +174,37 @@ async def upload_material(
                         image_filename = image_files[idx]
                         image_url = f"{pb_base_url}/api/files/materials/{material_id_str}/{image_filename}"
                         marker_to_url[marker] = image_url
-                
+
                 # Заменяем все маркеры на URLs с уникальным префиксом
                 for marker, url in marker_to_url.items():
-                    extracted_text = extracted_text.replace(marker, f"\n{{quizbee_unique_image_url:{url}}}\n")
-            
+                    extracted_text = extracted_text.replace(
+                        marker, f"\n{{quizbee_unique_image_url:{url}}}\n"
+                    )
+
             # Обновляем материал с текстом (независимо от наличия изображений)
             text_filename = f"{material_id_str}_text.txt"
             text_bytes = extracted_text.encode("utf-8")
-            
-            
-            await admin_pb.collection("materials").update(
-                material_id_str,
-                {"textFile": FileUpload((text_filename, text_bytes))}
-            )
-            
-            # Если есть оглавление из parse_pdf, сохраняем его
 
+            await admin_pb.collection("materials").update(
+                material_id_str, {"textFile": FileUpload((text_filename, text_bytes))}
+            )
+
+            # Если есть оглавление из parse_pdf, сохраняем его
 
             if pdf_data.get("isBook"):
                 is_book_doc = pdf_data["isBook"]
                 await admin_pb.collection("materials").update(
-                    material_id_str,
-                    {"isBook": True if is_book_doc else False}
+                    material_id_str, {"isBook": True if is_book_doc else False}
                 )
-                
+
             if pdf_data.get("contents"):
                 import json
+
                 toc_json = json.dumps(pdf_data["contents"])
                 await admin_pb.collection("materials").update(
-                    material_id_str,
-                    {"contents": toc_json}
+                    material_id_str, {"contents": toc_json}
                 )
-            
+
             # Обновляем объект material для ответа
             material = await admin_pb.collection("materials").get_one(material_id_str)
 

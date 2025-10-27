@@ -9,6 +9,7 @@
 
 	import type { Sender } from './types';
 	import Message from './Message.svelte';
+	import ExplainMore from './ExplainMore.svelte';
 
 	interface Props {
 		quizAttemptId: string;
@@ -53,6 +54,7 @@
 			<div class="flex h-full flex-col items-center justify-center text-center">
 				<div class="mb-4 text-6xl">💬</div>
 				<p class="text-base-content/70 text-lg font-medium">No messages yet, waiting...</p>
+				<ExplainMore sender={userSender} {quizAttemptId} {itemId} />
 			</div>
 		{:else}
 			{#each messages as msg (msg)}

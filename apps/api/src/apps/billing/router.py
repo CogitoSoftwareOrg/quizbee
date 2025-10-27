@@ -3,10 +3,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from starlette.responses import JSONResponse
 
-from apps.auth import auth_user, User
-from lib.clients import AdminPB, stripe_client
-from lib.settings import settings
-from lib.config import STRIPE_PRICES_MAP
+from src.apps.auth import auth_user, User
+from src.lib.clients import AdminPB, stripe_client
+from src.lib.settings import settings
+from src.lib.config import STRIPE_PRICES_MAP
 
 from .utils import stripe_subscription_to_pb
 from .middleware import load_subscription, Subscription

@@ -2,15 +2,15 @@ from enum import StrEnum
 import logging
 import httpx
 from pocketbase.models.dtos import Record
-from lib.clients import AdminPB, HTTPAsyncClient, langfuse_client
-from lib.utils import cache_key, update_span_with_result
-from lib.ai.models import QuizerDeps
+from src.lib.clients import AdminPB, HTTPAsyncClient, langfuse_client
+from src.lib.utils import cache_key, update_span_with_result
+from src.lib.ai.models import QuizerDeps
 
 from .agent import (
     QUIZER_COSTS,
     QUIZER_PRIORITY_COSTS,
     QUIZER_LLM,
-    quizer_agent,
+    Quizer,
     event_stream_handler,
 )
 
@@ -23,6 +23,7 @@ class GenMode(StrEnum):
 async def generate_quiz_task(
     admin_pb: AdminPB,
     http: HTTPAsyncClient,
+    quizer: Quizer,
     user_id: str,
     attempt_id: str,
     quiz_id: str,
@@ -64,7 +65,7 @@ async def generate_quiz_task(
     prompt_cache_key = cache_key(attempt_id)
     try:
         with langfuse_client.start_as_current_span(name=f"quiz-patch") as span:
-            async with quizer_agent.run_stream(
+            async with quizer.run_stream(
                 deps=QuizerDeps(
                     quiz=quiz,
                     prev_quiz_items=prev_quiz_items,
@@ -120,7 +121,9 @@ async def generate_quiz_task(
 
                         seen = len(items)
 
-            await update_span_with_result(langfuse_client, result, span, user_id, attempt_id, QUIZER_LLM)
+            await update_span_with_result(
+                langfuse_client, result, span, user_id, attempt_id, QUIZER_LLM
+            )
 
     except httpx.ReadError as e:
         if cancelled:
@@ -165,6 +168,7 @@ async def generate_quiz_task(
 async def generate_oneshot(
     admin_pb: AdminPB,
     http: HTTPAsyncClient,
+    quizer: Quizer,
     user_id: str,
     attempt_id: str,
     expanded_quiz: Record,
@@ -193,7 +197,7 @@ async def generate_oneshot(
     prompt_cache_key = cache_key(attempt_id)
     try:
         with langfuse_client.start_as_current_span(name=f"quiz-patch") as span:
-            res = await quizer_agent.run(
+            res = await quizer.run(
                 deps=QuizerDeps(
                     quiz=expanded_quiz,
                     prev_quiz_items=prev_items,
@@ -229,7 +233,9 @@ async def generate_oneshot(
                         "question": qi.question,
                     },
                 )
-            await update_span_with_result(langfuse_client, res, span, user_id, attempt_id, QUIZER_LLM)
+            await update_span_with_result(
+                langfuse_client, res, span, user_id, attempt_id, QUIZER_LLM
+            )
 
     except Exception as e:
         logging.exception("Agent run failed for quiz %s: %s", quiz_id, e)

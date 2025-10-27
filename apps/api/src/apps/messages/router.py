@@ -3,19 +3,19 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from apps.auth import auth_user
-from apps.billing import (
+from src.apps.auth import auth_user
+from src.apps.billing import (
     Subscription,
     load_subscription,
     explainer_call_quota_protection,
 )
-from lib.clients import AdminPB, HTTPAsyncClient, langfuse_client
-from lib.utils import sse, update_span_with_result
-from apps.auth import User
-from lib.utils.cache_key import cache_key
+from src.lib.clients import AdminPB, HTTPAsyncClient, langfuse_client
+from src.lib.utils import sse, update_span_with_result
+from src.apps.auth import User
+from src.lib.utils.cache_key import cache_key
 
 from .pb_to_ai import pb_to_ai
-from .ai import EXPLAINER_COSTS, EXPLAINER_LLM, ExplainerDeps, explainer_agent
+from .ai import EXPLAINER_COSTS, EXPLAINER_LLM, ExplainerDeps, Explainer
 
 messages_router = APIRouter(
     prefix="/messages",
@@ -34,6 +34,7 @@ messages_router = APIRouter(
 async def sse_messages(
     admin_pb: AdminPB,
     http: HTTPAsyncClient,
+    explainer: Explainer,
     user: User,
     query: str = Query(alias="q"),
     attempt_id: str = Query(alias="attempt"),
@@ -103,7 +104,7 @@ async def sse_messages(
         )
 
         with langfuse_client.start_as_current_span(name="explainer-agent") as span:
-            async with explainer_agent.run_stream(
+            async with explainer.run_stream(
                 query,
                 message_history=history,
                 deps=deps,
@@ -149,6 +150,7 @@ class CreateMessageDto(BaseModel):
 @messages_router.post("", dependencies=[Depends(explainer_call_quota_protection)])
 async def create_message(
     admin_pb: AdminPB,
+    explainer: Explainer,
     http: HTTPAsyncClient,
     dto: CreateMessageDto,
 ):
@@ -207,7 +209,7 @@ async def create_message(
     ai_msg_id = ai_msg.get("id", "")
 
     with langfuse_client.start_as_current_span(name="explainer-agent") as span:
-        res = await explainer_agent.run(
+        res = await explainer.run(
             dto.query,
             message_history=history,
             deps=ExplainerDeps(

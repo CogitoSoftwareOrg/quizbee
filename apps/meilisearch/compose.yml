@@ -1,0 +1,54 @@
+name: meili-prod-with-backup
+
+services:
+  meilisearch:
+    image: getmeili/meilisearch:latest
+    restart: unless-stopped
+    environment:
+      MEILI_NO_ANALYTICS: ${MEILI_NO_ANALYTICS:-true}
+      MEILI_ENV: ${MEILI_ENV:-production}
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+      MEILI_DB_PATH: /meili_data/data
+      MEILI_DUMPS_DIR: /meili_data/dumps
+      MEILI_SNAPSHOTS_DIR: /meili_data/snapshots
+    volumes:
+      - meili_data:/meili_data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:7700/health"]
+      interval: 2s
+      timeout: 10s
+      retries: 15
+
+  sidecar:
+    # image: minio/mc:latest
+    # # Держим контейнер "живым", чтобы запускать cron-команды из Coolify
+    # entrypoint: ["/bin/sh", "-c"]
+    # command: >
+    #   "apk add --no-cache curl jq ca-certificates >/dev/null 2>&1 || true;
+    #    sleep infinity"
+    image: alpine:3.20
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      set -e;
+      apk add --no-cache curl jq ca-certificates wget;
+      wget -qO /usr/local/bin/mc https://dl.min.io/client/mc/release/linux-amd64/mc;
+      chmod +x /usr/local/bin/mc;
+      sleep infinity
+    depends_on:
+      meilisearch:
+        condition: service_started
+    environment:
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
+      S3_ENDPOINT: ${S3_ENDPOINT} # напр. https://s3.eu-central-1.amazonaws.com или https://s3.example.com
+      S3_REGION: ${S3_REGION} # напр. eu-central-1
+      S3_BUCKET: ${S3_BUCKET} # напр. my-meili-backups
+      # Опционально: префикс для PR/окружений
+      BACKUP_PREFIX: ${BACKUP_PREFIX:-prod}
+    volumes:
+      - meili_data:/meili_data
+      - ./backup.sh:/backup.sh:ro
+
+volumes:
+  meili_data:

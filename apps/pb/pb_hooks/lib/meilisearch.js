@@ -51,6 +51,8 @@ const meiliService = {
 
     console.log("Meilisearch initialized");
   },
+
+  
   // upsert: (documents, index) => {
   //   const res = $http.send({
   //     url: `${this.meiliUrl}indexes/${index}/documents`,

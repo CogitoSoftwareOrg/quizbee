@@ -38,7 +38,7 @@
 	// Filter quiz attempts for this specific quiz
 	const quizAttempts = $derived(
 		quizAttemptsStore.quizAttempts.filter(
-			(attempt) => attempt.quiz === quiz?.id //&& attempt.feedback
+			(attempt) => attempt.quiz === quiz?.id && attempt.feedback
 		)
 	);
 
