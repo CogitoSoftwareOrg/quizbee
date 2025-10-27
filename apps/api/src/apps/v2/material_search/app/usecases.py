@@ -16,10 +16,10 @@ from ..domain.ports import (
 from ..domain.errors import TooLargeFileError
 from ..domain.constants import MAX_SIZE_MB, IMAGE_EXTENSIONS
 
-from .contracts import MaterialAdder, AddMaterialCmd
+from .contracts import MaterialSearchApp, AddMaterialCmd, SearchCmd
 
 
-class MaterialSearchApp(MaterialAdder):
+class MaterialSearchAppImpl(MaterialSearchApp):
     def __init__(
         self,
         material_repository: MaterialRepository,
@@ -38,9 +38,9 @@ class MaterialSearchApp(MaterialAdder):
         if file_size_mb > MAX_SIZE_MB:
             raise TooLargeFileError(file_size_mb)
 
-        material = await self._deduplicate_material(cmd)
-        if material is not None:
-            return material
+        # material = await self._deduplicate_material(cmd)
+        # if material is not None:
+        #     return material
 
         # try to parse file as pdf
         is_image = False
@@ -113,6 +113,10 @@ class MaterialSearchApp(MaterialAdder):
         material = await self.material_repository.update(material)
 
         return material
+
+    async def search(self, cmd: SearchCmd) -> list[Material]: ...
+
+    # return await self.indexer.search(cmd.query, cmd.user_id, cmd.material_ids, cmd.limit)
 
     async def _deduplicate_material(self, cmd: AddMaterialCmd) -> Material | None:
         material = await self.material_repository.get(

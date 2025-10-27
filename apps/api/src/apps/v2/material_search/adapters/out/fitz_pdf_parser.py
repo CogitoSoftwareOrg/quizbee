@@ -6,7 +6,6 @@ import re
 
 from ...domain.ports import PdfParser, PdfParseResult, PdfImage
 
-
 class FitzPDFParser(PdfParser):
     def __init__(
         self,
