@@ -1,0 +1,36 @@
+/* Custom Scrollbar Styles */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(var(--bc) / 0.15) transparent;
+}
+
+*:hover {
+  scrollbar-color: oklch(var(--bc) / 0.25) transparent;
+}
+
+/* Webkit browsers (Chrome, Safari, Edge) */
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: oklch(var(--bc) / 0.15);
+  border-radius: 100vw;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: oklch(var(--bc) / 0.25);
+}
+
+*::-webkit-scrollbar-thumb:active {
+  background: oklch(var(--bc) / 0.35);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}

@@ -5,7 +5,7 @@ from pydantic_ai import AgentRunResult
 from pydantic_ai.result import StreamedRunResult
 
 
-from lib.config.llms import LLMCosts
+from src.lib.config.llms import LLMCosts
 
 
 async def update_span_with_result(

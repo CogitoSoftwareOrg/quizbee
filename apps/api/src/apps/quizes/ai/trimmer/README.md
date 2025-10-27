@@ -12,7 +12,7 @@ The Trimmer module uses GPT-5-nano to analyze a table of contents (JSON format) 
 ## Usage
 
 ```python
-from apps.quizes.ai.trimmer import trim_content
+from src.apps.quizes.ai.trimmer import trim_content
 
 # Example table of contents (JSON string)
 contents = '''

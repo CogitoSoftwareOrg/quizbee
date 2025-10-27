@@ -5,8 +5,8 @@ from datetime import timezone
 from fastapi import HTTPException
 from pocketbase.models.dtos import Record
 
-from lib.clients import AdminPB
-from lib.config import STRIPE_TARIFS_MAP, STRIPE_MONTHLY_LIMITS_MAP
+from src.lib.clients import AdminPB
+from src.lib.config import STRIPE_TARIFS_MAP, STRIPE_MONTHLY_LIMITS_MAP
 
 
 PB_DT_FMT = "%Y-%m-%d %H:%M:%S.%fZ"

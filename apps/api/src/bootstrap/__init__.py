@@ -6,12 +6,29 @@ from starlette.middleware.cors import CORSMiddleware
 from mcp.server.fastmcp import FastMCP
 import httpx
 
-from apps.billing import billing_router
-from apps.quiz_attempts import quiz_attempts_router
-from apps.messages import messages_router
-from apps.quizes import quizes_router
-from apps.materials import materials_router
-from lib.clients import init_meilisearch, ensure_admin_pb, init_admin_pb
+from src.apps.v2.llm_tools.di import set_llm_tools
+from src.apps.billing import billing_router
+from src.apps.quiz_attempts import init_feedbacker, quiz_attempts_router
+from src.apps.messages import init_explainer, messages_router
+from src.apps.quizes import (
+    init_quizer,
+    init_summarizer,
+    init_trimmer,
+    quizes_router,
+)
+from src.apps.materials import materials_router
+from src.lib.clients import init_meilisearch, ensure_admin_pb, init_admin_pb
+
+from src.apps.v2.material_search.adapters.in_.http.router import (
+    material_search_router as v2_material_search_router,
+)
+from src.apps.v2.user_auth.di import set_auth_user_app
+from src.apps.v2.material_search.di import (
+    set_pdf_parser,
+    set_material_repository,
+    set_material_search_app,
+    aset_indexer,
+)
 
 from .cors import cors_middleware
 
@@ -26,6 +43,33 @@ async def lifespan(app: FastAPI):
     app.state.http = httpx.AsyncClient()
     init_admin_pb(app)
     await init_meilisearch(app)
+
+    # PYDANTIC AI
+    init_explainer(app)
+    init_feedbacker(app)
+    init_quizer(app)
+    init_summarizer(app)
+    init_trimmer(app)
+
+    # V2 LLM TOOLS
+    set_llm_tools(app)
+
+    # V2 USER AUTH
+    set_auth_user_app(app)
+
+    # V2 MATERIAL SEARCH
+    set_pdf_parser(app)
+    set_material_repository(app, app.state.admin_pb)
+    await aset_indexer(app, app.state.llm_tools, app.state.meilisearch_client)
+    set_material_search_app(
+        app,
+        app.state.material_repository,
+        app.state.pdf_parser,
+        app.state.llm_tools,
+        app.state.indexer,
+    )
+
+    # V2 QUIZ GENERATOR
 
     async with contextlib.AsyncExitStack() as stack:
         await stack.enter_async_context(mcp.session_manager.run())
@@ -51,6 +95,8 @@ def create_app():
     app.include_router(messages_router)
     app.include_router(materials_router)
     app.include_router(quiz_attempts_router)
+
+    app.include_router(v2_material_search_router)
 
     cors_middleware(app)
 

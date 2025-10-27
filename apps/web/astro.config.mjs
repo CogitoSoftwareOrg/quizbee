@@ -47,6 +47,7 @@ export default defineConfig({
     ssr: {
       noExternal: ["@cogisoft/ui-svelte-daisy"],
     },
+    envDir: "../../envs",
   },
 
   i18n: {

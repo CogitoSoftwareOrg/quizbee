@@ -6,7 +6,7 @@ from pocketbase.models.dtos import Record
 from pydantic_ai import BinaryContent
 from pydantic_ai.messages import ImageUrl
 
-from lib.settings import settings
+from src.lib.settings import settings
 
 
 async def materials_to_ai_images(
@@ -108,46 +108,42 @@ async def parse_text_with_images(
 ) -> list[str | BinaryContent]:
     """
     Парсит текст и заменяет маркеры изображений на BinaryContent.
-    
+
     Поддерживает два формата:
     1. Markdown-ссылки: ![Image](url)
     2. Уникальные маркеры: {quizbee_unique_image_url:url}
-    
+
     Пример текста:
-        "Вот первый график \n{quizbee_unique_image_url:http://localhost:8090/api/files/materials/xxx/img1.png}\n 
+        "Вот первый график \n{quizbee_unique_image_url:http://localhost:8090/api/files/materials/xxx/img1.png}\n
         и второй график \n{quizbee_unique_image_url:http://localhost:8090/api/files/materials/xxx/img2.png}\n"
-    
+
     Args:
         http: HTTP клиент
         text: Текст с маркерами изображений
         materials: Список материалов (не используется, но оставлен для совместимости)
-    
+
     Returns:
         Список элементов (строки и BinaryContent) в правильном порядке
         Например: ["Вот первый график ", BinaryContent(...), " и второй график ", BinaryContent(...), ...]
     """
     parts = []
     last_end = 0
-    
+
     # Паттерн для уникальных маркеров: {quizbee_unique_image_url:url}
     pattern_unique = r"\{quizbee_unique_image_url:(?P<url_unique>[^}]+)\}"
-    
-   
-    
+
     # Объединяем оба паттерна с использованием именованных групп
     combined_pattern = f"(?P<unique>{pattern_unique})"
-    
+
     for match in re.finditer(combined_pattern, text):
         # Добавляем текст перед изображением
         if match.start() > last_end:
-            text_part = text[last_end:match.start()]
+            text_part = text[last_end : match.start()]
             if text_part.strip():  # Добавляем только непустой текст
                 parts.append(text_part)
-        
-       
-        image_url = match.group('url_unique')
-       
-        
+
+        image_url = match.group("url_unique")
+
         try:
             res = await http.get(image_url)
             res.raise_for_status()

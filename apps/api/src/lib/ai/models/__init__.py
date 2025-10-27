@@ -11,7 +11,9 @@ from .trimmer import *
 
 
 AgentPayload = Annotated[
-    Union[QuizerOutput, ExplainerOutput, FeedbackerOutput, SummarizerOutput, TrimmerOutput],
+    Union[
+        QuizerOutput, ExplainerOutput, FeedbackerOutput, SummarizerOutput, TrimmerOutput
+    ],
     Field(discriminator="mode"),
 ]
 

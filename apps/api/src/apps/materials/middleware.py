@@ -1,7 +1,7 @@
 from fastapi import HTTPException, Request
 
-from lib.clients import AdminPB
-from apps.auth.middleware import User
+from src.lib.clients import AdminPB
+from src.apps.auth.middleware import User
 
 
 async def user_owns_materials(request: Request, admin_pb: AdminPB, user: User):

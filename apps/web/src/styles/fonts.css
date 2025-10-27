@@ -1,0 +1,12 @@
+@font-face {
+  font-family: "LV";
+  src: url("/fonts/League_Spartan/LeagueSpartan-VariableFont_wght.ttf")
+    format("truetype");
+  font-weight: 100 900; /* если variable */
+  font-style: normal;
+  font-display: swap;
+}
+:root {
+  font-size: 18px;
+  --font-sans: "LV", system-ui, sans-serif;
+}

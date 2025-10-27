@@ -3,7 +3,7 @@ from fastapi import Depends, Request, HTTPException
 from pocketbase import PocketBase
 from pocketbase.models.dtos import Record
 
-from lib.settings import settings
+from src.lib.settings import settings
 
 
 def get_user(request: Request):
