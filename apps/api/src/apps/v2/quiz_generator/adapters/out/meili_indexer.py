@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 import logging
 from typing import TypedDict
 from meilisearch_python_sdk import AsyncClient
@@ -36,10 +36,13 @@ meiliEmbeddings = {
 @dataclass
 class Doc:
     id: str
-    materialId: str
-    userId: str
+    quizId: str
+    authorId: str
     title: str
-    content: str
+    query: str
+    summary: str
+    tags: list[str]
+    category: str
 
 
 class MeiliIndexer(QuizIndexer):
@@ -55,71 +58,49 @@ class MeiliIndexer(QuizIndexer):
         await instance.quiz_index.update_embedders(
             Embedders(embedders=meiliEmbeddings)  # pyright: ignore[reportArgumentType]
         )
-        await instance.quiz_index.update_filterable_attributes(
-            ["userId", "quizId"]
-        )
+        await instance.quiz_index.update_filterable_attributes(["userId", "quizId"])
 
         return instance
 
-    async def index(self, material: Material) -> None:
+    async def index(self, quiz: Quiz) -> None:
         total_tokens = 0
 
-        if material.kind == MaterialKind.SIMPLE:
-            text = material.file.file_bytes.decode("utf-8")
-        elif material.text_file is not None:
-            text = material.text_file.file_bytes.decode("utf-8")
-        else:
-            raise ValueError("Material has no text")
+        if quiz.summary is None or quiz.tags is None or quiz.category is None:
+            raise ValueError("Quiz summary, tags, and category are required")
 
-        chunks = self.chunker.chunk(text)
-        docs = []
-        for i, chunk in enumerate(chunks):
-            docs.append(
-                {
-                    "id": f"{material.id}-{i}",
-                    "materialId": material.id,
-                    "userId": material.user_id,
-                    "title": material.title,
-                    "content": chunk,
-                }
-            )
-
-        tasks = await self.material_index.add_documents_in_batches(
-            docs, primary_key="id"
+        doc = Doc(
+            id=f"{quiz.id}",
+            quizId=quiz.id,
+            authorId=quiz.author_id,
+            title=quiz.title,
+            query=quiz.query,
+            summary=quiz.summary,
+            tags=quiz.tags,
+            category=quiz.category,
         )
 
-        logging.info(f"Created {len(tasks)} tasks for {len(docs)} documents")
+        task = await self.quiz_index.add_documents([asdict(doc)], primary_key="id")
+
+        logging.info(f"Created task for document")
 
         # First: Wait for all tasks to complete and get updated task objects
-        updated_tasks = []
-        for task in tasks:
-            updated_task = await self.meili.wait_for_task(
-                task.task_uid,
-                timeout_in_ms=int(30 * 1000),  # 30 seconds
-                interval_in_ms=int(0.5 * 1000),  # 0.5 seconds
-            )
-            updated_tasks.append(updated_task)
+        task = await self.meili.wait_for_task(
+            task.task_uid,
+            timeout_in_ms=int(60 * 1000),  # 30 seconds
+            interval_in_ms=int(0.5 * 1000),  # 0.5 seconds
+        )
 
-        logging.info(f"Processing {len(updated_tasks)} tasks with {len(docs)} docs")
+        logging.info(f"Processing task")
 
         # Second: Process results and count tokens
         # Each task represents a batch of documents, so all docs are processed by all tasks
-        for task in updated_tasks:
-            if task.status == "failed":
-                logging.error(f"Failed to index material batch: {task}")
-                # raise ValueError(f"Failed to index material batch: {task}")
-            elif task.status == "succeeded":
-                # All documents in this batch are indexed successfully
-                for doc in docs:
-                    indexed = EMBEDDER_TEMPLATE.replace(
-                        "{{doc.title}}", doc["title"]
-                    ).replace("{{doc.content}}", doc["content"])
-                    total_tokens += self.tokenizer.count_text(
-                        indexed, LLMS.TEXT_EMBEDDING_3_SMALL
-                    )
-                    logging.info(f"Indexed chunk {doc['id']}: (tokens: {total_tokens})")
-            else:
-                logging.error(f"Unknown task status: {task}")
+        if task.status == "failed":
+            logging.error(f"Failed to index material batch: {task}")
+            # raise ValueError(f"Failed to index material batch: {task}")
+        elif task.status == "succeeded":
+            logging.info(f"Indexed document")
+        else:
+            logging.error(f"Unknown task status: {task}")
 
         # Third: Log to langfuse after all tasks are complete and tokens are counted
         with langfuse_client.start_as_current_span(name="material-indexing") as span:
@@ -130,38 +111,38 @@ class MeiliIndexer(QuizIndexer):
                 },
             )
             span.update_trace(
-                input=f"Material: {material.id}",
+                input=f"Quiz: {quiz.id}",
                 output=f"Total tokens: {total_tokens}",
                 metadata={
-                    "material_id": material.id,
+                    "quiz_id": quiz.id,
                     "total_tokens": total_tokens,
                 },
-                user_id=material.user_id,
-                session_id=material.id,
+                user_id=quiz.author_id,
+                session_id=quiz.id,
             )
 
     async def search(
         self,
         user_id: str,
         query: str,
-        material_ids: list[str],
+        quiz_ids: list[str],
         limit: int = 100,
         ratio=0.5,
         threshold=0.4,
-    ) -> list[MaterialChunk]:
-        f = f"userId = {user_id}"
-        if material_ids:
-            f += f" AND materialId IN [{','.join(material_ids)}]"
+    ) -> list[Quiz]:
+        f = f"authorId = {user_id}"
+        if quiz_ids:
+            f += f" AND quizId IN [{','.join(quiz_ids)}]"
 
         if ratio == 0:
-            res = await self.material_index.search(
+            res = await self.quiz_index.search(
                 query=query,
                 ranking_score_threshold=threshold,
                 filter=f,
                 limit=limit,
             )
         else:
-            res = await self.material_index.search(
+            res = await self.quiz_index.search(
                 query=query,
                 hybrid=Hybrid(
                     semantic_ratio=ratio,
@@ -173,15 +154,15 @@ class MeiliIndexer(QuizIndexer):
             )
 
         docs: list[Doc] = [Doc(**hit) for hit in res.hits]
-        chunks = [self._doc_to_chunk(doc) for doc in docs]
+        quizes = [self._doc_to_quiz(doc) for doc in docs]
 
-        return chunks
+        return quizes
 
     async def delete(self, material_ids: list[str]) -> None:
         if len(material_ids) == 0:
             return
 
-        task = await self.material_index.delete_documents_by_filter(
+        task = await self.quiz_index.delete_documents_by_filter(
             f"materialId IN [{','.join(material_ids)}]"
         )
         task = await self.meili.wait_for_task(
@@ -197,17 +178,15 @@ class MeiliIndexer(QuizIndexer):
         else:
             logging.error(f"Unknown task status: {task}")
 
-    def _doc_to_chunk(self, doc: Doc) -> MaterialChunk:
-        idx = doc.id.split("-")[-1]
-
-        if not idx.isdigit():
-            raise ValueError(f"Invalid chunk id: {doc.id}")
-        idx = int(idx)
-
-        return MaterialChunk(
-            id=doc.id,
-            idx=int(idx),
-            material_id=doc.materialId,
-            title=doc.title,
-            content=doc.content,
-        )
+    # def _doc_to_quiz(self, doc: Doc) -> Quiz:
+    #     return Quiz(
+    #         id=doc.id,
+    #         author_id=doc.authorId,
+    #         materials=[],
+    #         length=0,
+    #         title=doc.title,
+    #         query=doc.query,
+    #         summary=doc.summary,
+    #         tags=doc.tags,
+    #         category=QuizCategory(doc.category),
+    #     )
