@@ -39,20 +39,16 @@ class MaterialSearchApp(MaterialAdder):
         if file_size_mb > MAX_SIZE_MB:
             raise TooLargeFileError(file_size_mb)
 
+        material = await self._deduplicate_material(cmd)
+        if material is not None:
+            return material
+
         # try to parse file as pdf
         is_image = False
         text = ""
         pdf_images = []
-        material = Material(
-            id=cmd.material_id,
-            file=cmd.file,
-            images=[],
-            title=cmd.title,
-            user_id=cmd.user_id,
-            status=MaterialStatus.UPLOADED,
-            kind=MaterialKind.SIMPLE,
-            tokens=0,
-            contents="",
+        material = Material.create(
+            user_id=cmd.user_id, title=cmd.title, file=cmd.file, id=cmd.material_id
         )
         if cmd.file.file_name.lower().endswith(".pdf"):
             try:
@@ -117,4 +113,10 @@ class MaterialSearchApp(MaterialAdder):
         material.status = MaterialStatus.INDEXED
         material = await self.material_repository.update(material)
 
+        return material
+
+    async def _deduplicate_material(self, cmd: AddMaterialCmd) -> Material | None:
+        material = await self.material_repository.get(
+            cmd.material_id, cmd.file.file_bytes
+        )
         return material

@@ -1,19 +1,22 @@
+from dataclasses import dataclass
 import logging
-from statistics import mode
+from typing import TypedDict
 from meilisearch_python_sdk import AsyncClient
+from meilisearch_python_sdk.models.search import Hybrid
 from meilisearch_python_sdk.models.settings import Embedders, OpenAiEmbedder
 
 from src.lib.clients import langfuse_client
 from src.lib.config import LLMS
 from src.lib.settings import settings
 
-from ...domain.models import Material, MaterialKind
+from ...domain.models import Material, MaterialChunk, MaterialKind
 from ...domain.ports import Indexer, Chunker, Tokenizer
 
+EMBEDDER_NAME = "materialChunks"
 EMBEDDER_TEMPLATE = "Chunk {{doc.title}}: {{doc.content}}"
 
 meiliEmbeddings = {
-    "materialChunks": OpenAiEmbedder(
+    EMBEDDER_NAME: OpenAiEmbedder(
         source="openAi",
         model=LLMS.TEXT_EMBEDDING_3_SMALL,
         api_key=settings.openai_api_key,
@@ -22,12 +25,21 @@ meiliEmbeddings = {
 }
 
 
+@dataclass
+class Doc:
+    id: str
+    materialId: str
+    userId: str
+    title: str
+    content: str
+
+
 class MeiliIndexer(Indexer):
     def __init__(self, tokenizer: Tokenizer, chunker: Chunker, meili: AsyncClient):
         self.tokenizer = tokenizer
         self.chunker = chunker
         self.meili = meili
-        self.material_index = meili.index("materialChunks")
+        self.material_index = meili.index(EMBEDDER_NAME)
 
     @classmethod
     async def ainit(
@@ -97,7 +109,9 @@ class MeiliIndexer(Indexer):
                     indexed = EMBEDDER_TEMPLATE.replace(
                         "{{doc.title}}", doc["title"]
                     ).replace("{{doc.content}}", doc["content"])
-                    total_tokens += self.tokenizer.count_text(indexed, LLMS.TEXT_EMBEDDING_3_SMALL)
+                    total_tokens += self.tokenizer.count_text(
+                        indexed, LLMS.TEXT_EMBEDDING_3_SMALL
+                    )
                     logging.info(f"Indexed chunk {doc['id']}: (tokens: {total_tokens})")
             else:
                 logging.error(f"Unknown task status: {task}")
@@ -120,3 +134,75 @@ class MeiliIndexer(Indexer):
                 user_id=material.user_id,
                 session_id=material.id,
             )
+
+    async def search(
+        self,
+        user_id: str,
+        query: str,
+        material_ids: list[str],
+        limit: int = 100,
+        ratio=0.5,
+        threshold=0.4,
+    ) -> list[MaterialChunk]:
+        f = f"userId = {user_id}"
+        if material_ids:
+            f += f" AND materialId IN [{','.join(material_ids)}]"
+
+        if ratio == 0:
+            res = await self.material_index.search(
+                query=query,
+                ranking_score_threshold=threshold,
+                filter=f,
+                limit=limit,
+            )
+        else:
+            res = await self.material_index.search(
+                query=query,
+                hybrid=Hybrid(
+                    semantic_ratio=ratio,
+                    embedder=EMBEDDER_NAME,
+                ),
+                ranking_score_threshold=threshold,
+                filter=f,
+                limit=limit,
+            )
+
+        docs: list[Doc] = [Doc(**hit) for hit in res.hits]
+        chunks = [self._doc_to_chunk(doc) for doc in docs]
+
+        return chunks
+
+    async def delete(self, material_ids: list[str]) -> None:
+        if len(material_ids) == 0:
+            return
+
+        task = await self.material_index.delete_documents_by_filter(
+            f"materialId IN [{','.join(material_ids)}]"
+        )
+        task = await self.meili.wait_for_task(
+            task.task_uid,
+            timeout_in_ms=int(30 * 1000),
+            interval_in_ms=int(0.5 * 1000),
+        )
+        if task.status == "failed":
+            logging.error(f"Failed to delete material: {task}")
+            # raise ValueError(f"Failed to delete material: {task}")
+        elif task.status == "succeeded":
+            logging.info(f"Deleted materials: {material_ids}")
+        else:
+            logging.error(f"Unknown task status: {task}")
+
+    def _doc_to_chunk(self, doc: Doc) -> MaterialChunk:
+        idx = doc.id.split("-")[-1]
+
+        if not idx.isdigit():
+            raise ValueError(f"Invalid chunk id: {doc.id}")
+        idx = int(idx)
+
+        return MaterialChunk(
+            id=doc.id,
+            idx=int(idx),
+            material_id=doc.materialId,
+            title=doc.title,
+            content=doc.content,
+        )

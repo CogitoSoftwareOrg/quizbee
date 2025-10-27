@@ -1,4 +1,5 @@
 import json
+import logging
 from typing import Any
 from pocketbase import FileUpload, PocketBase
 from pocketbase.models.dtos import Record
@@ -10,6 +11,18 @@ from ...domain.ports import MaterialRepository
 class PBMaterialRepository(MaterialRepository):
     def __init__(self, pb: PocketBase):
         self.pb = pb
+
+    async def get(self, id: str, file_bytes=b"") -> Material | None:
+        try:
+            rec = await self.pb.collection("materials").get_one(id)
+        except Exception as e:
+            logging.error(f"Error getting material: {e}")
+            return None
+
+        if rec.get("kind") == MaterialKind.COMPLEX:
+            return self._to_material(rec, b"", file_bytes)
+        else:
+            return self._to_material(rec, file_bytes)
 
     async def create(self, create: Material) -> Material:
         dto: dict[str, Any] = {}

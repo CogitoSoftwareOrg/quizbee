@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from typing import Any, Protocol
 
-from apps.api.src.lib.config.llms import LLMS
+from src.lib.config.llms import LLMS
 
-from .models import Material, MaterialFile
+from .models import Material, MaterialFile, MaterialChunk
 
 
 # ======ADAPTERS INTERFACES======
@@ -11,6 +11,8 @@ from .models import Material, MaterialFile
 
 # Material Repository
 class MaterialRepository(Protocol):
+    async def get(self, id: str, file_bytes: bytes = b"") -> Material | None: ...
+
     async def create(self, create: Material) -> Material: ...
 
     async def update(self, upd: Material) -> Material: ...
@@ -62,3 +64,7 @@ class Chunker(Protocol):
 # Indexer
 class Indexer(Protocol):
     async def index(self, material: Material) -> None: ...
+    async def search(
+        self, user_id: str, query: str, material_ids: list[str], limit: int
+    ) -> list[MaterialChunk]: ...
+    async def delete(self, material_ids: list[str]) -> None: ...
