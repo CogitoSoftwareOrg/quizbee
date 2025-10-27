@@ -1,7 +1,7 @@
 from typing import Annotated
 from fastapi import Depends, Request, FastAPI
 
-from apps.api.src.apps.v2.llm_tools.app.usecases import LLMToolsApp
+from src.apps.v2.llm_tools.app.usecases import LLMToolsApp
 from src.lib.clients.meilisearch import MeilisearchClient
 from src.lib.clients.pb import AdminPB
 

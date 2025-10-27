@@ -1,4 +1,4 @@
-from .constants import MAX_SIZE_MB
+from .constants import MAX_SIZE_MB, MAX_TEXT_INDEX_TOKENS
 
 
 class TooLargeFileError(Exception):
@@ -6,4 +6,10 @@ class TooLargeFileError(Exception):
         self.message = (
             f"File is too large ({file_size_mb}MB). Maximum size: {max_size_mb}MB"
         )
+        super().__init__(self.message)
+
+
+class TooManyTextTokensError(Exception):
+    def __init__(self, text_tokens: int, max_text_tokens: int = MAX_TEXT_INDEX_TOKENS):
+        self.message = f"Text is too long ({text_tokens} tokens). Maximum tokens: {max_text_tokens}"
         super().__init__(self.message)

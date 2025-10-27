@@ -2,7 +2,7 @@ import tiktoken
 
 from src.lib.config import LLMS
 
-from ...app.contracts import TextTokenizer
+from ...domain.ports import TextTokenizer
 
 
 class TiktokenTokenizer(TextTokenizer):

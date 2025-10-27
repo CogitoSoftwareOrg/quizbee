@@ -1,6 +1,6 @@
 import re
 
-from ...app.contracts import Chunker, TextTokenizer
+from ...domain.ports import Chunker, TextTokenizer
 
 
 class SimpleChunker(Chunker):

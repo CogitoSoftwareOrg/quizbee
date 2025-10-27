@@ -6,7 +6,7 @@ from starlette.middleware.cors import CORSMiddleware
 from mcp.server.fastmcp import FastMCP
 import httpx
 
-from apps.api.src.apps.v2.llm_tools.di import set_llm_tools
+from src.apps.v2.llm_tools.di import set_llm_tools
 from src.apps.billing import billing_router
 from src.apps.quiz_attempts import init_feedbacker, quiz_attempts_router
 from src.apps.messages import init_explainer, messages_router
@@ -51,11 +51,13 @@ async def lifespan(app: FastAPI):
     init_summarizer(app)
     init_trimmer(app)
 
+    # V2 LLM TOOLS
+    set_llm_tools(app)
+
     # V2 USER AUTH
     set_auth_user_app(app)
 
     # V2 MATERIAL SEARCH
-    set_llm_tools(app)
     set_pdf_parser(app)
     set_material_repository(app, app.state.admin_pb)
     await aset_indexer(app, app.state.llm_tools, app.state.meilisearch_client)

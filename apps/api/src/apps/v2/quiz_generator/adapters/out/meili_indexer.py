@@ -9,11 +9,19 @@ from src.lib.clients import langfuse_client
 from src.lib.config import LLMS
 from src.lib.settings import settings
 
-from ...domain.models import Quiz, QuizItem
-from ...domain.ports import Indexer, Chunker, Tokenizer
+from src.apps.v2.llm_tools.app.contracts import LLMToolsApp
 
-EMBEDDER_NAME = "materialChunks"
-EMBEDDER_TEMPLATE = "Chunk {{doc.title}}: {{doc.content}}"
+from ...domain.models import Quiz, QuizItem
+from ...domain.ports import QuizIndexer
+
+EMBEDDER_NAME = "quizSummaries"
+EMBEDDER_TEMPLATE = """
+Quiz {{doc.title}}
+Query: {{doc.query}}
+Summary: {{doc.summary}}
+Tags: {{doc.tags}}
+Category: {{doc.category}}
+"""
 
 meiliEmbeddings = {
     EMBEDDER_NAME: OpenAiEmbedder(
@@ -34,24 +42,21 @@ class Doc:
     content: str
 
 
-class MeiliIndexer(Indexer):
-    def __init__(self, tokenizer: Tokenizer, chunker: Chunker, meili: AsyncClient):
-        self.tokenizer = tokenizer
-        self.chunker = chunker
+class MeiliIndexer(QuizIndexer):
+    def __init__(self, llm_tools: LLMToolsApp, meili: AsyncClient):
+        self.llm_tools = llm_tools
         self.meili = meili
-        self.material_index = meili.index(EMBEDDER_NAME)
+        self.quiz_index = meili.index(EMBEDDER_NAME)
 
     @classmethod
-    async def ainit(
-        cls, tokenizer: Tokenizer, chunker: Chunker, meili: AsyncClient
-    ) -> "MeiliIndexer":
-        instance = cls(tokenizer, chunker, meili)
+    async def ainit(cls, llm_tools: LLMToolsApp, meili: AsyncClient) -> "MeiliIndexer":
+        instance = cls(llm_tools, meili)
 
-        await instance.material_index.update_embedders(
+        await instance.quiz_index.update_embedders(
             Embedders(embedders=meiliEmbeddings)  # pyright: ignore[reportArgumentType]
         )
-        await instance.material_index.update_filterable_attributes(
-            ["userId", "materialId"]
+        await instance.quiz_index.update_filterable_attributes(
+            ["userId", "quizId"]
         )
 
         return instance

@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 import logging
 from typing import TypedDict
 from meilisearch_python_sdk import AsyncClient
@@ -12,7 +12,9 @@ from src.lib.settings import settings
 from src.apps.v2.llm_tools.app.contracts import LLMToolsApp
 
 from ...domain.models import Material, MaterialChunk, MaterialKind
+from ...domain.constants import MAX_TEXT_INDEX_TOKENS
 from ...domain.ports import Indexer
+from ...domain.errors import TooManyTextTokensError
 
 EMBEDDER_NAME = "materialChunks"
 EMBEDDER_TEMPLATE = "Chunk {{doc.title}}: {{doc.content}}"
@@ -69,51 +71,50 @@ class MeiliIndexer(Indexer):
         docs = []
         for i, chunk in enumerate(chunks):
             docs.append(
-                {
-                    "id": f"{material.id}-{i}",
-                    "materialId": material.id,
-                    "userId": material.user_id,
-                    "title": material.title,
-                    "content": chunk,
-                }
+                Doc(
+                    id=f"{material.id}-{i}",
+                    materialId=material.id,
+                    userId=material.user_id,
+                    title=material.title,
+                    content=chunk,
+                )
             )
 
-        tasks = await self.material_index.add_documents_in_batches(
-            docs, primary_key="id"
+        docs_tokens = sum(
+            [
+                self.llm_tools.count_text(
+                    self._fill_template(doc), LLMS.TEXT_EMBEDDING_3_SMALL
+                )
+                for doc in docs
+            ]
+        )
+        if docs_tokens > MAX_TEXT_INDEX_TOKENS:
+            raise TooManyTextTokensError(docs_tokens)
+
+        task = await self.material_index.add_documents(
+            [asdict(doc) for doc in docs], primary_key="id"
         )
 
-        logging.info(f"Created {len(tasks)} tasks for {len(docs)} documents")
+        logging.info(f"Created task for {len(docs)} documents")
 
-        # First: Wait for all tasks to complete and get updated task objects
-        updated_tasks = []
-        for task in tasks:
-            updated_task = await self.meili.wait_for_task(
-                task.task_uid,
-                timeout_in_ms=int(30 * 1000),  # 30 seconds
-                interval_in_ms=int(0.5 * 1000),  # 0.5 seconds
-            )
-            updated_tasks.append(updated_task)
+        task = await self.meili.wait_for_task(
+            task.task_uid,
+            timeout_in_ms=int(120 * 1000),
+            interval_in_ms=int(1 * 1000),
+        )
 
-        logging.info(f"Processing {len(updated_tasks)} tasks with {len(docs)} docs")
-
-        # Second: Process results and count tokens
-        # Each task represents a batch of documents, so all docs are processed by all tasks
-        for task in updated_tasks:
-            if task.status == "failed":
-                logging.error(f"Failed to index material batch: {task}")
-                # raise ValueError(f"Failed to index material batch: {task}")
-            elif task.status == "succeeded":
-                # All documents in this batch are indexed successfully
-                for doc in docs:
-                    indexed = EMBEDDER_TEMPLATE.replace(
-                        "{{doc.title}}", doc["title"]
-                    ).replace("{{doc.content}}", doc["content"])
-                    total_tokens += self.llm_tools.count_text(
-                        indexed, LLMS.TEXT_EMBEDDING_3_SMALL
-                    )
-                    logging.info(f"Indexed chunk {doc['id']}: (tokens: {total_tokens})")
-            else:
-                logging.error(f"Unknown task status: {task}")
+        if task.status == "failed":
+            logging.error(f"Failed to index material batch: {task}")
+            # raise ValueError(f"Failed to index material batch: {task}")
+        elif task.status == "succeeded":
+            # All documents in this batch are indexed successfully
+            for doc in docs:
+                total_tokens += self.llm_tools.count_text(
+                    self._fill_template(doc), LLMS.TEXT_EMBEDDING_3_SMALL
+                )
+                logging.info(f"Indexed chunk {doc.id}: (tokens: {total_tokens})")
+        else:
+            logging.error(f"Unknown task status: {task}")
 
         # Third: Log to langfuse after all tasks are complete and tokens are counted
         with langfuse_client.start_as_current_span(name="material-indexing") as span:
@@ -204,4 +205,9 @@ class MeiliIndexer(Indexer):
             material_id=doc.materialId,
             title=doc.title,
             content=doc.content,
+        )
+
+    def _fill_template(self, doc: Doc):
+        return EMBEDDER_TEMPLATE.replace("{{doc.title}}", doc.title).replace(
+            "{{doc.content}}", doc.content
         )

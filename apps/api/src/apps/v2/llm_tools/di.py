@@ -1,12 +1,14 @@
 from typing import Annotated
 from fastapi import Depends, Request, FastAPI
 
-from apps.api.src.apps.v2.llm_tools.app.usecases import LLMToolsAppImpl
 
 from .adapters.out.tiktoken_tokenizer import TiktokenTokenizer
 from .adapters.out.openai_image_tokenizer import OpenAIImageTokenizer
 from .adapters.out.simple_chunker import SimpleChunker
+
+
 from .app.contracts import LLMToolsApp
+from .app.usecases import LLMToolsAppImpl
 
 
 def set_llm_tools(app: FastAPI):

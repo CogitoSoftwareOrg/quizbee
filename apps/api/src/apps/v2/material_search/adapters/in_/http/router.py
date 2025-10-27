@@ -3,7 +3,7 @@ import logging
 
 from fastapi.responses import JSONResponse
 
-from src.apps.v2.user_auth.di import User
+from src.apps.v2.user_auth.di import UserDeps
 
 from ....di import MaterialSearchAppDep
 from ....domain.models import MaterialFile
@@ -22,7 +22,7 @@ material_search_router = APIRouter(
 @material_search_router.post("", status_code=201)
 async def add_material(
     material_search_app: MaterialSearchAppDep,
-    user: User,
+    user: UserDeps,
     file: UploadFile = File(...),
     title: str = Form(...),
     material_id: str = Form(...),
@@ -37,7 +37,7 @@ async def add_material(
                 ),
                 title=title,
                 material_id=material_id,
-                user_id=user.get("id") or "",
+                user_id=user.id or "",
             )
         )
 
