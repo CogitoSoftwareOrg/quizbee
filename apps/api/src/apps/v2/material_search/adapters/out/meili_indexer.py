@@ -97,7 +97,7 @@ class MeiliIndexer(Indexer):
                     indexed = EMBEDDER_TEMPLATE.replace(
                         "{{doc.title}}", doc["title"]
                     ).replace("{{doc.content}}", doc["content"])
-                    total_tokens += self.tokenizer.count_text(indexed)
+                    total_tokens += self.tokenizer.count_text(indexed, LLMS.TEXT_EMBEDDING_3_SMALL)
                     logging.info(f"Indexed chunk {doc['id']}: (tokens: {total_tokens})")
             else:
                 logging.error(f"Unknown task status: {task}")

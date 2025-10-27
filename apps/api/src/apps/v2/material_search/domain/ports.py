@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Any, Protocol
 
+from apps.api.src.lib.config.llms import LLMS
+
 from .models import Material, MaterialFile
 
 
@@ -41,9 +43,9 @@ class PdfParser(Protocol):
 
 # Tokenizer
 class Tokenizer(Protocol):
-    def encode(self, text: str) -> list[int]: ...
+    def encode(self, text: str, llm: LLMS = LLMS.GPT_5_MINI) -> list[int]: ...
 
-    def count_text(self, text: str) -> int: ...
+    def count_text(self, text: str, llm: LLMS = LLMS.GPT_5_MINI) -> int: ...
 
 
 class ImageTokenizer(Protocol):
@@ -60,4 +62,3 @@ class Chunker(Protocol):
 # Indexer
 class Indexer(Protocol):
     async def index(self, material: Material) -> None: ...
-
