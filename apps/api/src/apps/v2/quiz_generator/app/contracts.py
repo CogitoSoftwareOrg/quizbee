@@ -22,9 +22,7 @@ class GenerateCmd:
     mode: GenMode
 
 
-class QuizGenerator(Protocol):
+class QuizGeneratorApp(Protocol):
+    async def start(self, cmd: GenerateCmd) -> None: ...
     async def generate(self, cmd: GenerateCmd) -> None: ...
-
-
-class QuizFinilizer(Protocol):
     async def finilize(self, cmd: FinilizeCmd) -> None: ...

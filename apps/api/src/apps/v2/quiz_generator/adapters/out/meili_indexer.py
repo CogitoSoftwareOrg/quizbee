@@ -11,14 +11,31 @@ from src.lib.settings import settings
 
 from src.apps.v2.llm_tools.app.contracts import LLMToolsApp
 
-from ...domain.models import Quiz, QuizItem
-from ...domain.ports import QuizIndexer
+from ...domain.errors import InvalidQuiz
+from ...domain.models import (
+    Quiz,
+    QuizCategory,
+    QuizDifficulty,
+    QuizItem,
+    QuizVisability,
+)
+from ...domain.ports import QuizIndexer, QuizRepository
+
+FILTERABLE_ATTRIBUTES = [
+    "authorId",
+    "quizId",
+    "visability",
+    "tags",
+    "category",
+    "difficulty",
+]
 
 EMBEDDER_NAME = "quizSummaries"
 EMBEDDER_TEMPLATE = """
 Quiz {{doc.title}}
 Query: {{doc.query}}
 Summary: {{doc.summary}}
+Difficulty: {{doc.difficulty}}
 Tags: {{doc.tags}}
 Category: {{doc.category}}
 """
@@ -36,29 +53,56 @@ meiliEmbeddings = {
 @dataclass
 class Doc:
     id: str
-    quizId: str
-    authorId: str
+    quiz_id: str
+    author_id: str
+    visability: QuizVisability
     title: str
     query: str
     summary: str
     tags: list[str]
-    category: str
+    category: QuizCategory
+    difficulty: QuizDifficulty
+
+    @classmethod
+    def from_quiz(cls, quiz: Quiz) -> "Doc":
+        return cls(
+            id=f"{quiz.id}",
+            quiz_id=quiz.id,
+            author_id=quiz.author_id,
+            visability=quiz.visability,
+            title=quiz.title,
+            query=quiz.query,
+            summary=quiz.summary,  # pyright: ignore[reportArgumentType]
+            tags=quiz.tags,  # pyright: ignore[reportArgumentType]
+            category=quiz.category,  # pyright: ignore[reportArgumentType]
+            difficulty=quiz.difficulty,
+        )
 
 
 class MeiliIndexer(QuizIndexer):
-    def __init__(self, llm_tools: LLMToolsApp, meili: AsyncClient):
+    def __init__(
+        self,
+        llm_tools: LLMToolsApp,
+        meili: AsyncClient,
+        quiz_repository: QuizRepository,
+    ):
         self.llm_tools = llm_tools
         self.meili = meili
         self.quiz_index = meili.index(EMBEDDER_NAME)
+        self.quiz_repository = quiz_repository
 
     @classmethod
-    async def ainit(cls, llm_tools: LLMToolsApp, meili: AsyncClient) -> "MeiliIndexer":
-        instance = cls(llm_tools, meili)
+    async def ainit(
+        cls, llm_tools: LLMToolsApp, meili: AsyncClient, quiz_repository: QuizRepository
+    ) -> "MeiliIndexer":
+        instance = cls(llm_tools, meili, quiz_repository)
 
         await instance.quiz_index.update_embedders(
             Embedders(embedders=meiliEmbeddings)  # pyright: ignore[reportArgumentType]
         )
-        await instance.quiz_index.update_filterable_attributes(["userId", "quizId"])
+        await instance.quiz_index.update_filterable_attributes(
+            FILTERABLE_ATTRIBUTES  # pyright: ignore[reportArgumentType]
+        )
 
         return instance
 
@@ -66,18 +110,9 @@ class MeiliIndexer(QuizIndexer):
         total_tokens = 0
 
         if quiz.summary is None or quiz.tags is None or quiz.category is None:
-            raise ValueError("Quiz summary, tags, and category are required")
+            raise InvalidQuiz("Quiz summary, tags, and category are required")
 
-        doc = Doc(
-            id=f"{quiz.id}",
-            quizId=quiz.id,
-            authorId=quiz.author_id,
-            title=quiz.title,
-            query=quiz.query,
-            summary=quiz.summary,
-            tags=quiz.tags,
-            category=quiz.category,
-        )
+        doc = Doc.from_quiz(quiz)
 
         task = await self.quiz_index.add_documents([asdict(doc)], primary_key="id")
 
@@ -125,14 +160,11 @@ class MeiliIndexer(QuizIndexer):
         self,
         user_id: str,
         query: str,
-        quiz_ids: list[str],
         limit: int = 100,
         ratio=0.5,
         threshold=0.4,
     ) -> list[Quiz]:
         f = f"authorId = {user_id}"
-        if quiz_ids:
-            f += f" AND quizId IN [{','.join(quiz_ids)}]"
 
         if ratio == 0:
             res = await self.quiz_index.search(
@@ -154,7 +186,7 @@ class MeiliIndexer(QuizIndexer):
             )
 
         docs: list[Doc] = [Doc(**hit) for hit in res.hits]
-        quizes = [self._doc_to_quiz(doc) for doc in docs]
+        quizes = self.quiz_repository
 
         return quizes
 
@@ -177,16 +209,3 @@ class MeiliIndexer(QuizIndexer):
             logging.info(f"Deleted materials: {material_ids}")
         else:
             logging.error(f"Unknown task status: {task}")
-
-    # def _doc_to_quiz(self, doc: Doc) -> Quiz:
-    #     return Quiz(
-    #         id=doc.id,
-    #         author_id=doc.authorId,
-    #         materials=[],
-    #         length=0,
-    #         title=doc.title,
-    #         query=doc.query,
-    #         summary=doc.summary,
-    #         tags=doc.tags,
-    #         category=QuizCategory(doc.category),
-    #     )

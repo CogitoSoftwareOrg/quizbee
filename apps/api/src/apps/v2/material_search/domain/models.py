@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 
 from src.lib.utils import genID
@@ -17,13 +17,13 @@ class MaterialStatus(StrEnum):
     DELETING = "deleting"
 
 
-@dataclass(frozen=True)
+@dataclass(slots=True, kw_only=True)
 class MaterialFile:
     file_name: str
     file_bytes: bytes = b""
 
 
-@dataclass(frozen=True)
+@dataclass(slots=True, kw_only=True)
 class MaterialChunk:
     id: str
     idx: int
@@ -32,44 +32,31 @@ class MaterialChunk:
     content: str
 
 
-@dataclass(frozen=False)
+@dataclass(slots=True, kw_only=True)
 class Material:
-    id: str
-    title: str
     user_id: str
-    status: MaterialStatus
-    kind: MaterialKind
-    tokens: int
+    title: str
     file: MaterialFile
-    images: list[MaterialFile]
-    contents: str  # JSON
-    is_book: bool = False
+    images: list[MaterialFile] = field(default_factory=list)
+    kind = MaterialKind.SIMPLE
+    tokens = 0
+    contents = ""
+    is_book = False
+    status = MaterialStatus.UPLOADED
     text_file: MaterialFile | None = None
+    id: str = field(default_factory=genID)
 
     @classmethod
     def create(
         cls,
+        id: str,
         user_id: str,
         title: str,
         file: MaterialFile,
-        id=genID(),
-        status=MaterialStatus.UPLOADED,
-        kind=MaterialKind.SIMPLE,
-        tokens: int = 0,
-        contents: str = "",
-        images: list[MaterialFile] | None = None,
     ) -> "Material":
-        if images is None:
-            images = []
-
         return cls(
             id=id,
             title=title,
-            status=status,
             user_id=user_id,
-            kind=kind,
-            tokens=tokens,
             file=file,
-            images=images,
-            contents=contents,
         )

@@ -1,10 +1,24 @@
 from typing import Protocol
 
-from .models import QuizAttempt, Quiz
+from .models import Attempt, Quiz
+
+
+class AttemptRepository(Protocol):
+    async def create(self, quiz_id: str, user_id: str) -> Attempt: ...
 
 
 class QuizRepository(Protocol):
-    async def create_attempt(self, quiz_id: str, user_id: str) -> QuizAttempt: ...
+    async def get(self, ids: list[str]) -> list[Quiz]: ...
+
+
+class UOW(Protocol):
+    quizzes: QuizRepository
+    attempts: AttemptRepository
+
+    def __enter__(self) -> "UOW": ...
+    def __exit__(self, exc_type, exc, tb) -> None: ...
+    def commit(self) -> None: ...
+    def rollback(self) -> None: ...
 
 
 class QuizIndexer(Protocol):

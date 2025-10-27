@@ -3,8 +3,6 @@ from enum import StrEnum
 
 from src.lib.utils import genID
 
-from src.apps.v2.material_search.domain.models import Material
-
 
 class QuizItemStatus(StrEnum):
     GENERATED = "generated"
@@ -28,7 +26,7 @@ class QuizStatus(StrEnum):
     ANSWERED = "answered"
 
 
-class QuizVisability(StrEnum):
+class QuizVisibility(StrEnum):
     LINK = "link"
     PUBLIC = "public"
 
@@ -49,7 +47,7 @@ class QuizCategory(StrEnum):
     # MUSIC = "music"
 
 
-@dataclass(frozen=True)
+@dataclass
 class QuizGenConfig:
     negative_questions: list[str]
     additional_instructions: list[str]
@@ -59,38 +57,46 @@ class QuizGenConfig:
     extra_expert: list[str]
 
 
-@dataclass(frozen=True)
+@dataclass
 class QuizItemVariant:
     content: str
     is_correct: bool
     explanation: str
 
 
-@dataclass(frozen=True)
+@dataclass
 class QuizItem:
+    id: str
     question: str
     variants: list[QuizItemVariant]
     order: int
     status: QuizItemStatus
 
 
-@dataclass(frozen=True)
-class QuizAttempt:
+@dataclass
+class Choice:
+    idx: int
+    correct: bool
+    item_id: str
+
+
+@dataclass
+class Attempt:
     id: str
-    choices: list[int] = field(default_factory=list)
+    choices: list[Choice] = field(default_factory=list)
 
 
-@dataclass(frozen=True)
+@dataclass(slots=True, kw_only=True)
 class Quiz:
     id: str
     author_id: str
-    materials: list[Material]
+    material_ids: list[str]
     title: str
     length: int
     query: str
     difficulty: QuizDifficulty
     status: QuizStatus
-    visability: QuizVisability
+    visibility: QuizVisibility
     total_materials: str
     avoid_repeat: bool
     items: list[QuizItem]
@@ -102,11 +108,11 @@ class Quiz:
     category: QuizCategory | None = None
 
     @classmethod
-    def create(cls, author_id: str):
+    def create(cls, author_id: str) -> "Quiz":
         return cls(
             id=genID(),
             author_id=author_id,
-            materials=[],
+            material_ids=[],
             title="",
             length=0,
             query="",
@@ -122,6 +128,6 @@ class Quiz:
             total_materials="",
             avoid_repeat=False,
             items=[],
-            visability=QuizVisability.PUBLIC,
+            visibility=QuizVisibility.PUBLIC,
             status=QuizStatus.DRAFT,
         )

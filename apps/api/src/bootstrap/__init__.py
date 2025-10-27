@@ -31,6 +31,7 @@ from src.apps.v2.material_search.di import (
 )
 
 from .cors import cors_middleware
+from .errors import all_exceptions_handler
 
 mcp = FastMCP("MCP", stateless_http=True)
 
@@ -59,13 +60,15 @@ async def lifespan(app: FastAPI):
 
     # V2 MATERIAL SEARCH
     set_pdf_parser(app)
-    set_material_repository(app, app.state.admin_pb)
-    await aset_indexer(app, app.state.llm_tools, app.state.meilisearch_client)
+    set_material_repository(app, admin_pb=app.state.admin_pb)
+    await aset_indexer(
+        app, llm_tools=app.state.llm_tools, meili=app.state.meilisearch_client
+    )
     set_material_search_app(
         app,
-        app.state.meilisearch_client,
-        app.state.admin_pb,
-        app.state.llm_tools,
+        meili=app.state.meilisearch_client,
+        admin_pb=app.state.admin_pb,
+        llm_tools=app.state.llm_tools,
     )
 
     # V2 QUIZ GENERATOR
@@ -88,6 +91,7 @@ def create_app():
             Depends(ensure_admin_pb),
         ],
     )
+    app.add_exception_handler(Exception, all_exceptions_handler)
 
     app.include_router(billing_router)
     app.include_router(quizes_router)
