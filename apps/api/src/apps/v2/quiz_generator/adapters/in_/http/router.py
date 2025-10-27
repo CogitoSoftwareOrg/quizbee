@@ -1,11 +1,14 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks
 from fastapi import Depends
+
+from src.apps.v2.user_auth.di import UserDeps
 
 from .deps import (
     http_guard_and_set_user,
     http_guard_user_owns_materials,
     http_guard_quiz_patch_quota_protection,
 )
+from .schemas import CreateQuizDto
 
 quiz_generator_router = APIRouter(
     prefix="/v2/quizes",
@@ -21,4 +24,8 @@ quiz_generator_router = APIRouter(
         Depends(http_guard_quiz_patch_quota_protection),
     ],
 )
-async def create_quiz(): ...
+async def create_quiz(
+    user: UserDeps,
+    dto: CreateQuizDto,
+    background: BackgroundTasks,
+): ...

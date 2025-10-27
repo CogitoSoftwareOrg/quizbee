@@ -1,10 +1,10 @@
 from fastapi import HTTPException, Request
 
-from src.apps.v2.user_auth.di import AuthGuard
+from src.apps.v2.user_auth.di import AuthGuardDeps
 from src.apps.v2.user_auth.domain.errors import NoTokenError, ForbiddenError
 
 
-async def http_guard_and_set_user(request: Request, auth_guard: AuthGuard):
+async def http_guard_and_set_user(request: Request, auth_guard: AuthGuardDeps):
     try:
         token = request.cookies.get("pb_token")
         user, sub = await auth_guard(token)

@@ -28,4 +28,4 @@ def get_auth_guard(request: Request):
     return request.app.state.auth_guard
 
 
-AuthGuard = Annotated[GuardUser, Depends(get_auth_guard)]
+AuthGuardDeps = Annotated[GuardUser, Depends(get_auth_guard)]

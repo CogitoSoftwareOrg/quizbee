@@ -2,11 +2,11 @@ from fastapi import HTTPException, Request
 
 from src.lib.clients import AdminPB
 
-from src.apps.v2.user_auth.di import AuthGuard, Subscription, User
+from src.apps.v2.user_auth.di import AuthGuardDeps, SubscriptionDeps, UserDeps
 from src.apps.v2.user_auth.domain.errors import NoTokenError, ForbiddenError
 
 
-async def http_guard_and_set_user(request: Request, auth_guard: AuthGuard):
+async def http_guard_and_set_user(request: Request, auth_guard: AuthGuardDeps):
     try:
         token = request.cookies.get("pb_token")
         user, sub = await auth_guard(token)
@@ -19,7 +19,7 @@ async def http_guard_and_set_user(request: Request, auth_guard: AuthGuard):
 
 
 async def http_guard_user_owns_materials(
-    request: Request, admin_pb: AdminPB, user: User
+    request: Request, admin_pb: AdminPB, user: UserDeps
 ):
     dto = await request.json()
     user_id = user.id
@@ -37,7 +37,7 @@ async def http_guard_user_owns_materials(
 
 
 async def http_guard_quiz_patch_quota_protection(
-    request: Request, user: User, sub: Subscription, admin_pb: AdminPB
+    request: Request, user: UserDeps, sub: SubscriptionDeps, admin_pb: AdminPB
 ):
     body = await request.json()
     quiz_id = request.path_params.get("quiz_id") or body.get("quiz_id") or ""
