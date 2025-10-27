@@ -43,17 +43,6 @@ class PdfParser(Protocol):
     def parse(self, file_bytes: bytes) -> PdfParseResult: ...
 
 
-# Tokenizer
-class Tokenizer(Protocol):
-    def encode(self, text: str, llm: LLMS = LLMS.GPT_5_MINI) -> list[int]: ...
-
-    def count_text(self, text: str, llm: LLMS = LLMS.GPT_5_MINI) -> int: ...
-
-
-class ImageTokenizer(Protocol):
-    def count_image(self, width: int, height: int) -> int: ...
-
-
 # Chunker
 
 

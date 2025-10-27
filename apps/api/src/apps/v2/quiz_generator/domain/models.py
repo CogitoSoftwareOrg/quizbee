@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 
 from src.apps.v2.material_search.domain.models import Material
@@ -75,7 +75,7 @@ class QuizItem:
 @dataclass(frozen=True)
 class QuizAttempt:
     id: str
-    choices: list[int]
+    choices: list[int] = field(default_factory=list)
 
 
 @dataclass(frozen=True)

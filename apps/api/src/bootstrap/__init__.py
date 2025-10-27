@@ -6,6 +6,7 @@ from starlette.middleware.cors import CORSMiddleware
 from mcp.server.fastmcp import FastMCP
 import httpx
 
+from apps.api.src.apps.v2.llm_tools.di import set_llm_tools
 from src.apps.billing import billing_router
 from src.apps.quiz_attempts import init_feedbacker, quiz_attempts_router
 from src.apps.messages import init_explainer, messages_router
@@ -23,11 +24,8 @@ from src.apps.v2.material_search.adapters.in_.http.router import (
 )
 from src.apps.v2.user_auth.di import set_auth_user_app
 from src.apps.v2.material_search.di import (
-    set_tokenizer,
-    set_image_tokenizer,
     set_pdf_parser,
     set_material_repository,
-    set_chunker,
     set_material_search_app,
     aset_indexer,
 )
@@ -57,20 +55,15 @@ async def lifespan(app: FastAPI):
     set_auth_user_app(app)
 
     # V2 MATERIAL SEARCH
-    set_tokenizer(app)
-    set_image_tokenizer(app)
+    set_llm_tools(app)
     set_pdf_parser(app)
     set_material_repository(app, app.state.admin_pb)
-    set_chunker(app, app.state.tokenizer)
-    await aset_indexer(
-        app, app.state.tokenizer, app.state.chunker, app.state.meilisearch_client
-    )
+    await aset_indexer(app, app.state.llm_tools, app.state.meilisearch_client)
     set_material_search_app(
         app,
         app.state.material_repository,
         app.state.pdf_parser,
-        app.state.tokenizer,
-        app.state.image_tokenizer,
+        app.state.llm_tools,
         app.state.indexer,
     )
 

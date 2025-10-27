@@ -1,6 +1,6 @@
 import re
 
-from ...domain.ports import Chunker, Tokenizer
+from ...app.contracts import Chunker, TextTokenizer
 
 
 class SimpleChunker(Chunker):
@@ -16,7 +16,7 @@ class SimpleChunker(Chunker):
 
     def __init__(
         self,
-        tokenizer: Tokenizer,
+        tokenizer: TextTokenizer,
         chunk_size: int = 512,
         overlap: int = 128,
         split_on_sentences: bool = True,

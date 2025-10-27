@@ -18,6 +18,7 @@ class FinilizeCmd:
 @dataclass(frozen=True)
 class GenerateCmd:
     quiz_id: str
+    user_id: str
     mode: GenMode
 
 

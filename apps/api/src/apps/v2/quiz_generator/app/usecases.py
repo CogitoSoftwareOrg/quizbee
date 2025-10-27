@@ -8,6 +8,9 @@ class QuizGeneratorApp(QuizFinilizer, QuizGenerator):
     def __init__(self, quiz_repository: QuizRepository):
         self.quiz_repository = quiz_repository
 
+    async def start(self, cmd: GenerateCmd) -> None:
+        attempt = await self.quiz_repository.create_attempt(cmd.quiz_id, cmd.user_id)
+
     async def generate(self, cmd: GenerateCmd) -> None:
         pass
 

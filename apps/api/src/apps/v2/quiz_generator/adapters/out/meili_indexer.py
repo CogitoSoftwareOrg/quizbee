@@ -9,10 +9,8 @@ from src.lib.clients import langfuse_client
 from src.lib.config import LLMS
 from src.lib.settings import settings
 
-from src.apps.v2.llm_tools.app.contracts import LLMToolsApp
-
-from ...domain.models import Material, MaterialChunk, MaterialKind
-from ...domain.ports import Indexer
+from ...domain.models import Quiz, QuizItem
+from ...domain.ports import Indexer, Chunker, Tokenizer
 
 EMBEDDER_NAME = "materialChunks"
 EMBEDDER_TEMPLATE = "Chunk {{doc.title}}: {{doc.content}}"
@@ -37,14 +35,17 @@ class Doc:
 
 
 class MeiliIndexer(Indexer):
-    def __init__(self, llm_tools: LLMToolsApp, meili: AsyncClient):
-        self.llm_tools = llm_tools
+    def __init__(self, tokenizer: Tokenizer, chunker: Chunker, meili: AsyncClient):
+        self.tokenizer = tokenizer
+        self.chunker = chunker
         self.meili = meili
         self.material_index = meili.index(EMBEDDER_NAME)
 
     @classmethod
-    async def ainit(cls, llm_tools: LLMToolsApp, meili: AsyncClient) -> "MeiliIndexer":
-        instance = cls(llm_tools, meili)
+    async def ainit(
+        cls, tokenizer: Tokenizer, chunker: Chunker, meili: AsyncClient
+    ) -> "MeiliIndexer":
+        instance = cls(tokenizer, chunker, meili)
 
         await instance.material_index.update_embedders(
             Embedders(embedders=meiliEmbeddings)  # pyright: ignore[reportArgumentType]
@@ -65,7 +66,7 @@ class MeiliIndexer(Indexer):
         else:
             raise ValueError("Material has no text")
 
-        chunks = self.llm_tools.chunk(text)
+        chunks = self.chunker.chunk(text)
         docs = []
         for i, chunk in enumerate(chunks):
             docs.append(
@@ -108,7 +109,7 @@ class MeiliIndexer(Indexer):
                     indexed = EMBEDDER_TEMPLATE.replace(
                         "{{doc.title}}", doc["title"]
                     ).replace("{{doc.content}}", doc["content"])
-                    total_tokens += self.llm_tools.count_text(
+                    total_tokens += self.tokenizer.count_text(
                         indexed, LLMS.TEXT_EMBEDDING_3_SMALL
                     )
                     logging.info(f"Indexed chunk {doc['id']}: (tokens: {total_tokens})")

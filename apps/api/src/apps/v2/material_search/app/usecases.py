@@ -4,13 +4,14 @@ import logging
 
 from src.lib.settings import settings
 
+
+from src.apps.v2.llm_tools.app.usecases import LLMToolsApp
+
 from ..domain.models import Material, MaterialFile, MaterialKind, MaterialStatus
 from ..domain.ports import (
     Indexer,
     MaterialRepository,
     PdfParser,
-    Tokenizer,
-    ImageTokenizer,
 )
 from ..domain.errors import TooLargeFileError
 from ..domain.constants import MAX_SIZE_MB, IMAGE_EXTENSIONS
@@ -23,14 +24,12 @@ class MaterialSearchApp(MaterialAdder):
         self,
         material_repository: MaterialRepository,
         pdf_parser: PdfParser,
-        tokenizer: Tokenizer,
-        image_tokenizer: ImageTokenizer,
+        llm_tools: LLMToolsApp,
         indexer: Indexer,
     ):
         self.material_repository = material_repository
         self.pdf_parser = pdf_parser
-        self.tokenizer = tokenizer
-        self.image_tokenizer = image_tokenizer
+        self.llm_tools = llm_tools
         self.indexer = indexer
 
     async def add_material(self, cmd: AddMaterialCmd) -> Material:
@@ -57,11 +56,11 @@ class MaterialSearchApp(MaterialAdder):
                 pdf_data = self.pdf_parser.parse(cmd.file.file_bytes)
                 text = pdf_data.text
                 pdf_images = pdf_data.images
-                text_tokens = self.tokenizer.count_text(text)
+                text_tokens = self.llm_tools.count_text(text)
 
                 image_tokens = 0
                 for image in pdf_images:
-                    image_tokens += self.image_tokenizer.count_image(
+                    image_tokens += self.llm_tools.count_image(
                         image.width, image.height
                     )
                     image_file = MaterialFile(
@@ -89,7 +88,7 @@ class MaterialSearchApp(MaterialAdder):
             else:
                 try:
                     text = cmd.file.file_bytes.decode("utf-8")
-                    material.tokens = self.tokenizer.count_text(text)
+                    material.tokens = self.llm_tools.count_text(text)
                 except UnicodeDecodeError as e:
                     logging.warning(f"Error decoding text: {e}")
 
