@@ -21,7 +21,7 @@ from src.lib.clients import init_meilisearch, ensure_admin_pb, init_admin_pb
 from src.apps.v2.material_search.adapters.in_.http.router import (
     material_search_router as v2_material_search_router,
 )
-from src.apps.v2.user_auth.di import set_auth_guard
+from src.apps.v2.user_auth.di import set_auth_user_app
 from src.apps.v2.material_search.di import (
     set_tokenizer,
     set_image_tokenizer,
@@ -54,7 +54,7 @@ async def lifespan(app: FastAPI):
     init_trimmer(app)
 
     # V2 USER AUTH
-    set_auth_guard(app)
+    set_auth_user_app(app)
 
     # V2 MATERIAL SEARCH
     set_tokenizer(app)
@@ -73,6 +73,8 @@ async def lifespan(app: FastAPI):
         app.state.image_tokenizer,
         app.state.indexer,
     )
+
+    # V2 QUIZ GENERATOR
 
     async with contextlib.AsyncExitStack() as stack:
         await stack.enter_async_context(mcp.session_manager.run())

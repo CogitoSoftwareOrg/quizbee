@@ -3,13 +3,13 @@ from pocketbase.models.dtos import Record
 
 from src.lib.settings import settings
 
-from ...domain.ports import GuardUser
+from ...domain.ports import UserGuarder
 from ...domain.errors import NoTokenError, ForbiddenError
 from ...domain.models import User, Subscription
 
 
-class PBGuardUser(GuardUser):
-    async def __call__(
+class PBGuardUser(UserGuarder):
+    async def guard(
         self, token: str | None = None, need_admin: bool = False
     ) -> tuple[User, Subscription]:
         if not token:

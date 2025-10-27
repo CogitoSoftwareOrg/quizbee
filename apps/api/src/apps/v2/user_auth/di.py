@@ -1,9 +1,11 @@
 from fastapi import FastAPI, Request, Depends
 from typing import Annotated
 
-from .domain.ports import GuardUser
+from .domain.ports import UserGuarder
 from .domain.models import User, Subscription
 from .adapters.out.pb_guard_user import PBGuardUser
+
+from .app.usecases import AuthUserApp
 
 
 def get_user(request: Request) -> User:
@@ -20,12 +22,13 @@ def get_subscription(request: Request) -> Subscription:
 SubscriptionDeps = Annotated[Subscription, Depends(get_subscription)]
 
 
-def set_auth_guard(app: FastAPI):
-    app.state.auth_guard = PBGuardUser()
+def set_auth_user_app(app: FastAPI):
+    guard_user = PBGuardUser()
+    app.state.auth_user_app = AuthUserApp(guard_user)
 
 
-def get_auth_guard(request: Request):
-    return request.app.state.auth_guard
+def get_auth_user_app(request: Request):
+    return request.app.state.auth_user_app
 
 
-AuthGuardDeps = Annotated[GuardUser, Depends(get_auth_guard)]
+AuthUserAppDeps = Annotated[AuthUserApp, Depends(get_auth_user_app)]
