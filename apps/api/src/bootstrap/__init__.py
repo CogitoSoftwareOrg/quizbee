@@ -62,7 +62,9 @@ async def lifespan(app: FastAPI):
     set_pdf_parser(app)
     set_material_repository(app, app.state.admin_pb)
     set_chunker(app, app.state.tokenizer)
-    await aset_indexer(app, app.state.chunker, app.state.meilisearch_client)
+    await aset_indexer(
+        app, app.state.tokenizer, app.state.chunker, app.state.meilisearch_client
+    )
     set_material_search_app(
         app,
         app.state.material_repository,

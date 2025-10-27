@@ -82,8 +82,10 @@ ChunkerDep = Annotated[Chunker, Depends(get_chunker)]
 
 
 # INDEXER
-async def aset_indexer(app: FastAPI, chunker: Chunker, meili: MeilisearchClient):
-    app.state.indexer = await MeiliIndexer.ainit(chunker, meili)
+async def aset_indexer(
+    app: FastAPI, tokenizer: Tokenizer, chunker: Chunker, meili: MeilisearchClient
+):
+    app.state.indexer = await MeiliIndexer.ainit(tokenizer, chunker, meili)
 
 
 def get_indexer(request: Request) -> Indexer:
