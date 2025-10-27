@@ -21,9 +21,7 @@ class SearchCmd:
     limit: int
 
 
-class MaterialAdder(Protocol):
+class MaterialSearchApp(Protocol):
     async def add_material(self, cmd: AddMaterialCmd) -> Material: ...
 
-
-class MaterialSearcher(Protocol):
-    def search(self, cmd: SearchCmd) -> list[Material]: ...
+    async def search(self, cmd: SearchCmd) -> list[Material]: ...

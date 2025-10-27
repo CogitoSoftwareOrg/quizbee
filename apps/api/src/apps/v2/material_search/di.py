@@ -1,5 +1,6 @@
 from typing import Annotated
 from fastapi import Depends, Request, FastAPI
+from meilisearch_python_sdk import AsyncClient
 
 from src.apps.v2.llm_tools.app.usecases import LLMToolsApp
 from src.lib.clients.meilisearch import MeilisearchClient
@@ -16,7 +17,8 @@ from .adapters.out.pb_repository import PBMaterialRepository
 from .adapters.out.fitz_pdf_parser import FitzPDFParser
 from .adapters.out.meili_indexer import MeiliIndexer
 
-from .app.usecases import MaterialSearchApp
+from .app.contracts import MaterialSearchApp
+from .app.usecases import MaterialSearchAppImpl
 
 
 # PDF PARSER
@@ -58,13 +60,18 @@ IndexerDep = Annotated[Indexer, Depends(get_indexer)]
 # APP
 def set_material_search_app(
     app: FastAPI,
-    material_repository: MaterialRepository,
-    pdf_parser: PdfParser,
+    meili: AsyncClient,
+    admin_pb: AdminPB,
     llm_tools: LLMToolsApp,
-    indexer: Indexer,
 ):
-    app.state.material_search_app = MaterialSearchApp(
-        material_repository, pdf_parser, llm_tools, indexer
+    pdf_parser = FitzPDFParser()
+    material_repository = PBMaterialRepository(admin_pb)
+    indexer = MeiliIndexer(llm_tools, meili)
+    app.state.material_search_app = MaterialSearchAppImpl(
+        material_repository=material_repository,
+        pdf_parser=pdf_parser,
+        llm_tools=llm_tools,
+        indexer=indexer,
     )
 
 
