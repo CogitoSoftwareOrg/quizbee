@@ -1,4 +1,4 @@
-from apps.api.src.apps.v2.material_search.domain.ports import ImageTokenizer
+from ...domain.ports import ImageTokenizer
 
 
 class OpenAIImageTokenizer(ImageTokenizer):

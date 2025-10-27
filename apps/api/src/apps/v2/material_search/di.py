@@ -3,10 +3,11 @@ from fastapi import Depends, Request, FastAPI
 
 from src.lib.clients.pb import AdminPB
 
-from .domain.ports import MaterialRepository, PdfParser, Tokenizer
+from .domain.ports import MaterialRepository, PdfParser, Tokenizer, ImageTokenizer
 from .adapters.out.pb_repository import PBMaterialRepository
 from .adapters.out.fitz_pdf_parser import FitzPDFParser
 from .adapters.out.tiktoken_tokenizer import TiktokenTokenizer
+from .adapters.out.openai_image_tokens import OpenAIImageTokenizer
 from .app.usecases import MaterialSearchApp
 
 
@@ -17,6 +18,20 @@ def set_tokenizer(app: FastAPI):
 
 def get_tokenizer(request: Request) -> Tokenizer:
     return request.app.state.tokenizer
+
+
+TokenizerDep = Annotated[Tokenizer, Depends(get_tokenizer)]
+
+
+def set_image_tokenizer(app: FastAPI):
+    app.state.image_tokenizer = OpenAIImageTokenizer()
+
+
+def get_image_tokenizer(request: Request) -> ImageTokenizer:
+    return request.app.state.image_tokenizer
+
+
+ImageTokenizerDep = Annotated[ImageTokenizer, Depends(get_image_tokenizer)]
 
 
 # PDF PARSER
@@ -45,9 +60,15 @@ MaterialRepositoryDep = Annotated[MaterialRepository, Depends(get_material_repos
 
 # APP
 def set_material_search_app(
-    app: FastAPI, material_repository: MaterialRepositoryDep, pdf_parser: PdfParserDep
+    app: FastAPI,
+    material_repository: MaterialRepositoryDep,
+    pdf_parser: PdfParserDep,
+    tokenizer: TokenizerDep,
+    image_tokenizer: ImageTokenizerDep,
 ):
-    app.state.material_search_app = MaterialSearchApp(material_repository, pdf_parser)
+    app.state.material_search_app = MaterialSearchApp(
+        material_repository, pdf_parser, tokenizer, image_tokenizer
+    )
 
 
 def get_material_search_app(request: Request) -> MaterialSearchApp:

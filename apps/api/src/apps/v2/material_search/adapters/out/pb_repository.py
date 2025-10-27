@@ -1,14 +1,9 @@
-import re
-from dataclasses import asdict
 from typing import Any
 from pocketbase import FileUpload, PocketBase
 from pocketbase.models.dtos import Record
 
-from src.lib.utils.case_conversion import camel_to_snake, snake_to_camel
-from src.lib.settings import settings
-
-from ...domain.models import Material, MaterialFile
-from ...domain.ports import MaterialPatch, MaterialRepository
+from ...domain.models import Material, MaterialFile, MaterialKind, MaterialStatus
+from ...domain.ports import MaterialRepository
 
 
 class PBMaterialRepository(MaterialRepository):
@@ -17,65 +12,94 @@ class PBMaterialRepository(MaterialRepository):
 
     async def create(self, create: Material) -> Material:
         dto: dict[str, Any] = {}
+        images_bytes = []
+        file_bytes = b""
+        text_bytes = b""
 
-        create_dict = snake_to_camel(asdict(create))
-        if not isinstance(create_dict, dict):
-            raise ValueError(f"Invalid create dict type: {type(create_dict)}")
+        # Простые поля
+        dto["id"] = create.id
+        dto["title"] = create.title
+        dto["user"] = create.user_id
+        dto["status"] = create.status
+        dto["kind"] = create.kind
+        dto["tokens"] = create.tokens
+        dto["contents"] = create.contents
+        dto["isBook"] = create.is_book
 
-        for key, value in create_dict.items():
-            dto[key] = value
+        # Файлы
+        file_bytes = create.file.file_bytes
+        dto["file"] = FileUpload((create.file.file_name, file_bytes))
 
-            if key == "textFile":
-                url = f"{settings.pb_url}api/files/materials/{dto.get("id")}/{value.file_name}"
-                dto[key] = FileUpload((url, value.file_bytes))
-            elif key == "images":
-                for image in value:
-                    url = f"{settings.pb_url}api/files/materials/{dto.get("id")}/{image.file_name}"
-                    dto[key].append(FileUpload((url, image.file_bytes)))
+        if create.text_file is not None and create.text_file.file_bytes:
+            text_bytes = create.text_file.file_bytes
+            dto["textFile"] = FileUpload((create.text_file.file_name, text_bytes))
+
+        # Изображения
+        if create.images:
+            images_list = []
+            for image in create.images:
+                images_bytes.append(image.file_bytes)
+                images_list.append((image.file_name, image.file_bytes))
+            dto["images"] = FileUpload(*images_list)
 
         res = await self.pb.collection("materials").create(dto)
 
-        return self._to_material(res)
+        return self._to_material(res, file_bytes, text_bytes, images_bytes)
 
-    async def update(self, m_id: str, upd: MaterialPatch) -> Material:
-        dto = {}
+    async def update(self, upd: Material) -> Material:
+        dto: dict[str, Any] = {}
 
-        upd_dict = snake_to_camel(asdict(upd))
-        if not isinstance(upd_dict, dict):
-            raise ValueError(f"Invalid upd dict type: {type(upd_dict)}")
+        # Обновляем только простые поля без bytes
+        dto["title"] = upd.title
+        dto["user"] = upd.user_id
+        dto["status"] = upd.status
+        dto["kind"] = upd.kind
+        dto["tokens"] = upd.tokens
+        dto["contents"] = upd.contents
+        dto["isBook"] = upd.is_book
 
-        for key, value in upd_dict.items():
-            if key == "textFile":
-                url = f"{settings.pb_url}api/files/materials/{m_id}/{value.file_name}"
-                dto[key] = FileUpload((url, value.file_bytes))
-            elif key == "images":
-                for image in value:
-                    url = (
-                        f"{settings.pb_url}api/files/materials/{m_id}/{image.file_name}"
-                    )
-                    dto[key].append(FileUpload((url, image.file_bytes)))
+        # Если нужно обновить textFile
+        if upd.text_file is not None and upd.text_file.file_bytes:
+            dto["textFile"] = FileUpload(
+                (upd.text_file.file_name, upd.text_file.file_bytes)
+            )
 
-        rec = await self.pb.collection("materials").update(m_id, dto)
+        rec = await self.pb.collection("materials").update(upd.id, dto)
         return self._to_material(rec)
 
-    def _to_material(self, rec: Record) -> Material:
+    def _to_material(
+        self,
+        rec: Record,
+        file_bytes: bytes = b"",
+        text_bytes: bytes = b"",
+        images_bytes: list[bytes] | None = None,
+    ) -> Material:
         return Material(
-            id=rec.get("id"),
+            id=rec.get("id") or "",
             title=rec.get("title") or "",
             user_id=rec.get("user") or "",
-            status=rec.get("status") or "",
-            kind=rec.get("kind") or "",
+            status=MaterialStatus(rec.get("status") or ""),
+            kind=MaterialKind(rec.get("kind") or ""),
             tokens=rec.get("tokens") or 0,
             file=MaterialFile(
                 file_name=rec.get("file") or "",
+                file_bytes=file_bytes,
             ),
             images=[
                 MaterialFile(
                     file_name=image,
+                    file_bytes=image_bytes,
                 )
-                for image in rec.get("images", [])
+                for image, image_bytes in zip(rec.get("images", []), images_bytes or [])
             ],
-            text_file=MaterialFile(
-                file_name=rec.get("textFile") or "",
+            contents=rec.get("contents") or "",
+            is_book=rec.get("isBook") or False,
+            text_file=(
+                MaterialFile(
+                    file_name=rec.get("textFile") or "",
+                    file_bytes=text_bytes,
+                )
+                if rec.get("textFile")
+                else None
             ),
         )

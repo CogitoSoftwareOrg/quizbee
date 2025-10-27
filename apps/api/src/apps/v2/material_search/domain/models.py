@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+
+from src.lib.utils import genID
 
 
 class MaterialKind(StrEnum):
@@ -10,9 +11,9 @@ class MaterialKind(StrEnum):
 
 class MaterialStatus(StrEnum):
     UPLOADED = "uploaded"
-    PROCESSING = "processing"
-    PROCESSED = "processed"
-    ERROR = "error"
+    USED = "used"
+    INDEXING = "indexing"
+    INDEXED = "indexed"
 
 
 @dataclass(frozen=True)
@@ -25,12 +26,34 @@ class MaterialFile:
 class Material:
     title: str
     user_id: str
-    status: str
-    kind: str
+    status: MaterialStatus
+    kind: MaterialKind
     tokens: int
     file: MaterialFile
     images: list[MaterialFile]
     contents: str  # JSON
+    id: str
     is_book: bool = False
     text_file: MaterialFile | None = None
-    id: str | None = None
+
+    # def create(
+    #     self,
+    #     user_id: str,
+    #     title: str,
+    #     kind: MaterialKind,
+    #     tokens: int,
+    #     file: MaterialFile,
+    #     images: list[MaterialFile],
+    #     contents: str,
+    # ) -> "Material":
+    #     return Material(
+    #         id=genID(),
+    #         title=title,
+    #         user_id=user_id,
+    #         status=MaterialStatus.UPLOADED,
+    #         kind=kind,
+    #         tokens=tokens,
+    #         file=file,
+    #         images=images,
+    #         contents=contents,
+    #     )

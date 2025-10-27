@@ -18,6 +18,18 @@ from src.apps.quizes import (
 from src.apps.materials import materials_router
 from src.lib.clients import init_meilisearch, ensure_admin_pb, init_admin_pb
 
+from src.apps.v2.material_search.adapters.in_.http.router import (
+    material_search_router as v2_material_search_router,
+)
+from src.apps.v2.user_auth.di import set_auth_guard
+from src.apps.v2.material_search.di import (
+    set_tokenizer,
+    set_image_tokenizer,
+    set_pdf_parser,
+    set_material_repository,
+    set_material_search_app,
+)
+
 from .cors import cors_middleware
 
 mcp = FastMCP("MCP", stateless_http=True)
@@ -31,11 +43,28 @@ async def lifespan(app: FastAPI):
     app.state.http = httpx.AsyncClient()
     init_admin_pb(app)
     await init_meilisearch(app)
+
+    # PYDANTIC AI
     init_explainer(app)
     init_feedbacker(app)
     init_quizer(app)
     init_summarizer(app)
     init_trimmer(app)
+
+    # V2
+    set_auth_guard(app)
+
+    set_tokenizer(app)
+    set_image_tokenizer(app)
+    set_pdf_parser(app)
+    set_material_repository(app, app.state.admin_pb)
+    set_material_search_app(
+        app,
+        app.state.material_repository,
+        app.state.pdf_parser,
+        app.state.tokenizer,
+        app.state.image_tokenizer,
+    )
 
     async with contextlib.AsyncExitStack() as stack:
         await stack.enter_async_context(mcp.session_manager.run())
@@ -61,6 +90,8 @@ def create_app():
     app.include_router(messages_router)
     app.include_router(materials_router)
     app.include_router(quiz_attempts_router)
+
+    app.include_router(v2_material_search_router)
 
     cors_middleware(app)
 

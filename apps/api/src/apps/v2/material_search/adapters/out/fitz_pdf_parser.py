@@ -4,7 +4,7 @@ from typing import Any
 import logging
 import re
 
-from ...domain.ports import PdfParser
+from ...domain.ports import PdfParser, PdfParseResult, PdfImage
 
 
 class FitzPDFParser(PdfParser):
@@ -18,7 +18,7 @@ class FitzPDFParser(PdfParser):
         self.min_height = min_height
         self.min_file_size = min_file_size
 
-    def parse(self, file_bytes: bytes) -> dict[str, Any]:
+    def parse(self, file_bytes: bytes) -> PdfParseResult:
         """
         Извлекает текст и изображения из PDF-файла, фильтруя слишком маленькие изображения.
 
@@ -52,7 +52,7 @@ class FitzPDFParser(PdfParser):
             page_count = len(doc)
             logging.info(f"PDF открыт. Количество страниц: {page_count}")
 
-            images = []
+            images: list[PdfImage] = []
             image_positions = {}
             is_book_doc = self.is_book(doc)
 
@@ -110,17 +110,16 @@ class FitzPDFParser(PdfParser):
                         marker = f"{{quizbee_unique_image_{global_image_counter}}}"
 
                         images.append(
-                            {
-                                "bytes": img_bytes,
-                                "ext": "png",
-                                "width": pix.width,  # type: ignore
-                                "height": pix.height,  # type: ignore
-                                "page": page_num + 1,
-                                "index": 0,
-                                "marker": marker,
-                                "size": len(img_bytes),
-                                "is_full_page": True,
-                            }
+                            PdfImage(
+                                bytes=img_bytes,
+                                ext="png",
+                                width=pix.width,  # type: ignore
+                                height=pix.height,  # type: ignore
+                                page=page_num + 1,
+                                index=0,
+                                marker=marker,
+                                file_name=f"img_p{page_num + 1}_0.png",
+                            )
                         )
 
                         image_positions[page_num] = [(0, marker)]
@@ -259,16 +258,16 @@ class FitzPDFParser(PdfParser):
                             marker = f"{{quizbee_unique_image_{global_image_counter}}}"
 
                             images.append(
-                                {
-                                    "bytes": img_bytes,
-                                    "ext": "png",
-                                    "width": pix.width,  # type: ignore
-                                    "height": pix.height,  # type: ignore
-                                    "page": page_num + 1,
-                                    "index": len(images) + 1,
-                                    "marker": marker,
-                                    "size": len(img_bytes),
-                                }
+                                PdfImage(
+                                    bytes=img_bytes,
+                                    ext="png",
+                                    width=pix.width,  # type: ignore
+                                    height=pix.height,  # type: ignore
+                                    page=page_num + 1,
+                                    index=len(images) + 1,
+                                    marker=marker,
+                                    file_name=f"img_p{page_num + 1}_{len(images) + 1}.png",
+                                )
                             )
 
                             page_img_positions.append((rect.y0, marker))
@@ -310,18 +309,16 @@ class FitzPDFParser(PdfParser):
                             marker = f"{{quizbee_unique_image_{global_image_counter}}}"
 
                             images.append(
-                                {
-                                    "bytes": img_bytes,
-                                    "ext": "png",
-                                    "width": pix.width,  # type: ignore
-                                    "height": pix.height,  # type: ignore
-                                    "page": page_num + 1,
-                                    "index": len(images) + 1,
-                                    "marker": marker,
-                                    "size": len(img_bytes),
-                                    "is_grouped": True,
-                                    "group_size": len(group),
-                                }
+                                PdfImage(
+                                    bytes=img_bytes,
+                                    ext="png",
+                                    width=pix.width,  # type: ignore
+                                    height=pix.height,  # type: ignore
+                                    page=page_num + 1,
+                                    index=len(images) + 1,
+                                    marker=marker,
+                                    file_name=f"img_p{page_num + 1}_{len(images) + 1}.png",
+                                )
                             )
 
                             page_img_positions.append((min_y, marker))
@@ -399,12 +396,12 @@ class FitzPDFParser(PdfParser):
                 f"скриншотов_страниц={stats['full_page_screenshots']}"
             )
 
-            return {
-                "text": md_text,
-                "images": images,
-                "contents": toc_items,
-                "isBook": is_book_doc,
-            }
+            return PdfParseResult(
+                text=md_text,
+                images=images,
+                contents=toc_items,
+                is_book=is_book_doc,
+            )
 
         except Exception as e:
             raise Exception(f"Ошибка при парсинге PDF файла: {str(e)}")

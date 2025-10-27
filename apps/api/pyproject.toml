@@ -28,6 +28,7 @@ dependencies = [
     "meilisearch-python-sdk>=4.10.1",
     "fastapi-limiter>=0.1.6",
     "pytest>=8.4.2",
+    "nanoid>=2.0.0",
 ]
 
 [tool.hatch.build.targets.wheel]

@@ -8,23 +8,35 @@ from .models import Material, MaterialFile
 
 
 # Material Repository
-@dataclass
-class MaterialPatch:
-    title: str | None = None
-    text_file: MaterialFile | None = None
-
-
 class MaterialRepository(Protocol):
     async def create(self, create: Material) -> Material: ...
 
-    async def update(self, m_id: str, upd: MaterialPatch) -> Material: ...
+    async def update(self, upd: Material) -> Material: ...
 
 
 # PDF Parser
+@dataclass
+class PdfImage:
+    width: int
+    height: int
+    page: int
+    index: int
+    ext: str
+    bytes: bytes
+    file_name: str
+    marker: str | None = None
+
+
+@dataclass
+class PdfParseResult:
+    text: str
+    images: list[PdfImage]
+    contents: list[dict[str, Any]]
+    is_book: bool
 
 
 class PdfParser(Protocol):
-    def parse(self, material: bytes) -> dict[str, Any]: ...
+    def parse(self, file_bytes: bytes) -> PdfParseResult: ...
 
 
 # Tokenizer

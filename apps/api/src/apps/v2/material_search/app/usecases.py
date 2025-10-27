@@ -4,9 +4,8 @@ import logging
 
 from src.lib.settings import settings
 
-from ..domain.models import Material, MaterialFile
+from ..domain.models import Material, MaterialFile, MaterialKind, MaterialStatus
 from ..domain.ports import (
-    MaterialPatch,
     MaterialRepository,
     PdfParser,
     Tokenizer,
@@ -37,7 +36,7 @@ class MaterialSearchApp:
         self.tokenizer = tokenizer
         self.image_tokenizer = image_tokenizer
 
-    async def add_material(self, cmd: AddMaterialCmd):
+    async def add_material(self, cmd: AddMaterialCmd) -> Material:
         file = cmd.file
         title = cmd.title
         material_id = cmd.material_id
@@ -53,39 +52,40 @@ class MaterialSearchApp:
         text = ""
         pdf_images = []
         material = Material(
+            id=material_id,
             file=file,
             images=[],
             title=title,
             user_id=user_id,
-            status="uploaded",
-            kind="simple",
+            status=MaterialStatus.UPLOADED,
+            kind=MaterialKind.SIMPLE,
             tokens=0,
             contents="",
         )
         if file.file_name.lower().endswith(".pdf"):
             try:
-                material.kind = "complex"
+                material.kind = MaterialKind.COMPLEX
 
                 pdf_data = self.pdf_parser.parse(file.file_bytes)
-                text = pdf_data.get("text") or ""
-                pdf_images = pdf_data.get("images") or []
+                text = pdf_data.text
+                pdf_images = pdf_data.images
                 text_tokens = self.tokenizer.count_text(text)
 
                 image_tokens = 0
                 for image in pdf_images:
                     image_tokens += self.image_tokenizer.count_image(
-                        image["width"], image["height"]
+                        image.width, image.height
                     )
 
-                    image = MaterialFile(
-                        file_name=f"{material_id}_p{image['page']}_img{image['index']}.{image['ext']}",
-                        file_bytes=image["bytes"],
+                    image_file = MaterialFile(
+                        file_name=f"{material_id}_p{image.page}_img{image.index}.{image.ext}",
+                        file_bytes=image.bytes,
                     )
-                    material.images.append(image)
+                    material.images.append(image_file)
 
                 material.tokens = text_tokens + image_tokens
-                material.contents = json.dumps(pdf_data.get("contents", []))
-                material.is_book = pdf_data.get("isBook", False)
+                material.contents = json.dumps(pdf_data.contents)
+                material.is_book = pdf_data.is_book
 
             except Exception as e:
                 logging.warning(f"Error parsing PDF: {e}")
@@ -105,21 +105,14 @@ class MaterialSearchApp:
         if material.kind == "complex" and len(text) > 0:
             marker_to_url = {}
             for i, image in enumerate(pdf_images):
-                marker = image.get("marker")
-                if marker and i < len(pdf_images):
-                    image_url = f"{settings.pb_url}api/files/materials/{material.id}/{image['file_name']}"
+                marker = image.marker
+                if marker and i < len(material.images):
+                    image_file_name = material.images[i].file_name
+                    image_url = f"{settings.pb_url}api/files/materials/{material.id}/{image_file_name}"
                     marker_to_url[marker] = image_url
             for marker, url in marker_to_url.items():
                 text = text.replace(marker, f"\n{{quizbee_unique_image_url:{url}}}\n")
 
-        text_filename = "full_text.txt"
-        text_bytes = text.encode("utf-8")
-        material = await self.material_repository.update(
-            material.id or "",
-            MaterialPatch(
-                text_file=MaterialFile(
-                    file_name=text_filename,
-                    file_bytes=text_bytes,
-                )
-            ),
-        )
+        material = await self.material_repository.update(material)
+
+        return material
