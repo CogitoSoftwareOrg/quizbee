@@ -6,3 +6,6 @@ stripe:
 
 dev:
 	uv run python -m uvicorn src.bootstrap:app --reload --host 0.0.0.0
+
+debug:
+	uv run python -m uvicorn src.bootstrap:app --reload --host 0.0.0.0 --log-level debug

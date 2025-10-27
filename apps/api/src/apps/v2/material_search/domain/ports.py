@@ -48,3 +48,16 @@ class Tokenizer(Protocol):
 
 class ImageTokenizer(Protocol):
     def count_image(self, width: int, height: int) -> int: ...
+
+
+# Chunker
+
+
+class Chunker(Protocol):
+    def chunk(self, text: str) -> list[str]: ...
+
+
+# Indexer
+class Indexer(Protocol):
+    async def index(self, material: Material) -> None: ...
+

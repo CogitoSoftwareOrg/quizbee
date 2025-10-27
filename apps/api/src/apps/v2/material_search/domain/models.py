@@ -24,6 +24,7 @@ class MaterialFile:
 
 @dataclass(frozen=False)
 class Material:
+    id: str
     title: str
     user_id: str
     status: MaterialStatus
@@ -32,7 +33,6 @@ class Material:
     file: MaterialFile
     images: list[MaterialFile]
     contents: str  # JSON
-    id: str
     is_book: bool = False
     text_file: MaterialFile | None = None
 

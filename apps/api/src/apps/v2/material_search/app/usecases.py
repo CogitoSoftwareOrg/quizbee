@@ -6,6 +6,7 @@ from src.lib.settings import settings
 
 from ..domain.models import Material, MaterialFile, MaterialKind, MaterialStatus
 from ..domain.ports import (
+    Indexer,
     MaterialRepository,
     PdfParser,
     Tokenizer,
@@ -14,36 +15,27 @@ from ..domain.ports import (
 from ..domain.errors import TooLargeFileError
 from ..domain.constants import MAX_SIZE_MB, IMAGE_EXTENSIONS
 
-
-@dataclass
-class AddMaterialCmd:
-    file: MaterialFile
-    title: str
-    material_id: str
-    user_id: str
+from .contracts import MaterialAdder, AddMaterialCmd
 
 
-class MaterialSearchApp:
+class MaterialSearchApp(MaterialAdder):
     def __init__(
         self,
         material_repository: MaterialRepository,
         pdf_parser: PdfParser,
         tokenizer: Tokenizer,
         image_tokenizer: ImageTokenizer,
+        indexer: Indexer,
     ):
         self.material_repository = material_repository
         self.pdf_parser = pdf_parser
         self.tokenizer = tokenizer
         self.image_tokenizer = image_tokenizer
+        self.indexer = indexer
 
     async def add_material(self, cmd: AddMaterialCmd) -> Material:
-        file = cmd.file
-        title = cmd.title
-        material_id = cmd.material_id
-        user_id = cmd.user_id
-
         # Validate file size
-        file_size_mb = len(file.file_bytes) / (1024 * 1024)
+        file_size_mb = len(cmd.file.file_bytes) / (1024 * 1024)
         if file_size_mb > MAX_SIZE_MB:
             raise TooLargeFileError(file_size_mb)
 
@@ -52,21 +44,21 @@ class MaterialSearchApp:
         text = ""
         pdf_images = []
         material = Material(
-            id=material_id,
-            file=file,
+            id=cmd.material_id,
+            file=cmd.file,
             images=[],
-            title=title,
-            user_id=user_id,
+            title=cmd.title,
+            user_id=cmd.user_id,
             status=MaterialStatus.UPLOADED,
             kind=MaterialKind.SIMPLE,
             tokens=0,
             contents="",
         )
-        if file.file_name.lower().endswith(".pdf"):
+        if cmd.file.file_name.lower().endswith(".pdf"):
             try:
                 material.kind = MaterialKind.COMPLEX
 
-                pdf_data = self.pdf_parser.parse(file.file_bytes)
+                pdf_data = self.pdf_parser.parse(cmd.file.file_bytes)
                 text = pdf_data.text
                 pdf_images = pdf_data.images
                 text_tokens = self.tokenizer.count_text(text)
@@ -76,9 +68,8 @@ class MaterialSearchApp:
                     image_tokens += self.image_tokenizer.count_image(
                         image.width, image.height
                     )
-
                     image_file = MaterialFile(
-                        file_name=f"{material_id}_p{image.page}_img{image.index}.{image.ext}",
+                        file_name=f"{cmd.material_id}_p{image.page}_img{image.index}.{image.ext}",
                         file_bytes=image.bytes,
                     )
                     material.images.append(image_file)
@@ -87,15 +78,21 @@ class MaterialSearchApp:
                 material.contents = json.dumps(pdf_data.contents)
                 material.is_book = pdf_data.is_book
 
+                text_bytes = text.encode("utf-8")
+                material.text_file = MaterialFile(
+                    file_name=f"{cmd.material_id}_text.txt",
+                    file_bytes=text_bytes,
+                )
+
             except Exception as e:
                 logging.warning(f"Error parsing PDF: {e}")
         else:
-            is_image = file.file_name.lower().endswith(IMAGE_EXTENSIONS)
+            is_image = cmd.file.file_name.lower().endswith(IMAGE_EXTENSIONS)
             if is_image:
                 ...  # TODO: implement image parsing
             else:
                 try:
-                    text = file.file_bytes.decode("utf-8")
+                    text = cmd.file.file_bytes.decode("utf-8")
                     material.tokens = self.tokenizer.count_text(text)
                 except UnicodeDecodeError as e:
                     logging.warning(f"Error decoding text: {e}")
@@ -113,6 +110,11 @@ class MaterialSearchApp:
             for marker, url in marker_to_url.items():
                 text = text.replace(marker, f"\n{{quizbee_unique_image_url:{url}}}\n")
 
+        material.status = MaterialStatus.INDEXING
+        material = await self.material_repository.update(material)
+
+        await self.indexer.index(material)
+        material.status = MaterialStatus.INDEXED
         material = await self.material_repository.update(material)
 
         return material

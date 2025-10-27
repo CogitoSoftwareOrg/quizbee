@@ -27,7 +27,9 @@ from src.apps.v2.material_search.di import (
     set_image_tokenizer,
     set_pdf_parser,
     set_material_repository,
+    set_chunker,
     set_material_search_app,
+    aset_indexer,
 )
 
 from .cors import cors_middleware
@@ -51,19 +53,23 @@ async def lifespan(app: FastAPI):
     init_summarizer(app)
     init_trimmer(app)
 
-    # V2
+    # V2 USER AUTH
     set_auth_guard(app)
 
+    # V2 MATERIAL SEARCH
     set_tokenizer(app)
     set_image_tokenizer(app)
     set_pdf_parser(app)
     set_material_repository(app, app.state.admin_pb)
+    set_chunker(app, app.state.tokenizer)
+    await aset_indexer(app, app.state.chunker, app.state.meilisearch_client)
     set_material_search_app(
         app,
         app.state.material_repository,
         app.state.pdf_parser,
         app.state.tokenizer,
         app.state.image_tokenizer,
+        app.state.indexer,
     )
 
     async with contextlib.AsyncExitStack() as stack:

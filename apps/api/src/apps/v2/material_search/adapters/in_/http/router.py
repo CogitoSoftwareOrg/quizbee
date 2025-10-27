@@ -19,7 +19,7 @@ material_search_router = APIRouter(
 )
 
 
-@material_search_router.post("/", status_code=201)
+@material_search_router.post("", status_code=201)
 async def add_material(
     material_search_app: MaterialSearchAppDep,
     user: User,
