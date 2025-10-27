@@ -1,4 +1,5 @@
-from src.lib.clients.tiktoken import ENCODERS
+import tiktoken
+
 from src.lib.config import LLMS
 
 
@@ -43,7 +44,10 @@ def count_text_tokens(concatenated_texts: str) -> int:
         Количество токенов в тексте
     """
     try:
-        tokens = ENCODERS[LLMS.GPT_5_MINI].encode(concatenated_texts)
+        encoder = tiktoken.encoding_for_model(
+            LLMS.GPT_5_MINI
+        )  # pyright: ignore[reportUndefinedVariable]
+        tokens = encoder.encode(concatenated_texts)
         return len(tokens)
     except Exception as e:
         raise Exception(f"Ошибка при подсчете токенов: {str(e)}")

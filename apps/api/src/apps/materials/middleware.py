@@ -1,10 +1,10 @@
 from fastapi import HTTPException, Request
 
-from src.lib.clients import AdminPB
+from src.lib.clients import AdminPBDeps
 from src.apps.auth.middleware import User
 
 
-async def user_owns_materials(request: Request, admin_pb: AdminPB, user: User):
+async def user_owns_materials(request: Request, admin_pb: AdminPBDeps, user: User):
     dto = await request.json()
     user_id = user.get("id", "")
     material_ids = dto.get("material_ids", [])

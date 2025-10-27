@@ -2,7 +2,7 @@ from enum import StrEnum
 import logging
 import httpx
 from pocketbase.models.dtos import Record
-from src.lib.clients import AdminPB, HTTPAsyncClient, langfuse_client
+from src.lib.clients import AdminPBDeps as AdminPB, HTTPAsyncClient, langfuse_client
 from src.lib.utils import cache_key, update_span_with_result
 from src.lib.ai.models import QuizerDeps
 

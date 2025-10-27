@@ -4,6 +4,9 @@ import stripe
 
 from src.lib.settings import settings
 
+stripe_client = stripe
+stripe_client.api_key = settings.stripe_api_key
+
 
 def set_stripe(app: FastAPI):
     app.state.stripe = stripe.StripeClient(api_key=settings.stripe_api_key)

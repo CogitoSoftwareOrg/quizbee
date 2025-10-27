@@ -2,7 +2,12 @@ import logging
 import json
 
 from src.lib.ai.models import SummarizerDeps
-from src.lib.clients import AdminPB, HTTPAsyncClient, MeilisearchClient, langfuse_client
+from src.lib.clients import (
+    AdminPBDeps,
+    langfuse_client,
+    HTTPAsyncClient,
+    MeiliDeps as MeilisearchClient,
+)
 from src.lib.utils import cache_key, update_span_with_result
 
 from src.apps.materials.utils import load_file_text
@@ -11,7 +16,7 @@ from .agent import SUMMARIZER_COSTS, SUMMARIZER_LLM, Summarizer
 
 
 async def summary_and_index(
-    admin_pb: AdminPB,
+    admin_pb: AdminPBDeps,
     summarizer_agent: Summarizer,
     http: HTTPAsyncClient,
     meilisearch_client: MeilisearchClient,

@@ -16,7 +16,7 @@ from .pdf_parser import parse_pdf
 from .important_sentences import summarize_to_fixed_tokens
 from src.apps.auth import User
 from src.apps.auth import User, auth_user
-from src.lib.clients import AdminPB
+from src.lib.clients import AdminPBDeps as AdminPB
 from src.lib.settings import settings
 
 materials_router = APIRouter(

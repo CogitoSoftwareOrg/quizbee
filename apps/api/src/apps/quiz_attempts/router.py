@@ -6,7 +6,12 @@ import httpx
 from src.apps.auth import User, auth_user
 from src.apps.billing import load_subscription, Subscription
 from src.apps.quizes.ai import summary_and_index
-from src.lib.clients import AdminPB, langfuse_client, HTTPAsyncClient, MeilisearchClient
+from src.lib.clients import (
+    AdminPBDeps as AdminPB,
+    langfuse_client,
+    HTTPAsyncClient,
+    MeiliDeps as MeilisearchClient,
+)
 from src.lib.utils import cache_key, update_span_with_result
 
 from src.apps.quizes.ai.summarizer.agent import Summarizer

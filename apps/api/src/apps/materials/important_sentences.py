@@ -1,12 +1,17 @@
 import fitz  # PyMuPDF
 import re
+import tiktoken
 import math
 import time
 from typing import Union
 
-from src.lib.clients.tiktoken import ENCODERS
+
 from src.lib.config import LLMS
 
+
+encoder = tiktoken.encoding_for_model(
+    LLMS.GPT_5_MINI
+)  # pyright: ignore[reportUndefinedVariable]
 # -----------------------------------------------------------------------------
 # БЛОК КОДА ДЛЯ СУММАРИЗАЦИИ
 # -----------------------------------------------------------------------------
@@ -67,7 +72,7 @@ def count_tokens(text: str) -> int:
     Returns:
         Количество токенов
     """
-    tokens = ENCODERS[LLMS.GPT_5_MINI].encode(text)
+    tokens = encoder.encode(text)
     return len(tokens)
 
 

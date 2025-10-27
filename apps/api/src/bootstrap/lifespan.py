@@ -1,11 +1,8 @@
+from fastapi import FastAPI
 import logging
 import contextlib
 from contextlib import asynccontextmanager
-from fastapi import Depends, FastAPI, HTTPException, Request
 from meilisearch_python_sdk import AsyncClient
-from pocketbase import PocketBase
-from starlette.middleware.cors import CORSMiddleware
-from mcp.server.fastmcp import FastMCP
 import httpx
 
 from src.lib.settings import settings
@@ -13,21 +10,16 @@ from src.lib.settings import settings
 from src.apps.v2.llm_tools.di import set_llm_tools
 from src.apps.v2.quiz_generator.di import set_quiz_generator_app
 
-from src.apps.billing import billing_router
-from src.apps.quiz_attempts import init_feedbacker, quiz_attempts_router
-from src.apps.messages import init_explainer, messages_router
+from src.apps.quiz_attempts import init_feedbacker
+from src.apps.messages import init_explainer
 from src.apps.quizes import (
     init_quizer,
     init_summarizer,
     init_trimmer,
-    quizes_router,
 )
-from src.apps.materials import materials_router
-from src.lib.clients import ensure_admin_pb
 
-from src.apps.v2.material_search.adapters.in_.http.router import (
-    material_search_router as v2_material_search_router,
-)
+from src.lib.clients import set_admin_pb, set_langfuse
+
 from src.apps.v2.user_auth.di import set_auth_user_app
 
 from src.apps.v2.material_search.di import (
@@ -37,6 +29,10 @@ from src.apps.v2.material_search.adapters.out.pb_repository import PBMaterialRep
 from src.apps.v2.material_search.adapters.out.fitz_pdf_parser import FitzPDFParser
 from src.apps.v2.material_search.adapters.out.meili_indexer import MeiliIndexer
 
+from src.lib.clients import set_admin_pb
+
+from .mcp import mcp
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -44,7 +40,8 @@ async def lifespan(app: FastAPI):
     logging.info("Starting Quizbee API server")
 
     http = httpx.AsyncClient()
-    admin_pb = PocketBase(settings.pb_url)
+    set_admin_pb(app)
+    set_langfuse(app)
     meili = AsyncClient(settings.meili_url, settings.meili_master_key)
 
     # PYDANTIC AI
@@ -61,7 +58,7 @@ async def lifespan(app: FastAPI):
     set_auth_user_app(app)
 
     # V2 MATERIAL SEARCH
-    material_repository = PBMaterialRepository(admin_pb)
+    material_repository = PBMaterialRepository(app.state.admin_pb)
     pdf_parser = FitzPDFParser()
     indexer = MeiliIndexer(app.state.llm_tools, meili)
     set_material_search_app(
@@ -73,7 +70,7 @@ async def lifespan(app: FastAPI):
     )
 
     # V2 QUIZ GENERATOR
-    set_quiz_generator_app(app, admin_pb=admin_pb, http=http)
+    set_quiz_generator_app(app, admin_pb=app.state.admin_pb, http=http)
 
     async with contextlib.AsyncExitStack() as stack:
         await stack.enter_async_context(mcp.session_manager.run())

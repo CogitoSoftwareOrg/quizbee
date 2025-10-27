@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from starlette.responses import JSONResponse
 
 from src.apps.auth import auth_user, User
-from src.lib.clients import AdminPB, stripe_client
+from src.lib.clients import AdminPBDeps, stripe_client
 from src.lib.settings import settings
 from src.lib.config import STRIPE_PRICES_MAP
 
@@ -15,7 +15,7 @@ billing_router = APIRouter(prefix="/billing", tags=["billing"])
 
 
 @billing_router.post("/stripe/webhook", status_code=200)
-async def stripe_webhook(request: Request, admin_pb: AdminPB):
+async def stripe_webhook(request: Request, admin_pb: AdminPBDeps):
     # Verify the signature
     raw = await request.body()
     sig_header = request.headers.get("stripe-signature")

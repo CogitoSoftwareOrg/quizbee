@@ -4,6 +4,7 @@ import re
 from meilisearch_python_sdk.models.search import Hybrid
 from pocketbase import FileUpload
 from pocketbase.models.dtos import Record
+import tiktoken
 
 from src.apps.materials.utils import (
     load_file_text,
@@ -14,15 +15,16 @@ from src.apps.quizes.ai.trimmer import trim_content, Trimmer
 from src.lib.ai.models import DynamicConfig
 from src.lib.clients import (
     HTTPAsyncClient,
-    MeilisearchClient,
-    AdminPB,
-    ENCODERS,
+    MeiliDeps as MeilisearchClient,
+    AdminPBDeps as AdminPB,
     langfuse_client,
 )
 from src.lib.config import LLMS
 
 from .generate_patch import GenMode, generate_oneshot, generate_quiz_task
 from .agent import Quizer
+
+ENCODER = tiktoken.encoding_for_model(LLMS.GPT_5_MINI)
 
 
 def filter_content_by_page_ranges(content: str, page_ranges: list) -> str:
@@ -148,7 +150,7 @@ async def start_generating_quiz_task(
     concatenated_texts = "\n\n".join(formatted_texts)
 
     # Check total token count
-    tokens = ENCODERS[LLMS.GPT_5_MINI].encode(concatenated_texts)
+    tokens = ENCODER.encode(concatenated_texts)
     total_tokens = len(tokens)
 
     logging.info(f"Total tokens from all materials: {total_tokens}")
@@ -259,7 +261,7 @@ async def start_generating_quiz_task(
             )
         concatenated_texts = "\n\n".join(formatted_texts)
 
-        tokens = ENCODERS[LLMS.GPT_5_MINI].encode(concatenated_texts)
+        tokens = ENCODER.encode(concatenated_texts)
         total_tokens = len(tokens)
         logging.info(f"After trimming: {total_tokens} tokens")
 
@@ -273,7 +275,7 @@ async def start_generating_quiz_task(
             summary_token_count=6000,
         )
         # Recalculate tokens after summarization
-        tokens = ENCODERS[LLMS.GPT_5_MINI].encode(concatenated_texts[0])
+        tokens = ENCODER.encode(concatenated_texts[0])
         logging.info(f"After summarization: {len(tokens)} tokens")
     elif total_tokens > 6000:
         concatenated_texts = summarize_to_fixed_tokens(
@@ -291,7 +293,7 @@ async def start_generating_quiz_task(
 
     # Create estimated summary from brief summary (without context)
     estimated_summary = concatenated_texts[1]
-    estimated_summary_tokens = ENCODERS[LLMS.GPT_5_MINI].encode(estimated_summary)
+    estimated_summary_tokens = ENCODER.encode(estimated_summary)
     logging.info(
         f"Estimated summary: {len(estimated_summary)} chars, {len(estimated_summary_tokens)} tokens"
     )

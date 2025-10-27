@@ -5,7 +5,7 @@ from datetime import timezone
 from fastapi import HTTPException
 from pocketbase.models.dtos import Record
 
-from src.lib.clients import AdminPB
+from src.lib.clients import AdminPBDeps
 from src.lib.config import STRIPE_TARIFS_MAP, STRIPE_MONTHLY_LIMITS_MAP
 
 
@@ -52,7 +52,7 @@ def _maybe_reset_usage_on_period_change(sub: Record, new_cp_start_ts: int):
 
 
 async def stripe_subscription_to_pb(
-    admin_pb: AdminPB, sub: dict, user_id: str | None = None
+    admin_pb: AdminPBDeps, sub: dict, user_id: str | None = None
 ):
     stripe_subscription_id = sub["id"]
     status = sub.get("status")
@@ -101,7 +101,7 @@ async def stripe_subscription_to_pb(
     return existing.get("id", "")
 
 
-async def ensure_active_and_maybe_reset(admin_pb, sub: Record):
+async def ensure_active_and_maybe_reset(admin_pb: AdminPBDeps, sub: Record):
     allowed = {"active", "trialing", "past_due"}
     if sub.get("status") not in allowed:
         raise HTTPException(402, "Subscription inactive")

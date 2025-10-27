@@ -9,7 +9,7 @@ from src.apps.billing import (
     load_subscription,
     explainer_call_quota_protection,
 )
-from src.lib.clients import AdminPB, HTTPAsyncClient, langfuse_client
+from src.lib.clients import AdminPBDeps as AdminPB, HTTPAsyncClient, langfuse_client
 from src.lib.utils import sse, update_span_with_result
 from src.apps.auth import User
 from src.lib.utils.cache_key import cache_key

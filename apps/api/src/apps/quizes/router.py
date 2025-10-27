@@ -15,7 +15,11 @@ from src.apps.billing import (
     quiz_patch_quota_protection,
 )
 from src.apps.materials import user_owns_materials
-from src.lib.clients import AdminPB, HTTPAsyncClient, MeilisearchClient
+from src.lib.clients import (
+    AdminPBDeps as AdminPB,
+    HTTPAsyncClient,
+    MeiliDeps as MeilisearchClient,
+)
 
 from .ai import (
     generate_quiz_task,
