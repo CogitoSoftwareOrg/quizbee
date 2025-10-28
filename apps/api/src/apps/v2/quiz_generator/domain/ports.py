@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from .models import Attempt, Quiz
+from .models import Attempt, Quiz, QuizItem
 
 
 class AttemptRepository(Protocol):
@@ -10,6 +10,7 @@ class AttemptRepository(Protocol):
 
 class QuizRepository(Protocol):
     async def get(self, id: str) -> Quiz: ...
+    async def save_item(self, item: QuizItem) -> None: ...
 
     # async def get_user(self, user_id: str) -> list[Quiz]: ...
     async def save(self, quiz: Quiz) -> None: ...
@@ -31,3 +32,7 @@ class QuizIndexer(Protocol):
     async def search(
         self, user_id: str, query: str, limit: int, ratio: float, threshold: float
     ) -> list[Quiz]: ...
+
+
+class PatchGenerator(Protocol):
+    async def generate(self, quiz: Quiz, cache_key: str) -> None: ...

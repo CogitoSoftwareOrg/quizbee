@@ -44,6 +44,9 @@ class PBQuizRepository(QuizRepository):
         return [await self._to_quiz(rec) for rec in recs]
 
     async def save(self, quiz: Quiz):
+        for item in quiz.items:
+            await self.save_item(item)
+
         try:
             await self.admin_pb.collection("quizes").create(await self._to_record(quiz))
         except:
@@ -51,12 +54,22 @@ class PBQuizRepository(QuizRepository):
                 quiz.id, await self._to_record(quiz)
             )
 
+    async def save_item(self, item: QuizItem):
+        try:
+            await self.admin_pb.collection("quizItems").create(
+                await self._to_record_item(item)
+            )
+        except:
+            await self.admin_pb.collection("quizItems").update(
+                item.id, await self._to_record_item(item)
+            )
+
     async def _to_quiz(self, rec: Record) -> Quiz:
         materials_recs = rec.get("expand", {}).get("materials", [])
         items_recs = rec.get("expand", {}).get("quizItems_via_quiz", [])
         q_id = rec.get("id", "")
 
-        items = [self._to_item(i) for i in items_recs]
+        items = sorted([self._to_item(i) for i in items_recs], key=lambda x: x.order)
         materials = await asyncio.gather(
             *[self._to_material(m) for m in materials_recs]
         )
@@ -154,6 +167,15 @@ class PBQuizRepository(QuizRepository):
             dto["materialsContext"] = f
 
         return dto
+
+    async def _to_record_item(self, item: QuizItem) -> dict[str, Any]:
+        return {
+            "id": item.id,
+            "question": item.question,
+            "answers": item.variants,
+            "order": item.order,
+            "status": item.status,
+        }
 
     def _to_gen_config(self, rec: Record) -> QuizGenConfig:
         return QuizGenConfig(

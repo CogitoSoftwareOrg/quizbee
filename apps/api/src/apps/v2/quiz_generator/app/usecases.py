@@ -2,8 +2,13 @@ import logging
 from src.apps.v2.llm_tools.app.contracts import LLMToolsApp
 from src.apps.v2.material_search.app.contracts import MaterialSearchApp, SearchCmd
 
-from ..domain.ports import AttemptRepository, QuizIndexer, QuizRepository
-from ..domain.models import Quiz, Attempt
+from ..domain.ports import (
+    AttemptRepository,
+    PatchGenerator,
+    QuizIndexer,
+    QuizRepository,
+)
+from ..domain.models import Quiz, Attempt, QuizItemStatus
 
 from .contracts import GenerateCmd, FinalizeCmd, GenMode, QuizGeneratorApp
 
@@ -16,15 +21,27 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
         quiz_indexer: QuizIndexer,
         llm_tools: LLMToolsApp,
         material_search: MaterialSearchApp,
+        patch_generator: PatchGenerator,
     ):
         self.quiz_repository = quiz_repository
         self.attempt_repository = attempt_repository
         self.quiz_indexer = quiz_indexer
         self.material_search = material_search
         self.llm_tools = llm_tools
+        self.patch_generator = patch_generator
 
     async def generate(self, cmd: GenerateCmd) -> None:
-        pass
+        quiz = await self.quiz_repository.get(cmd.quiz_id)
+
+        if cmd.mode == GenMode.Regenerate:
+            logging.info(f"Incrementing generation for quiz {cmd.quiz_id}")
+            quiz.increment_generation()
+            await self.quiz_repository.save(quiz)
+
+        quiz.generate_patch()
+        await self.quiz_repository.save(quiz)
+
+        await self.patch_generator.generate(quiz, cmd.cache_key)
 
     async def finalize(self, cmd: FinalizeCmd) -> None:
         pass
@@ -35,12 +52,12 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
         await self.quiz_repository.save(quiz)
 
         if quiz.need_build_material_content:
-            await self._build_material_content(quiz)
+            await self._build_material_content(quiz, quiz.length * 2000)
             await self.quiz_repository.save(quiz)
 
         if quiz.avoid_repeat:
             logging.info(f"Avoiding repeat for quiz {quiz.id}")
-            await self._estimate_summary(quiz)
+            await self._estimate_summary(quiz, 7_000)
             similar_quizes = await self.quiz_indexer.search(
                 user_id=quiz.author_id,
                 query=f"title:{quiz.title} query:{quiz.query} Summary:{quiz.summary}",
@@ -72,12 +89,14 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
         quiz.to_creating()
         await self.quiz_repository.save(quiz)
 
+        await self.generate(cmd)
+
     async def create_attempt(self, quiz_id: str, user_id: str) -> Attempt:
         attempt = Attempt.create(quiz_id, user_id)
         await self.attempt_repository.save(attempt)
         return attempt
 
-    async def _build_material_content(self, quiz: Quiz, token_limit=70_000) -> None:
+    async def _build_material_content(self, quiz: Quiz, token_limit) -> None:
         logging.info(f"Building material content for quiz {quiz.id}")
         chunks = await self.material_search.search(
             SearchCmd(
@@ -91,7 +110,7 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
         content = "\n<CHUNK>\n".join([c.content for c in chunks])
         quiz.set_material_content(content)
 
-    async def _estimate_summary(self, quiz: Quiz, token_limit=7_000):
+    async def _estimate_summary(self, quiz: Quiz, token_limit):
         logging.info(f"Estimating summary for quiz {quiz.id}")
         summary = ""
         text_chunks = quiz.material_content.split("\n<CHUNK>\n")

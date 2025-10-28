@@ -8,7 +8,7 @@ from src.apps.v2.material_search.app.contracts import MaterialSearchApp
 from src.apps.v2.llm_tools.app.contracts import LLMToolsApp
 
 
-from .domain.ports import QuizRepository, AttemptRepository, QuizIndexer
+from .domain.ports import QuizRepository, AttemptRepository, QuizIndexer, PatchGenerator
 from .app.contracts import QuizGeneratorApp
 from .app.usecases import QuizGeneratorAppImpl
 
@@ -20,6 +20,7 @@ def set_quiz_generator_app(
     quiz_repository: QuizRepository,
     attempt_repository: AttemptRepository,
     quiz_indexer: QuizIndexer,
+    patch_generator: PatchGenerator,
 ):
     app.state.quiz_generator_app = QuizGeneratorAppImpl(
         quiz_repository,
@@ -27,6 +28,7 @@ def set_quiz_generator_app(
         quiz_indexer,
         llm_tools,
         material_search,
+        patch_generator,
     )
 
 

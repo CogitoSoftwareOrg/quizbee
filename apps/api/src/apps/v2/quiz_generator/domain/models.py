@@ -3,13 +3,15 @@ from enum import StrEnum
 
 from src.lib.utils import genID
 
+from .constants import PATCH_LIMIT
+
 
 class QuizItemStatus(StrEnum):
+    BLANK = "blank"
     GENERATED = "generated"
     GENERATING = "generating"
-    FINAL = "final"
-    BLANK = "blank"
     FAILED = "failed"
+    FINAL = "final"
 
 
 class QuizDifficulty(StrEnum):
@@ -68,6 +70,20 @@ class QuizItem:
     order: int
     status: QuizItemStatus
 
+    def to_generating(self) -> None:
+        if self.status not in {QuizItemStatus.BLANK}:
+            raise ValueError("Item is not in blank status for generating")
+        self.status = QuizItemStatus.GENERATING
+
+    def regenerate(self) -> None:
+        if self.status not in {QuizItemStatus.FINAL}:
+            self.status = QuizItemStatus.BLANK
+
+    def to_failed(self) -> None:
+        if self.status not in {QuizItemStatus.GENERATING}:
+            raise ValueError("Item is not in generating status for failing")
+        self.status = QuizItemStatus.FAILED
+
 
 @dataclass(slots=True, kw_only=True)
 class Choice:
@@ -101,6 +117,7 @@ class MaterialRef:
 
 @dataclass(slots=True, kw_only=True)
 class Quiz:
+    generation: int = 0
     author_id: str
     title: str
     query: str
@@ -167,3 +184,35 @@ class Quiz:
 
     def add_negative_questions(self, questions: list[str]):
         self.gen_config.negative_questions.extend(questions)
+
+    def increment_generation(self) -> None:
+        for item in self.items:
+            item.regenerate()
+        self.generation += 1
+
+    def get_final_items(self) -> list[QuizItem]:
+        return [item for item in self.items if item.status == QuizItemStatus.FINAL]
+
+    def generate_patch(self) -> list[QuizItem]:
+        ready_items = [
+            item for item in self.items if item.status == QuizItemStatus.BLANK
+        ][:PATCH_LIMIT]
+        for item in ready_items:
+            item.to_generating()
+        return ready_items
+
+    def generating_items(self) -> list[QuizItem]:
+        return [
+            item for item in self.items if item.status in {QuizItemStatus.GENERATING}
+        ]
+
+    def prev_items(self) -> list[QuizItem]:
+        return [
+            item
+            for item in self.items
+            if item.status in {QuizItemStatus.FINAL, QuizItemStatus.GENERATED}
+        ]
+
+    def fail(self):
+        for item in self.items:
+            item.to_failed()

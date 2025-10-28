@@ -1,9 +1,11 @@
+from typing import Annotated, Union
 from fastapi import FastAPI
 import logging
 import contextlib
 from contextlib import asynccontextmanager
 from meilisearch_python_sdk import AsyncClient
 import httpx
+from pydantic import BaseModel, Field
 
 from src.lib.settings import settings
 
@@ -35,6 +37,10 @@ from src.apps.v2.quiz_generator.adapters.out.pb_quiz_repository import PBQuizRep
 from src.apps.v2.quiz_generator.adapters.out.pb_attempt_repository import (
     PBAttemptRepository,
 )
+from src.apps.v2.quiz_generator.adapters.out.ai_patch_generator import (
+    AIPatchGenerator,
+    AIPatchGeneratorOutput,
+)
 from src.apps.v2.quiz_generator.adapters.out.meili_indexer import (
     MeiliIndexer as MeiliQuizIndexer,
 )
@@ -42,6 +48,15 @@ from src.apps.v2.quiz_generator.adapters.out.meili_indexer import (
 from src.lib.clients import set_admin_pb
 
 from .mcp import mcp
+
+AgentPayload = Annotated[
+    Union[AIPatchGeneratorOutput],
+    Field(discriminator="mode"),
+]
+
+
+class AgentEnvelope(BaseModel):
+    data: AgentPayload
 
 
 @asynccontextmanager
@@ -82,6 +97,11 @@ async def lifespan(app: FastAPI):
     # V2 QUIZ GENERATOR
     quiz_repository = PBQuizRepository(app.state.admin_pb, http)
     attempt_repository = PBAttemptRepository(app.state.admin_pb)
+    patch_generator = AIPatchGenerator(
+        lf=app.state.langfuse_client,
+        quiz_repository=quiz_repository,
+        shared_schema=AgentEnvelope,
+    )
     quiz_indexer = MeiliQuizIndexer(app.state.llm_tools, meili, quiz_repository)
     set_quiz_generator_app(
         app,
@@ -90,6 +110,7 @@ async def lifespan(app: FastAPI):
         quiz_repository=quiz_repository,
         attempt_repository=attempt_repository,
         quiz_indexer=quiz_indexer,
+        patch_generator=patch_generator,
     )
 
     async with contextlib.AsyncExitStack() as stack:

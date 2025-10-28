@@ -17,6 +17,7 @@ class FinalizeCmd:
 
 @dataclass(frozen=True)
 class GenerateCmd:
+    cache_key: str
     quiz_id: str
     user_id: str
     mode: GenMode
