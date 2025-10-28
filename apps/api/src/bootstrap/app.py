@@ -10,12 +10,17 @@ from src.apps.quiz_attempts import quiz_attempts_router
 from src.apps.v2.material_search.adapters.in_.http.router import (
     material_search_router as v2_material_search_router,
 )
+from src.apps.v2.quiz_generator.adapters.in_.http.router import (
+    quiz_generator_router as v2_quiz_generator_router,
+)
 
 from .cors import cors_middleware
 from .errors import all_exceptions_handler
 from .deps import http_ensure_admin_pb
 from .lifespan import lifespan
 from .mcp import mcp
+
+
 def create_app():
     app = FastAPI(
         lifespan=lifespan,
@@ -32,6 +37,7 @@ def create_app():
     app.include_router(quiz_attempts_router)
 
     app.include_router(v2_material_search_router)
+    app.include_router(v2_quiz_generator_router)
 
     cors_middleware(app)
 

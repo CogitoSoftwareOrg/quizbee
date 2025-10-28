@@ -13,17 +13,11 @@ from src.lib.settings import settings
 from src.apps.v2.llm_tools.app.contracts import LLMToolsApp
 
 from ...domain.errors import InvalidQuiz
-from ...domain.models import (
-    Quiz,
-    QuizCategory,
-    QuizDifficulty,
-    QuizItem,
-    QuizVisibility,
-)
+from ...domain.models import Quiz, QuizCategory, QuizDifficulty, QuizVisibility
 from ...domain.ports import QuizIndexer, QuizRepository
 
 FILTERABLE_ATTRIBUTES = [
-    "authorId",
+    "userId",
     "quizId",
     "visibility",
     "tags",
@@ -55,7 +49,7 @@ meiliEmbeddings = {
 class Doc:
     id: str
     quiz_id: str
-    author_id: str
+    user_id: str
     visibility: QuizVisibility
     title: str
     query: str
@@ -67,9 +61,9 @@ class Doc:
     @classmethod
     def from_quiz(cls, quiz: Quiz) -> "Doc":
         return cls(
-            id=f"{quiz.id}",
+            id=quiz.id,
             quiz_id=quiz.id,
-            author_id=quiz.author_id,
+            user_id=quiz.author_id,
             visibility=quiz.visibility,
             title=quiz.title,
             query=quiz.query,
@@ -77,6 +71,21 @@ class Doc:
             tags=quiz.tags,  # pyright: ignore[reportArgumentType]
             category=quiz.category,  # pyright: ignore[reportArgumentType]
             difficulty=quiz.difficulty,
+        )
+
+    @classmethod
+    def from_hit(cls, hit: dict) -> "Doc":
+        return cls(
+            id=hit.get("id", ""),
+            quiz_id=hit.get("quizId", ""),
+            user_id=hit.get("userId", ""),
+            visibility=hit.get("visibility", ""),
+            title=hit.get("title", ""),
+            query=hit.get("query", ""),
+            summary=hit.get("summary", ""),
+            tags=hit.get("tags", []),
+            category=hit.get("category", ""),
+            difficulty=hit.get("difficulty", ""),
         )
 
 
@@ -165,28 +174,28 @@ class MeiliIndexer(QuizIndexer):
         ratio=0.5,
         threshold=0.4,
     ) -> list[Quiz]:
-        f = f"authorId = {user_id}"
-
-        if ratio == 0:
-            res = await self.quiz_index.search(
-                query=query,
-                ranking_score_threshold=threshold,
-                filter=f,
-                limit=limit,
+        f = f"userId = {user_id}"
+        hybrid = (
+            Hybrid(
+                semantic_ratio=ratio,
+                embedder=EMBEDDER_NAME,
             )
-        else:
-            res = await self.quiz_index.search(
-                query=query,
-                hybrid=Hybrid(
-                    semantic_ratio=ratio,
-                    embedder=EMBEDDER_NAME,
-                ),
-                ranking_score_threshold=threshold,
-                filter=f,
-                limit=limit,
-            )
+            if ratio > 0
+            else None
+        )
 
-        docs: list[Doc] = [Doc(**hit) for hit in res.hits]
+        res = await self.quiz_index.search(
+            query=query,
+            hybrid=hybrid,
+            ranking_score_threshold=threshold,
+            filter=f,
+            limit=limit,
+        )
+
+        logging.info(f"Meili Searching... {f} (hits: {len(res.hits)})")
+
+        docs: list[Doc] = [Doc.from_hit(hit) for hit in res.hits]
+        logging.info(f"Docs: {docs}")
         quizes = await asyncio.gather(
             *[self.quiz_repository.get(doc.quiz_id) for doc in docs]
         )

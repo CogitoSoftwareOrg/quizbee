@@ -113,7 +113,7 @@ class MeiliIndexer(Indexer):
                 total_tokens += self.llm_tools.count_text(
                     indexed, LLMS.TEXT_EMBEDDING_3_SMALL
                 )
-                logging.info(f"Indexed chunk {doc['id']}: (tokens: {total_tokens})")
+                logging.info(f"Indexed chunk {doc.id}: (tokens: {total_tokens})")
         else:
             logging.error(f"Unknown task status: {task}")
 
@@ -131,6 +131,8 @@ class MeiliIndexer(Indexer):
         f = f"userId = {user_id}"
         if material_ids is not None:
             f += f" AND materialId IN [{','.join(material_ids)}]"
+
+        logging.info(f"Meili Searching... {f}")
 
         if ratio == 0:
             res = await self.material_index.search(

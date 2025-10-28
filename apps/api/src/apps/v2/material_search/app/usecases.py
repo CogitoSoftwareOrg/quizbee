@@ -128,6 +128,9 @@ class MaterialSearchAppImpl(MaterialSearchApp):
         else:
             ratio = 0.5
 
+        logging.info(
+            f"Searching for material chunks for query: {cmd.query} (limit: {limit_chunks}, ratio: {ratio})"
+        )
         chunks = await self.indexer.search(
             user_id=cmd.user_id,
             query=cmd.query,

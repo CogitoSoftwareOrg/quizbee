@@ -1,4 +1,6 @@
 import asyncio
+import json
+from dataclasses import asdict
 from typing import Any
 import httpx
 from pocketbase import FileUpload, PocketBase
@@ -7,7 +9,15 @@ from pocketbase.models.dtos import Record
 from src.lib.settings import settings
 
 from ...domain.ports import QuizRepository
-from ...domain.models import Attempt, Choice, MaterialRef, Quiz, QuizItem, QuizStatus
+from ...domain.models import (
+    Attempt,
+    Choice,
+    MaterialRef,
+    Quiz,
+    QuizGenConfig,
+    QuizItem,
+    QuizStatus,
+)
 
 
 class PBQuizRepository(QuizRepository):
@@ -15,14 +25,14 @@ class PBQuizRepository(QuizRepository):
         self.admin_pb = admin_pb
         self.http = http
 
-    async def get(self, id: str, material_content="") -> Quiz:
-        rec = await self.admin_pb.collection("quizzes").get_one(
+    async def get(self, id: str) -> Quiz:
+        rec = await self.admin_pb.collection("quizes").get_one(
             id, options={"params": {"expand": "quizItems_via_quiz,materials"}}
         )
-        return await self._to_quiz(rec, material_content)
+        return await self._to_quiz(rec)
 
     async def get_user_quizzes(self, user_id: str) -> list[Quiz]:
-        recs = await self.admin_pb.collection("quizzes").get_full_list(
+        recs = await self.admin_pb.collection("quizes").get_full_list(
             options={
                 "params": {
                     "filter": f"author = '{user_id}'",
@@ -34,9 +44,14 @@ class PBQuizRepository(QuizRepository):
         return [await self._to_quiz(rec) for rec in recs]
 
     async def save(self, quiz: Quiz):
-        await self.admin_pb.collection("quizzes").create(await self._to_record(quiz))
+        try:
+            await self.admin_pb.collection("quizes").create(await self._to_record(quiz))
+        except:
+            await self.admin_pb.collection("quizes").update(
+                quiz.id, await self._to_record(quiz)
+            )
 
-    async def _to_quiz(self, rec: Record, material_content="") -> Quiz:
+    async def _to_quiz(self, rec: Record) -> Quiz:
         materials_recs = rec.get("expand", {}).get("materials", [])
         items_recs = rec.get("expand", {}).get("quizItems_via_quiz", [])
         q_id = rec.get("id", "")
@@ -45,6 +60,12 @@ class PBQuizRepository(QuizRepository):
         materials = await asyncio.gather(
             *[self._to_material(m) for m in materials_recs]
         )
+
+        fname = rec.get("materialsContext")
+        material_content = ""
+        if fname:
+            total_content = await self._load_file_text("quizes", q_id, fname)
+            material_content = total_content
 
         quiz = Quiz(
             id=rec.get("id", ""),
@@ -62,16 +83,10 @@ class PBQuizRepository(QuizRepository):
             status=rec.get("status", ""),
             visibility=rec.get("visibility", ""),
             avoid_repeat=rec.get("avoidRepeat", False),
-            gen_config=rec.get("genConfig", {}),
+            gen_config=self._to_gen_config(rec),
         )
 
-        fname = rec.get("materialsContext")
-        if quiz.material_content:
-            pass
-        elif fname:
-            total_content = await self._load_file_text("quizes", q_id, fname)
-            quiz.set_material_content(total_content)
-        else:
+        if not len(quiz.material_content) == 0 and len(quiz.materials) > 0:
             quiz.request_build_material_content()
 
         return quiz
@@ -106,17 +121,10 @@ class PBQuizRepository(QuizRepository):
     async def _to_record(self, quiz: Quiz) -> dict[str, Any]:
         content = quiz.material_content
 
-        f = (
-            FileUpload(("materialsContext.txt", content.encode("utf-8")))
-            if quiz.status == QuizStatus.PREPARING and len(content) > 0
-            else None
-        )
-
-        return {
+        dto = {
             # Simple fields
             "id": quiz.id,
             "author": quiz.author_id,
-            "materials": [m.id for m in quiz.materials],
             "title": quiz.title,
             "itemsLimit": quiz.length,
             "query": quiz.query,
@@ -127,13 +135,40 @@ class PBQuizRepository(QuizRepository):
             "status": quiz.status,
             "visibility": quiz.visibility,
             "avoidRepeat": quiz.avoid_repeat,
-            "items": quiz.items,
-            "genConfig": quiz.gen_config,
-            # Files
-            "materialContent": f,
+            "dynamicConfig": json.dumps(asdict(quiz.gen_config)),
+            "materials": [m.id for m in quiz.materials],
         }
 
+        f = (
+            FileUpload(
+                (
+                    self._file_url("quizes", quiz.id, "materialsContext.txt"),
+                    content.encode("utf-8"),
+                )
+            )
+            if quiz.status == QuizStatus.PREPARING
+            else None
+        )
+
+        if f:
+            dto["materialsContext"] = f
+
+        return dto
+
+    def _to_gen_config(self, rec: Record) -> QuizGenConfig:
+        return QuizGenConfig(
+            negative_questions=rec.get("negativeQuestions", []),
+            additional_instructions=rec.get("adds", []),
+            more_on_topic=rec.get("moreOnTopic", []),
+            less_on_topic=rec.get("lessOnTopic", []),
+            extra_beginner=rec.get("extraBeginner", []),
+            extra_expert=rec.get("extraExpert", []),
+        )
+
+    def _file_url(self, col: str, id: str, file: str) -> str:
+        return f"{settings.pb_url}api/files/{col}/{id}/{file}"
+
     async def _load_file_text(self, col: str, id: str, file: str) -> str:
-        url = f"{settings.pb_url}api/files/{col}/{id}/{file}"
+        url = self._file_url(col, id, file)
         response = await self.http.get(url)
         return response.text

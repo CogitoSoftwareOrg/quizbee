@@ -124,7 +124,7 @@
 						setTimeout(() => {
 							warningTooBigFile = null;
 						}, 5000);
-					} else if (foundMaterial.status === 'uploaded') {
+					} else if (foundMaterial.status === 'indexed') {
 						attachedFile.tokens = foundMaterial.tokens;
 						attachedFile.isBook = foundMaterial.isBook;
 						attachedFile.isUploading = false;

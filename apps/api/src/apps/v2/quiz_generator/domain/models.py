@@ -137,7 +137,8 @@ class Quiz:
         if self.status != QuizStatus.DRAFT:
             raise ValueError("Quiz is not in draft status for preparing")
         self.status = QuizStatus.PREPARING
-        self.request_build_material_content()
+        if len(self.materials) > 0:
+            self.request_build_material_content()
 
     def to_creating(self) -> None:
         if self.status != QuizStatus.PREPARING:
@@ -163,3 +164,6 @@ class Quiz:
 
     def set_summary(self, summary: str):
         self.summary = summary
+
+    def add_negative_questions(self, questions: list[str]):
+        self.gen_config.negative_questions.extend(questions)

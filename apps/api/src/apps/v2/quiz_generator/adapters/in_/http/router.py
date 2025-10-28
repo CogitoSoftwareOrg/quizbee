@@ -35,13 +35,15 @@ async def start_quiz(
     user: UserDeps,
     background: BackgroundTasks,
 ):
+    attempt = await quiz_generator_app.create_attempt(quiz_id, user.id)
+
     background.add_task(
         quiz_generator_app.start,
         GenerateCmd(quiz_id=quiz_id, user_id=user.id, mode=GenMode.Continue),
     )
 
     return JSONResponse(
-        content={"scheduled": True, "quiz_id": quiz_id},
+        content={"scheduled": True, "quiz_id": quiz_id, "attempt_id": attempt.id},
     )
 
 

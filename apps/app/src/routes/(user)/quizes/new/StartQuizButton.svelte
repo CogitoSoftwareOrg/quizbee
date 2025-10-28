@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { Button } from '@cogisoft/ui-svelte-daisy';
 
-	import { postApi } from '$lib/api/call-api';
+	import { putApi } from '$lib/api/call-api';
 	import { uiStore } from '$lib/apps/users/ui.svelte';
 	import type { AttachedFile } from '$lib/types/attached-file';
 	import { pb } from '$lib/pb';
@@ -45,19 +45,20 @@
 				}
 			}
 
-			const { quiz_id: quizId, quiz_attempt_id: quizAttemptsId } = await postApi('quizes', {
-				quiz_id: quizTemplateId
-			});
+			const { quiz_id: quizId, attempt_id: attemptId } = await putApi(
+				`v2/quizes/${quizTemplateId}`,
+				{}
+			);
 
 			posthog.capture('quiz_creation_started', {
 				quizId,
-				quizAttemptsId
+				attemptId
 			});
 
-			console.log('Quiz created:', quizId, 'Attempt created:', quizAttemptsId);
+			console.log('Quiz created:', quizId, 'Attempt created:', attemptId);
 
 			uiStore.setGlobalSidebarOpen(false);
-			await goto(`/quizes/${quizId}/attempts/${quizAttemptsId}`);
+			await goto(`/quizes/${quizId}/attempts/${attemptId}`);
 
 			return true;
 		} catch (error) {

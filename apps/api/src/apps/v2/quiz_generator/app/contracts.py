@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Protocol
 
-from ..domain.models import Quiz
+from ..domain.models import Attempt
 
 
 class GenMode(StrEnum):
@@ -11,7 +11,7 @@ class GenMode(StrEnum):
 
 
 @dataclass(frozen=True)
-class FinilizeCmd:
+class FinalizeCmd:
     quiz_id: str
 
 
@@ -25,4 +25,5 @@ class GenerateCmd:
 class QuizGeneratorApp(Protocol):
     async def start(self, cmd: GenerateCmd) -> None: ...
     async def generate(self, cmd: GenerateCmd) -> None: ...
-    async def finilize(self, cmd: FinilizeCmd) -> None: ...
+    async def finalize(self, cmd: FinalizeCmd) -> None: ...
+    async def create_attempt(self, quiz_id: str, user_id: str) -> Attempt: ...
