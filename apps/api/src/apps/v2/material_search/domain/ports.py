@@ -11,11 +11,9 @@ from .models import Material, MaterialFile, MaterialChunk
 
 # Material Repository
 class MaterialRepository(Protocol):
-    async def get(self, id: str, file_bytes: bytes = b"") -> Material | None: ...
+    async def get(self, id: str) -> Material | None: ...
 
-    async def create(self, create: Material) -> Material: ...
-
-    async def update(self, upd: Material) -> Material: ...
+    async def save(self, material: Material) -> None: ...
 
 
 # PDF Parser
@@ -43,17 +41,15 @@ class PdfParser(Protocol):
     def parse(self, file_bytes: bytes) -> PdfParseResult: ...
 
 
-# Chunker
-
-
-class Chunker(Protocol):
-    def chunk(self, text: str) -> list[str]: ...
-
-
 # Indexer
 class Indexer(Protocol):
     async def index(self, material: Material) -> None: ...
     async def search(
-        self, user_id: str, query: str, material_ids: list[str], limit: int
+        self,
+        user_id: str,
+        query: str,
+        material_ids: list[str],
+        limit: int,
+        ratio: float,
     ) -> list[MaterialChunk]: ...
     async def delete(self, material_ids: list[str]) -> None: ...

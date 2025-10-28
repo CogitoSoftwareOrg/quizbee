@@ -109,43 +109,27 @@ class MeiliIndexer(Indexer):
         elif task.status == "succeeded":
             # All documents in this batch are indexed successfully
             for doc in docs:
+                indexed = self._fill_template(doc)
                 total_tokens += self.llm_tools.count_text(
-                    self._fill_template(doc), LLMS.TEXT_EMBEDDING_3_SMALL
+                    indexed, LLMS.TEXT_EMBEDDING_3_SMALL
                 )
-                logging.info(f"Indexed chunk {doc.id}: (tokens: {total_tokens})")
+                logging.info(f"Indexed chunk {doc['id']}: (tokens: {total_tokens})")
         else:
             logging.error(f"Unknown task status: {task}")
 
-        # Third: Log to langfuse after all tasks are complete and tokens are counted
-        with langfuse_client.start_as_current_span(name="material-indexing") as span:
-            langfuse_client.update_current_generation(
-                model=LLMS.TEXT_EMBEDDING_3_SMALL,
-                usage_details={
-                    "total": total_tokens,
-                },
-            )
-            span.update_trace(
-                input=f"Material: {material.id}",
-                output=f"Total tokens: {total_tokens}",
-                metadata={
-                    "material_id": material.id,
-                    "total_tokens": total_tokens,
-                },
-                user_id=material.user_id,
-                session_id=material.id,
-            )
+        self._log_langfuse(material.user_id, material.id, total_tokens)
 
     async def search(
         self,
         user_id: str,
         query: str,
-        material_ids: list[str],
+        material_ids: list[str] | None = None,
         limit: int = 100,
-        ratio=0.5,
-        threshold=0.4,
+        ratio: float = 0.5,
+        threshold: float = 0.4,
     ) -> list[MaterialChunk]:
         f = f"userId = {user_id}"
-        if material_ids:
+        if material_ids is not None:
             f += f" AND materialId IN [{','.join(material_ids)}]"
 
         if ratio == 0:
@@ -156,6 +140,8 @@ class MeiliIndexer(Indexer):
                 limit=limit,
             )
         else:
+            total_tokens = self.llm_tools.count_text(query, LLMS.TEXT_EMBEDDING_3_SMALL)
+
             res = await self.material_index.search(
                 query=query,
                 hybrid=Hybrid(
@@ -166,6 +152,8 @@ class MeiliIndexer(Indexer):
                 filter=f,
                 limit=limit,
             )
+
+            self._log_langfuse(user_id, "", total_tokens)
 
         docs: list[Doc] = [Doc(**hit) for hit in res.hits]
         chunks = [self._doc_to_chunk(doc) for doc in docs]
@@ -211,3 +199,18 @@ class MeiliIndexer(Indexer):
         return EMBEDDER_TEMPLATE.replace("{{doc.title}}", doc.title).replace(
             "{{doc.content}}", doc.content
         )
+
+    def _log_langfuse(self, user_id: str, session_id: str, total_tokens: int) -> None:
+        with langfuse_client.start_as_current_span(name="material-indexing") as span:
+            langfuse_client.update_current_generation(
+                model=LLMS.TEXT_EMBEDDING_3_SMALL,
+                usage_details={
+                    "total": total_tokens,
+                },
+            )
+            span.update_trace(
+                input=f"User: {user_id}, Session: {session_id}",
+                output=f"Total tokens: {total_tokens}",
+                user_id=user_id,
+                session_id=session_id,
+            )

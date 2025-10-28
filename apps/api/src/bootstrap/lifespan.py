@@ -27,7 +27,17 @@ from src.apps.v2.material_search.di import (
 )
 from src.apps.v2.material_search.adapters.out.pb_repository import PBMaterialRepository
 from src.apps.v2.material_search.adapters.out.fitz_pdf_parser import FitzPDFParser
-from src.apps.v2.material_search.adapters.out.meili_indexer import MeiliIndexer
+from src.apps.v2.material_search.adapters.out.meili_indexer import (
+    MeiliIndexer as MeiliMaterialIndexer,
+)
+
+from src.apps.v2.quiz_generator.adapters.out.pb_quiz_repository import PBQuizRepository
+from src.apps.v2.quiz_generator.adapters.out.pb_attempt_repository import (
+    PBAttemptRepository,
+)
+from src.apps.v2.quiz_generator.adapters.out.meili_indexer import (
+    MeiliIndexer as MeiliQuizIndexer,
+)
 
 from src.lib.clients import set_admin_pb
 
@@ -60,7 +70,7 @@ async def lifespan(app: FastAPI):
     # V2 MATERIAL SEARCH
     material_repository = PBMaterialRepository(app.state.admin_pb)
     pdf_parser = FitzPDFParser()
-    indexer = MeiliIndexer(app.state.llm_tools, meili)
+    indexer = MeiliMaterialIndexer(app.state.llm_tools, meili)
     set_material_search_app(
         app,
         material_repository=material_repository,
@@ -70,7 +80,17 @@ async def lifespan(app: FastAPI):
     )
 
     # V2 QUIZ GENERATOR
-    set_quiz_generator_app(app, admin_pb=app.state.admin_pb, http=http)
+    quiz_repository = PBQuizRepository(app.state.admin_pb, http)
+    attempt_repository = PBAttemptRepository(app.state.admin_pb)
+    quiz_indexer = MeiliQuizIndexer(app.state.llm_tools, meili, quiz_repository)
+    set_quiz_generator_app(
+        app,
+        llm_tools=app.state.llm_tools,
+        material_search=app.state.material_search_app,
+        quiz_repository=quiz_repository,
+        attempt_repository=attempt_repository,
+        quiz_indexer=quiz_indexer,
+    )
 
     async with contextlib.AsyncExitStack() as stack:
         await stack.enter_async_context(mcp.session_manager.run())

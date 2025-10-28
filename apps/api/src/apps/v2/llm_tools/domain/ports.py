@@ -14,4 +14,7 @@ class ImageTokenizer(Protocol):
 
 
 class Chunker(Protocol):
+    @property
+    def chunk_size(self) -> int: ...
+
     def chunk(self, text: str) -> list[str]: ...

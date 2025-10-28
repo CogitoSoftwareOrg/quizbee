@@ -20,10 +20,10 @@ class QuizDifficulty(StrEnum):
 
 class QuizStatus(StrEnum):
     DRAFT = "draft"
-    CREATING = "creating"
-    FINAL = "final"
     PREPARING = "preparing"
+    CREATING = "creating"
     ANSWERED = "answered"
+    FINAL = "final"
 
 
 class QuizVisibility(StrEnum):
@@ -92,12 +92,20 @@ class Attempt:
 
 
 @dataclass(slots=True, kw_only=True)
+class MaterialRef:
+    id: str
+    text: str
+    filename: str
+    is_book: bool
+
+
+@dataclass(slots=True, kw_only=True)
 class Quiz:
     author_id: str
     title: str
     query: str
     id: str = field(default_factory=genID)
-    material_ids: list[str] = field(default_factory=list)
+    materials: list[MaterialRef] = field(default_factory=list)
     length: int = 0
     difficulty: QuizDifficulty
     visibility: QuizVisibility = QuizVisibility.PUBLIC
@@ -112,6 +120,8 @@ class Quiz:
     tags: list[str] | None = None
     category: QuizCategory | None = None
 
+    need_build_material_content: bool = False
+
     @classmethod
     def create(
         cls, author_id: str, title: str, query: str, difficulty: QuizDifficulty
@@ -122,3 +132,34 @@ class Quiz:
             query=query,
             difficulty=difficulty,
         )
+
+    def to_preparing(self) -> None:
+        if self.status != QuizStatus.DRAFT:
+            raise ValueError("Quiz is not in draft status for preparing")
+        self.status = QuizStatus.PREPARING
+        self.request_build_material_content()
+
+    def to_creating(self) -> None:
+        if self.status != QuizStatus.PREPARING:
+            raise ValueError("Quiz is not in preparing status for creating")
+        self.status = QuizStatus.CREATING
+
+    def to_answered(self) -> None:
+        if self.status != QuizStatus.CREATING:
+            raise ValueError("Quiz is not in creating status for answered")
+        self.status = QuizStatus.ANSWERED
+
+    def to_final(self) -> None:
+        if self.status != QuizStatus.ANSWERED:
+            raise ValueError("Quiz is not in answered status for final")
+        self.status = QuizStatus.FINAL
+
+    def set_material_content(self, content: str):
+        self.material_content = content
+        self.need_build_material_content = False
+
+    def request_build_material_content(self) -> None:
+        self.need_build_material_content = True
+
+    def set_summary(self, summary: str):
+        self.summary = summary

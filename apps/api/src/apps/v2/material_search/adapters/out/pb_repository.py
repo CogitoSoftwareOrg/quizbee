@@ -24,92 +24,12 @@ class PBMaterialRepository(MaterialRepository):
         else:
             return self._to_material(rec, file_bytes)
 
-    async def create(self, create: Material) -> Material:
-        dto: dict[str, Any] = {}
-        total_bytes = 0
-        images_bytes = []
-        file_bytes = b""
-        text_bytes = b""
-
-        # Простые поля
-        dto["id"] = create.id
-        dto["title"] = create.title
-        dto["user"] = create.user_id
-        dto["status"] = create.status
-        dto["kind"] = create.kind
-        dto["tokens"] = create.tokens
-        dto["contents"] = create.contents
-        dto["isBook"] = create.is_book
-
-        # Файлы
-        file_bytes = create.file.file_bytes
-        total_bytes += len(file_bytes)
-        dto["file"] = FileUpload((create.file.file_name, file_bytes))
-
-        if create.text_file is not None and create.text_file.file_bytes:
-            text_bytes = create.text_file.file_bytes
-            total_bytes += len(text_bytes)
-            dto["textFile"] = FileUpload((create.text_file.file_name, text_bytes))
-
-        # Изображения
-        if create.images:
-            images_list = []
-            for image in create.images:
-                total_bytes += len(image.file_bytes)
-                images_bytes.append(image.file_bytes)
-                images_list.append((image.file_name, image.file_bytes))
-            dto["images"] = FileUpload(*images_list)
-
-        dto["bytes"] = total_bytes
-
-        res = await self.pb.collection("materials").create(dto)
-
-        return self._to_material(res, file_bytes, text_bytes, images_bytes)
-
-    async def update(self, upd: Material) -> Material:
-        dto: dict[str, Any] = {}
-
-        total_bytes = 0
-        images_bytes = []
-        file_bytes = b""
-        text_bytes = b""
-
-        # Обновляем только простые поля без bytes
-        dto["title"] = upd.title
-        dto["user"] = upd.user_id
-        dto["status"] = upd.status
-        dto["kind"] = upd.kind
-        dto["tokens"] = upd.tokens
-        dto["contents"] = upd.contents
-        dto["isBook"] = upd.is_book
-
-        if upd.file.file_bytes:
-            file_bytes = upd.file.file_bytes
-            total_bytes += len(file_bytes)
-
-        if upd.images:
-            images_bytes = []
-            for image in upd.images:
-                total_bytes += len(image.file_bytes)
-                images_bytes.append(image.file_bytes)
-
-        # Если нужно обновить textFile
-        if upd.text_file is not None and upd.text_file.file_bytes:
-            text_bytes = upd.text_file.file_bytes
-            total_bytes += len(text_bytes)
-            dto["textFile"] = FileUpload(
-                (upd.text_file.file_name, upd.text_file.file_bytes)
-            )
-
-        dto["bytes"] = total_bytes
-
-        rec = await self.pb.collection("materials").update(upd.id, dto)
-        return self._to_material(
-            rec,
-            file_bytes,
-            text_bytes,
-            images_bytes,
-        )
+    async def save(self, material: Material):
+        dto = self._to_record(material)
+        try:
+            await self.pb.collection("materials").create(dto)
+        except Exception as e:
+            await self.pb.collection("materials").update(material.id, dto)
 
     def _to_material(
         self,
@@ -150,3 +70,39 @@ class PBMaterialRepository(MaterialRepository):
                 else None
             ),
         )
+
+    def _to_record(self, material: Material) -> dict[str, Any]:
+        total_bytes = 0
+        total_bytes += len(material.file.file_bytes)
+        if material.text_file and material.text_file.file_bytes:
+            total_bytes += len(material.text_file.file_bytes)
+        if material.images:
+            for image in material.images:
+                total_bytes += len(image.file_bytes)
+
+        return {
+            "id": material.id,
+            "title": material.title,
+            "user": material.user_id,
+            "status": material.status,
+            "kind": material.kind,
+            "tokens": material.tokens,
+            "contents": material.contents,
+            "isBook": material.is_book,
+            "file": FileUpload((material.file.file_name, material.file.file_bytes)),
+            "textFile": (
+                FileUpload(
+                    (material.text_file.file_name, material.text_file.file_bytes)
+                )
+                if material.text_file
+                else None
+            ),
+            "images": (
+                FileUpload(
+                    *[(image.file_name, image.file_bytes) for image in material.images]
+                )
+                if len(material.images) > 0
+                else None
+            ),
+            "bytes": total_bytes,
+        }

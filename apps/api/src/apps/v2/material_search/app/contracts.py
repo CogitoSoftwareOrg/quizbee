@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 from typing import Protocol
 
-from ..domain.models import Material, MaterialFile
+from ..domain.models import Material, MaterialFile, MaterialChunk
 
 
 @dataclass
@@ -18,10 +18,10 @@ class SearchCmd:
     query: str
     user_id: str
     material_ids: list[str]
-    limit: int
+    limit_tokens: int
 
 
 class MaterialSearchApp(Protocol):
     async def add_material(self, cmd: AddMaterialCmd) -> Material: ...
 
-    async def search(self, cmd: SearchCmd) -> list[Material]: ...
+    async def search(self, cmd: SearchCmd) -> list[MaterialChunk]: ...

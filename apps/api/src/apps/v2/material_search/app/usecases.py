@@ -7,7 +7,13 @@ from src.lib.settings import settings
 
 from src.apps.v2.llm_tools.app.usecases import LLMToolsApp
 
-from ..domain.models import Material, MaterialFile, MaterialKind, MaterialStatus
+from ..domain.models import (
+    Material,
+    MaterialFile,
+    MaterialKind,
+    MaterialStatus,
+    MaterialChunk,
+)
 from ..domain.ports import (
     Indexer,
     MaterialRepository,
@@ -92,7 +98,7 @@ class MaterialSearchAppImpl(MaterialSearchApp):
                 except UnicodeDecodeError as e:
                     logging.warning(f"Error decoding text: {e}")
 
-        material = await self.material_repository.create(material)
+        await self.material_repository.save(material)
 
         if material.kind == "complex" and len(text) > 0:
             marker_to_url = {}
@@ -106,20 +112,34 @@ class MaterialSearchAppImpl(MaterialSearchApp):
                 text = text.replace(marker, f"\n{{quizbee_unique_image_url:{url}}}\n")
 
         material.status = MaterialStatus.INDEXING
-        material = await self.material_repository.update(material)
+        await self.material_repository.save(material)
 
         await self.indexer.index(material)
         material.status = MaterialStatus.INDEXED
-        material = await self.material_repository.update(material)
+        await self.material_repository.save(material)
 
         return material
 
-    async def search(self, cmd: SearchCmd) -> list[Material]: ...
+    async def search(self, cmd: SearchCmd) -> list[MaterialChunk]:
+        limit_chunks = int(cmd.limit_tokens / self.llm_tools.chunk_size)
 
-    # return await self.indexer.search(cmd.query, cmd.user_id, cmd.material_ids, cmd.limit)
+        if len(cmd.query.strip().split()) <= 3:
+            ratio = 0
+        else:
+            ratio = 0.5
+
+        chunks = await self.indexer.search(
+            user_id=cmd.user_id,
+            query=cmd.query,
+            material_ids=cmd.material_ids,
+            limit=limit_chunks,
+            ratio=ratio,
+        )
+
+        return chunks
 
     async def _deduplicate_material(self, cmd: AddMaterialCmd) -> Material | None:
-        material = await self.material_repository.get(
-            cmd.material_id, cmd.file.file_bytes
-        )
+        material = await self.material_repository.get(cmd.material_id)
+        if material is not None:
+            return material
         return material

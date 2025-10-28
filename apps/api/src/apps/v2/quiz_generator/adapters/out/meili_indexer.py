@@ -1,3 +1,4 @@
+import asyncio
 from dataclasses import asdict, dataclass
 import logging
 from typing import TypedDict
@@ -17,14 +18,14 @@ from ...domain.models import (
     QuizCategory,
     QuizDifficulty,
     QuizItem,
-    QuizVisability,
+    QuizVisibility,
 )
 from ...domain.ports import QuizIndexer, QuizRepository
 
 FILTERABLE_ATTRIBUTES = [
     "authorId",
     "quizId",
-    "visability",
+    "visibility",
     "tags",
     "category",
     "difficulty",
@@ -55,7 +56,7 @@ class Doc:
     id: str
     quiz_id: str
     author_id: str
-    visability: QuizVisability
+    visibility: QuizVisibility
     title: str
     query: str
     summary: str
@@ -69,7 +70,7 @@ class Doc:
             id=f"{quiz.id}",
             quiz_id=quiz.id,
             author_id=quiz.author_id,
-            visability=quiz.visability,
+            visibility=quiz.visibility,
             title=quiz.title,
             query=quiz.query,
             summary=quiz.summary,  # pyright: ignore[reportArgumentType]
@@ -186,7 +187,9 @@ class MeiliIndexer(QuizIndexer):
             )
 
         docs: list[Doc] = [Doc(**hit) for hit in res.hits]
-        quizes = self.quiz_repository
+        quizes = await asyncio.gather(
+            *[self.quiz_repository.get(doc.quiz_id) for doc in docs]
+        )
 
         return quizes
 

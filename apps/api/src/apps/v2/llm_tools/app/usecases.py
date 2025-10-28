@@ -16,6 +16,10 @@ class LLMToolsAppImpl(LLMToolsApp):
         self.image_tokenizer = image_tokenizer
         self.chunker = chunker
 
+    @property
+    def chunk_size(self) -> int:
+        return self.chunker.chunk_size
+
     def encode(self, text: str, llm: LLMS = LLMS.GPT_5_MINI) -> list[int]:
         return self.text_tokenizer.encode(text, llm)
 

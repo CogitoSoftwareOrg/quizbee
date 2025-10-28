@@ -26,6 +26,10 @@ class SimpleChunker(Chunker):
         self._overlap = overlap
         self._split_on_sentences = split_on_sentences
 
+    @property
+    def chunk_size(self) -> int:
+        return self._chunk_size
+
     def chunk(self, text: str) -> list[str]:
         """
         Split text into overlapping chunks.

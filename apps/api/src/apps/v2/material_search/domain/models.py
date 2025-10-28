@@ -38,11 +38,11 @@ class Material:
     title: str
     file: MaterialFile
     images: list[MaterialFile] = field(default_factory=list)
-    kind = MaterialKind.SIMPLE
-    tokens = 0
-    contents = ""
-    is_book = False
-    status = MaterialStatus.UPLOADED
+    kind: MaterialKind = MaterialKind.SIMPLE
+    tokens: int = 0
+    contents: str = ""
+    is_book: bool = False
+    status: MaterialStatus = MaterialStatus.UPLOADED
     text_file: MaterialFile | None = None
     id: str = field(default_factory=genID)
 
