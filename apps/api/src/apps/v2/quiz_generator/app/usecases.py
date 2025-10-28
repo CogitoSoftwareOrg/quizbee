@@ -87,6 +87,7 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
                 await self.quiz_repository.save(quiz)
 
         quiz.to_creating()
+        quiz.increment_generation()
         await self.quiz_repository.save(quiz)
 
         await self.generate(cmd)

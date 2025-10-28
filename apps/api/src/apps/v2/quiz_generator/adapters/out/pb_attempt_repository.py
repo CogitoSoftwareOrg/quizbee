@@ -1,8 +1,11 @@
+import json
+from dataclasses import asdict
+from typing import Any
 from pocketbase import PocketBase
 from pocketbase.models.dtos import Record
 
-from ...domain.ports import AttemptRepository, QuizRepository
-from ...domain.models import Attempt, Choice, Quiz
+from ...domain.ports import AttemptRepository
+from ...domain.models import Attempt, Choice
 
 
 class PBAttemptRepository(AttemptRepository):
@@ -16,19 +19,24 @@ class PBAttemptRepository(AttemptRepository):
     async def save(self, attempt: Attempt) -> None:
         try:
             await self.admin_pb.collection("quizAttempts").create(
-                {
-                    "quiz": attempt.quiz_id,
-                    "user": attempt.user_id,
-                }
+                self._to_record(attempt)
             )
         except:
             await self.admin_pb.collection("quizAttempts").update(
-                attempt.id,
-                {
-                    "quiz": attempt.quiz_id,
-                    "user": attempt.user_id,
-                },
+                attempt.id, self._to_record(attempt)
             )
+
+    def _to_record(self, attempt: Attempt) -> dict[str, Any]:
+        dto = {
+            "id": attempt.id,
+            "quiz": attempt.quiz_id,
+            "user": attempt.user_id,
+        }
+
+        if attempt.choices:
+            dto["choices"] = json.dumps([asdict(c) for c in attempt.choices])
+
+        return dto
 
     def _to_attempt(self, rec: Record) -> Attempt:
         choices = rec.get("choices", [])

@@ -16,6 +16,7 @@ from ...domain.models import (
     Quiz,
     QuizGenConfig,
     QuizItem,
+    QuizItemVariant,
     QuizStatus,
 )
 
@@ -123,12 +124,20 @@ class PBQuizRepository(QuizRepository):
         )
 
     def _to_item(self, item_rec: Record) -> QuizItem:
+        answers = item_rec.get("answers") or []
         return QuizItem(
             id=item_rec.get("id", ""),
             question=item_rec.get("question", ""),
-            variants=item_rec.get("answers", []),
+            variants=[self._to_variant(a) for a in answers],
             order=item_rec.get("order", 0),
             status=item_rec.get("status", ""),
+        )
+
+    def _to_variant(self, rec: dict[str, Any]) -> QuizItemVariant:
+        return QuizItemVariant(
+            content=rec.get("content", ""),
+            explanation=rec.get("explanation", ""),
+            is_correct=rec.get("isCorrect", False),
         )
 
     async def _to_record(self, quiz: Quiz) -> dict[str, Any]:
@@ -136,6 +145,7 @@ class PBQuizRepository(QuizRepository):
 
         dto = {
             # Simple fields
+            "generation": quiz.generation,
             "id": quiz.id,
             "author": quiz.author_id,
             "title": quiz.title,
@@ -169,13 +179,24 @@ class PBQuizRepository(QuizRepository):
         return dto
 
     async def _to_record_item(self, item: QuizItem) -> dict[str, Any]:
-        return {
+        dto = {
             "id": item.id,
             "question": item.question,
-            "answers": item.variants,
             "order": item.order,
             "status": item.status,
         }
+
+        if len(item.variants) > 0:
+            dto["answers"] = [
+                {
+                    "content": v.content,
+                    "explanation": v.explanation,
+                    "isCorrect": v.is_correct,
+                }
+                for v in item.variants
+            ]
+
+        return dto
 
     def _to_gen_config(self, rec: Record) -> QuizGenConfig:
         return QuizGenConfig(

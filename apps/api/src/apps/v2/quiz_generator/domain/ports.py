@@ -36,3 +36,7 @@ class QuizIndexer(Protocol):
 
 class PatchGenerator(Protocol):
     async def generate(self, quiz: Quiz, cache_key: str) -> None: ...
+
+
+class Finalizer(Protocol):
+    async def finalize(self, quiz: Quiz) -> None: ...

@@ -81,6 +81,10 @@ class AIPatchGenerator(PatchGenerator):
         )
 
     async def generate(self, quiz: Quiz, cache_key: str) -> None:
+        logging.info(
+            f"Generating quiz patch for quiz {quiz.id} (generation {quiz.generation})"
+        )
+
         generation = quiz.generation
         seen = 0
         cancelled = False

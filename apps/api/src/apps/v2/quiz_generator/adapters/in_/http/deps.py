@@ -5,6 +5,8 @@ from src.lib.clients import AdminPBDeps
 from src.apps.v2.user_auth.di import AuthUserAppDeps, SubscriptionDeps, UserDeps
 from src.apps.v2.user_auth.domain.errors import NoTokenError, ForbiddenError
 
+from ....domain.constants import PATCH_LIMIT
+
 
 async def http_guard_and_set_user(request: Request, auth_user_app: AuthUserAppDeps):
     try:
@@ -47,10 +49,10 @@ async def http_guard_quiz_patch_quota_protection(
         quiz_id, options={"params": {"filter": f"author = '{user.id}'"}}
     )
 
-    cost = abs(int(body.get("limit", 5)))
-
     remained = sub.quiz_items_limit - sub.quiz_items_usage
-    if cost > remained:
+    if PATCH_LIMIT > remained:
         raise HTTPException(status_code=400, detail=f"Quiz items limit exceeded")
 
-    await admin_pb.collection("subscriptions").update(sub.id, {"quizItemsUsage+": cost})
+    await admin_pb.collection("subscriptions").update(
+        sub.id, {"quizItemsUsage+": PATCH_LIMIT}
+    )
