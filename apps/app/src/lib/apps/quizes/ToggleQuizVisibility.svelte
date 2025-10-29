@@ -87,7 +87,7 @@
 				{isSearchable ? 'Public' : 'Link'}
 			</h4>
 			<p class="text-base-content/70 text-xs">
-				{isSearchable ? 'Visible in search results' : 'Only via direct link'}
+				{isSearchable ? 'Visible in search results' : 'Shareable only via direct link'}
 			</p>
 		</div>
 	</div>

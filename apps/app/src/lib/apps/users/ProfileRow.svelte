@@ -3,7 +3,9 @@
 	import type { ClassValue } from 'svelte/elements';
 
 	import { pb } from '$lib/pb';
-	import Man from '$lib/assets/images/Man.jpg';
+	
+	import userImageDefault from '$lib/assets/images/user.png';
+
 	import { userStore } from '$lib/apps/users/user.svelte';
 	import { uiStore } from '$lib/apps/users/ui.svelte';
 	import { subscriptionStore } from '../billing/subscriptions.svelte';
@@ -15,7 +17,7 @@
 	let { class: className, expanded = false }: Props = $props();
 
 	const user = $derived(userStore.user);
-	const avatar = $derived(user?.avatar ? pb!.files.getURL(user, user.avatar) : Man);
+	const avatar = $derived(user?.avatar ? pb!.files.getURL(user, user.avatar) : userImageDefault);
 	const sub = $derived(subscriptionStore.subscription);
 
 	const limit = $derived(sub?.quizItemsLimit ?? 0);

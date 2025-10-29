@@ -5,7 +5,7 @@
 	import { onMount } from 'svelte';
 	import { PortalHost } from '@cogisoft/ui-svelte-daisy';
 
-	import favicon from '$lib/assets/icons/bee_final.svg';
+	import favicon from '$lib/assets/icons/bee_v3.svg';
 	import ThemeLoad from '$lib/features/ThemeLoad.svelte';
 
 	let { children } = $props();

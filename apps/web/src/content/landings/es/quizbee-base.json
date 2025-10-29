@@ -4,7 +4,7 @@
   "meta": {
     "title": "QuizBee - Aprende de Manera Más Inteligente con Cuestionarios Impulsados por IA",
     "description": "Transforma tus materiales de estudio en cuestionarios interactivos impulsados por IA. Aprendizaje adaptativo, tutoría con IA y seguimiento de progreso para estudiantes y profesionales.",
-    "image": "/bee_final.svg",
+    "image": "/bee_v3.svg",
     "active": "home",
     "headerCtaHref": "{{APP_URL}}",
     "structuredData": {
@@ -33,7 +33,7 @@
         "title": "Transforma Tus Materiales de Estudio en Cuestionarios Interactivos",
         "description": "QuizBee convierte tus documentos en cuestionarios atractivos impulsados por IA. Estudia de manera más inteligente, no más difícil, con aprendizaje personalizado que se adapta a tus necesidades.",
         "buttonText": "Comenzar Gratis",
-        "image": "/bee_final.svg",
+        "image": "/bee_v3.svg",
         "position": "right",
         "overlay": false,
         "href": "{{APP_URL}}"

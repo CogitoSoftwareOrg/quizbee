@@ -4,7 +4,7 @@ import { pb } from '$lib/pb';
 import type { UsersResponse } from '$lib/pb';
 import type { UserExpand } from '$lib/pb/expands';
 import type { Sender } from '$lib/apps/messages/types';
-import Man from '$lib/assets/images/Man.jpg';
+import userImageDefault from '$lib/assets/images/user.png';
 class UserStore {
 	_loaded = $state(false);
 
@@ -26,7 +26,9 @@ class UserStore {
 
 	sender: Sender = $derived({
 		id: this.user?.id || '',
-		avatar: this.user?.avatar ? pb?.files.getURL(this.user, this.user.avatar) || Man : Man,
+		avatar: this.user?.avatar
+			? pb?.files.getURL(this.user, this.user.avatar) || userImageDefault
+			: userImageDefault,
 		name: this.user?.name || 'Name',
 		role: 'user'
 	});
