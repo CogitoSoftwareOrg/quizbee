@@ -1,7 +1,12 @@
 FROM alpine:3.20
+
 RUN apk add --no-cache ca-certificates curl jq wget
 ARG MC_ARCH=linux-amd64
+
 RUN wget -qO /usr/local/bin/mc https://dl.min.io/client/mc/release/${MC_ARCH}/mc \
     && chmod +x /usr/local/bin/mc
+
+COPY ./backup.sh /backup.sh
+
 ENTRYPOINT ["/bin/sh","-c"]
 CMD ["tail -f /dev/null"]

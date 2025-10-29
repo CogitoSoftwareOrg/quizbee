@@ -39,7 +39,6 @@ services:
       BACKUP_PREFIX: ${BACKUP_PREFIX:-prod}
     volumes:
       - meili_data:/meili_data
-      - ./backup.sh:/backup.sh:ro
 
 volumes:
   meili_data:
