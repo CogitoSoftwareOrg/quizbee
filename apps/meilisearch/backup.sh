@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-set -euo pipefail
+set -eu
 
 MEILI_URL="${MEILI_URL:-http://meilisearch:7700}"
 AUTH="Authorization: Bearer ${MEILI_MASTER_KEY}"
@@ -47,7 +47,6 @@ export AWS_REGION="${S3_REGION}"
 mc cp "${dump_file}" "s3/${S3_BUCKET}/${prefix}/${obj}"
 
 echo "[4/4] Prune local old dumps (keep 5)..."
-find /meili_data/dumps -type f -name "*.dump" -printf "%T@ %p\n" \
-  | sort -nr | awk 'NR>5{print $2}' | xargs -r rm -f
+ls -1t /meili_data/dumps/*.dump 2>/dev/null | tail -n +6 | xargs -r rm -f
 
 echo "Backup finished: ${obj}"
