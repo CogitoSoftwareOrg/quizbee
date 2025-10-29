@@ -1,6 +1,7 @@
 import asyncio
 import json
 from dataclasses import asdict
+import logging
 from typing import Any
 import httpx
 from pocketbase import FileUpload, PocketBase
@@ -135,7 +136,7 @@ class PBQuizRepository(QuizRepository):
         return QuizItemVariant(
             content=rec.get("content", ""),
             explanation=rec.get("explanation", ""),
-            is_correct=rec.get("isCorrect", False),
+            is_correct=rec.get("correct", False),
         )
 
     async def _to_record(self, quiz: Quiz) -> dict[str, Any]:
@@ -158,6 +159,7 @@ class PBQuizRepository(QuizRepository):
             "avoidRepeat": quiz.avoid_repeat,
             "dynamicConfig": json.dumps(asdict(quiz.gen_config)),
             "materials": [m.id for m in quiz.materials],
+            "slug": quiz.slug,
         }
 
         f = (
@@ -189,7 +191,7 @@ class PBQuizRepository(QuizRepository):
                 {
                     "content": v.content,
                     "explanation": v.explanation,
-                    "isCorrect": v.is_correct,
+                    "correct": v.is_correct,
                 }
                 for v in item.variants
             ]

@@ -68,11 +68,11 @@ class AIPatchGeneratorOutput(BaseModel):
         ),
     ]
 
-    def _merge(self, items: list[QuizItem]):
-        for item, schema in zip(items, self.quiz_items):
-            item = QuizItem(
-                id=item.id,
-                question=item.question,
+    def _merge(self, quiz: Quiz, items: list[QuizItem]):
+        for original_item, schema in zip(items, self.quiz_items):
+            updated_item = QuizItem(
+                id=original_item.id,
+                question=schema.question,
                 variants=[
                     QuizItemVariant(
                         content=a.answer,
@@ -81,9 +81,10 @@ class AIPatchGeneratorOutput(BaseModel):
                     )
                     for a in schema.answers
                 ],
-                order=item.order,
+                order=original_item.order,
                 status=QuizItemStatus.GENERATED,
             )
+            quiz.update_item(updated_item)
 
 
 class AIPatchGenerator(PatchGenerator):
@@ -97,7 +98,7 @@ class AIPatchGenerator(PatchGenerator):
         self._quiz_repository = quiz_repository
 
         self._ai = ai
-        self._ai.history_processors = self._ai.history_processors + [self._inject_request_prompt]  # type: ignore
+        self._ai.history_processors += [self._inject_request_prompt]  # type: ignore
 
     async def generate(self, quiz: Quiz, cache_key: str) -> None:
         logging.info(
@@ -143,18 +144,21 @@ class AIPatchGenerator(PatchGenerator):
 
                         payload: AIPatchGeneratorOutput = output.data
                         if len(payload.quiz_items) > 0:
-                            items = generating_items[seen : len(payload.quiz_items)]
-                            payload._merge(items)
-                            await asyncio.gather(
-                                *[
-                                    self._quiz_repository.save_item(item)
-                                    for item in items
-                                ]
-                            )
-                            seen += 1
+                            items = generating_items[
+                                seen : seen + len(payload.quiz_items)
+                            ]
+                            payload._merge(quiz, items)
+                            await self._quiz_repository.save(quiz)
+                            seen += len(payload.quiz_items)
 
                 await update_span_with_result(
-                    self._lf, run, span, quiz.author_id, cache_key, PATCH_GENERATOR_LLM
+                    self._lf,
+                    run,
+                    span,
+                    quiz.author_id,
+                    cache_key,
+                    PATCH_GENERATOR_LLM,
+                    run.all_messages(),
                 )
 
         except Exception as e:

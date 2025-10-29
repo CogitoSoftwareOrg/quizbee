@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from enum import StrEnum
+import logging
 
 from src.lib.utils import genID
 
@@ -142,8 +143,11 @@ class Quiz:
         self.status = QuizStatus.CREATING
 
     def to_answered(self) -> None:
-        if self.status != QuizStatus.CREATING:
+        if self.status not in {QuizStatus.CREATING, QuizStatus.ANSWERED}:
             raise ValueError("Quiz is not in creating status for answered")
+        for item in self.items:
+            if item.status not in {QuizItemStatus.FINAL}:
+                raise ValueError("Quiz can't be answered if some items are not final")
         self.status = QuizStatus.ANSWERED
 
     def to_final(self) -> None:
@@ -209,8 +213,8 @@ class Quiz:
             item.to_failed()
 
     def update_item(self, item: QuizItem):
-        for i in self.items:
-            if i.id == item.id:
-                i = item
+        for i, existing_item in enumerate(self.items):
+            if existing_item.id == item.id:
+                self.items[i] = item
                 return
         raise ValueError(f"Item {item.id} not found")

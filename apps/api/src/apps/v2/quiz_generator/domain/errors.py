@@ -18,3 +18,9 @@ class NotEnoughQuizItemsError(Exception):
         self.cost = cost
         self.stored = stored
         super().__init__(f"Quota exceeded for quiz {quiz_id} by user {user_id}")
+
+
+class QuizNotAnsweredError(Exception):
+    def __init__(self, quiz_id: str):
+        self.quiz_id = quiz_id
+        super().__init__(f"Quiz {quiz_id} is not in answered status")

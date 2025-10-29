@@ -48,6 +48,9 @@ from src.apps.v2.quiz_generator.adapters.out import (
     MeiliIndexer as MeiliQuizIndexer,
 )
 
+from src.apps.v2.quiz_attempter.di import set_quiz_attempter_app
+from src.apps.v2.quiz_attempter.adapters.out import PBAttemptRepository
+
 
 from src.lib.clients import set_admin_pb
 
@@ -145,6 +148,12 @@ async def lifespan(app: FastAPI):
         quiz_indexer=quiz_indexer,
         patch_generator=patch_generator,
         finalizer=finalizer,
+    )
+
+    # V2 QUIZ ATTEMPTER
+    attempt_repository = PBAttemptRepository(app.state.admin_pb)
+    set_quiz_attempter_app(
+        app, attempt_repository=attempt_repository, user_auth=app.state.auth_user_app
     )
 
     async with contextlib.AsyncExitStack() as stack:

@@ -1,7 +1,7 @@
 from typing import Annotated, Any
 from langfuse import Langfuse, LangfuseSpan
 from fastapi import Depends, FastAPI, Request
-from pydantic_ai import AgentRunResult
+from pydantic_ai import AgentRunResult, ModelMessage
 from pydantic_ai.agent import Agent
 from pydantic_ai.result import StreamedRunResult
 
@@ -45,6 +45,7 @@ async def update_span_with_result(
     user_id: str,
     session_id: str,
     model: LLMS,
+    new_messages: list[ModelMessage],
     # costs: LLMCosts,
 ):
     if isinstance(result, StreamedRunResult):
@@ -64,7 +65,7 @@ async def update_span_with_result(
     # outp_price = round(outp * costs.output, 4)
 
     lf.update_current_generation(
-        input=f"{input_nc} input tokens, {input_cah} cache read tokens, {outp} output tokens",
+        input=new_messages,
         output=output,
         model=model,
         usage_details={

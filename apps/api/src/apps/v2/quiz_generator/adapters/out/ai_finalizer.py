@@ -83,7 +83,7 @@ class AIFinalizer(Finalizer):
         self._quiz_repository = quiz_repository
 
         self._ai = ai
-        self._ai.history_processors = self._ai.history_processors + [self._inject_request_prompt]  # type: ignore
+        self._ai.history_processors += [self._inject_request_prompt]  # type: ignore
 
     async def finalize(self, quiz: Quiz, cache_key: str) -> None:
         logging.info(f"Finalizing quiz {quiz.id}")
@@ -94,18 +94,25 @@ class AIFinalizer(Finalizer):
                 model_settings={
                     "extra_body": {
                         "reasoning_effort": "low",
+                        "service_tier": "default",
                         "prompt_cache_key": cache_key,
                     }
                 },
             )
             await update_span_with_result(
-                self._lf, res, span, quiz.author_id, cache_key, FINALIZER_LLM
+                self._lf,
+                res,
+                span,
+                quiz.author_id,
+                cache_key,
+                FINALIZER_LLM,
+                res.all_messages(),
             )
 
-            if res.output.data != "summary":
+            if res.output.data.mode != "summary":
                 raise ValueError(f"Unexpected output type: {type(res.output)}")
 
-            payload: FinalizerOutput = res.output.data  # type: ignore
+            payload: FinalizerOutput = res.output.data
             payload._merge(quiz)
             await self._quiz_repository.save(quiz)
 

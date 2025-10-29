@@ -4,6 +4,13 @@ from src.lib.utils import genID
 
 
 @dataclass(slots=True, kw_only=True)
+class Feedback:
+    overview: str = field(default="")
+    problem_topics: list[str] = field(default_factory=list)
+    uncovered_topics: list[str] = field(default_factory=list)
+
+
+@dataclass(slots=True, kw_only=True)
 class Choice:
     idx: int
     correct: bool
@@ -12,6 +19,7 @@ class Choice:
 
 @dataclass(slots=True, kw_only=True)
 class Attempt:
+    feedback: Feedback | None = None
     id: str = field(default_factory=genID)
     choices: list[Choice] = field(default_factory=list)
     quiz_id: str

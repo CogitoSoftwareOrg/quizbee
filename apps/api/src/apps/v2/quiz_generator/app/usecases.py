@@ -9,9 +9,13 @@ from ..domain.ports import (
     QuizIndexer,
     QuizRepository,
 )
-from ..domain.models import Quiz
+from ..domain.models import Quiz, QuizStatus
 from ..domain.constants import PATCH_LIMIT
-from ..domain.errors import NotQuizOwnerError, NotEnoughQuizItemsError
+from ..domain.errors import (
+    NotQuizOwnerError,
+    NotEnoughQuizItemsError,
+    QuizNotAnsweredError,
+)
 
 from .contracts import (
     GenerateCmd,
@@ -68,6 +72,13 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
 
     async def finalize(self, cmd: FinalizeCmd) -> None:
         quiz = await self.quiz_repository.get(cmd.quiz_id)
+        user = await self.user_auth.validate(cmd.token)
+
+        if quiz.author_id != user.id:
+            raise NotQuizOwnerError(quiz_id=cmd.quiz_id, user_id=user.id)
+
+        quiz.to_answered()
+        await self.quiz_repository.save(quiz)
         await self.finalizer.finalize(quiz, cmd.cache_key)
 
     async def start(self, cmd: GenerateCmd) -> None:
@@ -76,7 +87,7 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
         await self.quiz_repository.save(quiz)
 
         if quiz.need_build_material_content:
-            await self._build_material_content(quiz, quiz.length * 2000)
+            await self._build_material_content(quiz, quiz.length * 2000, cmd.token)
             await self.quiz_repository.save(quiz)
 
         if quiz.avoid_repeat:
@@ -116,7 +127,9 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
 
         await self.generate(cmd)
 
-    async def _build_material_content(self, quiz: Quiz, token_limit) -> None:
+    async def _build_material_content(
+        self, quiz: Quiz, token_limit: int, token: str
+    ) -> None:
         logging.info(f"Building material content for quiz {quiz.id}")
         chunks = await self.material_search.search(
             SearchCmd(
@@ -124,6 +137,7 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
                 user_id=quiz.author_id,
                 material_ids=[m.id for m in quiz.materials],
                 limit_tokens=token_limit,
+                token=token,
             )
         )
         logging.info(f"Found {len(chunks)} chunks for quiz {quiz.id}")
