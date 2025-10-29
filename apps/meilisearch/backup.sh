@@ -17,8 +17,8 @@ mc alias set s3 "${S3_ENDPOINT}" "${S3_ACCESS_KEY_ID}" "${S3_SECRET_ACCESS_KEY}"
 mc mb --ignore-existing "s3/${S3_BUCKET}" >/dev/null 2>&1 || true
 
 ts="$(date -u +"%Y%m%dT%H%M%SZ")"
-prefix="${BACKUP_PREFIX:-prod}"
-obj="meili_dump_${prefix}_${ts}.dump"
+prefix="${BACKUP_PREFIX:-dumps}"
+obj="meili_dump_${ts}.dump"
 
 echo "[1/4] Requesting Meilisearch dump..."
 task_uid="$(curl -sS -X POST -H "${AUTH}" "${MEILI_URL}/dumps" | jq -r '.taskUid // .uid')"
