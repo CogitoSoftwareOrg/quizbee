@@ -1,7 +1,6 @@
-from typing import Annotated
-from fastapi import Depends, Request, FastAPI
+from fastapi import FastAPI
 
-from src.apps.v2.llm_tools.app.usecases import LLMToolsApp
+from src.apps.v2.user_auth.app.contracts import AuthUserApp
 from src.apps.v2.llm_tools.app.contracts import LLMToolsApp
 
 from .domain.ports import (
@@ -10,7 +9,6 @@ from .domain.ports import (
     Indexer,
 )
 
-from .app.contracts import MaterialSearchApp
 from .app.usecases import MaterialSearchAppImpl
 
 
@@ -21,17 +19,12 @@ def set_material_search_app(
     pdf_parser: PdfParser,
     indexer: Indexer,
     material_repository: MaterialRepository,
+    user_auth: AuthUserApp,
 ):
     app.state.material_search_app = MaterialSearchAppImpl(
         material_repository=material_repository,
         pdf_parser=pdf_parser,
         llm_tools=llm_tools,
         indexer=indexer,
+        user_auth=user_auth,
     )
-
-
-def get_material_search_app(request: Request) -> MaterialSearchApp:
-    return request.app.state.material_search_app
-
-
-MaterialSearchAppDep = Annotated[MaterialSearchApp, Depends(get_material_search_app)]

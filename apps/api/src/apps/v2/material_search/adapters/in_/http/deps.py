@@ -1,10 +1,11 @@
-from fastapi import Request
+from typing import Annotated
+from fastapi import Depends, Request
 
-from src.apps.v2.user_auth.di import AuthUserAppDeps
+from ....app.contracts import MaterialSearchApp
 
 
-async def http_guard_and_set_user(request: Request, auth_user_app: AuthUserAppDeps):
-    token = request.cookies.get("pb_token")
-    user, sub = await auth_user_app.validate(token)
-    request.state.user = user
-    request.state.subscription = sub
+def get_material_search_app(request: Request) -> MaterialSearchApp:
+    return request.app.state.material_search_app
+
+
+MaterialSearchAppDeps = Annotated[MaterialSearchApp, Depends(get_material_search_app)]

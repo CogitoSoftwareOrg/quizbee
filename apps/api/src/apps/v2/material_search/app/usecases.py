@@ -6,6 +6,7 @@ from src.lib.settings import settings
 
 
 from src.apps.v2.llm_tools.app.usecases import LLMToolsApp
+from src.apps.v2.user_auth.app.contracts import AuthUserApp
 
 from ..domain.models import (
     Material,
@@ -32,14 +33,18 @@ class MaterialSearchAppImpl(MaterialSearchApp):
         pdf_parser: PdfParser,
         llm_tools: LLMToolsApp,
         indexer: Indexer,
+        user_auth: AuthUserApp,
     ):
         self.material_repository = material_repository
         self.pdf_parser = pdf_parser
         self.llm_tools = llm_tools
         self.indexer = indexer
+        self.user_auth = user_auth
 
     async def add_material(self, cmd: AddMaterialCmd) -> Material:
         # Validate file size
+        user = await self.user_auth.validate(cmd.token)
+
         file_size_mb = len(cmd.file.file_bytes) / (1024 * 1024)
         if file_size_mb > MAX_SIZE_MB:
             raise TooLargeFileError(file_size_mb)
@@ -53,7 +58,7 @@ class MaterialSearchAppImpl(MaterialSearchApp):
         text = ""
         pdf_images = []
         material = Material.create(
-            user_id=cmd.user_id, title=cmd.title, file=cmd.file, id=cmd.material_id
+            user_id=user.id, title=cmd.title, file=cmd.file, id=cmd.material_id
         )
         if cmd.file.file_name.lower().endswith(".pdf"):
             try:

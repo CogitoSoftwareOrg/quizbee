@@ -12,7 +12,7 @@ class PBUserRepository(UserRepository):
 
     async def get(self, user_id: str) -> User:
         rec = await self.pb.collection("users").get_one(
-            user_id, options={"params": {"expand": "subscription_via_user"}}
+            user_id, options={"params": {"expand": "subscriptions_via_user"}}
         )
         return self._to_user(rec)
 
@@ -29,7 +29,7 @@ class PBUserRepository(UserRepository):
             raise Exception(f"Failed to update subscription {sub.id}: {e}")
 
     def _to_user(self, rec: Record) -> User:
-        sub_rec = rec.get("expand", {}).get("subscription_via_user", [])[0]
+        sub_rec = rec.get("expand", {}).get("subscriptions_via_user", [])[0]
         if not sub_rec:
             raise Exception("Subscription not found")
 

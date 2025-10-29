@@ -1,43 +1,44 @@
-from fastapi import APIRouter, HTTPException, Depends, File, UploadFile, Form
+from fastapi import APIRouter, HTTPException, Depends, File, UploadFile, Form, Request
 import logging
 
 from fastapi.responses import JSONResponse
 
-from src.apps.v2.user_auth.di import UserDeps
-
-from ....di import MaterialSearchAppDep
 from ....domain.models import MaterialFile
 from ....app.usecases import AddMaterialCmd
 from ....domain.errors import TooLargeFileError
 
-from .deps import http_guard_and_set_user
+from .deps import MaterialSearchAppDeps
 
 material_search_router = APIRouter(
     prefix="/v2/materials",
     tags=["v2"],
-    dependencies=[Depends(http_guard_and_set_user)],
+    dependencies=[],
 )
 
 
 @material_search_router.post("", status_code=201)
 async def add_material(
-    material_search_app: MaterialSearchAppDep,
-    user: UserDeps,
+    request: Request,
+    material_search_app: MaterialSearchAppDeps,
     file: UploadFile = File(...),
     title: str = Form(...),
     material_id: str = Form(...),
 ):
+    token = request.cookies.get("pb_token")
+    if not token:
+        raise HTTPException(status_code=401, detail="Unauthorized: no pb_token")
+
     try:
         file_bytes = await file.read()
         material = await material_search_app.add_material(
             AddMaterialCmd(
+                token=token,
                 file=MaterialFile(
                     file_name=file.filename or "unknown",
                     file_bytes=file_bytes,
                 ),
                 title=title,
                 material_id=material_id,
-                user_id=user.id or "",
             )
         )
 

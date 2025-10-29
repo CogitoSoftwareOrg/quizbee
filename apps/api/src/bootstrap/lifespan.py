@@ -84,8 +84,8 @@ async def lifespan(app: FastAPI):
     set_llm_tools(app)
 
     # V2 USER AUTH
-    user_verifier = PBUserVerifier(app.state.admin_pb)
     user_repository = PBUserRepository(app.state.admin_pb)
+    user_verifier = PBUserVerifier(user_repository=user_repository)
     set_auth_user_app(app, user_verifier=user_verifier, user_repository=user_repository)
 
     # V2 MATERIAL SEARCH
@@ -100,6 +100,7 @@ async def lifespan(app: FastAPI):
         pdf_parser=pdf_parser,
         indexer=material_indexer,
         llm_tools=app.state.llm_tools,
+        user_auth=app.state.auth_user_app,
     )
 
     # V2 QUIZ GENERATOR

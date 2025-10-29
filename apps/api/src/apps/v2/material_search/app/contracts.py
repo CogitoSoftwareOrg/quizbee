@@ -7,14 +7,15 @@ from ..domain.models import Material, MaterialFile, MaterialChunk
 
 @dataclass
 class AddMaterialCmd:
+    token: str
     file: MaterialFile
     title: str
     material_id: str
-    user_id: str
 
 
 @dataclass
 class SearchCmd:
+    token: str
     query: str
     user_id: str
     material_ids: list[str]

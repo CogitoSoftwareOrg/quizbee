@@ -1,5 +1,4 @@
-from typing import Annotated
-from fastapi import Depends, FastAPI, Request
+from fastapi import FastAPI
 
 from src.apps.v2.user_auth.app.contracts import AuthUserApp
 from src.apps.v2.material_search.app.contracts import MaterialSearchApp
@@ -12,7 +11,6 @@ from .domain.ports import (
     QuizIndexer,
     PatchGenerator,
 )
-from .app.contracts import QuizGeneratorApp
 from .app.usecases import QuizGeneratorAppImpl
 
 
@@ -35,10 +33,3 @@ def set_quiz_generator_app(
         patch_generator=patch_generator,
         finalizer=finalizer,
     )
-
-
-def get_quiz_generator_app(request: Request) -> QuizGeneratorApp:
-    return request.app.state.quiz_generator_app
-
-
-QuizGeneratorAppDeps = Annotated[QuizGeneratorApp, Depends(get_quiz_generator_app)]

@@ -1,32 +1,23 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 
 from src.lib.utils.cache_key import cache_key
 
 from ....app.contracts import FinalizeCmd, GenMode, GenerateCmd
-from ....di import QuizGeneratorAppDeps
 
 from .schemas import FinalizeQuizDto, PatchQuizDto, StartQuizDto
-
-from .deps import (
-    http_guard_and_set_user,
-    http_guard_user_owns_materials,
-    http_guard_quiz_patch_quota_protection,
-)
+from .deps import QuizGeneratorAppDeps
 
 quiz_generator_router = APIRouter(
     prefix="/v2/quizes",
     tags=["v2"],
-    dependencies=[Depends(http_guard_and_set_user)],
+    dependencies=[],
 )
 
 
 @quiz_generator_router.put(
     "/{quiz_id}",
-    dependencies=[
-        Depends(http_guard_user_owns_materials),
-        Depends(http_guard_quiz_patch_quota_protection),
-    ],
+    dependencies=[],
     status_code=status.HTTP_202_ACCEPTED,
 )
 async def start_quiz(
@@ -57,10 +48,7 @@ async def start_quiz(
 
 @quiz_generator_router.patch(
     "/{quiz_id}",
-    dependencies=[
-        Depends(http_guard_user_owns_materials),
-        Depends(http_guard_quiz_patch_quota_protection),
-    ],
+    dependencies=[],
     status_code=status.HTTP_202_ACCEPTED,
 )
 async def generate_quiz_items(
@@ -89,10 +77,7 @@ async def generate_quiz_items(
 
 @quiz_generator_router.put(
     "/{quiz_id}/finalize",
-    dependencies=[
-        Depends(http_guard_user_owns_materials),
-        Depends(http_guard_quiz_patch_quota_protection),
-    ],
+    dependencies=[],
     status_code=status.HTTP_202_ACCEPTED,
 )
 async def finalize_quiz(

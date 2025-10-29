@@ -6,17 +6,19 @@ from src.apps.v2.material_search.domain.errors import (
     TooLargeFileError,
     TooManyTextTokensError,
 )
-
 from src.apps.v2.quiz_generator.domain.errors import (
     NotQuizOwnerError,
     NotEnoughQuizItemsError,
 )
+from src.apps.v2.user_auth.domain.errors import ForbiddenError, NoTokenError
 
 ERROR_MAP = {
     NotQuizOwnerError: (403, "NOT_QUIZ_OWNER"),
     NotEnoughQuizItemsError: (402, "NOT_ENOUGH_QUIZ_ITEMS"),
     TooLargeFileError: (413, "TOO_LARGE_FILE"),
     TooManyTextTokensError: (413, "TOO_MANY_TEXT_TOKENS"),
+    NoTokenError: (401, "NO_TOKEN"),
+    ForbiddenError: (403, "FORBIDDEN"),
 }
 
 
