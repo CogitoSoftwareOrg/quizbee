@@ -6,7 +6,7 @@ from src.apps.v2.llm_tools.app.contracts import LLMToolsApp
 
 
 from .domain.ports import (
-    Finalizer,
+    QuizFinalizer,
     QuizRepository,
     QuizIndexer,
     PatchGenerator,
@@ -22,7 +22,7 @@ def set_quiz_generator_app(
     quiz_repository: QuizRepository,
     quiz_indexer: QuizIndexer,
     patch_generator: PatchGenerator,
-    finalizer: Finalizer,
+    finalizer: QuizFinalizer,
 ):
     app.state.quiz_generator_app = QuizGeneratorAppImpl(
         user_auth=user_auth,

@@ -36,16 +36,16 @@ from src.apps.v2.material_search.adapters.out import (
 )
 
 from src.apps.v2.quiz_generator.adapters.out import (
-    PATCH_GENERATOR_LLM,
-    FINALIZER_LLM,
     PBQuizRepository,
+    PATCH_GENERATOR_LLM,
+    QUIZ_FINALIZER_LLM,
     AIPatchGenerator,
     AIPatchGeneratorDeps,
+    AIQuizFinalizer,
+    QuizFinalizerDeps,
+    QuizFinalizerOutput,
     AIPatchGeneratorOutput,
-    AIFinalizer,
-    FinalizerDeps,
-    FinalizerOutput,
-    MeiliIndexer as MeiliQuizIndexer,
+    MeiliQuizIndexer,
 )
 
 from src.apps.v2.quiz_attempter.di import set_quiz_attempter_app
@@ -57,7 +57,7 @@ from src.lib.clients import set_admin_pb
 from .mcp import mcp
 
 AgentPayload = Annotated[
-    Union[AIPatchGeneratorOutput, FinalizerOutput],
+    Union[AIPatchGeneratorOutput, QuizFinalizerOutput],
     Field(discriminator="mode"),
 ]
 
@@ -123,13 +123,13 @@ async def lifespan(app: FastAPI):
     )
 
     finalizer_ai = Agent(
-        model=FINALIZER_LLM,
-        deps_type=FinalizerDeps,
+        model=QUIZ_FINALIZER_LLM,
+        deps_type=QuizFinalizerDeps,
         output_type=AgentEnvelope,
         history_processors=[],
         retries=3,
     )
-    finalizer = AIFinalizer(
+    finalizer = AIQuizFinalizer(
         lf=app.state.langfuse_client,
         quiz_repository=quiz_repository,
         ai=finalizer_ai,

@@ -4,7 +4,7 @@ from src.apps.v2.material_search.app.contracts import MaterialSearchApp, SearchC
 from src.apps.v2.user_auth.app.contracts import AuthUserApp
 
 from ..domain.ports import (
-    Finalizer,
+    QuizFinalizer,
     PatchGenerator,
     QuizIndexer,
     QuizRepository,
@@ -34,7 +34,7 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
         llm_tools: LLMToolsApp,
         material_search: MaterialSearchApp,
         patch_generator: PatchGenerator,
-        finalizer: Finalizer,
+        finalizer: QuizFinalizer,
     ):
         self.user_auth = user_auth
         self.quiz_repository = quiz_repository

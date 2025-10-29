@@ -89,7 +89,7 @@ class Doc:
         )
 
 
-class MeiliIndexer(QuizIndexer):
+class MeiliQuizIndexer(QuizIndexer):
     def __init__(
         self,
         llm_tools: LLMToolsApp,
@@ -104,7 +104,7 @@ class MeiliIndexer(QuizIndexer):
     @classmethod
     async def ainit(
         cls, llm_tools: LLMToolsApp, meili: AsyncClient, quiz_repository: QuizRepository
-    ) -> "MeiliIndexer":
+    ) -> "MeiliQuizIndexer":
         instance = cls(llm_tools, meili, quiz_repository)
 
         await instance.quiz_index.update_embedders(

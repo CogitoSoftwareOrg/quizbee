@@ -5,10 +5,10 @@ from .ai_patch_generator import (
     AIPatchGeneratorOutput,
     PATCH_GENERATOR_LLM,
 )
-from .ai_finalizer import (
-    AIFinalizer,
-    FinalizerDeps,
-    FinalizerOutput,
-    FINALIZER_LLM,
+from .ai_quiz_finalizer import (
+    AIQuizFinalizer,
+    QuizFinalizerDeps,
+    QuizFinalizerOutput,
+    QUIZ_FINALIZER_LLM,
 )
-from .meili_indexer import MeiliIndexer
+from .meili_indexer import MeiliQuizIndexer

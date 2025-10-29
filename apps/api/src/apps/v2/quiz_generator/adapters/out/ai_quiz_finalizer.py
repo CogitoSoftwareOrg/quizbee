@@ -19,18 +19,18 @@ from src.lib.settings import settings
 from src.lib.clients import update_span_with_result
 
 from ...domain.models import QuizCategory, Quiz
-from ...domain.ports import Finalizer, QuizRepository
+from ...domain.ports import QuizFinalizer, QuizRepository
 
 
-FINALIZER_LLM = LLMS.GPT_5_MINI
+QUIZ_FINALIZER_LLM = LLMS.GPT_5_MINI
 
 
 @dataclass
-class FinalizerDeps:
+class QuizFinalizerDeps:
     quiz: Quiz
 
 
-class FinalizerOutput(BaseModel):
+class QuizFinalizerOutput(BaseModel):
     mode: Literal["summary"]
 
     summary: Annotated[
@@ -72,12 +72,12 @@ class FinalizerOutput(BaseModel):
         quiz.to_final()
 
 
-class AIFinalizer(Finalizer):
+class AIQuizFinalizer(QuizFinalizer):
     def __init__(
         self,
         lf: Langfuse,
         quiz_repository: QuizRepository,
-        ai: Agent[FinalizerDeps, Any],
+        ai: Agent[QuizFinalizerDeps, Any],
     ):
         self._lf = lf
         self._quiz_repository = quiz_repository
@@ -90,7 +90,7 @@ class AIFinalizer(Finalizer):
         # SUMMARIZE
         with self._lf.start_as_current_span(name="quiz-finalizer") as span:
             res = await self._ai.run(
-                deps=FinalizerDeps(quiz=quiz),
+                deps=QuizFinalizerDeps(quiz=quiz),
                 model_settings={
                     "extra_body": {
                         "reasoning_effort": "low",
@@ -105,19 +105,19 @@ class AIFinalizer(Finalizer):
                 span,
                 quiz.author_id,
                 cache_key,
-                FINALIZER_LLM,
+                QUIZ_FINALIZER_LLM,
                 res.all_messages(),
             )
 
             if res.output.data.mode != "summary":
                 raise ValueError(f"Unexpected output type: {type(res.output)}")
 
-            payload: FinalizerOutput = res.output.data
+            payload: QuizFinalizerOutput = res.output.data
             payload._merge(quiz)
             await self._quiz_repository.save(quiz)
 
     async def _inject_request_prompt(
-        self, ctx: RunContext[FinalizerDeps], messages: list[ModelMessage]
+        self, ctx: RunContext[QuizFinalizerDeps], messages: list[ModelMessage]
     ) -> list[ModelMessage]:
         pre_parts = self._build_pre_prompt(ctx.deps.quiz)
 
