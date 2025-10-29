@@ -13,7 +13,7 @@ from src.apps.v2.llm_tools.app.contracts import LLMToolsApp
 
 from ...domain.models import Material, MaterialChunk, MaterialKind
 from ...domain.constants import MAX_TEXT_INDEX_TOKENS
-from ...domain.ports import Indexer
+from ...domain.ports import MaterialIndexer
 from ...domain.errors import TooManyTextTokensError
 
 EMBEDDER_NAME = "materialChunks"
@@ -38,14 +38,16 @@ class Doc:
     content: str
 
 
-class MeiliIndexer(Indexer):
+class MeiliMaterialIndexer(MaterialIndexer):
     def __init__(self, llm_tools: LLMToolsApp, meili: AsyncClient):
         self.llm_tools = llm_tools
         self.meili = meili
         self.material_index = meili.index(EMBEDDER_NAME)
 
     @classmethod
-    async def ainit(cls, llm_tools: LLMToolsApp, meili: AsyncClient) -> "MeiliIndexer":
+    async def ainit(
+        cls, llm_tools: LLMToolsApp, meili: AsyncClient
+    ) -> "MeiliMaterialIndexer":
         instance = cls(llm_tools, meili)
 
         await instance.material_index.update_embedders(

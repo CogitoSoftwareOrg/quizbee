@@ -31,7 +31,7 @@ from src.apps.v2.material_search.di import (
 )
 from src.apps.v2.material_search.adapters.out import (
     FitzPDFParser,
-    MeiliIndexer as MeiliMaterialIndexer,
+    MeiliMaterialIndexer,
     PBMaterialRepository,
 )
 

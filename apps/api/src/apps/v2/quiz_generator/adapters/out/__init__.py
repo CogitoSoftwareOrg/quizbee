@@ -11,4 +11,4 @@ from .ai_quiz_finalizer import (
     QuizFinalizerOutput,
     QUIZ_FINALIZER_LLM,
 )
-from .meili_indexer import MeiliQuizIndexer
+from .meili_quiz_indexer import MeiliQuizIndexer

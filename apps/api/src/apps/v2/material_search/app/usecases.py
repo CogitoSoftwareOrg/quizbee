@@ -16,7 +16,7 @@ from ..domain.models import (
     MaterialChunk,
 )
 from ..domain.ports import (
-    Indexer,
+    MaterialIndexer,
     MaterialRepository,
     PdfParser,
 )
@@ -32,7 +32,7 @@ class MaterialSearchAppImpl(MaterialSearchApp):
         material_repository: MaterialRepository,
         pdf_parser: PdfParser,
         llm_tools: LLMToolsApp,
-        indexer: Indexer,
+        indexer: MaterialIndexer,
         user_auth: AuthUserApp,
     ):
         self.material_repository = material_repository

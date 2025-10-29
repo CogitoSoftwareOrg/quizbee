@@ -6,7 +6,7 @@ from src.apps.v2.llm_tools.app.contracts import LLMToolsApp
 from .domain.ports import (
     MaterialRepository,
     PdfParser,
-    Indexer,
+    MaterialIndexer,
 )
 
 from .app.usecases import MaterialSearchAppImpl
@@ -17,7 +17,7 @@ def set_material_search_app(
     app: FastAPI,
     llm_tools: LLMToolsApp,
     pdf_parser: PdfParser,
-    indexer: Indexer,
+    indexer: MaterialIndexer,
     material_repository: MaterialRepository,
     user_auth: AuthUserApp,
 ):

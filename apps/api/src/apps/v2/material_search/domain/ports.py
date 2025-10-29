@@ -42,7 +42,7 @@ class PdfParser(Protocol):
 
 
 # Indexer
-class Indexer(Protocol):
+class MaterialIndexer(Protocol):
     async def index(self, material: Material) -> None: ...
     async def search(
         self,
