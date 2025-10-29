@@ -239,6 +239,7 @@
 						{#if item && quiz && quizAttempt}
 							<QuizItemsNavigation
 								{quizAttempt}
+								{quiz}
 								{quizItems}
 								{order}
 								{itemDecision}
@@ -288,6 +289,7 @@
 			<AIChat
 				class="flex h-full flex-col px-2"
 				{item}
+				{quiz}
 				{quizAttempt}
 				{itemDecision}
 				{messages}
@@ -300,6 +302,7 @@
 </div>
 <!-- Mobile AI Chat (bottom sheet) -->
 <MobileAIChat
+	{quiz}
 	{item}
 	{quizAttempt}
 	{itemDecision}

@@ -36,6 +36,7 @@ class MessagesStore {
 		sender: Sender,
 		content: string,
 		attemptId: string,
+		quizId: string,
 		itemId: string,
 		mode: 'sse' | 'post' = 'sse'
 	) {
@@ -58,11 +59,13 @@ class MessagesStore {
 			posthog.capture('message_sse_started', {
 				content,
 				attemptId,
+				quizId,
+				attemptId,
 				itemId
 			});
 
 			const es = new EventSource(
-				`${computeApiUrl()}messages/sse?q=${encodeURIComponent(content)}&attempt=${attemptId}&item=${itemId}`,
+				`${computeApiUrl()}v2/quizes/${quizId}/attempts/${attemptId}/messages/sse?q=${encodeURIComponent(content)}&item=${itemId}`,
 				{
 					withCredentials: true
 				}

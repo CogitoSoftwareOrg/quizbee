@@ -4,6 +4,8 @@
 
 	import { Button } from '@cogisoft/ui-svelte-daisy';
 
+	import type { QuizesResponse } from '$lib/pb';
+
 	import { messagesStore } from './stores/messages.svelte';
 	import type { Sender } from './types';
 
@@ -22,6 +24,7 @@
 		sender: Sender;
 		quizAttemptId: string;
 		itemId: string;
+		quiz: QuizesResponse;
 		chatOpen?: boolean;
 	};
 
@@ -29,6 +32,7 @@
 		sender,
 		quizAttemptId,
 		itemId,
+		quiz,
 		class: className,
 		color = 'neutral',
 		style = 'outline',
@@ -47,7 +51,7 @@
 	onclick={async () => {
 		if (!quizAttemptId || !itemId) return;
 		chatOpen = true;
-		messagesStore.sendMessage(sender, 'Explain this question', quizAttemptId, itemId);
+		messagesStore.sendMessage(sender, 'Explain this question', quizAttemptId, quiz.id, itemId);
 	}}
 	size="lg"
 	class={`dark:text-base-content/90 min-w-40 ${className || ''}`}

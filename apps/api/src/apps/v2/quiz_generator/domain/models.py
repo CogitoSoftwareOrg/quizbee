@@ -1,10 +1,10 @@
 from dataclasses import dataclass, field
 from enum import StrEnum
-import logging
 
 from src.lib.utils import genID
 
 from .constants import PATCH_LIMIT
+from .refs import MaterialRef
 
 
 class QuizItemStatus(StrEnum):
@@ -84,14 +84,6 @@ class QuizItem:
         if self.status not in {QuizItemStatus.GENERATING}:
             raise ValueError("Item is not in generating status for failing")
         self.status = QuizItemStatus.FAILED
-
-
-@dataclass(slots=True, kw_only=True)
-class MaterialRef:
-    id: str
-    text: str
-    filename: str
-    is_book: bool
 
 
 @dataclass(slots=True, kw_only=True)

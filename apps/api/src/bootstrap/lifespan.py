@@ -49,7 +49,13 @@ from src.apps.v2.quiz_generator.adapters.out import (
 )
 
 from src.apps.v2.quiz_attempter.di import set_quiz_attempter_app
-from src.apps.v2.quiz_attempter.adapters.out import PBAttemptRepository
+from src.apps.v2.quiz_attempter.adapters.out import (
+    PBAttemptRepository,
+    AIExplainer,
+    ExplainerDeps,
+    EXPLAINER_LLM,
+    ExplainerOutput,
+)
 
 
 from src.lib.clients import set_admin_pb
@@ -57,7 +63,7 @@ from src.lib.clients import set_admin_pb
 from .mcp import mcp
 
 AgentPayload = Annotated[
-    Union[AIPatchGeneratorOutput, QuizFinalizerOutput],
+    Union[AIPatchGeneratorOutput, QuizFinalizerOutput, ExplainerOutput],
     Field(discriminator="mode"),
 ]
 
@@ -151,9 +157,23 @@ async def lifespan(app: FastAPI):
     )
 
     # V2 QUIZ ATTEMPTER
-    attempt_repository = PBAttemptRepository(app.state.admin_pb)
+    attempt_repository = PBAttemptRepository(app.state.admin_pb, http=http)
+    explainer_ai = Agent(
+        # instrument=True,
+        model=EXPLAINER_LLM,
+        deps_type=ExplainerDeps,
+        history_processors=[],
+        output_type=AgentEnvelope,
+    )
+    explainer = AIExplainer(
+        lf=app.state.langfuse_client,
+        ai=explainer_ai,
+    )
     set_quiz_attempter_app(
-        app, attempt_repository=attempt_repository, user_auth=app.state.auth_user_app
+        app,
+        attempt_repository=attempt_repository,
+        user_auth=app.state.auth_user_app,
+        explainer=explainer,
     )
 
     async with contextlib.AsyncExitStack() as stack:

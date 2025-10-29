@@ -2,6 +2,8 @@ from dataclasses import dataclass, field
 
 from src.lib.utils import genID
 
+from .refs import MessageRef, QuizRef, Choice
+
 
 @dataclass(slots=True, kw_only=True)
 class Feedback:
@@ -11,23 +13,23 @@ class Feedback:
 
 
 @dataclass(slots=True, kw_only=True)
-class Choice:
-    idx: int
-    correct: bool
-    item_id: str
-
-
-@dataclass(slots=True, kw_only=True)
 class Attempt:
-    feedback: Feedback | None = None
     id: str = field(default_factory=genID)
-    choices: list[Choice] = field(default_factory=list)
-    quiz_id: str
     user_id: str
+    message_history: list[MessageRef] = field(default_factory=list)
+    feedback: Feedback | None = None
+    quiz: QuizRef
+    choices: list[Choice] = field(default_factory=list)
 
     @classmethod
-    def create(cls, quiz_id: str, user_id: str):
+    def create(cls, quiz: QuizRef, user_id: str):
         return cls(
-            quiz_id=quiz_id,
+            quiz=quiz,
             user_id=user_id,
         )
+
+    def get_item(self, item_id: str):
+        for item in self.quiz.items:
+            if item == item_id:
+                return item
+        raise ValueError(f"Item {item_id} not found")

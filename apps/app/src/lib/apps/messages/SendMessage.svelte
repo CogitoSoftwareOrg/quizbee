@@ -3,7 +3,7 @@
 
 	import { Button } from '@cogisoft/ui-svelte-daisy';
 
-	import type { QuizAttemptsResponse, QuizItemsResponse } from '$lib/pb';
+	import type { QuizAttemptsResponse, QuizItemsResponse, QuizesResponse } from '$lib/pb';
 
 	import type { Sender } from './types';
 	import { messagesStore } from './stores/messages.svelte';
@@ -11,6 +11,7 @@
 	type Props = {
 		item: QuizItemsResponse;
 		attempt: QuizAttemptsResponse;
+		quiz: QuizesResponse;
 		inputText?: string;
 		inputEl?: HTMLTextAreaElement | null;
 		class?: string;
@@ -21,6 +22,7 @@
 	let {
 		item,
 		attempt,
+		quiz,
 		inputEl,
 		class: className,
 		inputText = $bindable(''),
@@ -34,7 +36,7 @@
 		// SEND MESSAGE
 		const text = inputText;
 		inputText = '';
-		await messagesStore.sendMessage(sender, text, attempt.id, item.id);
+		await messagesStore.sendMessage(sender, text, attempt.id, quiz.id, item.id);
 
 		if (inputEl) inputEl.style.height = 'auto';
 	}
