@@ -3,12 +3,10 @@ from fastapi.responses import JSONResponse
 
 from src.lib.utils.cache_key import cache_key
 
-from src.apps.v2.user_auth.di import SubscriptionDeps, UserDeps
-
 from ....app.contracts import FinalizeCmd, GenMode, GenerateCmd
 from ....di import QuizGeneratorAppDeps
 
-from .schemas import FinalizeQuizDto, PatchQuizDto
+from .schemas import FinalizeQuizDto, PatchQuizDto, StartQuizDto
 
 from .deps import (
     http_guard_and_set_user,
@@ -32,7 +30,8 @@ quiz_generator_router = APIRouter(
     status_code=status.HTTP_202_ACCEPTED,
 )
 async def start_quiz(
-    quiz_generator_app: QuizGeneratorAppDeps,
+    dto: StartQuizDto,
+    quiz_generator: QuizGeneratorAppDeps,
     quiz_id: str,
     background: BackgroundTasks,
     request: Request,
@@ -41,20 +40,18 @@ async def start_quiz(
     if not token:
         raise HTTPException(status_code=401, detail="Unauthorized: no pb_token")
 
-    attempt = await quiz_generator_app.create_attempt(quiz_id=quiz_id, token=token)
-
     background.add_task(
-        quiz_generator_app.start,
+        quiz_generator.start,
         GenerateCmd(
             token=token,
             quiz_id=quiz_id,
             mode=GenMode.Continue,
-            cache_key=cache_key(attempt.id),
+            cache_key=cache_key(dto.attempt_id),
         ),
     )
 
     return JSONResponse(
-        content={"scheduled": True, "quiz_id": quiz_id, "attempt_id": attempt.id},
+        content={"scheduled": True, "quiz_id": quiz_id, "attempt_id": dto.attempt_id},
     )
 
 
@@ -69,7 +66,7 @@ async def start_quiz(
 async def generate_quiz_items(
     dto: PatchQuizDto,
     quiz_id: str,
-    quiz_generator_app: QuizGeneratorAppDeps,
+    quiz_generator: QuizGeneratorAppDeps,
     request: Request,
     background: BackgroundTasks,
 ):
@@ -78,7 +75,7 @@ async def generate_quiz_items(
         raise HTTPException(status_code=401, detail="Unauthorized: no pb_token")
 
     background.add_task(
-        quiz_generator_app.generate,
+        quiz_generator.generate,
         GenerateCmd(
             quiz_id=quiz_id,
             token=token,
@@ -101,7 +98,7 @@ async def generate_quiz_items(
 async def finalize_quiz(
     dto: FinalizeQuizDto,
     quiz_id: str,
-    quiz_generator_app: QuizGeneratorAppDeps,
+    quiz_generator: QuizGeneratorAppDeps,
     request: Request,
     background: BackgroundTasks,
 ):
@@ -110,7 +107,7 @@ async def finalize_quiz(
         raise HTTPException(status_code=401, detail="Unauthorized: no pb_token")
 
     background.add_task(
-        quiz_generator_app.finalize,
+        quiz_generator.finalize,
         FinalizeCmd(
             quiz_id=quiz_id,
             token=token,

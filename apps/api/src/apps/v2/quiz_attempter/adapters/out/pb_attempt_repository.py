@@ -4,8 +4,8 @@ from typing import Any
 from pocketbase import PocketBase
 from pocketbase.models.dtos import Record
 
-from ...domain.ports import AttemptRepository
 from ...domain.models import Attempt, Choice
+from ...domain.ports import AttemptRepository
 
 
 class PBAttemptRepository(AttemptRepository):

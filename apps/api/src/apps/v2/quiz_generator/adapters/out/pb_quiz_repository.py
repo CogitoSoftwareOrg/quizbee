@@ -10,8 +10,6 @@ from src.lib.settings import settings
 
 from ...domain.ports import QuizRepository
 from ...domain.models import (
-    Attempt,
-    Choice,
     MaterialRef,
     Quiz,
     QuizGenConfig,

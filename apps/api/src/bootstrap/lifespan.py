@@ -39,7 +39,6 @@ from src.apps.v2.quiz_generator.adapters.out import (
     PATCH_GENERATOR_LLM,
     FINALIZER_LLM,
     PBQuizRepository,
-    PBAttemptRepository,
     AIPatchGenerator,
     AIPatchGeneratorDeps,
     AIPatchGeneratorOutput,
@@ -55,7 +54,7 @@ from src.lib.clients import set_admin_pb
 from .mcp import mcp
 
 AgentPayload = Annotated[
-    Union[AIPatchGeneratorOutput],
+    Union[AIPatchGeneratorOutput, FinalizerOutput],
     Field(discriminator="mode"),
 ]
 
@@ -112,7 +111,6 @@ async def lifespan(app: FastAPI):
         retries=3,
     )
     quiz_repository = PBQuizRepository(app.state.admin_pb, http)
-    attempt_repository = PBAttemptRepository(app.state.admin_pb)
 
     patch_generator = AIPatchGenerator(
         lf=app.state.langfuse_client,
@@ -143,7 +141,6 @@ async def lifespan(app: FastAPI):
         llm_tools=app.state.llm_tools,
         material_search=app.state.material_search_app,
         quiz_repository=quiz_repository,
-        attempt_repository=attempt_repository,
         quiz_indexer=quiz_indexer,
         patch_generator=patch_generator,
         finalizer=finalizer,

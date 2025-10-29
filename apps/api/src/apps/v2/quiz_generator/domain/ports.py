@@ -1,11 +1,6 @@
 from typing import Protocol
 
-from .models import Attempt, Quiz, QuizItem
-
-
-class AttemptRepository(Protocol):
-    async def get(self, id: str) -> Attempt: ...
-    async def save(self, attempt: Attempt) -> None: ...
+from .models import Quiz, QuizItem
 
 
 class QuizRepository(Protocol):
