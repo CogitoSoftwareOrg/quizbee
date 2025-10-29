@@ -1,10 +1,10 @@
-from dataclasses import dataclass, field
+import asyncio
+from dataclasses import dataclass
 import logging
-from typing import Annotated, Any, Literal, Type
+from typing import Annotated, Any, Literal
 import httpx
 from langfuse import Langfuse
 from pydantic import BaseModel, Field
-from pocketbase.models.dtos import Record
 from pydantic_ai import (
     Agent,
     ModelMessage,
@@ -15,11 +15,15 @@ from pydantic_ai import (
     UserPromptPart,
 )
 
+from src.lib.clients import update_span_with_result
 from src.lib.config import LLMS
 from src.lib.settings import settings
 
 from ...domain.ports import PatchGenerator, QuizRepository
 from ...domain.models import Quiz, QuizItem, QuizItemStatus, QuizItemVariant
+
+
+PATCH_GENERATOR_LLM = LLMS.GPT_5_MINI
 
 
 @dataclass
@@ -64,21 +68,36 @@ class AIPatchGeneratorOutput(BaseModel):
         ),
     ]
 
+    def _merge(self, items: list[QuizItem]):
+        for item, schema in zip(items, self.quiz_items):
+            item = QuizItem(
+                id=item.id,
+                question=item.question,
+                variants=[
+                    QuizItemVariant(
+                        content=a.answer,
+                        is_correct=a.correct,
+                        explanation=a.explanation,
+                    )
+                    for a in schema.answers
+                ],
+                order=item.order,
+                status=QuizItemStatus.GENERATED,
+            )
+
 
 class AIPatchGenerator(PatchGenerator):
     def __init__(
-        self, lf: Langfuse, quiz_repository: QuizRepository, shared_schema: Any
+        self,
+        lf: Langfuse,
+        quiz_repository: QuizRepository,
+        ai: Agent[AIPatchGeneratorDeps, Any],
     ):
         self._lf = lf
         self._quiz_repository = quiz_repository
-        self._ai = Agent(
-            # instrument=True,
-            model=LLMS.GPT_5_MINI,
-            deps_type=AIPatchGeneratorDeps,
-            output_type=shared_schema,
-            history_processors=[self._inject_request_prompt],
-            retries=3,
-        )
+
+        self._ai = ai
+        self._ai.history_processors = self._ai.history_processors + [self._inject_request_prompt]  # type: ignore
 
     async def generate(self, quiz: Quiz, cache_key: str) -> None:
         logging.info(
@@ -123,16 +142,20 @@ class AIPatchGenerator(PatchGenerator):
                         )
 
                         payload: AIPatchGeneratorOutput = output.data
-                        items = payload.quiz_items or []
-                        if len(items) > 0:
-                            for item, schema in zip(
-                                generating_items[seen : len(items)], items[seen:]
-                            ):
-                                domain_item = self._item_schema_to_domain(
-                                    item.id, item.order, schema
-                                )
-                                await self._quiz_repository.save_item(domain_item)
-                                seen += 1
+                        if len(payload.quiz_items) > 0:
+                            items = generating_items[seen : len(payload.quiz_items)]
+                            payload._merge(items)
+                            await asyncio.gather(
+                                *[
+                                    self._quiz_repository.save_item(item)
+                                    for item in items
+                                ]
+                            )
+                            seen += 1
+
+                await update_span_with_result(
+                    self._lf, run, span, quiz.author_id, cache_key, PATCH_GENERATOR_LLM
+                )
 
         except Exception as e:
             logging.exception("Failed to generate quiz patch: %s", e)
@@ -245,24 +268,6 @@ class AIPatchGenerator(PatchGenerator):
             )
 
         return post_parts
-
-    def _item_schema_to_domain(
-        self, id: str, order: int, item: QuizItemSchema
-    ) -> QuizItem:
-        return QuizItem(
-            id=id,
-            question=item.question,
-            variants=[
-                QuizItemVariant(
-                    content=a.answer,
-                    is_correct=a.correct,
-                    explanation=a.explanation,
-                )
-                for a in item.answers
-            ],
-            order=order,
-            status=QuizItemStatus.GENERATED,
-        )
 
     async def _catch_exception(self, e: Exception, cancelled: bool, quiz: Quiz) -> None:
         if isinstance(e, httpx.ReadError):

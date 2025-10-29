@@ -11,6 +11,8 @@ from ....domain.constants import PATCH_LIMIT
 async def http_guard_and_set_user(request: Request, auth_user_app: AuthUserAppDeps):
     try:
         token = request.cookies.get("pb_token")
+        if not token:
+            raise HTTPException(status_code=401, detail="Unauthorized: no pb_token")
         user, sub = await auth_user_app.validate(token)
         request.state.user = user
         request.state.subscription = sub

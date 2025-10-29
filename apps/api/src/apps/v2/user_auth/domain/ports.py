@@ -1,10 +1,12 @@
 from typing import Protocol
 
-from .models import User, Subscription
+from .models import User
 
 
-class UserGuarder(Protocol):
-    async def guard(self, token: str | None = None) -> tuple[User, Subscription]: ...
+class UserVerifier(Protocol):
+    async def verify(self, token: str | None = None) -> User: ...
 
 
-class SubscriptionGuarder(Protocol): ...
+class UserRepository(Protocol):
+    async def get(self, user_id: str) -> User: ...
+    async def save(self, user: User, cost: int) -> None: ...

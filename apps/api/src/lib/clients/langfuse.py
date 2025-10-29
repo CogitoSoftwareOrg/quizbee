@@ -1,8 +1,11 @@
-from typing import Annotated
-from langfuse import Langfuse
+from typing import Annotated, Any
+from langfuse import Langfuse, LangfuseSpan
 from fastapi import Depends, FastAPI, Request
+from pydantic_ai import AgentRunResult
 from pydantic_ai.agent import Agent
+from pydantic_ai.result import StreamedRunResult
 
+from src.lib.config.llms import LLMS
 from src.lib.settings import settings
 
 langfuse_client = Langfuse(
@@ -14,12 +17,14 @@ langfuse_client = Langfuse(
 
 
 def set_langfuse(app: FastAPI):
-    app.state.langfuse_client = Langfuse(
+    lf = Langfuse(
         public_key=settings.langfuse_public_key,
         secret_key=settings.langfuse_secret_key,
         host=settings.langfuse_host,
         environment=settings.env,
     )
+
+    app.state.langfuse_client = lf
 
 
 def get_langfuse(request: Request) -> Langfuse:
@@ -31,3 +36,44 @@ LangfuseDeps = Annotated[Langfuse, Depends(get_langfuse)]
 
 # if settings.env != "production":
 #     Agent.instrument_all()
+
+
+async def update_span_with_result(
+    lf: Langfuse,
+    result: StreamedRunResult | AgentRunResult | Any,
+    span: LangfuseSpan,
+    user_id: str,
+    session_id: str,
+    model: LLMS,
+    # costs: LLMCosts,
+):
+    if isinstance(result, StreamedRunResult):
+        output = await result.get_output()
+    elif isinstance(result, AgentRunResult):
+        output = result.output
+    else:
+        raise ValueError(f"Unexpected result type: {type(result)}")
+
+    usage = result.usage()
+    input_nc = usage.input_tokens - usage.cache_read_tokens
+    input_cah = usage.cache_read_tokens
+    outp = usage.output_tokens
+
+    # input_nc_price = round(input_nc * costs.input_nc, 4)
+    # input_cah_price = round(input_cah * costs.input_cah, 4)
+    # outp_price = round(outp * costs.output, 4)
+
+    lf.update_current_generation(
+        input=f"{input_nc} input tokens, {input_cah} cache read tokens, {outp} output tokens",
+        output=output,
+        model=model,
+        usage_details={
+            "input": input_nc,
+            "input_cache_read": input_cah,
+            "output": outp,
+        },
+    )
+    span.update_trace(
+        user_id=user_id,
+        session_id=session_id,
+    )

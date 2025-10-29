@@ -6,3 +6,7 @@ from ....app.contracts import GenMode
 class PatchQuizDto(BaseModel):
     attempt_id: str
     mode: GenMode = Field(default=GenMode.Continue)
+
+
+class FinalizeQuizDto(BaseModel):
+    attempt_id: str

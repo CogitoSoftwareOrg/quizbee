@@ -136,6 +136,7 @@ class Quiz:
     summary: str | None = None
     tags: list[str] | None = None
     category: QuizCategory | None = None
+    slug: str | None = None
 
     need_build_material_content: bool = False
 
@@ -182,6 +183,18 @@ class Quiz:
     def set_summary(self, summary: str):
         self.summary = summary
 
+    def set_title(self, title: str):
+        self.title = title
+
+    def set_tags(self, tags: list[str]):
+        self.tags = tags
+
+    def set_category(self, category: QuizCategory):
+        self.category = category
+
+    def set_slug(self, slug: str):
+        self.slug = slug
+
     def add_negative_questions(self, questions: list[str]):
         self.gen_config.negative_questions.extend(questions)
 
@@ -216,3 +229,10 @@ class Quiz:
     def fail(self):
         for item in self.items:
             item.to_failed()
+
+    def update_item(self, item: QuizItem):
+        for i in self.items:
+            if i.id == item.id:
+                i = item
+                return
+        raise ValueError(f"Item {item.id} not found")

@@ -7,7 +7,14 @@ from src.apps.v2.material_search.domain.errors import (
     TooManyTextTokensError,
 )
 
+from src.apps.v2.quiz_generator.domain.errors import (
+    NotQuizOwnerError,
+    NotEnoughQuizItemsError,
+)
+
 ERROR_MAP = {
+    NotQuizOwnerError: (403, "NOT_QUIZ_OWNER"),
+    NotEnoughQuizItemsError: (402, "NOT_ENOUGH_QUIZ_ITEMS"),
     TooLargeFileError: (413, "TOO_LARGE_FILE"),
     TooManyTextTokensError: (413, "TOO_MANY_TEXT_TOKENS"),
 }

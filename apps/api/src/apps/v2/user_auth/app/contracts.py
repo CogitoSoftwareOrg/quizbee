@@ -1,7 +1,16 @@
+from dataclasses import dataclass
 from typing import Protocol
 
-from ..domain.models import User, Subscription
+
+@dataclass(slots=True, kw_only=True)
+class Principal:
+    id: str
+    remaining: int
+    used: int
+    limit: int
 
 
-class TokenValidator(Protocol):
-    async def validate(self, token: str) -> tuple[User, Subscription]: ...
+class AuthUserApp(Protocol):
+    async def validate(self, token: str) -> Principal: ...
+
+    async def charge(self, user_id: str, cost: int) -> None: ...

@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from meilisearch_python_sdk import AsyncClient
 import httpx
 from pydantic import BaseModel, Field
+from pydantic_ai import Agent
 
 from src.lib.settings import settings
 
@@ -23,27 +24,31 @@ from src.apps.quizes import (
 from src.lib.clients import set_admin_pb, set_langfuse
 
 from src.apps.v2.user_auth.di import set_auth_user_app
+from src.apps.v2.user_auth.adapters.out import PBUserVerifier, PBUserRepository
 
 from src.apps.v2.material_search.di import (
     set_material_search_app,
 )
-from src.apps.v2.material_search.adapters.out.pb_repository import PBMaterialRepository
-from src.apps.v2.material_search.adapters.out.fitz_pdf_parser import FitzPDFParser
-from src.apps.v2.material_search.adapters.out.meili_indexer import (
+from src.apps.v2.material_search.adapters.out import (
+    FitzPDFParser,
     MeiliIndexer as MeiliMaterialIndexer,
+    PBMaterialRepository,
 )
 
-from src.apps.v2.quiz_generator.adapters.out.pb_quiz_repository import PBQuizRepository
-from src.apps.v2.quiz_generator.adapters.out.pb_attempt_repository import (
+from src.apps.v2.quiz_generator.adapters.out import (
+    PATCH_GENERATOR_LLM,
+    FINALIZER_LLM,
+    PBQuizRepository,
     PBAttemptRepository,
-)
-from src.apps.v2.quiz_generator.adapters.out.ai_patch_generator import (
     AIPatchGenerator,
+    AIPatchGeneratorDeps,
     AIPatchGeneratorOutput,
-)
-from src.apps.v2.quiz_generator.adapters.out.meili_indexer import (
+    AIFinalizer,
+    FinalizerDeps,
+    FinalizerOutput,
     MeiliIndexer as MeiliQuizIndexer,
 )
+
 
 from src.lib.clients import set_admin_pb
 
@@ -80,37 +85,68 @@ async def lifespan(app: FastAPI):
     set_llm_tools(app)
 
     # V2 USER AUTH
-    set_auth_user_app(app)
+    user_verifier = PBUserVerifier(app.state.admin_pb)
+    user_repository = PBUserRepository(app.state.admin_pb)
+    set_auth_user_app(app, user_verifier=user_verifier, user_repository=user_repository)
 
     # V2 MATERIAL SEARCH
     material_repository = PBMaterialRepository(app.state.admin_pb)
     pdf_parser = FitzPDFParser()
-    indexer = MeiliMaterialIndexer(app.state.llm_tools, meili)
+    material_indexer = await MeiliMaterialIndexer.ainit(
+        llm_tools=app.state.llm_tools, meili=meili
+    )
     set_material_search_app(
         app,
         material_repository=material_repository,
         pdf_parser=pdf_parser,
-        indexer=indexer,
+        indexer=material_indexer,
         llm_tools=app.state.llm_tools,
     )
 
     # V2 QUIZ GENERATOR
+    patch_generator_ai = Agent(
+        model=PATCH_GENERATOR_LLM,
+        deps_type=AIPatchGeneratorDeps,
+        output_type=AgentEnvelope,
+        history_processors=[],
+        retries=3,
+    )
     quiz_repository = PBQuizRepository(app.state.admin_pb, http)
     attempt_repository = PBAttemptRepository(app.state.admin_pb)
+
     patch_generator = AIPatchGenerator(
         lf=app.state.langfuse_client,
         quiz_repository=quiz_repository,
-        shared_schema=AgentEnvelope,
+        ai=patch_generator_ai,
     )
-    quiz_indexer = MeiliQuizIndexer(app.state.llm_tools, meili, quiz_repository)
+
+    finalizer_ai = Agent(
+        model=FINALIZER_LLM,
+        deps_type=FinalizerDeps,
+        output_type=AgentEnvelope,
+        history_processors=[],
+        retries=3,
+    )
+    finalizer = AIFinalizer(
+        lf=app.state.langfuse_client,
+        quiz_repository=quiz_repository,
+        ai=finalizer_ai,
+    )
+    quiz_indexer = await MeiliQuizIndexer.ainit(
+        llm_tools=app.state.llm_tools,
+        meili=meili,
+        quiz_repository=quiz_repository,
+    )
     set_quiz_generator_app(
         app,
+        user_auth=app.state.auth_user_app,
         llm_tools=app.state.llm_tools,
         material_search=app.state.material_search_app,
         quiz_repository=quiz_repository,
         attempt_repository=attempt_repository,
         quiz_indexer=quiz_indexer,
         patch_generator=patch_generator,
+        finalizer=finalizer,
     )
 
     async with contextlib.AsyncExitStack() as stack:

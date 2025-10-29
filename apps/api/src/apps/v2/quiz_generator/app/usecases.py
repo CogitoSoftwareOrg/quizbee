@@ -1,37 +1,64 @@
 import logging
 from src.apps.v2.llm_tools.app.contracts import LLMToolsApp
 from src.apps.v2.material_search.app.contracts import MaterialSearchApp, SearchCmd
+from src.apps.v2.user_auth.app.contracts import AuthUserApp
+
 
 from ..domain.ports import (
     AttemptRepository,
+    Finalizer,
     PatchGenerator,
     QuizIndexer,
     QuizRepository,
 )
 from ..domain.models import Quiz, Attempt, QuizItemStatus
+from ..domain.constants import PATCH_LIMIT
+from ..domain.errors import NotQuizOwnerError, NotEnoughQuizItemsError
 
-from .contracts import GenerateCmd, FinalizeCmd, GenMode, QuizGeneratorApp
+from .contracts import (
+    GenerateCmd,
+    FinalizeCmd,
+    GenMode,
+    QuizGeneratorApp,
+)
 
 
 class QuizGeneratorAppImpl(QuizGeneratorApp):
     def __init__(
         self,
+        user_auth: AuthUserApp,
         quiz_repository: QuizRepository,
         attempt_repository: AttemptRepository,
         quiz_indexer: QuizIndexer,
         llm_tools: LLMToolsApp,
         material_search: MaterialSearchApp,
         patch_generator: PatchGenerator,
+        finalizer: Finalizer,
     ):
+        self.user_auth = user_auth
         self.quiz_repository = quiz_repository
         self.attempt_repository = attempt_repository
         self.quiz_indexer = quiz_indexer
         self.material_search = material_search
         self.llm_tools = llm_tools
         self.patch_generator = patch_generator
+        self.finalizer = finalizer
 
     async def generate(self, cmd: GenerateCmd) -> None:
+        user, sub = await self.user_auth.validate(cmd.token)
         quiz = await self.quiz_repository.get(cmd.quiz_id)
+
+        if quiz.author_id != user.id:
+            raise NotQuizOwnerError(quiz_id=cmd.quiz_id, user_id=user.id)
+        stored = sub.quiz_items_limit - sub.quiz_items_usage
+        cost = PATCH_LIMIT
+        if cost > stored:
+            raise NotEnoughQuizItemsError(
+                quiz_id=cmd.quiz_id,
+                user_id=user.id,
+                cost=cost,
+                stored=stored,
+            )
 
         if cmd.mode == GenMode.Regenerate:
             logging.info(f"Incrementing generation for quiz {cmd.quiz_id}")
@@ -42,9 +69,11 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
         await self.quiz_repository.save(quiz)
 
         await self.patch_generator.generate(quiz, cmd.cache_key)
+        
 
     async def finalize(self, cmd: FinalizeCmd) -> None:
-        pass
+        quiz = await self.quiz_repository.get(cmd.quiz_id)
+        await self.finalizer.finalize(quiz, cmd.cache_key)
 
     async def start(self, cmd: GenerateCmd) -> None:
         quiz = await self.quiz_repository.get(cmd.quiz_id)
@@ -92,8 +121,9 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
 
         await self.generate(cmd)
 
-    async def create_attempt(self, quiz_id: str, user_id: str) -> Attempt:
-        attempt = Attempt.create(quiz_id, user_id)
+    async def create_attempt(self, quiz_id: str, token: str) -> Attempt:
+        user, _ = await self.user_auth.validate(token)
+        attempt = Attempt.create(quiz_id, user.id)
         await self.attempt_repository.save(attempt)
         return attempt
 
