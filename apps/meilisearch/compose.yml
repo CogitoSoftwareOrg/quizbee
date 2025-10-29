@@ -22,6 +22,7 @@ services:
   sidecar:
     build:
       context: .
+      dockerfile: Dockerfile.sidecar
       args:
         MC_ARCH: ${MC_ARCH_OVERRIDE:-linux-amd64}
     depends_on:
