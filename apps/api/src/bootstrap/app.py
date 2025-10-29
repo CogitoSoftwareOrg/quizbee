@@ -1,11 +1,4 @@
 from fastapi import Depends, FastAPI
-from mcp.server.fastmcp import FastMCP
-
-from src.apps.billing import billing_router
-from src.apps.quizes import quizes_router
-from src.apps.messages import messages_router
-from src.apps.materials import materials_router
-from src.apps.quiz_attempts import quiz_attempts_router
 
 from src.apps.v2.material_search.adapters.in_.http.router import (
     material_search_router as v2_material_search_router,
@@ -32,12 +25,6 @@ def create_app():
         ],
     )
     app.add_exception_handler(Exception, all_exceptions_handler)
-
-    app.include_router(billing_router)
-    app.include_router(quizes_router)
-    app.include_router(messages_router)
-    app.include_router(materials_router)
-    app.include_router(quiz_attempts_router)
 
     app.include_router(v2_material_search_router)
     app.include_router(v2_quiz_generator_router)

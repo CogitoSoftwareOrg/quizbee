@@ -77,17 +77,11 @@ async def lifespan(app: FastAPI):
     # INIT LOGIC
     logging.info("Starting Quizbee API server")
 
+    # GLOBAL
     http = httpx.AsyncClient()
     set_admin_pb(app)
     set_langfuse(app)
     meili = AsyncClient(settings.meili_url, settings.meili_master_key)
-
-    # PYDANTIC AI
-    init_explainer(app)
-    init_feedbacker(app)
-    init_quizer(app)
-    init_summarizer(app)
-    init_trimmer(app)
 
     # V2 LLM TOOLS
     set_llm_tools(app)
@@ -98,10 +92,8 @@ async def lifespan(app: FastAPI):
     set_auth_user_app(app, user_verifier=user_verifier, user_repository=user_repository)
 
     # V2 MATERIAL SEARCH
-    material_repository = PBMaterialRepository(app.state.admin_pb)
-    pdf_parser = FitzPDFParser()
-    material_indexer = await MeiliMaterialIndexer.ainit(
-        llm_tools=app.state.llm_tools, meili=meili
+    material_repository, pdf_parser, material_indexer = await init_material_search_deps(
+        app, meili
     )
     set_material_search_app(
         app,
@@ -113,37 +105,8 @@ async def lifespan(app: FastAPI):
     )
 
     # V2 QUIZ GENERATOR
-    patch_generator_ai = Agent(
-        model=PATCH_GENERATOR_LLM,
-        deps_type=AIPatchGeneratorDeps,
-        output_type=AgentEnvelope,
-        history_processors=[],
-        retries=3,
-    )
-    quiz_repository = PBQuizRepository(app.state.admin_pb, http)
-
-    patch_generator = AIPatchGenerator(
-        lf=app.state.langfuse_client,
-        quiz_repository=quiz_repository,
-        ai=patch_generator_ai,
-    )
-
-    finalizer_ai = Agent(
-        model=QUIZ_FINALIZER_LLM,
-        deps_type=QuizFinalizerDeps,
-        output_type=AgentEnvelope,
-        history_processors=[],
-        retries=3,
-    )
-    finalizer = AIQuizFinalizer(
-        lf=app.state.langfuse_client,
-        quiz_repository=quiz_repository,
-        ai=finalizer_ai,
-    )
-    quiz_indexer = await MeiliQuizIndexer.ainit(
-        llm_tools=app.state.llm_tools,
-        meili=meili,
-        quiz_repository=quiz_repository,
+    quiz_repository, patch_generator, finalizer, quiz_indexer = (
+        await init_quiz_generator_deps(app, http, meili)
     )
     set_quiz_generator_app(
         app,
@@ -157,18 +120,7 @@ async def lifespan(app: FastAPI):
     )
 
     # V2 QUIZ ATTEMPTER
-    attempt_repository = PBAttemptRepository(app.state.admin_pb, http=http)
-    explainer_ai = Agent(
-        # instrument=True,
-        model=EXPLAINER_LLM,
-        deps_type=ExplainerDeps,
-        history_processors=[],
-        output_type=AgentEnvelope,
-    )
-    explainer = AIExplainer(
-        lf=app.state.langfuse_client,
-        ai=explainer_ai,
-    )
+    attempt_repository, explainer = init_quiz_attempter_deps(app, http)
     set_quiz_attempter_app(
         app,
         attempt_repository=attempt_repository,
@@ -185,3 +137,67 @@ async def lifespan(app: FastAPI):
     # await app.state.meili_client.aclose()
     await http.aclose()
     await meili.aclose()
+
+
+async def init_material_search_deps(
+    app: FastAPI, meili: AsyncClient
+) -> tuple[PBMaterialRepository, FitzPDFParser, MeiliMaterialIndexer]:
+    material_repository = PBMaterialRepository(app.state.admin_pb)
+    pdf_parser = FitzPDFParser()
+    material_indexer = await MeiliMaterialIndexer.ainit(
+        llm_tools=app.state.llm_tools, meili=meili
+    )
+    return material_repository, pdf_parser, material_indexer
+
+
+# Factory functions for dependency initialization
+def init_quiz_attempter_deps(
+    app: FastAPI, http: httpx.AsyncClient
+) -> tuple[PBAttemptRepository, AIExplainer]:
+    attempt_repository = PBAttemptRepository(app.state.admin_pb, http=http)
+    explainer_ai = Agent(
+        # instrument=True,
+        model=EXPLAINER_LLM,
+        deps_type=ExplainerDeps,
+        history_processors=[],
+        output_type=AgentEnvelope,
+    )
+    explainer = AIExplainer(
+        lf=app.state.langfuse_client,
+        ai=explainer_ai,
+    )
+    return attempt_repository, explainer
+
+
+async def init_quiz_generator_deps(
+    app: FastAPI, http: httpx.AsyncClient, meili: AsyncClient
+) -> tuple[PBQuizRepository, AIPatchGenerator, AIQuizFinalizer, MeiliQuizIndexer]:
+    quiz_repository = PBQuizRepository(app.state.admin_pb, http=http)
+    patch_generator_ai = Agent(
+        model=PATCH_GENERATOR_LLM,
+        deps_type=AIPatchGeneratorDeps,
+        history_processors=[],
+        output_type=AgentEnvelope,
+    )
+    patch_generator = AIPatchGenerator(
+        lf=app.state.langfuse_client,
+        quiz_repository=quiz_repository,
+        ai=patch_generator_ai,
+    )
+    finalizer_ai = Agent(
+        model=QUIZ_FINALIZER_LLM,
+        deps_type=QuizFinalizerDeps,
+        history_processors=[],
+        output_type=AgentEnvelope,
+    )
+    finalizer = AIQuizFinalizer(
+        lf=app.state.langfuse_client,
+        quiz_repository=quiz_repository,
+        ai=finalizer_ai,
+    )
+    quiz_indexer = await MeiliQuizIndexer.ainit(
+        llm_tools=app.state.llm_tools,
+        meili=meili,
+        quiz_repository=quiz_repository,
+    )
+    return quiz_repository, patch_generator, finalizer, quiz_indexer

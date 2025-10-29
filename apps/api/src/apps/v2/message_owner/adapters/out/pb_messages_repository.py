@@ -3,15 +3,19 @@ import asyncio
 from pocketbase import PocketBase
 from pocketbase.models.dtos import Record
 
-from ...domain.ports import MessageHistoryRepository
-from ...domain.models import AttemptHistory, Message
+from ...domain.ports import MessageRepository
+from ...domain.models import Message
 
 
-class PBMessageHistoryRepository(MessageHistoryRepository):
+class PBMessageRepository(MessageRepository):
     def __init__(self, pb: PocketBase):
         self.pb = pb
 
-    async def get(self, attempt_id: str, limit: int = 100) -> AttemptHistory:
+    async def get(self, id: str) -> Message:
+        rec = await self.pb.collection("messages").get_one(id)
+        return self._to_message(rec)
+
+    async def get_attempt(self, attempt_id: str, limit: int = 100) -> list[Message]:
         recs = await self.pb.collection("messages").get_full_list(
             options={
                 "params": {
@@ -23,9 +27,7 @@ class PBMessageHistoryRepository(MessageHistoryRepository):
         )
         recs.reverse()
 
-        return AttemptHistory(
-            attempt_id=attempt_id, messages=[self._to_message(rec) for rec in recs]
-        )
+        return [self._to_message(rec) for rec in recs]
 
     async def save(self, messages: list[Message]) -> None:
         for message in messages:

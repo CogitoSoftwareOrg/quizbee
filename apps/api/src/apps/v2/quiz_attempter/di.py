@@ -15,8 +15,11 @@ def set_quiz_attempter_app(
     user_auth: AuthUserApp,
     explainer: Explainer,
 ):
+
+
     app.state.quiz_attempter_app = QuizAttempterAppImpl(
         attempt_repository=attempt_repository,
         user_auth=user_auth,
         explainer=explainer,
     )
+
