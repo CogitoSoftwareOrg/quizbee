@@ -13,6 +13,9 @@ from src.apps.v2.material_search.adapters.in_.http.router import (
 from src.apps.v2.quiz_generator.adapters.in_.http.router import (
     quiz_generator_router as v2_quiz_generator_router,
 )
+from src.apps.v2.quiz_attempter.adapters.in_.http.router import (
+    quiz_attempter_router as v2_quiz_attempter_router,
+)
 
 from .cors import cors_middleware
 from .errors import all_exceptions_handler
@@ -38,6 +41,7 @@ def create_app():
 
     app.include_router(v2_material_search_router)
     app.include_router(v2_quiz_generator_router)
+    app.include_router(v2_quiz_attempter_router)
 
     cors_middleware(app)
 

@@ -16,7 +16,7 @@ from .deps import (
 
 quiz_generator_router = APIRouter(
     prefix="/v2/quizes",
-    tags=["quizes"],
+    tags=["v2"],
     dependencies=[Depends(http_guard_and_set_user)],
 )
 

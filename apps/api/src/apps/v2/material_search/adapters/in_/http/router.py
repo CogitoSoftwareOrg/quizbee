@@ -14,7 +14,7 @@ from .deps import http_guard_and_set_user
 
 material_search_router = APIRouter(
     prefix="/v2/materials",
-    tags=["materials"],
+    tags=["v2"],
     dependencies=[Depends(http_guard_and_set_user)],
 )
 

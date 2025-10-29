@@ -1,17 +1,34 @@
-from fastapi import APIRouter
-from fastapi import Depends
+from fastapi import APIRouter, BackgroundTasks
+from fastapi.responses import JSONResponse
 
-router = APIRouter(
-    prefix="/v2/quizes/{quiz_id}/attempts", tags=["attempts"], dependencies=[]
+from src.lib.utils import cache_key
+
+from ....di import QuizAttempterAppDeps
+from ....app.contracts import FinalizeCmd
+
+quiz_attempter_router = APIRouter(
+    prefix="/v2/quizes/{quiz_id}/attempts", tags=["v2"], dependencies=[]
 )
 
 
-@router.put("/{attempt_id}", status_code=201)
+@quiz_attempter_router.put("/{attempt_id}", status_code=201)
 async def finalize_attempt(
-    # quiz_attempter_app: QuizAttempterAppDeps,
+    attempt_id: str,
+    quiz_attempter_app: QuizAttempterAppDeps,
     quiz_id: str,
     token: str,
-): ...
+    background: BackgroundTasks,
+):
+    background.add_task(
+        quiz_attempter_app.finalize,
+        FinalizeCmd(
+            quiz_id=quiz_id,
+            cache_key=cache_key(attempt_id),
+            attempt_id=attempt_id,
+            token=token,
+        ),
+    )
 
-
-# return await quiz_attempter_app.create_attempt(CreateAttemptCmd(quiz_id=quiz_id, token=token))
+    return JSONResponse(
+        content={"scheduled": True, "quiz_id": quiz_id, "attempt_id": attempt_id}
+    )
