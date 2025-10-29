@@ -5,7 +5,7 @@ from src.lib.utils.cache_key import cache_key
 
 from src.apps.v2.user_auth.di import UserDeps
 
-from ....app.contracts import GenMode, GenerateCmd
+from ....app.contracts import FinalizeCmd, GenMode, GenerateCmd
 from ....di import QuizGeneratorAppDeps
 
 from .schemas import PatchQuizDto
@@ -77,6 +77,30 @@ async def generate_quiz_items(
             mode=dto.mode,
             cache_key=cache_key(dto.attempt_id),
         ),
+    )
+
+    return JSONResponse(
+        content={"scheduled": True, "quiz_id": quiz_id},
+    )
+
+
+@quiz_generator_router.put(
+    "/{quiz_id}/finalize",
+    dependencies=[
+        Depends(http_guard_user_owns_materials),
+        Depends(http_guard_quiz_patch_quota_protection),
+    ],
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def finalize_quiz(
+    quiz_id: str,
+    quiz_generator_app: QuizGeneratorAppDeps,
+    user: UserDeps,
+    background: BackgroundTasks,
+):
+    background.add_task(
+        quiz_generator_app.finalize,
+        FinalizeCmd(quiz_id=quiz_id, user_id=user.id),
     )
 
     return JSONResponse(

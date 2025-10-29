@@ -45,15 +45,14 @@ class PBQuizRepository(QuizRepository):
         return [await self._to_quiz(rec) for rec in recs]
 
     async def save(self, quiz: Quiz):
-        for item in quiz.items:
-            await self.save_item(item)
+        await asyncio.gather(*[self.save_item(item) for item in quiz.items])
 
         try:
-            await self.admin_pb.collection("quizes").create(await self._to_record(quiz))
-        except:
             await self.admin_pb.collection("quizes").update(
                 quiz.id, await self._to_record(quiz)
             )
+        except:
+            await self.admin_pb.collection("quizes").create(await self._to_record(quiz))
 
     async def save_item(self, item: QuizItem):
         try:
@@ -98,6 +97,7 @@ class PBQuizRepository(QuizRepository):
             visibility=rec.get("visibility", ""),
             avoid_repeat=rec.get("avoidRepeat", False),
             gen_config=self._to_gen_config(rec),
+            generation=rec.get("generation", 0),
         )
 
         if not len(quiz.material_content) == 0 and len(quiz.materials) > 0:

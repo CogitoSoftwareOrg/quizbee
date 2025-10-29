@@ -10,12 +10,13 @@ class GenMode(StrEnum):
     Regenerate = "regenerate"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class FinalizeCmd:
     quiz_id: str
+    user_id: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class GenerateCmd:
     cache_key: str
     quiz_id: str

@@ -10,3 +10,4 @@ class AuthUserApp(TokenValidator):
 
     async def validate(self, token: str | None = None) -> tuple[User, Subscription]:
         return await self.guard_user.guard(token)
+
