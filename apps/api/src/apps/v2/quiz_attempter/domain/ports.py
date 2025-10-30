@@ -9,7 +9,10 @@ class AttemptRepository(Protocol):
     async def save(self, attempt: Attempt) -> None: ...
 
 
-# Порт для streaming объяснений - абстракция над LLM/AI
+class AttemptFinalizer(Protocol):
+    async def finalize(self, attempt: Attempt, cache_key: str) -> None: ...
+
+
 class Explainer(Protocol):
     def explain(
         self,

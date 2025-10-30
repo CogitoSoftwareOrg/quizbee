@@ -5,7 +5,7 @@ from src.apps.v2.user_auth.app.contracts import AuthUserApp
 from src.apps.v2.message_owner.app.contracts import MessageOwnerApp
 from src.apps.v2.llm_tools.app.contracts import LLMToolsApp
 
-from .domain.ports import AttemptRepository, Explainer
+from .domain.ports import AttemptRepository, Explainer, AttemptFinalizer
 from .app.contracts import QuizAttempterApp
 from .app.usecases import QuizAttempterAppImpl
 
@@ -17,6 +17,7 @@ def set_quiz_attempter_app(
     explainer: Explainer,
     message_owner: MessageOwnerApp,
     llm_tools: LLMToolsApp,
+    finalizer: AttemptFinalizer,
 ):
 
     app.state.quiz_attempter_app = QuizAttempterAppImpl(
@@ -25,4 +26,5 @@ def set_quiz_attempter_app(
         explainer=explainer,
         message_owner=message_owner,
         llm_tools=llm_tools,
+        finalizer=finalizer,
     )

@@ -57,6 +57,10 @@ from src.apps.v2.quiz_attempter.adapters.out import (
     ExplainerDeps,
     EXPLAINER_LLM,
     ExplainerOutput,
+    AttemptFinalizerOutput,
+    AttemptFinalizerDeps,
+    ATTEMPT_FINALIZER_LLM,
+    AIAttemptFinalizer,
 )
 
 
@@ -68,7 +72,12 @@ from .mcp import mcp
 logger = logging.getLogger(__name__)
 
 AgentPayload = Annotated[
-    Union[AIPatchGeneratorOutput, QuizFinalizerOutput, ExplainerOutput],
+    Union[
+        AIPatchGeneratorOutput,
+        QuizFinalizerOutput,
+        ExplainerOutput,
+        AttemptFinalizerOutput,
+    ],
     Field(discriminator="mode"),
 ]
 
@@ -137,7 +146,7 @@ async def lifespan(app: FastAPI):
     set_message_owner_app(app, message_repository=message_repository)
 
     # V2 QUIZ ATTEMPTER
-    attempt_repository, explainer = init_quiz_attempter_deps(app, http)
+    attempt_repository, explainer, finalizer = init_quiz_attempter_deps(app, http)
     set_quiz_attempter_app(
         app,
         attempt_repository=attempt_repository,
@@ -145,6 +154,7 @@ async def lifespan(app: FastAPI):
         explainer=explainer,
         message_owner=app.state.message_owner_app,
         llm_tools=app.state.llm_tools,
+        finalizer=finalizer,
     )
 
     async with contextlib.AsyncExitStack() as stack:
@@ -172,7 +182,7 @@ async def init_material_search_deps(
 # Factory functions for dependency initialization
 def init_quiz_attempter_deps(
     app: FastAPI, http: httpx.AsyncClient
-) -> tuple[PBAttemptRepository, AIExplainer]:
+) -> tuple[PBAttemptRepository, AIExplainer, AIAttemptFinalizer]:
     attempt_repository = PBAttemptRepository(app.state.admin_pb, http=http)
     explainer_ai = Agent(
         # instrument=True,
@@ -185,7 +195,19 @@ def init_quiz_attempter_deps(
         lf=app.state.langfuse_client,
         ai=explainer_ai,
     )
-    return attempt_repository, explainer
+
+    finalizer_ai = Agent(
+        model=ATTEMPT_FINALIZER_LLM,
+        deps_type=AttemptFinalizerDeps,
+        history_processors=[],
+        output_type=AgentEnvelope,
+    )
+    finalizer = AIAttemptFinalizer(
+        lf=app.state.langfuse_client,
+        attempt_repository=attempt_repository,
+        ai=finalizer_ai,
+    )
+    return attempt_repository, explainer, finalizer
 
 
 async def init_quiz_generator_deps(

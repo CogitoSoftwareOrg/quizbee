@@ -23,7 +23,7 @@ from ..domain.refs import (
     MessageStatusRef,
     MessageMetadataRef,
 )
-from ..domain.ports import AttemptRepository, Explainer
+from ..domain.ports import AttemptRepository, Explainer, AttemptFinalizer
 from ..domain.errors import NotAttemptOwnerError, AttemptAlreadyFinalizedError
 
 from .contracts import (
@@ -44,16 +44,20 @@ class QuizAttempterAppImpl(QuizAttempterApp):
         explainer: Explainer,
         message_owner: MessageOwnerApp,
         llm_tools: LLMToolsApp,
+        finalizer: AttemptFinalizer,
     ):
         self.attempt_repository = attempt_repository
         self.user_auth = user_auth
         self.explainer = explainer
         self.message_owner = message_owner
         self.llm_tools = llm_tools
+        self.finalizer = finalizer
 
     async def finalize(self, cmd: FinalizeCmd) -> None:
+        logger.info(f"Finalize attempt: {cmd.attempt_id}")
         attempt = await self.attempt_repository.get(cmd.attempt_id)
         await self.validate_attempt(attempt, cmd.token)
+        await self.finalizer.finalize(attempt, cmd.cache_key)
 
     async def ask_explainer(
         self, cmd: AskExplainerCmd

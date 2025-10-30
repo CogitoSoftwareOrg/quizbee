@@ -36,3 +36,28 @@ class Attempt:
 
     def set_history(self, history: list[MessageRef]):
         self.message_history = history
+
+    def set_feedback(self, feedback: Feedback):
+        self.feedback = feedback
+
+    def quiz_content(self) -> str:
+        return "\n".join(
+            [
+                f"{i+1}. {qi.question}: {qi.answers}"
+                for i, qi in enumerate(self.quiz.items)
+            ]
+        )
+
+    def correct_items_content(self) -> str:
+        content = "CORRECT ANSWERS:\n"
+        for qi in self.quiz.items:
+            if qi.choice and qi.choice.correct:
+                content += f"{qi.question}\n"
+        return content
+
+    def wrong_items_content(self) -> str:
+        content = "WRONG ANSWERS:\n"
+        for qi in self.quiz.items:
+            if qi.choice and not qi.choice.correct:
+                content += f"{qi.question}\n"
+        return content
