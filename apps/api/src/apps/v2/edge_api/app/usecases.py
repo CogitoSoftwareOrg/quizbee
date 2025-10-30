@@ -131,6 +131,6 @@ class EdgeAPIAppImpl(EdgeAPIApp):
                 item_id=cmd.item_id,
             )
         ):
+            if result.status == "done":
+                await self.user_auth.charge(user.id, cost)
             yield result
-
-        await self.user_auth.charge(user.id, cost)

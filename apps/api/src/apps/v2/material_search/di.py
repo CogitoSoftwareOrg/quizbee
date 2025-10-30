@@ -12,14 +12,13 @@ from .app.usecases import MaterialSearchAppImpl
 
 
 # APP
-def set_material_search_app(
-    app: FastAPI,
+def init_material_search_app(
     llm_tools: LLMToolsApp,
     pdf_parser: PdfParser,
     indexer: MaterialIndexer,
     material_repository: MaterialRepository,
 ):
-    app.state.material_search_app = MaterialSearchAppImpl(
+    return MaterialSearchAppImpl(
         material_repository=material_repository,
         pdf_parser=pdf_parser,
         llm_tools=llm_tools,

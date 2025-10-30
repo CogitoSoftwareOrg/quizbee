@@ -9,8 +9,7 @@ from .app.contracts import QuizAttempterApp
 from .app.usecases import QuizAttempterAppImpl
 
 
-def set_quiz_attempter_app(
-    app: FastAPI,
+def init_quiz_attempter_app(
     attempt_repository: AttemptRepository,
     explainer: Explainer,
     message_owner: MessageOwnerApp,
@@ -18,7 +17,7 @@ def set_quiz_attempter_app(
     finalizer: AttemptFinalizer,
 ):
 
-    app.state.quiz_attempter_app = QuizAttempterAppImpl(
+    return QuizAttempterAppImpl(
         attempt_repository=attempt_repository,
         explainer=explainer,
         message_owner=message_owner,

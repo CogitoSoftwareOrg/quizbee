@@ -13,8 +13,7 @@ from .domain.ports import (
 from .app.usecases import QuizGeneratorAppImpl
 
 
-def set_quiz_generator_app(
-    app: FastAPI,
+def init_quiz_generator_app(
     llm_tools: LLMToolsApp,
     material_search: MaterialSearchApp,
     quiz_repository: QuizRepository,
@@ -22,7 +21,7 @@ def set_quiz_generator_app(
     patch_generator: PatchGenerator,
     finalizer: QuizFinalizer,
 ):
-    app.state.quiz_generator_app = QuizGeneratorAppImpl(
+    return QuizGeneratorAppImpl(
         quiz_repository=quiz_repository,
         quiz_indexer=quiz_indexer,
         llm_tools=llm_tools,

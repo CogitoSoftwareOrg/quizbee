@@ -1,33 +1,28 @@
-from typing import Annotated, Union
 from fastapi import FastAPI
 import logging
 import contextlib
 from contextlib import asynccontextmanager
+from langfuse import Langfuse
 from meilisearch_python_sdk import AsyncClient
 import httpx
-from pydantic import BaseModel, Field
-from pydantic_ai import Agent
+from pocketbase import PocketBase
 
-from src.apps.v2.edge_api.di import set_edge_api_app
+from src.apps.v2.quiz_generator.di import init_quiz_generator_app
+from src.apps.v2.edge_api.di import init_edge_api_app
 from src.lib.settings import settings
 
-from src.apps.v2.llm_tools.di import set_llm_tools
+from src.apps.v2.llm_tools.di import init_llm_tools
 from src.apps.v2.llm_tools.adapters.out import (
     TiktokenTokenizer,
     OpenAIImageTokenizer,
     SimpleChunker,
 )
 
-
-from src.apps.v2.quiz_generator.di import set_quiz_generator_app
-
-from src.lib.clients import set_admin_pb, set_langfuse
-
-from src.apps.v2.user_auth.di import set_auth_user_app
+from src.apps.v2.user_auth.di import init_auth_user_app
 from src.apps.v2.user_auth.adapters.out import PBUserVerifier, PBUserRepository
 
 from src.apps.v2.material_search.di import (
-    set_material_search_app,
+    init_material_search_app,
 )
 from src.apps.v2.material_search.adapters.out import (
     FitzPDFParser,
@@ -35,56 +30,24 @@ from src.apps.v2.material_search.adapters.out import (
     PBMaterialRepository,
 )
 
-from src.apps.v2.message_owner.di import set_message_owner_app
+from src.apps.v2.message_owner.di import init_message_owner_app
 from src.apps.v2.message_owner.adapters.out import PBMessageRepository
 
-from src.apps.v2.quiz_generator.adapters.out import (
-    PBQuizRepository,
-    PATCH_GENERATOR_LLM,
-    QUIZ_FINALIZER_LLM,
-    AIPatchGenerator,
-    AIPatchGeneratorDeps,
-    AIQuizFinalizer,
-    QuizFinalizerDeps,
-    QuizFinalizerOutput,
-    AIPatchGeneratorOutput,
-    MeiliQuizIndexer,
-)
-
-from src.apps.v2.quiz_attempter.di import set_quiz_attempter_app
-from src.apps.v2.quiz_attempter.adapters.out import (
-    PBAttemptRepository,
-    AIExplainer,
-    ExplainerDeps,
-    EXPLAINER_LLM,
-    ExplainerOutput,
-    AttemptFinalizerOutput,
-    AttemptFinalizerDeps,
-    ATTEMPT_FINALIZER_LLM,
-    AIAttemptFinalizer,
-)
-
-
-from src.lib.clients import set_admin_pb
+from src.apps.v2.quiz_attempter.di import init_quiz_attempter_app
 
 from .mcp import mcp
+from .di import (
+    init_llm_tools_deps,
+    init_material_search_deps,
+    init_message_owner_deps,
+    init_quiz_generator_deps,
+    init_quiz_attempter_deps,
+    init_user_auth_deps,
+    init_global_deps,
+)
 
 
 logger = logging.getLogger(__name__)
-
-AgentPayload = Annotated[
-    Union[
-        AIPatchGeneratorOutput,
-        QuizFinalizerOutput,
-        ExplainerOutput,
-        AttemptFinalizerOutput,
-    ],
-    Field(discriminator="mode"),
-]
-
-
-class AgentEnvelope(BaseModel):
-    data: AgentPayload
 
 
 @asynccontextmanager
@@ -93,47 +56,48 @@ async def lifespan(app: FastAPI):
     logger.info("Starting Quizbee API server")
 
     # GLOBAL
-    http = httpx.AsyncClient()
-    set_admin_pb(app)
-    set_langfuse(app)
-    meili = AsyncClient(settings.meili_url, settings.meili_master_key)
+    admin_pb, lf, meili, http = init_global_deps()
 
     # V2 LLM TOOLS
-    text_tokenizer = TiktokenTokenizer()
-    image_tokenizer = OpenAIImageTokenizer()
-    chunker = SimpleChunker(text_tokenizer)
-    set_llm_tools(
-        app,
+    text_tokenizer, image_tokenizer, chunker = init_llm_tools_deps()
+    llm_tools = init_llm_tools(
         text_tokenizer=text_tokenizer,
         image_tokenizer=image_tokenizer,
         chunker=chunker,
     )
 
     # V2 USER AUTH
-    user_repository = PBUserRepository(app.state.admin_pb)
-    user_verifier = PBUserVerifier(user_repository=user_repository)
-    set_auth_user_app(app, user_verifier=user_verifier, user_repository=user_repository)
+    user_verifier, user_repository = init_user_auth_deps(admin_pb=admin_pb)
+    auth_user_app = init_auth_user_app(
+        user_verifier=user_verifier, user_repository=user_repository
+    )
 
     # V2 MATERIAL SEARCH
     material_repository, pdf_parser, material_indexer = await init_material_search_deps(
-        app, meili
+        admin_pb=admin_pb,
+        meili=meili,
+        llm_tools=llm_tools,
     )
-    set_material_search_app(
-        app,
-        material_repository=material_repository,
+    material_search_app = init_material_search_app(
+        llm_tools=llm_tools,
         pdf_parser=pdf_parser,
         indexer=material_indexer,
-        llm_tools=app.state.llm_tools,
+        material_repository=material_repository,
     )
 
     # V2 QUIZ GENERATOR
     quiz_repository, patch_generator, finalizer, quiz_indexer = (
-        await init_quiz_generator_deps(app, http, meili)
+        await init_quiz_generator_deps(
+            meili=meili,
+            lf=lf,
+            admin_pb=admin_pb,
+            http=http,
+            llm_tools=llm_tools,
+        )
     )
-    set_quiz_generator_app(
-        app,
-        llm_tools=app.state.llm_tools,
-        material_search=app.state.material_search_app,
+    quiz_generator_app = init_quiz_generator_app(
+        llm_tools=llm_tools,
+        material_search=material_search_app,
         quiz_repository=quiz_repository,
         quiz_indexer=quiz_indexer,
         patch_generator=patch_generator,
@@ -141,28 +105,33 @@ async def lifespan(app: FastAPI):
     )
 
     # V2 MESSAGE OWNER
-    message_repository = PBMessageRepository(app.state.admin_pb)
-    set_message_owner_app(app, message_repository=message_repository)
+    message_repository = init_message_owner_deps(admin_pb=admin_pb)
+    message_owner_app = init_message_owner_app(message_repository=message_repository)
 
     # V2 QUIZ ATTEMPTER
-    attempt_repository, explainer, finalizer = init_quiz_attempter_deps(app, http)
-    set_quiz_attempter_app(
-        app,
+    attempt_repository, explainer, finalizer = init_quiz_attempter_deps(
+        lf=lf,
+        admin_pb=admin_pb,
+        http=http,
+        llm_tools=llm_tools,
+    )
+    quiz_attempter_app = init_quiz_attempter_app(
         attempt_repository=attempt_repository,
         explainer=explainer,
-        message_owner=app.state.message_owner_app,
-        llm_tools=app.state.llm_tools,
+        message_owner=message_owner_app,
+        llm_tools=llm_tools,
         finalizer=finalizer,
     )
 
     # V2 EDGE API
-    set_edge_api_app(
-        app,
-        auth_user_app=app.state.auth_user_app,
-        quiz_generator_app=app.state.quiz_generator_app,
-        quiz_attempter_app=app.state.quiz_attempter_app,
-        material_search_app=app.state.material_search_app,
+    edge_api_app = init_edge_api_app(
+        auth_user_app=auth_user_app,
+        quiz_generator_app=quiz_generator_app,
+        quiz_attempter_app=quiz_attempter_app,
+        material_search_app=material_search_app,
     )
+
+    app.state.edge_api_app = edge_api_app
 
     async with contextlib.AsyncExitStack() as stack:
         await stack.enter_async_context(mcp.session_manager.run())
@@ -173,79 +142,3 @@ async def lifespan(app: FastAPI):
     # await app.state.meili_client.aclose()
     await http.aclose()
     await meili.aclose()
-
-
-async def init_material_search_deps(
-    app: FastAPI, meili: AsyncClient
-) -> tuple[PBMaterialRepository, FitzPDFParser, MeiliMaterialIndexer]:
-    material_repository = PBMaterialRepository(app.state.admin_pb)
-    pdf_parser = FitzPDFParser()
-    material_indexer = await MeiliMaterialIndexer.ainit(
-        llm_tools=app.state.llm_tools, meili=meili
-    )
-    return material_repository, pdf_parser, material_indexer
-
-
-# Factory functions for dependency initialization
-def init_quiz_attempter_deps(
-    app: FastAPI, http: httpx.AsyncClient
-) -> tuple[PBAttemptRepository, AIExplainer, AIAttemptFinalizer]:
-    attempt_repository = PBAttemptRepository(app.state.admin_pb, http=http)
-    explainer_ai = Agent(
-        # instrument=True,
-        model=EXPLAINER_LLM,
-        deps_type=ExplainerDeps,
-        history_processors=[],
-        output_type=AgentEnvelope,
-    )
-    explainer = AIExplainer(
-        lf=app.state.langfuse_client,
-        ai=explainer_ai,
-    )
-
-    finalizer_ai = Agent(
-        model=ATTEMPT_FINALIZER_LLM,
-        deps_type=AttemptFinalizerDeps,
-        history_processors=[],
-        output_type=AgentEnvelope,
-    )
-    finalizer = AIAttemptFinalizer(
-        lf=app.state.langfuse_client,
-        attempt_repository=attempt_repository,
-        ai=finalizer_ai,
-    )
-    return attempt_repository, explainer, finalizer
-
-
-async def init_quiz_generator_deps(
-    app: FastAPI, http: httpx.AsyncClient, meili: AsyncClient
-) -> tuple[PBQuizRepository, AIPatchGenerator, AIQuizFinalizer, MeiliQuizIndexer]:
-    quiz_repository = PBQuizRepository(app.state.admin_pb, http=http)
-    patch_generator_ai = Agent(
-        model=PATCH_GENERATOR_LLM,
-        deps_type=AIPatchGeneratorDeps,
-        history_processors=[],
-        output_type=AgentEnvelope,
-    )
-    patch_generator = AIPatchGenerator(
-        lf=app.state.langfuse_client,
-        quiz_repository=quiz_repository,
-        ai=patch_generator_ai,
-    )
-    finalizer_ai = Agent(
-        model=QUIZ_FINALIZER_LLM,
-        deps_type=QuizFinalizerDeps,
-        history_processors=[],
-        output_type=AgentEnvelope,
-    )
-    finalizer = AIQuizFinalizer(
-        lf=app.state.langfuse_client,
-        quiz_repository=quiz_repository,
-        ai=finalizer_ai,
-    )
-    quiz_indexer = await MeiliQuizIndexer.ainit(
-        llm_tools=app.state.llm_tools,
-        meili=meili,
-        quiz_repository=quiz_repository,
-    )
-    return quiz_repository, patch_generator, finalizer, quiz_indexer
