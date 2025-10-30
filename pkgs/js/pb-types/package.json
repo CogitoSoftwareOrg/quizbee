@@ -1,12 +1,13 @@
 {
   "name": "@quizbee/pb-types",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
+  "description": "PocketBase TypeScript types for QuizBee",
   "type": "module",
-  "files": [
-    "src/index.ts"
-  ],
+  "main": "src/index.ts",
   "types": "src/index.ts",
+  "files": [
+    "src"
+  ],
   "sideEffects": false,
   "scripts": {
     "build": "npx pocketbase-typegen --db ../../../apps/pb/pb_data/data.db --out src/pocketbase-types.ts",
@@ -18,5 +19,20 @@
   },
   "engines": {
     "node": ">=18"
-  }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/quizbee.git",
+    "directory": "pkgs/js/pb-types"
+  },
+  "keywords": [
+    "pocketbase",
+    "types",
+    "typescript",
+    "quizbee"
+  ],
+  "license": "MIT"
 }
