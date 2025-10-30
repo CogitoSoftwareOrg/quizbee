@@ -1,6 +1,6 @@
 import logging
 
-from src.apps..edge_api.app.contracts import (
+from src.apps.edge_api.app.contracts import (
     EdgeAPIApp,
     PublicStartQuizCmd,
     PublicFinalizeQuizCmd,

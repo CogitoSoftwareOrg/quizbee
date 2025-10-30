@@ -12,7 +12,7 @@ from pydantic_ai import (
     UserPromptPart,
 )
 
-from src.lib.clients import update_span_with_result
+from src.lib.utils import update_span_with_result
 from src.lib.config import LLMS
 from src.lib.settings import settings
 

@@ -1,10 +1,10 @@
 from typing import Any
 from fastapi import FastAPI
 
-from src.apps..user_auth.app.contracts import AuthUserApp
-from src.apps..quiz_generator.app.contracts import QuizGeneratorApp
-from src.apps..quiz_attempter.app.contracts import QuizAttempterApp
-from src.apps..material_search.app.contracts import MaterialSearchApp
+from src.apps.user_auth.app.contracts import AuthUserApp
+from src.apps.quiz_generator.app.contracts import QuizGeneratorApp
+from src.apps.quiz_attempter.app.contracts import QuizAttempterApp
+from src.apps.material_search.app.contracts import MaterialSearchApp
 
 from .app.usecases import EdgeAPIAppImpl
 

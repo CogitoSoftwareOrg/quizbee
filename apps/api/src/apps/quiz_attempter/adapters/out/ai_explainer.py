@@ -23,7 +23,7 @@ from pydantic_ai import (
 
 from src.lib.config import LLMS
 from src.lib.settings import settings
-from src.lib.clients import update_span_with_result
+from src.lib.utils import update_span_with_result
 
 from ...domain.models import (
     Attempt,

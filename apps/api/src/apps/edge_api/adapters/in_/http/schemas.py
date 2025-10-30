@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
-from src.apps..quiz_generator.app.contracts import GenMode
+from src.apps.quiz_generator.app.contracts import GenMode
 
 
 class StartQuizDto(BaseModel):

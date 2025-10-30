@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
-from src.apps..material_search.app.contracts import MaterialSearchApp
-from src.apps..llm_tools.app.contracts import LLMToolsApp
+from src.apps.material_search.app.contracts import MaterialSearchApp
+from src.apps.llm_tools.app.contracts import LLMToolsApp
 
 
 from .domain.ports import (

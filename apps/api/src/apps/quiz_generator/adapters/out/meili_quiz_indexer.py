@@ -2,15 +2,15 @@ import asyncio
 from dataclasses import asdict, dataclass
 import logging
 from typing import TypedDict
+from langfuse import Langfuse
 from meilisearch_python_sdk import AsyncClient
 from meilisearch_python_sdk.models.search import Hybrid
 from meilisearch_python_sdk.models.settings import Embedders, OpenAiEmbedder
 
-from src.lib.clients import langfuse_client
 from src.lib.config import LLMS
 from src.lib.settings import settings
 
-from src.apps..llm_tools.app.contracts import LLMToolsApp
+from src.apps.llm_tools.app.contracts import LLMToolsApp
 
 from ...domain.errors import InvalidQuiz
 from ...domain.models import Quiz, QuizCategory, QuizDifficulty, QuizVisibility
@@ -92,10 +92,12 @@ class Doc:
 class MeiliQuizIndexer(QuizIndexer):
     def __init__(
         self,
+        lf: Langfuse,
         llm_tools: LLMToolsApp,
         meili: AsyncClient,
         quiz_repository: QuizRepository,
     ):
+        self._lf = lf
         self.llm_tools = llm_tools
         self.meili = meili
         self.quiz_index = meili.index(EMBEDDER_NAME)
@@ -103,9 +105,13 @@ class MeiliQuizIndexer(QuizIndexer):
 
     @classmethod
     async def ainit(
-        cls, llm_tools: LLMToolsApp, meili: AsyncClient, quiz_repository: QuizRepository
+        cls,
+        lf: Langfuse,
+        llm_tools: LLMToolsApp,
+        meili: AsyncClient,
+        quiz_repository: QuizRepository,
     ) -> "MeiliQuizIndexer":
-        instance = cls(llm_tools, meili, quiz_repository)
+        instance = cls(lf, llm_tools, meili, quiz_repository)
 
         await instance.quiz_index.update_embedders(
             Embedders(embedders=meiliEmbeddings)  # pyright: ignore[reportArgumentType]
@@ -148,8 +154,8 @@ class MeiliQuizIndexer(QuizIndexer):
             logging.error(f"Unknown task status: {task}")
 
         # Third: Log to langfuse after all tasks are complete and tokens are counted
-        with langfuse_client.start_as_current_span(name="material-indexing") as span:
-            langfuse_client.update_current_generation(
+        with self._lf.start_as_current_span(name="quiz-indexing") as span:
+            self._lf.update_current_generation(
                 model=LLMS.TEXT_EMBEDDING_3_SMALL,
                 usage_details={
                     "total": total_tokens,

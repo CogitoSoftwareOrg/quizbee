@@ -29,7 +29,7 @@ from .deps import (
 )
 from .schemas import StartQuizDto, PatchQuizDto, FinalizeQuizDto
 
-edge_api_router = APIRouter(prefix="/", tags=["v2"], dependencies=[])
+edge_api_router = APIRouter(prefix="", tags=["v2"], dependencies=[])
 
 
 # Quiz Generator

@@ -5,7 +5,7 @@ import logging
 from src.lib.settings import settings
 
 
-from src.apps..llm_tools.app.usecases import LLMToolsApp
+from src.apps.llm_tools.app.usecases import LLMToolsApp
 
 from ..domain.models import (
     Material,

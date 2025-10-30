@@ -1,7 +1,7 @@
 from typing import Any, AsyncGenerator, AsyncIterable, Literal, Protocol
 from dataclasses import dataclass
 
-from src.apps..user_auth.app.contracts import Principal
+from src.apps.user_auth.app.contracts import Principal
 
 from ..domain.models import Attempt
 

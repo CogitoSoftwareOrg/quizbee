@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 from typing import Protocol
 
-from src.apps..user_auth.app.contracts import Principal
+from src.apps.user_auth.app.contracts import Principal
 
 from ..domain.models import Material, MaterialFile, MaterialChunk
 

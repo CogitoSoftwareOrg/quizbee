@@ -1,8 +1,8 @@
 import logging
 
-from src.apps..llm_tools.app.contracts import LLMToolsApp
-from src.apps..material_search.app.contracts import MaterialSearchApp, SearchCmd
-from src.apps..user_auth.app.contracts import Principal
+from src.apps.llm_tools.app.contracts import LLMToolsApp
+from src.apps.material_search.app.contracts import MaterialSearchApp, SearchCmd
+from src.apps.user_auth.app.contracts import Principal
 
 from ..domain.ports import (
     QuizFinalizer,

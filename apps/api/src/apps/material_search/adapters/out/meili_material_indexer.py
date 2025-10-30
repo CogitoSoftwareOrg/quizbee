@@ -1,15 +1,15 @@
 from dataclasses import asdict, dataclass
 import logging
 from typing import TypedDict
+from langfuse import Langfuse
 from meilisearch_python_sdk import AsyncClient
 from meilisearch_python_sdk.models.search import Hybrid
 from meilisearch_python_sdk.models.settings import Embedders, OpenAiEmbedder
 
-from src.lib.clients import langfuse_client
 from src.lib.config import LLMS
 from src.lib.settings import settings
 
-from src.apps..llm_tools.app.contracts import LLMToolsApp
+from src.apps.llm_tools.app.contracts import LLMToolsApp
 
 from ...domain.models import Material, MaterialChunk, MaterialKind
 from ...domain.constants import MAX_TEXT_INDEX_TOKENS
@@ -39,16 +39,17 @@ class Doc:
 
 
 class MeiliMaterialIndexer(MaterialIndexer):
-    def __init__(self, llm_tools: LLMToolsApp, meili: AsyncClient):
+    def __init__(self, lf: Langfuse, llm_tools: LLMToolsApp, meili: AsyncClient):
+        self._lf = lf
         self.llm_tools = llm_tools
         self.meili = meili
         self.material_index = meili.index(EMBEDDER_NAME)
 
     @classmethod
     async def ainit(
-        cls, llm_tools: LLMToolsApp, meili: AsyncClient
+        cls, lf: Langfuse, llm_tools: LLMToolsApp, meili: AsyncClient
     ) -> "MeiliMaterialIndexer":
-        instance = cls(llm_tools, meili)
+        instance = cls(lf, llm_tools, meili)
 
         await instance.material_index.update_embedders(
             Embedders(embedders=meiliEmbeddings)  # pyright: ignore[reportArgumentType]
@@ -205,8 +206,8 @@ class MeiliMaterialIndexer(MaterialIndexer):
         )
 
     def _log_langfuse(self, user_id: str, session_id: str, total_tokens: int) -> None:
-        with langfuse_client.start_as_current_span(name="material-indexing") as span:
-            langfuse_client.update_current_generation(
+        with self._lf.start_as_current_span(name="material-indexing") as span:
+            self._lf.update_current_generation(
                 model=LLMS.TEXT_EMBEDDING_3_SMALL,
                 usage_details={
                     "total": total_tokens,

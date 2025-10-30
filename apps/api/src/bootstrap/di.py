@@ -101,12 +101,12 @@ def init_user_auth_deps(admin_pb: PocketBase):
 
 
 async def init_material_search_deps(
-    admin_pb: PocketBase, meili: AsyncClient, llm_tools: LLMToolsApp
+    lf: Langfuse, admin_pb: PocketBase, meili: AsyncClient, llm_tools: LLMToolsApp
 ) -> tuple[PBMaterialRepository, FitzPDFParser, MeiliMaterialIndexer]:
     material_repository = PBMaterialRepository(admin_pb)
     pdf_parser = FitzPDFParser()
     material_indexer = await MeiliMaterialIndexer.ainit(
-        llm_tools=llm_tools, meili=meili
+        lf=lf, llm_tools=llm_tools, meili=meili
     )
     return material_repository, pdf_parser, material_indexer
 
@@ -173,6 +173,7 @@ async def init_quiz_generator_deps(
         ai=finalizer_ai,
     )
     quiz_indexer = await MeiliQuizIndexer.ainit(
+        lf=lf,
         llm_tools=llm_tools,
         meili=meili,
         quiz_repository=quiz_repository,

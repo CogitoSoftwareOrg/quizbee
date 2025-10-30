@@ -1,20 +1,20 @@
 import logging
 from typing import AsyncGenerator
 
-from src.apps..user_auth.app.contracts import AuthUserApp, Principal
-from src.apps..message_owner.app.contracts import (
+from src.apps.user_auth.app.contracts import AuthUserApp, Principal
+from src.apps.message_owner.app.contracts import (
     MessageOwnerApp,
     StartMessageCmd,
     GetAttemptHistoryCmd,
     FinalizeMessageCmd,
 )
-from src.apps..message_owner.domain.models import (
+from src.apps.message_owner.domain.models import (
     Message,
     MessageMetadata,
     MessageRole,
     MessageStatus,
 )
-from src.apps..llm_tools.app.contracts import LLMToolsApp
+from src.apps.llm_tools.app.contracts import LLMToolsApp
 
 from ..domain.models import Attempt
 from ..domain.refs import (

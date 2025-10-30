@@ -1,20 +1,20 @@
-from src.apps..quiz_generator.app.contracts import (
+from src.apps.quiz_generator.app.contracts import (
     QuizGeneratorApp,
     GenerateCmd,
     FinalizeQuizCmd,
     GenMode,
 )
-from src.apps..quiz_attempter.app.contracts import (
+from src.apps.quiz_attempter.app.contracts import (
     QuizAttempterApp,
     FinalizeAttemptCmd,
     AskExplainerCmd,
 )
-from src.apps..material_search.app.contracts import (
+from src.apps.material_search.app.contracts import (
     AddMaterialCmd,
     MaterialSearchApp,
     Material,
 )
-from src.apps..user_auth.app.contracts import AuthUserApp
+from src.apps.user_auth.app.contracts import AuthUserApp
 
 from ..domain.errors import NotEnoughQuizItemsError
 from ..domain.constants import PATCH_LIMIT

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from src.apps..llm_tools.app.contracts import LLMToolsApp
+from src.apps.llm_tools.app.contracts import LLMToolsApp
 
 from .domain.ports import (
     MaterialRepository,

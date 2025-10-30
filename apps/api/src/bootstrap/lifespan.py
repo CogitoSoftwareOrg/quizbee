@@ -7,33 +7,33 @@ from meilisearch_python_sdk import AsyncClient
 import httpx
 from pocketbase import PocketBase
 
-from src.apps..quiz_generator.di import init_quiz_generator_app
-from src.apps..edge_api.di import init_edge_api_app
+from src.apps.quiz_generator.di import init_quiz_generator_app
+from src.apps.edge_api.di import init_edge_api_app
 from src.lib.settings import settings
 
-from src.apps..llm_tools.di import init_llm_tools
-from src.apps..llm_tools.adapters.out import (
+from src.apps.llm_tools.di import init_llm_tools
+from src.apps.llm_tools.adapters.out import (
     TiktokenTokenizer,
     OpenAIImageTokenizer,
     SimpleChunker,
 )
 
-from src.apps..user_auth.di import init_auth_user_app
-from src.apps..user_auth.adapters.out import PBUserVerifier, PBUserRepository
+from src.apps.user_auth.di import init_auth_user_app
+from src.apps.user_auth.adapters.out import PBUserVerifier, PBUserRepository
 
-from src.apps..material_search.di import (
+from src.apps.material_search.di import (
     init_material_search_app,
 )
-from src.apps..material_search.adapters.out import (
+from src.apps.material_search.adapters.out import (
     FitzPDFParser,
     MeiliMaterialIndexer,
     PBMaterialRepository,
 )
 
-from src.apps..message_owner.di import init_message_owner_app
-from src.apps..message_owner.adapters.out import PBMessageRepository
+from src.apps.message_owner.di import init_message_owner_app
+from src.apps.message_owner.adapters.out import PBMessageRepository
 
-from src.apps..quiz_attempter.di import init_quiz_attempter_app
+from src.apps.quiz_attempter.di import init_quiz_attempter_app
 
 from .mcp import mcp
 from .di import (
@@ -74,9 +74,7 @@ async def lifespan(app: FastAPI):
 
     # V2 MATERIAL SEARCH
     material_repository, pdf_parser, material_indexer = await init_material_search_deps(
-        admin_pb=admin_pb,
-        meili=meili,
-        llm_tools=llm_tools,
+        lf=lf, admin_pb=admin_pb, meili=meili, llm_tools=llm_tools
     )
     material_search_app = init_material_search_app(
         llm_tools=llm_tools,
@@ -131,6 +129,7 @@ async def lifespan(app: FastAPI):
         material_search_app=material_search_app,
     )
 
+    app.state.admin_pb = admin_pb
     app.state.edge_api_app = edge_api_app
 
     async with contextlib.AsyncExitStack() as stack:

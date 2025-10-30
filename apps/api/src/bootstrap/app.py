@@ -4,7 +4,7 @@ from fastapi import Depends, FastAPI
 from src.lib.config import LOGGING_CONFIG
 
 
-from src.apps..edge_api.adapters.in_.http.router import edge_api_router
+from src.apps.edge_api.adapters.in_.http.router import edge_api_router
 
 from .cors import cors_middleware
 from .errors import all_exceptions_handler

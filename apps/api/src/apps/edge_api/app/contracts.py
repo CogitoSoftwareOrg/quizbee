@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from typing import AsyncIterable, Protocol
 
-from src.apps..quiz_generator.app.contracts import GenMode
-from src.apps..material_search.app.contracts import MaterialFile, Material
+from src.apps.quiz_generator.app.contracts import GenMode
+from src.apps.material_search.app.contracts import MaterialFile, Material
 
-from src.apps..quiz_attempter.app.contracts import AskExplainerResult
+from src.apps.quiz_attempter.app.contracts import AskExplainerResult
 
 
 @dataclass(frozen=True, slots=True)
