@@ -6,28 +6,28 @@ from pocketbase import PocketBase
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 
-from src.apps.v2.llm_tools.app.contracts import LLMToolsApp
+from src.apps.llm_tools.app.contracts import LLMToolsApp
 from src.lib.settings import settings
 
-from src.apps.v2.llm_tools.adapters.out import (
+from src.apps.llm_tools.adapters.out import (
     TiktokenTokenizer,
     OpenAIImageTokenizer,
     SimpleChunker,
 )
 
 
-from src.apps.v2.user_auth.adapters.out import PBUserVerifier, PBUserRepository
+from src.apps.user_auth.adapters.out import PBUserVerifier, PBUserRepository
 
 
-from src.apps.v2.material_search.adapters.out import (
+from src.apps.material_search.adapters.out import (
     FitzPDFParser,
     MeiliMaterialIndexer,
     PBMaterialRepository,
 )
 
-from src.apps.v2.message_owner.adapters.out import PBMessageRepository
+from src.apps.message_owner.adapters.out import PBMessageRepository
 
-from src.apps.v2.quiz_generator.adapters.out import (
+from src.apps.quiz_generator.adapters.out import (
     PBQuizRepository,
     PATCH_GENERATOR_LLM,
     QUIZ_FINALIZER_LLM,
@@ -40,7 +40,7 @@ from src.apps.v2.quiz_generator.adapters.out import (
     MeiliQuizIndexer,
 )
 
-from src.apps.v2.quiz_attempter.adapters.out import (
+from src.apps.quiz_attempter.adapters.out import (
     PBAttemptRepository,
     AIExplainer,
     ExplainerDeps,

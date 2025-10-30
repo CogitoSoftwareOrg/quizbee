@@ -1,19 +1,20 @@
 from arq.connections import RedisSettings
 
-from src.apps.v2.edge_api.adapters.in_.events.subscribers import (
+from src.apps..edge_api.adapters.in_.events.subscribers import (
     start_quiz_job,
     finalize_quiz_job,
     generate_quiz_items_job,
     finalize_attempt_job,
+    add_material_job,
 )
 
-from src.apps.v2.llm_tools.di import init_llm_tools
-from src.apps.v2.user_auth.di import init_auth_user_app
-from src.apps.v2.material_search.di import init_material_search_app
-from src.apps.v2.quiz_generator.di import init_quiz_generator_app
-from src.apps.v2.message_owner.di import init_message_owner_app
-from src.apps.v2.quiz_attempter.di import init_quiz_attempter_app
-from src.apps.v2.edge_api.di import init_edge_api_app
+from src.apps..llm_tools.di import init_llm_tools
+from src.apps..user_auth.di import init_auth_user_app
+from src.apps..material_search.di import init_material_search_app
+from src.apps..quiz_generator.di import init_quiz_generator_app
+from src.apps..message_owner.di import init_message_owner_app
+from src.apps..quiz_attempter.di import init_quiz_attempter_app
+from src.apps..edge_api.di import init_edge_api_app
 
 from src.lib.settings import settings
 
@@ -122,6 +123,7 @@ class WorkerSettings:
         finalize_quiz_job,
         generate_quiz_items_job,
         finalize_attempt_job,
+        add_material_job,
     ]
     on_startup = startup
     on_shutdown = shutdown
