@@ -64,6 +64,9 @@ from src.lib.clients import set_admin_pb
 
 from .mcp import mcp
 
+
+logger = logging.getLogger(__name__)
+
 AgentPayload = Annotated[
     Union[AIPatchGeneratorOutput, QuizFinalizerOutput, ExplainerOutput],
     Field(discriminator="mode"),
@@ -77,7 +80,7 @@ class AgentEnvelope(BaseModel):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # INIT LOGIC
-    logging.info("Starting Quizbee API server")
+    logger.info("Starting Quizbee API server")
 
     # GLOBAL
     http = httpx.AsyncClient()
@@ -149,7 +152,7 @@ async def lifespan(app: FastAPI):
         yield
 
     # CLEANUP LOGIC
-    logging.info("Shutting down Quizbee API server")
+    logger.info("Shutting down Quizbee API server")
     # await app.state.meili_client.aclose()
     await http.aclose()
     await meili.aclose()

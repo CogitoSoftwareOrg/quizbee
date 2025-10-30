@@ -33,6 +33,8 @@ from .contracts import (
     FinalizeCmd,
 )
 
+logger = logging.getLogger(__name__)
+
 
 class QuizAttempterAppImpl(QuizAttempterApp):
     def __init__(
@@ -56,7 +58,7 @@ class QuizAttempterAppImpl(QuizAttempterApp):
     async def ask_explainer(
         self, cmd: AskExplainerCmd
     ) -> AsyncGenerator[AskExplainerResult, None]:
-        logging.info(f"Ask explainer: {cmd.attempt_id}")
+        logger.info(f"Ask explainer: {cmd.attempt_id}")
         attempt = await self.attempt_repository.get(cmd.attempt_id)
         await self.validate_attempt(attempt, cmd.token)
 
@@ -74,11 +76,11 @@ class QuizAttempterAppImpl(QuizAttempterApp):
 
         item = attempt.get_item(cmd.item_id)
 
-        logging.info(f"Explain attempt: {attempt.id}")
+        logger.info(f"Explain attempt: {attempt.id}")
         async for message in self.explainer.explain(
             cmd.query, attempt, item, ai_message_ref, cmd.cache_key
         ):
-            logging.info(f"Message: {len(message.content)} chars, id: {message.id}")
+            logger.debug(f"Message: {len(message.content)} chars, id: {message.id}")
             status = "chunk" if message.status == "streaming" else "done"
 
             if message.status == MessageStatus.FINAL:

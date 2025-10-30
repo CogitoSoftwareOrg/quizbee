@@ -23,6 +23,13 @@ class Settings(BaseSettings):
     )
 
     env: str = Field(default="local")
+
+    # Logging configuration
+    log_level: str = Field(default="INFO")
+    log_format: str = Field(default="pretty" if env == "local" else "json")
+    log_requests: bool = Field(default=True)
+    log_slow_requests_threshold: float = Field(default=1.0)
+
     coolify_url: str | None = Field(default=None)
     pr_id: int | None = Field(default=None)
     redis_prefix: str = Field(default="")
@@ -42,12 +49,6 @@ class Settings(BaseSettings):
 
     brave_search_url: str = Field(default="https://search.brave.com")
     brave_search_api_key: str = Field(default="key")
-
-    # Logging configuration
-    log_level: str = Field(default="INFO")
-    log_format: str = Field(default="json")
-    log_requests: bool = Field(default=True)
-    log_slow_requests_threshold: float = Field(default=1.0)
 
     # Langfuse configuration
     langfuse_public_key: str = Field(default="key")

@@ -25,6 +25,7 @@ from ..domain.constants import MAX_SIZE_MB, IMAGE_EXTENSIONS
 
 from .contracts import MaterialSearchApp, AddMaterialCmd, SearchCmd
 
+logger = logging.getLogger(__name__)
 
 class MaterialSearchAppImpl(MaterialSearchApp):
     def __init__(
@@ -42,6 +43,7 @@ class MaterialSearchAppImpl(MaterialSearchApp):
         self.user_auth = user_auth
 
     async def add_material(self, cmd: AddMaterialCmd) -> Material:
+        logger.info("MaterialSearchAppImpl.add_material")
         # Validate file size
         user = await self.user_auth.validate(cmd.token)
 
@@ -91,7 +93,7 @@ class MaterialSearchAppImpl(MaterialSearchApp):
                 )
 
             except Exception as e:
-                logging.warning(f"Error parsing PDF: {e}")
+                logger.warning(f"Error parsing PDF: {e}")
         else:
             is_image = cmd.file.file_name.lower().endswith(IMAGE_EXTENSIONS)
             if is_image:
@@ -101,7 +103,7 @@ class MaterialSearchAppImpl(MaterialSearchApp):
                     text = cmd.file.file_bytes.decode("utf-8")
                     material.tokens = self.llm_tools.count_text(text)
                 except UnicodeDecodeError as e:
-                    logging.warning(f"Error decoding text: {e}")
+                    logger.warning(f"Error decoding text: {e}")
 
         await self.material_repository.save(material)
 
@@ -126,14 +128,12 @@ class MaterialSearchAppImpl(MaterialSearchApp):
         return material
 
     async def search(self, cmd: SearchCmd) -> list[MaterialChunk]:
+        logger.info("MaterialSearchAppImpl.search")
         limit_chunks = int(cmd.limit_tokens / self.llm_tools.chunk_size)
+        ratio = 0.5 if len(cmd.query.strip().split()) > 3 else 0
 
-        if len(cmd.query.strip().split()) <= 3:
-            ratio = 0
-        else:
-            ratio = 0.5
 
-        logging.info(
+        logger.info(
             f"Searching for material chunks for query: {cmd.query} (limit: {limit_chunks}, ratio: {ratio})"
         )
         chunks = await self.indexer.search(
