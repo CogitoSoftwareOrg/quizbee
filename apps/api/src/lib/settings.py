@@ -32,7 +32,6 @@ class Settings(BaseSettings):
 
     coolify_url: str | None = Field(default=None)
     pr_id: int | None = Field(default=None)
-    redis_prefix: str = Field(default="")
 
     app_url: str = Field(default="http://localhost:5173", alias="PUBLIC_APP_URL")
 

@@ -1,13 +1,10 @@
 from arq.connections import RedisSettings
-from arq import cron
 
 from src.apps.v2.edge_api.adapters.in_.events.subscribers import (
     start_quiz_job,
     finalize_quiz_job,
     generate_quiz_items_job,
     finalize_attempt_job,
-    add_material_job,
-    ask_explainer_job,
 )
 
 from src.apps.v2.llm_tools.di import init_llm_tools
@@ -17,6 +14,8 @@ from src.apps.v2.quiz_generator.di import init_quiz_generator_app
 from src.apps.v2.message_owner.di import init_message_owner_app
 from src.apps.v2.quiz_attempter.di import init_quiz_attempter_app
 from src.apps.v2.edge_api.di import init_edge_api_app
+
+from src.lib.settings import settings
 
 from .di import (
     init_global_deps,
@@ -106,7 +105,7 @@ async def startup(ctx):
         material_search_app=material_search_app,
     )
 
-    ctx["edge_api_app"] = edge_api_app
+    ctx["edge"] = edge_api_app
     ctx["meili"] = meili
     ctx["http"] = http
 
@@ -117,14 +116,12 @@ async def shutdown(ctx):
 
 
 class WorkerSettings:
-    redis_settings = RedisSettings()
+    redis_settings = RedisSettings.from_dsn(settings.redis_dsn)
     functions = [
         start_quiz_job,
         finalize_quiz_job,
         generate_quiz_items_job,
         finalize_attempt_job,
-        add_material_job,
-        ask_explainer_job,
     ]
     on_startup = startup
-    max_jobs = 200
+    on_shutdown = shutdown
