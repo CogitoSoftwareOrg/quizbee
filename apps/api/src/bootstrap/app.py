@@ -4,15 +4,7 @@ from fastapi import Depends, FastAPI
 from src.lib.config import LOGGING_CONFIG
 
 
-from src.apps.v2.material_search.adapters.in_.http.router import (
-    material_search_router as v2_material_search_router,
-)
-from src.apps.v2.quiz_generator.adapters.in_.http.router import (
-    quiz_generator_router as v2_quiz_generator_router,
-)
-from src.apps.v2.quiz_attempter.adapters.in_.http.router import (
-    quiz_attempter_router as v2_quiz_attempter_router,
-)
+from src.apps.v2.edge_api.adapters.in_.http.router import edge_api_router
 
 from .cors import cors_middleware
 from .errors import all_exceptions_handler
@@ -36,9 +28,7 @@ def create_app():
     app.add_middleware(RequestContextMiddleware)
     app.add_exception_handler(Exception, all_exceptions_handler)
 
-    app.include_router(v2_material_search_router)
-    app.include_router(v2_quiz_generator_router)
-    app.include_router(v2_quiz_attempter_router)
+    app.include_router(edge_api_router)
 
     cors_middleware(app)
 

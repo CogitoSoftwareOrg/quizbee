@@ -81,6 +81,8 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
         await self.quiz_repository.save(quiz)
         await self.finalizer.finalize(quiz, cmd.cache_key)
 
+        await self.quiz_indexer.index(quiz)
+
     async def start(self, cmd: GenerateCmd) -> None:
         quiz = await self.quiz_repository.get(cmd.quiz_id)
         quiz.to_preparing()
