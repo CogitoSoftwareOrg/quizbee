@@ -9,7 +9,7 @@
 	const { streak, class: className = '' }: Props = $props();
 </script>
 
-<div class="card bg-base-100 shadow {className}">
+<div class="card  bg-base-100 shadow {className}">
 	<div class="card-body p-4">
 		<div class="flex items-center gap-2">
 			<Flame class="text-warning h-5 w-5" />

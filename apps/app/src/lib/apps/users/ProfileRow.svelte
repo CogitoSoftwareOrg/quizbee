@@ -40,13 +40,13 @@
 		{#if expanded}
 			<div class="flex h-full flex-1 flex-col gap-1">
 				<p class="truncate text-sm font-semibold">{user?.name || user?.email}</p>
-
+<!-- 
 				<div class="flex items-center gap-1">
 					<p class="badge-primary badge badge-sm font-semibold">{sub?.tariff}</p>
 					<p class="badge-primary badge badge-sm font-semibold">
 						<span class="text-xs">{limit - usage}</span>
 					</p>
-				</div>
+				</div> -->
 			</div>
 
 			<div>

@@ -19,9 +19,9 @@
 	<div class={['flex items-center', isExpanded ? 'justify-between pr-2' : 'justify-center']}>
 		{#if isExpanded}
 			<a href="/home" class="relative mb-4 flex select-none items-center justify-center">
-				<span class="absolute -right-7 top-2">
+				<!-- <span class="absolute -right-7 top-2">
 					<span class="badge badge-outline mb-1 mr-1 badge-xs badge-info">BETA</span>
-				</span>
+				</span> -->
 				<img
 					src={Logo}
 					alt="Quizbee"

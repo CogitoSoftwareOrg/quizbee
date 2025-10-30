@@ -9,3 +9,18 @@
 	font-size: 18px;
 	--font-sans: 'LV', system-ui, sans-serif;
 }
+
+@media screen and (min-width: 1920px) {
+	:root {
+		/* Для экранов 1920px+: базовый размер 20px, максимум 28px на очень больших экранах */
+		font-size: clamp(20px, 1.2vw + 0.5rem, 24px);
+	}
+}
+
+/* Дополнительное увеличение для экранов с высоким DPI */
+/* @media screen and (min-width: 1920px) and (min-resolution: 1.5dppx),
+	screen and (min-width: 1920px) and (-webkit-min-device-pixel-ratio: 1.5) {
+	:root {
+		font-size: clamp(22px, 1.4vw + 0.5rem, 28px);
+	}
+} */
