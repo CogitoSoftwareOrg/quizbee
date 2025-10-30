@@ -158,7 +158,6 @@ class AIPatchGenerator(PatchGenerator):
                     quiz.author_id,
                     cache_key,
                     PATCH_GENERATOR_LLM,
-                    run.all_messages(),
                 )
 
         except Exception as e:

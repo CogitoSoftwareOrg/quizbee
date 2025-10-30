@@ -2,9 +2,10 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, Request
 
 from src.apps.v2.user_auth.app.contracts import AuthUserApp
+from src.apps.v2.message_owner.app.contracts import MessageOwnerApp
+from src.apps.v2.llm_tools.app.contracts import LLMToolsApp
 
 from .domain.ports import AttemptRepository, Explainer
-
 from .app.contracts import QuizAttempterApp
 from .app.usecases import QuizAttempterAppImpl
 
@@ -14,12 +15,14 @@ def set_quiz_attempter_app(
     attempt_repository: AttemptRepository,
     user_auth: AuthUserApp,
     explainer: Explainer,
+    message_owner: MessageOwnerApp,
+    llm_tools: LLMToolsApp,
 ):
-
 
     app.state.quiz_attempter_app = QuizAttempterAppImpl(
         attempt_repository=attempt_repository,
         user_auth=user_auth,
         explainer=explainer,
+        message_owner=message_owner,
+        llm_tools=llm_tools,
     )
-

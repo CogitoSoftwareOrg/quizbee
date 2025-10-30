@@ -14,6 +14,7 @@ class FinalizeCmd:
 
 @dataclass(frozen=True, slots=True)
 class AskExplainerCmd:
+    cache_key: str
     query: str
     item_id: str
     attempt_id: str

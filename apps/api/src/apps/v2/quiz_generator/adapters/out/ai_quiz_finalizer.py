@@ -106,7 +106,6 @@ class AIQuizFinalizer(QuizFinalizer):
                 quiz.author_id,
                 cache_key,
                 QUIZ_FINALIZER_LLM,
-                res.all_messages(),
             )
 
             if res.output.data.mode != "summary":

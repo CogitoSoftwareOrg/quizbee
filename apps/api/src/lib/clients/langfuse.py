@@ -45,7 +45,6 @@ async def update_span_with_result(
     user_id: str,
     session_id: str,
     model: LLMS,
-    new_messages: list[ModelMessage],
     # costs: LLMCosts,
 ):
     if isinstance(result, StreamedRunResult):
@@ -54,6 +53,8 @@ async def update_span_with_result(
         output = result.output
     else:
         raise ValueError(f"Unexpected result type: {type(result)}")
+
+    messages = result.all_messages()
 
     usage = result.usage()
     input_nc = usage.input_tokens - usage.cache_read_tokens
@@ -65,7 +66,7 @@ async def update_span_with_result(
     # outp_price = round(outp * costs.output, 4)
 
     lf.update_current_generation(
-        input=new_messages,
+        input=messages,
         output=output,
         model=model,
         usage_details={

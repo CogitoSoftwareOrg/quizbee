@@ -11,15 +11,14 @@ from pydantic_ai import Agent
 from src.lib.settings import settings
 
 from src.apps.v2.llm_tools.di import set_llm_tools
-from src.apps.v2.quiz_generator.di import set_quiz_generator_app
-
-from src.apps.quiz_attempts import init_feedbacker
-from src.apps.messages import init_explainer
-from src.apps.quizes import (
-    init_quizer,
-    init_summarizer,
-    init_trimmer,
+from src.apps.v2.llm_tools.adapters.out import (
+    TiktokenTokenizer,
+    OpenAIImageTokenizer,
+    SimpleChunker,
 )
+
+
+from src.apps.v2.quiz_generator.di import set_quiz_generator_app
 
 from src.lib.clients import set_admin_pb, set_langfuse
 
@@ -34,6 +33,9 @@ from src.apps.v2.material_search.adapters.out import (
     MeiliMaterialIndexer,
     PBMaterialRepository,
 )
+
+from src.apps.v2.message_owner.di import set_message_owner_app
+from src.apps.v2.message_owner.adapters.out import PBMessageRepository
 
 from src.apps.v2.quiz_generator.adapters.out import (
     PBQuizRepository,
@@ -84,7 +86,15 @@ async def lifespan(app: FastAPI):
     meili = AsyncClient(settings.meili_url, settings.meili_master_key)
 
     # V2 LLM TOOLS
-    set_llm_tools(app)
+    text_tokenizer = TiktokenTokenizer()
+    image_tokenizer = OpenAIImageTokenizer()
+    chunker = SimpleChunker(text_tokenizer)
+    set_llm_tools(
+        app,
+        text_tokenizer=text_tokenizer,
+        image_tokenizer=image_tokenizer,
+        chunker=chunker,
+    )
 
     # V2 USER AUTH
     user_repository = PBUserRepository(app.state.admin_pb)
@@ -119,6 +129,10 @@ async def lifespan(app: FastAPI):
         finalizer=finalizer,
     )
 
+    # V2 MESSAGE OWNER
+    message_repository = PBMessageRepository(app.state.admin_pb)
+    set_message_owner_app(app, message_repository=message_repository)
+
     # V2 QUIZ ATTEMPTER
     attempt_repository, explainer = init_quiz_attempter_deps(app, http)
     set_quiz_attempter_app(
@@ -126,6 +140,8 @@ async def lifespan(app: FastAPI):
         attempt_repository=attempt_repository,
         user_auth=app.state.auth_user_app,
         explainer=explainer,
+        message_owner=app.state.message_owner_app,
+        llm_tools=app.state.llm_tools,
     )
 
     async with contextlib.AsyncExitStack() as stack:

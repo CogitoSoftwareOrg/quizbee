@@ -105,7 +105,6 @@ class AIExplainer(Explainer):
                 attempt.user_id,
                 cache_key,
                 EXPLAINER_LLM,
-                run.all_messages(),
             )
 
     async def _inject_system_prompt(

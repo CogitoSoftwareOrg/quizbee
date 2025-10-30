@@ -27,6 +27,8 @@ class MessageRef:
     status: MessageStatus
     metadata: MessageMetadata
 
+    
+
 
 @dataclass(slots=True, kw_only=True)
 class Choice:
