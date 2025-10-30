@@ -4,12 +4,12 @@ from enum import StrEnum
 from src.lib.utils import genID
 
 
-class Role(StrEnum):
+class MessageRole(StrEnum):
     USER = "user"
     AI = "ai"
 
 
-class Status(StrEnum):
+class MessageStatus(StrEnum):
     INITIAL = "initial"
     FINAL = "final"
     STREAMING = "streaming"
@@ -19,6 +19,11 @@ class Status(StrEnum):
 class MessageMetadata:
     tool_calls: list[str] = field(default_factory=list)
     tool_results: list[str] = field(default_factory=list)
+    item_id: str = field(default="")
+
+    def update(self, tool_calls: list[str], tool_results: list[str]):
+        self.tool_calls.extend(tool_calls)
+        self.tool_results.extend(tool_results)
 
 
 @dataclass(slots=True, kw_only=True)
@@ -26,28 +31,28 @@ class Message:
     id: str = field(default_factory=genID)
     attempt_id: str
     content: str
-    role: Role
-    status: Status
+    role: MessageRole
+    status: MessageStatus
     metadata: MessageMetadata
 
     @classmethod
-    def create(cls, attempt_id: str, role: Role):
+    def create(cls, attempt_id: str, role: MessageRole, item_id):
         return cls(
             attempt_id=attempt_id,
             content="",
             role=role,
-            status=Status.INITIAL,
-            metadata=MessageMetadata(),
+            status=MessageStatus.INITIAL,
+            metadata=MessageMetadata(item_id=item_id),
         )
 
     def to_streaming(self):
-        if self.status != Status.INITIAL:
+        if self.status != MessageStatus.INITIAL:
             raise ValueError(f"Message {self.id} is not initial")
-        if self.role != Role.AI:
+        if self.role != MessageRole.AI:
             raise ValueError(f"Message {self.id} should be AI for streaming")
-        self.status = Status.STREAMING
+        self.status = MessageStatus.STREAMING
 
     def to_final(self, content: str, metadata: MessageMetadata):
+        self.metadata.update(metadata.tool_calls, metadata.tool_results)
         self.content = content
-        self.metadata = metadata
-        self.status = Status.FINAL
+        self.status = MessageStatus.FINAL

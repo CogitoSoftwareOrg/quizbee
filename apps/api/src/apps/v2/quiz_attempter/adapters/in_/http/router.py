@@ -63,12 +63,13 @@ async def ask_explainer(
     async def event_generator():
         async for run in quiz_attempter_app.ask_explainer(
             AskExplainerCmd(
+                cache_key=cache_key(attempt_id),
                 query=query,
                 item_id=item_id,
                 attempt_id=attempt_id,
                 token=token,
             ),
         ):
-            yield sse(run.status, json.dumps(asdict(run)))
+            yield sse(run.status, asdict(run))
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")

@@ -1,10 +1,12 @@
+from dataclasses import asdict
+import logging
 from typing import Any
 import asyncio
 from pocketbase import PocketBase
 from pocketbase.models.dtos import Record
 
 from ...domain.ports import MessageRepository
-from ...domain.models import Message
+from ...domain.models import Message, MessageMetadata
 
 
 class PBMessageRepository(MessageRepository):
@@ -41,19 +43,19 @@ class PBMessageRepository(MessageRepository):
     def _to_record(self, message: Message) -> dict[str, Any]:
         return {
             "id": message.id,
-            "attempt": message.attempt_id,
+            "quizAttempt": message.attempt_id,
             "content": message.content,
             "role": message.role,
             "status": message.status,
-            "metadata": message.metadata,
+            "metadata": asdict(message.metadata),
         }
 
     def _to_message(self, rec: Record) -> Message:
         return Message(
             id=rec.get("id", ""),
-            attempt_id=rec.get("attempt_id", ""),
+            attempt_id=rec.get("quizAttempt", ""),
             content=rec.get("content", ""),
             role=rec.get("role", ""),
             status=rec.get("status", ""),
-            metadata=rec.get("metadata", {}),
+            metadata=MessageMetadata(**(rec.get("metadata", {}) or {})),
         )

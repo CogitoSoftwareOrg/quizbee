@@ -88,8 +88,8 @@
 	// Messages
 	const messages = $derived(
 		messagesStore.messages.filter((m) => {
-			const meta = m.metadata as { itemId: string };
-			const itemId = meta?.itemId;
+			const meta = m.metadata as { item_id: string };
+			const itemId = meta?.item_id;
 			return itemId === item?.id;
 		})
 	);

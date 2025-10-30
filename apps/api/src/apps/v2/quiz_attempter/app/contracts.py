@@ -22,7 +22,7 @@ class AskExplainerCmd:
 
 
 @dataclass(frozen=True, slots=True)
-class AskExplainerOutput:
+class AskExplainerResult:
     text: str
     msg_id: str
     i: int
@@ -34,4 +34,4 @@ class QuizAttempterApp(Protocol):
 
     def ask_explainer(
         self, cmd: AskExplainerCmd
-    ) -> AsyncIterable[AskExplainerOutput]: ...
+    ) -> AsyncIterable[AskExplainerResult]: ...

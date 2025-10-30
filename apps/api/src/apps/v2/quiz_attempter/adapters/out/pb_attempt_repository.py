@@ -1,5 +1,6 @@
 import json
 from dataclasses import asdict
+import logging
 from typing import Any
 import httpx
 from pocketbase import PocketBase
@@ -91,7 +92,7 @@ class PBAttemptRepository(AttemptRepository):
         )
 
     def _to_item(self, rec: Record, choice: Choice | None) -> QuizItemRef:
-        answers_recs = rec.get("answers", [])
+        answers_recs = rec.get("answers") or []
         answers = [
             f"Answer {i+1} {a.get('correct', False)}: {a.get('content', '')}\n\nExplanation: {a.get('explanation', '')}\n\n"
             for i, a in enumerate(answers_recs)

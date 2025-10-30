@@ -1,4 +1,3 @@
-import json
 from fastapi import APIRouter, Depends, Query, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -122,9 +121,7 @@ async def sse_messages(
                         raise ValueError(f"Unexpected output type: {type(output)}")
                     text = output.data.explanation[len(content) :]
                     content += text
-                    yield sse(
-                        "chunk", json.dumps({"text": text, "msg_id": ai_msg_id, "i": i})
-                    )
+                    yield sse("chunk", {"text": text, "msg_id": ai_msg_id, "i": i})
             await update_span_with_result(
                 langfuse_client, run, span, user_id, attempt_id, EXPLAINER_LLM
             )
@@ -136,7 +133,7 @@ async def sse_messages(
                 "status": "final",
             },
         )
-        yield sse("done", json.dumps({}))
+        yield sse("done", {})
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 

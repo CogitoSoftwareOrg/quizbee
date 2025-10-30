@@ -2,18 +2,18 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 
 
-class MessageRole(StrEnum):
+class MessageRoleRef(StrEnum):
     USER = "user"
     AI = "ai"
 
 
-class MessageStatus(StrEnum):
+class MessageStatusRef(StrEnum):
     FINAL = "final"
     STREAMING = "streaming"
 
 
 @dataclass(slots=True, kw_only=True)
-class MessageMetadata:
+class MessageMetadataRef:
     tool_calls: list[str] = field(default_factory=list)
     tool_results: list[str] = field(default_factory=list)
 
@@ -23,11 +23,9 @@ class MessageRef:
     id: str
     attempt_id: str
     content: str
-    role: MessageRole
-    status: MessageStatus
-    metadata: MessageMetadata
-
-    
+    role: MessageRoleRef
+    status: MessageStatusRef
+    metadata: MessageMetadataRef
 
 
 @dataclass(slots=True, kw_only=True)

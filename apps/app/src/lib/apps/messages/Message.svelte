@@ -66,8 +66,8 @@
 
 		<div
 			class={[
-				'prose chat-bubble max-w-[80vw] overflow-hidden break-words rounded-lg p-2',
-				'[&_code]:overflow-wrap-anywhere [&_p]:overflow-wrap-anywhere [&_code]:whitespace-pre-wrap [&_code]:break-words [&_p]:break-words [&_pre]:mx-auto [&_pre]:max-w-[95%] [&_pre]:overflow-x-hidden [&_pre]:whitespace-pre-wrap [&_pre]:break-words'
+				'prose chat-bubble wrap-break-words max-w-[80vw] overflow-hidden rounded-lg p-2',
+				'[&_code]:overflow-wrap-anywhere [&_p]:overflow-wrap-anywhere [&_code]:wrap-break-words [&_p]:wrap-break-words [&_pre]:wrap-break-words [&_code]:whitespace-pre-wrap [&_pre]:mx-auto [&_pre]:max-w-[95%] [&_pre]:overflow-x-hidden [&_pre]:whitespace-pre-wrap'
 			]}
 			class:chat-bubble-base-200={incoming}
 			class:chat-bubble={!incoming}

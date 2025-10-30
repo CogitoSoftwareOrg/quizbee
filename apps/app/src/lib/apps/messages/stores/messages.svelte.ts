@@ -1,6 +1,5 @@
 import posthog from 'posthog-js';
 
-import { postApi } from '$lib/api/call-api';
 import { computeApiUrl } from '$lib/api/compute-url';
 import { pb } from '$lib/pb';
 import type { Collections, MessagesResponse } from '$lib/pb';
@@ -37,8 +36,7 @@ class MessagesStore {
 		content: string,
 		attemptId: string,
 		quizId: string,
-		itemId: string,
-		mode: 'sse' | 'post' = 'sse'
+		itemId: string
 	) {
 		const clientMsg: MessagesResponse = {
 			collectionId: 'messages',
@@ -48,63 +46,52 @@ class MessagesStore {
 			created: new Date().toISOString(),
 			tokens: 0,
 			updated: new Date().toISOString(),
-			metadata: { itemId },
+			metadata: { item_id: itemId },
 			quizAttempt: attemptId,
 			role: sender.role as MessagesResponse['role'],
 			status: 'onClient' as MessagesResponse['status']
 		};
-		this.messages.push(clientMsg);
+		posthog.capture('message_sse_started', {
+			content,
+			attemptId,
+			quizId,
+			itemId
+		});
 
-		if (mode === 'sse') {
-			posthog.capture('message_sse_started', {
-				content,
-				attemptId,
-				quizId,
+		this.messages.push(clientMsg);
+		const msg = { ...clientMsg, status: 'final' };
+		await pb!.collection('messages').create(msg);
+
+		const es = new EventSource(
+			`${computeApiUrl()}v2/quizes/${quizId}/attempts/${attemptId}/messages/sse?q=${encodeURIComponent(content)}&item=${itemId}`,
+			{
+				withCredentials: true
+			}
+		);
+		es.addEventListener('chunk', (e) => {
+			const data = JSON.parse(e.data) as { text: string; msg_id: string; i?: number };
+			const msg = { ...this._messages.find((m) => m.id === data.msg_id) } as MessagesResponse;
+			if (!msg || msg.status !== 'streaming') return;
+
+			// const nextI = data.i ?? ((msg as any)._last_i ?? 0) + 1;
+			// if ((msg as any)._last_i && nextI <= (msg as any)._last_i) return;
+			// (msg as any)._last_i = nextI;
+
+			msg.content = (msg.content || '') + data.text;
+			const newMessages = this._messages.map((m) => (m.id === msg.id ? msg : m));
+			this._messages = newMessages;
+		});
+		es.addEventListener('error', (e) => {
+			console.error(e);
+			es.close();
+		});
+		es.addEventListener('done', () => {
+			posthog.capture('message_sse_completed', {
 				attemptId,
 				itemId
 			});
-
-			const es = new EventSource(
-				`${computeApiUrl()}v2/quizes/${quizId}/attempts/${attemptId}/messages/sse?q=${encodeURIComponent(content)}&item=${itemId}`,
-				{
-					withCredentials: true
-				}
-			);
-			es.addEventListener('chunk', (e) => {
-				const data = JSON.parse(e.data) as { text: string; msg_id: string; i?: number };
-				// const list = this.messagesMap.get(roomId);
-				// if (!list) return;
-
-				const msg = { ...this._messages.find((m) => m.id === data.msg_id) } as MessagesResponse;
-				if (!msg || msg.status !== 'streaming') return;
-
-				// const nextI = data.i ?? ((msg as any)._last_i ?? 0) + 1;
-				// if ((msg as any)._last_i && nextI <= (msg as any)._last_i) return;
-				// (msg as any)._last_i = nextI;
-
-				msg.content = (msg.content || '') + data.text;
-				const newMessages = this._messages.map((m) => (m.id === msg.id ? msg : m));
-				this._messages = newMessages;
-			});
-			es.addEventListener('error', (e) => {
-				console.error(e);
-				es.close();
-			});
-			es.addEventListener('done', () => {
-				posthog.capture('message_sse_completed', {
-					attemptId,
-					itemId
-				});
-				es.close();
-			});
-		} else if (mode === 'post') {
-			const res = await postApi('messages', {
-				query: content,
-				attempt_id: attemptId,
-				item_id: itemId
-			});
-			console.log(res);
-		}
+			es.close();
+		});
 	}
 
 	async subscribe(quizAttemptId: string) {

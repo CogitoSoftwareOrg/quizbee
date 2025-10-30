@@ -30,6 +30,9 @@ class Attempt:
 
     def get_item(self, item_id: str):
         for item in self.quiz.items:
-            if item == item_id:
+            if item.id == item_id:
                 return item
         raise ValueError(f"Item {item_id} not found")
+
+    def set_history(self, history: list[MessageRef]):
+        self.message_history = history

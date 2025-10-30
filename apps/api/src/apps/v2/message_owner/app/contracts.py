@@ -13,13 +13,14 @@ class GetAttemptHistoryCmd:
 @dataclass(slots=True, kw_only=True)
 class StartMessageCmd:
     attempt_id: str
+    item_id: str
 
 
 @dataclass(slots=True, kw_only=True)
 class FinalizeMessageCmd:
     message_id: str
     content: str
-    metadata: MessageMetadata = field(default_factory=MessageMetadata)
+    metadata: MessageMetadata
 
 
 class MessageOwnerApp(Protocol):

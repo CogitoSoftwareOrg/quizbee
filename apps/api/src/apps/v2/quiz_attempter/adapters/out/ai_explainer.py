@@ -1,3 +1,5 @@
+import asyncio
+import contextlib
 import logging
 from dataclasses import dataclass
 from typing import Any, Literal, AsyncIterable
@@ -30,9 +32,9 @@ from ...domain.models import (
 from ...domain.refs import (
     MessageRef,
     QuizItemRef,
-    MessageRole,
-    MessageStatus,
-    MessageMetadata,
+    MessageRoleRef,
+    MessageStatusRef,
+    MessageMetadataRef,
 )
 from ...domain.ports import Explainer
 
@@ -64,48 +66,79 @@ class AIExplainer(Explainer):
         ai_msg: MessageRef,
         cache_key: str,
     ) -> AsyncIterable[MessageRef]:
-        content = ""
+        queue: asyncio.Queue[MessageRef | None] = asyncio.Queue()
+        deps = ExplainerDeps(quiz=attempt.quiz, current_item=item)
 
-        deps = ExplainerDeps(
-            quiz=attempt.quiz,
-            current_item=item,
-        )
+        async def producer():
+            with self._lf.start_as_current_span(name="explainer-agent") as span:
+                content = ""
+                run = None
+                try:
+                    async with self._ai.run_stream(
+                        query,
+                        message_history=self._ai_history(attempt.message_history),
+                        deps=deps,
+                        model_settings={
+                            "extra_body": {
+                                "reasoning_effort": "low",
+                                "prompt_cache_key": cache_key,
+                            }
+                        },
+                    ) as r:
+                        run = r
+                        async for output in run.stream_output():
+                            if output.data.mode != "explanation":
+                                raise ValueError(
+                                    f"Unexpected output type: {type(output)}"
+                                )
+                            delta = output.data.explanation[len(content) :]
+                            content += delta
 
-        with self._lf.start_as_current_span(name="explainer-agent") as span:
-            async with self._ai.run_stream(
-                query,
-                message_history=self._ai_history(attempt.message_history),
-                deps=deps,
-                model_settings={
-                    "extra_body": {
-                        "reasoning_effort": "low",
-                        "prompt_cache_key": cache_key,
-                    }
-                },
-            ) as run:
-                i = 0
-                async for output in run.stream_output():
-                    if output.data.mode != "explanation":
-                        raise ValueError(f"Unexpected output type: {type(output)}")
-                    text = output.data.explanation[len(content) :]
-                    content += text
-                    yield MessageRef(
-                        id=ai_msg.id,
-                        attempt_id=attempt.id,
-                        content=text,
-                        role=MessageRole.AI,
-                        status=MessageStatus.STREAMING,
-                        metadata=MessageMetadata(),
+                            await queue.put(
+                                MessageRef(
+                                    id=ai_msg.id,
+                                    attempt_id=attempt.id,
+                                    content=delta,
+                                    role=MessageRoleRef.AI,
+                                    status=MessageStatusRef.STREAMING,
+                                    metadata=MessageMetadataRef(),
+                                )
+                            )
+
+                    await queue.put(
+                        MessageRef(
+                            id=ai_msg.id,
+                            attempt_id=attempt.id,
+                            content=content,
+                            role=MessageRoleRef.AI,
+                            status=MessageStatusRef.FINAL,
+                            metadata=MessageMetadataRef(),
+                        )
                     )
 
-            await update_span_with_result(
-                self._lf,
-                run,
-                span,
-                attempt.user_id,
-                cache_key,
-                EXPLAINER_LLM,
-            )
+                finally:
+                    with contextlib.suppress(Exception):
+                        await update_span_with_result(
+                            self._lf,
+                            run,
+                            span,
+                            attempt.user_id,
+                            cache_key,
+                            EXPLAINER_LLM,
+                        )
+                    await queue.put(None)
+
+        producer_task = asyncio.create_task(producer())
+        try:
+            while True:
+                message = await queue.get()
+                if message is None:
+                    break
+                yield message
+        finally:
+            producer_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await producer_task
 
     async def _inject_system_prompt(
         self, ctx: RunContext[ExplainerDeps], messages: list[ModelMessage]
@@ -146,8 +179,6 @@ class AIExplainer(Explainer):
             role = msg.role
             meta = msg.metadata
             content = msg.content.strip()
-
-            logging.info(f"PB Message: {role} {content} {meta}")
 
             if role == "user":
                 if content:
