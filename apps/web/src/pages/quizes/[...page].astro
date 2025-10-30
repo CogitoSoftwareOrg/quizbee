@@ -4,7 +4,7 @@ import Root from "@/layouts/Root.astro";
 import { QuizesCategoryOptions } from "@/lib/pocketbase-types";
 import { pb } from "@/lib";
 import { Image } from "astro:assets";
-import beeCover from "@/assets/bee1.svg";
+import beeCover from "@/assets/bee_v3.svg";
 
 type CatInfo = {
   name: string;
@@ -55,7 +55,7 @@ const pageHref = (n: number) => (n === 1 ? `/quizes` : `/quizes/${n}`);
 <Root title={title} description={desc} active="quizes">
   <!-- HERO -->
   <section
-    class="mb-8 rounded-2xl bg-linear-to-r from-primary-70 to-secondary-70 border p-6 md:p-8"
+    class="mb-8 rounded-2xl bg-linear-to-r from-primary-70 to-secondary-70  p-6 md:p-8"
   >
     <div
       class="flex flex-col md:flex-row md:items-center md:justify-between gap-3"
@@ -64,17 +64,17 @@ const pageHref = (n: number) => (n === 1 ? `/quizes` : `/quizes/${n}`);
         <h1 class="text-3xl md:text-4xl font-bold tracking-tight">Quizes</h1>
         <p class="mt-2 text-sm text-muted-foreground">{desc}</p>
       </div>
-      <nav class="text-sm text-muted-foreground">
+      <!-- <nav class="text-sm text-muted-foreground">
         <a href="/" class="hover:underline">Home</a>
         <span class="mx-1">/</span>
         <span>Quizes</span>
-      </nav>
+      </nav> -->
     </div>
 
     <!-- Category grid -->
     {
       categories.length > 0 && (
-        <div class="mt-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        <div class="mt-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 ">
           {categories.slice(0, 8).map((c) => (
             <a
               href={`/quizes/${c.name}`}

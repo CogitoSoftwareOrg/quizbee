@@ -186,7 +186,7 @@
 				href={`/quizes/${quiz?.id}`}
 				class="hidden underline sm:block"
 			>
-				<ChevronLeft /> Back to quiz
+				<ChevronLeft /> 
 			</Button>
 			{#if quiz}
 				<h1 class="text-center text-2xl font-bold leading-tight">{quiz?.title || 'Quiz'}</h1>

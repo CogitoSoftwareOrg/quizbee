@@ -4,7 +4,7 @@
   "meta": {
     "title": "QuizBee - Lernen Sie Intelligenter mit KI-gestützten Quiz",
     "description": "Verwandeln Sie Ihre Lernmaterialien in interaktive KI-gestützte Quiz. Adaptives Lernen, KI-Nachhilfe und Fortschrittsänderung für Schüler und Fachleute.",
-    "image": "/bee_final.svg",
+    "image": "/bee_v3.svg",
     "active": "home",
     "headerCtaHref": "{{APP_URL}}",
     "structuredData": {
@@ -33,7 +33,7 @@
         "title": "Verwandeln Sie Ihre Lernmaterialien in Interaktive Quiz",
         "description": "QuizBee verwandelt Ihre Dokumente in ansprechende, KI-gestützte Quiz. Lernen Sie intelligenter, nicht härter, mit personalisiertem Lernen, das sich an Ihre Bedürfnisse anpasst.",
         "buttonText": "Kostenlos Starten",
-        "image": "/bee_final.svg",
+        "image": "/bee_v3.svg",
         "position": "right",
         "overlay": false,
         "href": "{{APP_URL}}"

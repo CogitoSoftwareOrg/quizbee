@@ -2,7 +2,7 @@
 	import { MediaQuery } from 'svelte/reactivity';
 	import { PanelRightOpen, PanelRightClose } from 'lucide-svelte';
 
-	import Logo from '$lib/assets/icons/bee1.svg';
+	import Logo from '$lib/assets/icons/bee_v3.svg';
 	import { uiStore } from '$lib/apps/users/ui.svelte';
 	import ProfileRow from '$lib/apps/users/ProfileRow.svelte';
 	import Feedback from '$lib/apps/users/Feedback.svelte';
@@ -19,10 +19,14 @@
 	<div class={['flex items-center', isExpanded ? 'justify-between pr-2' : 'justify-center']}>
 		{#if isExpanded}
 			<a href="/home" class="relative mb-4 flex select-none items-center justify-center">
-				<span class="absolute -right-7 top-2">
-					<span class="badge badge-outline badge-xs badge-info">BETA</span>
-				</span>
-				<img src={Logo} alt="Quizbee" class="size-14 rounded-full" />
+				<!-- <span class="absolute -right-7 top-2">
+					<span class="badge badge-outline mb-1 mr-1 badge-xs badge-info">BETA</span>
+				</span> -->
+				<img
+					src={Logo}
+					alt="Quizbee"
+					class="size-14 rounded-full  scale-[0.7] ml-1"
+				/>
 				<p class="text-primary mt-2 text-3xl font-semibold">Quizbee</p>
 			</a>
 		{/if}

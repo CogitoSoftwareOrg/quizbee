@@ -4,7 +4,7 @@
   "meta": {
     "title": "QuizBee - Learn Smarter with AI-Powered Quizzes",
     "description": "Transform your study materials into interactive AI-powered quizzes. Adaptive learning, AI tutoring, and progress tracking for students and professionals.",
-    "image": "/bee_final.svg",
+    "image": "/bee_v3.svg",
     "active": "home",
     "headerCtaHref": "{{APP_URL}}",
     "structuredData": {
@@ -30,20 +30,29 @@
     {
       "type": "Hero",
       "props": {
-        "title": "Transform Your Study Materials into Interactive Quizzes",
-        "description": "QuizBee turns your documents into engaging, AI-powered quizzes. Study smarter, not harder, with personalized learning that adapts to your needs.",
-        "buttonText": "Start Learning for Free",
+        "title": "Transform Your Study Materials into",
+        "titleHighlight": "Interactive Quizzes",
+        "description": "Upload your lecture notes, textbooks, or study guides. QuizBee uses AI to generate personalized quizzes that help you ace your midterms and exams.",
+        "buttonText": "Start creating quizzes",
+        "footerText": "Free to start • No credit card required ",
+        "href": "{{APP_URL}}",
         "image": "",
+        "titleAlign": "center",
+        "descriptionAlign": "center",
+        "footerAlign": "center",
         "position": "right",
-        "overlay": false,
-        "href": "{{APP_URL}}"
+        "center": true,
+        "textWidth": "max-w-5xl",
+        "titleSize": "text-7xl 2xl:text-8xl",
+        "descriptionSize": "text-xl 2xl:text-2xl py-6",
+        "buttonSize": "xl"
       }
     },
     {
       "type": "Pains",
       "props": {
         "title": "Tired of Studying That Doesn’t Stick?",
-        "theme": "gradient",
+        "theme": "",
         "pains": [
           {
             "title": "You Read… and Forget",
@@ -108,7 +117,7 @@
           }
         ],
         "stats": {
-          "total": "100+",
+          "total": "200+",
           "label": "Quizzes Generated Daily",
           "description": "Join hundreds of students and professionals using QuizBee to master their materials"
         }
@@ -119,7 +128,7 @@
       "props": {
         "title": "Get Started in 4 Simple Steps",
         "subtitle": "How QuizBee Works",
-        "theme": "gradient",
+        "theme": "",
         "steps": [
           {
             "number": 1,
@@ -149,7 +158,7 @@
       "props": {
         "title": "Frequently Asked Questions",
         "subtitle": "Got Questions?",
-        "theme": "gradient",
+        "theme": "",
         "questions": [
           {
             "question": "Is there a free tier?",
@@ -161,17 +170,13 @@
           },
           {
             "question": "What file formats do you support?",
-            "answer": "We support PDF, DOCX, PPTX, Markdown, TXT and more. You can upload lecture notes, textbooks, study guides, articles - pretty much any text or image based learning material."
+            "answer": "We support PDF, DOCX, PPTX, Markdown, TXT and more. You can upload lecture notes, textbooks, study guides, articles - pretty much any text based learning material."
           },
           {
             "question": "How does the AI tutor work?",
             "answer": "After each quiz question, you can start a conversation with our AI tutor. It has full context of your study materials and can explain concepts, provide examples, clarify confusing topics, and answer follow-up questions - all based on YOUR specific materials."
           },
 
-          {
-            "question": "Can I use QuizBee on my phone?",
-            "answer": "Yes! QuizBee works on any device with a web browser - desktop, tablet, or mobile. Study anywhere, anytime. Your progress syncs across all devices automatically."
-          },
           {
             "question": "Is my data secure and private?",
             "answer": "Absolutely. Your study materials and quiz history are encrypted with AES-256 and stored securely. As a Europe-based company, we strictly follow GDPR. We never share your data for unauthorized uses—you own it and can delete anytime."
@@ -188,9 +193,9 @@
       "props": {
         "headline": "Ready to Transform Your Learning?",
         "subheadline": "Join hundres of students who are studying smarter with AI-powered quizzes. Upload your first material and create a quiz in seconds. No credit card required.",
-        "buttonText": "Start Free - No Credit Card Required",
+        "buttonText": "Start for Free - No Credit Card Required",
         "buttonHref": "{{APP_URL}}",
-        "theme": "gradient"
+        "theme": ""
       }
     }
   ]

@@ -32,7 +32,7 @@
 	const weeklyProgress = $derived(calculateWeeklyProgress(weeklyQuestionCount, weeklyGoal));
 </script>
 
-<div class="mx-auto w-full max-w-7xl space-y-4 p-4 sm:space-y-6 sm:p-6 lg:p-8">
+<div class="mx-auto w-full max-w-7xl min-h-full flex flex-col space-y-4 p-4 sm:space-y-6 sm:p-6 lg:p-8">
 	<!-- Header -->
 	<div class="flex items-center gap-3">
 		<BarChart class="h-8 w-8" />
@@ -44,7 +44,7 @@
 
 	<!-- Statistics Overview -->
 	<section class="space-y-4">
-		<h2 class="text-lg font-semibold">Overview</h2>
+		<h2 class="text-2xl mt-8 font-semibold">Overview</h2>
 		<div class="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-4">
 			<StreakCard {streak} />
 			<WeeklyQuestionsCard {weeklyQuestionCount} />
@@ -55,12 +55,12 @@
 
 	<!-- Weekly Progress Card -->
 	<section class="space-y-4">
-		<h2 class="text-lg font-semibold">Weekly Progress</h2>
-		<div class="card bg-base-100 shadow-lg">
+		<!-- <h2 class="text-2xl mt-8 font-semibold">Weekly Progress</h2> -->
+		<div class="card bg-base-100 -ml-5 ">
 			<div class="card-body">
 				<div class="flex items-center gap-2">
 					<TrendingUp class="h-5 w-5" />
-					<h3 class="card-title text-lg">This Week's Goal</h3>
+					<h3 class="card-title font-semibold text-2xl">This Week's Goal</h3>
 				</div>
 				<div class="mt-4 space-y-3">
 					<div class="flex items-baseline justify-between">
@@ -88,11 +88,11 @@
 		</div>
 	</section>
 
-	<!-- Performance Insights -->
+	<!-- Performance Insights
 	<section class="space-y-4">
 		<h2 class="text-lg font-semibold">Performance Insights</h2>
 		<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-			<!-- Accuracy Card -->
+			
 			<div class="card bg-base-100 shadow-lg">
 				<div class="card-body">
 					<h3 class="card-title text-lg">Average Accuracy</h3>
@@ -115,7 +115,7 @@
 				</div>
 			</div>
 
-			<!-- Consistency Card -->
+			
 			<div class="card bg-base-100 shadow-lg">
 				<div class="card-body">
 					<h3 class="card-title text-lg">Consistency</h3>
@@ -141,12 +141,13 @@
 				</div>
 			</div>
 		</div>
-	</section>
+	</section> -->
 
 	<!-- Activity Summary -->
-	<section class="space-y-4">
-		<h2 class="text-lg font-semibold">Activity Summary</h2>
-		<div class="card bg-base-100 shadow-lg">
+
+	<!-- <section class="space-y-4">
+		<h2 class="text-2xl mt-8 font-semibold">Activity Summary</h2>
+		<div class="card bg-base-100 ">
 			<div class="card-body">
 				<div class="stats stats-vertical lg:stats-horizontal shadow">
 					<div class="stat">
@@ -169,5 +170,5 @@
 				</div>
 			</div>
 		</div>
-	</section>
+	</section> -->
 </div>

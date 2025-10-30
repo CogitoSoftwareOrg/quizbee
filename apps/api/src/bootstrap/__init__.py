@@ -63,10 +63,9 @@ async def lifespan(app: FastAPI):
     await aset_indexer(app, app.state.llm_tools, app.state.meilisearch_client)
     set_material_search_app(
         app,
-        app.state.material_repository,
-        app.state.pdf_parser,
+        app.state.meilisearch_client,
+        app.state.admin_pb,
         app.state.llm_tools,
-        app.state.indexer,
     )
 
     # V2 QUIZ GENERATOR

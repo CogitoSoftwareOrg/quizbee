@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from enum import StrEnum
 
+from src.lib.utils import genID
+
 from src.apps.v2.material_search.domain.models import Material
 
 
@@ -80,6 +82,8 @@ class QuizAttempt:
 
 @dataclass(frozen=True)
 class Quiz:
+    id: str
+    author_id: str
     materials: list[Material]
     title: str
     length: int
@@ -98,8 +102,10 @@ class Quiz:
     category: QuizCategory | None = None
 
     @classmethod
-    def create(cls):
+    def create(cls, author_id: str):
         return cls(
+            id=genID(),
+            author_id=author_id,
             materials=[],
             title="",
             length=0,

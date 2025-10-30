@@ -6,7 +6,6 @@ import re
 
 from ...domain.ports import PdfParser, PdfParseResult, PdfImage
 
-
 class FitzPDFParser(PdfParser):
     def __init__(
         self,
@@ -18,7 +17,7 @@ class FitzPDFParser(PdfParser):
         self.min_height = min_height
         self.min_file_size = min_file_size
 
-    def parse(self, file_bytes: bytes) -> PdfParseResult:
+    def parse(self, file_bytes: bytes, process_images: bool = False) -> PdfParseResult:
         """
         Извлекает текст и изображения из PDF-файла, фильтруя слишком маленькие изображения.
 
@@ -66,17 +65,8 @@ class FitzPDFParser(PdfParser):
                 "full_page_screenshots": 0,
             }
 
-            # Для отслеживания уже обработанных изображений (дедупликация)
-            seen_xrefs = set()
-
-            # Порог минимального количества текста на странице (в символах), чтобы решать, делать ли скриншот всей страницы
-            MIN_TEXT_LENGTH = 100
-
-            # Если документ определен как книга - не извлекаем изображения
             if is_book_doc:
-                logging.info(f"Документ является книгой - изображения не извлекаются")
-
-                # Извлекаем оглавление с помощью специальной функции
+                logging.info(f"This is a book.")
                 toc_items = self.extract_table_of_contents(doc)
 
                 if not toc_items:
@@ -93,244 +83,14 @@ class FitzPDFParser(PdfParser):
                         # Добавляем отступы в зависимости от уровня вложенности
                         indent = "  " * (level - 1)
                         logging.info(f"{indent}- {title} (стр. {page_num})")
-            else:
-                global_image_counter = 1
+            
+            if process_images:
+                # Вынесенная логика обработки изображений
+                self.extract_pictures(doc, page_count, images, image_positions, stats)
 
-                for page_num in range(page_count):
-                    page = doc.load_page(page_num)
 
-                    page_text: str = page.get_text()  # type: ignore
-                    text_length = len(page_text.strip())
 
-                    # Если текста очень мало, создаём полноразмерный скриншот страницы
-                    if text_length < MIN_TEXT_LENGTH:
-                        pix = page.get_pixmap()  # type: ignore
-                        img_bytes = pix.tobytes("png")  # type: ignore
-
-                        marker = f"{{quizbee_unique_image_{global_image_counter}}}"
-
-                        images.append(
-                            PdfImage(
-                                bytes=img_bytes,
-                                ext="png",
-                                width=pix.width,  # type: ignore
-                                height=pix.height,  # type: ignore
-                                page=page_num + 1,
-                                index=0,
-                                marker=marker,
-                                file_name=f"img_p{page_num + 1}_0.png",
-                            )
-                        )
-
-                        image_positions[page_num] = [(0, marker)]
-                        global_image_counter += 1
-                        stats["full_page_screenshots"] += 1
-
-                        continue
-
-                    image_list = page.get_images(full=True)  # type: ignore
-
-                    if not image_list:
-                        continue
-
-                    logging.info(
-                        f"Найдено {len(image_list)} исходных изображений на странице {page_num + 1}"
-                    )
-
-                    # Получаем bbox для всех изображений на странице
-                    image_rects = []
-                    for image_index, img in enumerate(image_list):
-                        xref = img[0]
-                        stats["total"] += 1
-
-                        # Проверяем дубликаты
-                        if xref in seen_xrefs:
-                            stats["filtered_duplicates"] += 1
-                            continue
-
-                        # Получаем все вхождения изображения на странице
-                        img_instances = page.get_image_rects(xref)  # type: ignore
-                        if img_instances:
-                            # Берем первое вхождение (обычно изображение встречается один раз)
-                            rect = img_instances[0]
-
-                            base_image = doc.extract_image(xref)
-                            width = base_image.get("width", 0)
-                            height = base_image.get("height", 0)
-                            file_size = len(base_image["image"])
-
-                            # Фильтрация
-                            if width < self.min_width or height < self.min_height:
-                                stats["filtered_dimensions"] += 1
-                                continue
-
-                            if file_size < self.min_file_size:
-                                stats["filtered_size"] += 1
-                                continue
-
-                            seen_xrefs.add(xref)
-                            stats["accepted"] += 1
-
-                            image_rects.append(
-                                {
-                                    "xref": xref,
-                                    "rect": rect,
-                                    "image_data": base_image,
-                                    "width": width,
-                                    "height": height,
-                                    "file_size": file_size,
-                                }
-                            )
-
-                    if not image_rects:
-                        continue
-
-                    # Группируем близкие изображения
-                    # Порог близости в пунктах (points) - если изображения ближе, объединяем
-                    PROXIMITY_THRESHOLD = 50  # пикселей
-
-                    def group_nearby_images(img_rects):
-                        """Группирует изображения, которые находятся близко друг к другу"""
-                        if not img_rects:
-                            return []
-
-                        # Сортируем по Y-координате (сверху вниз)
-                        sorted_imgs = sorted(img_rects, key=lambda x: x["rect"].y0)
-
-                        groups = []
-                        current_group = [sorted_imgs[0]]
-
-                        for img in sorted_imgs[1:]:
-                            # Проверяем расстояние до последнего изображения в текущей группе
-                            last_img = current_group[-1]
-
-                            # Расстояние по вертикали
-                            vertical_dist = img["rect"].y0 - last_img["rect"].y1
-
-                            # Проверяем пересечение по горизонтали
-                            horizontal_overlap = not (
-                                img["rect"].x1 < last_img["rect"].x0
-                                or img["rect"].x0 > last_img["rect"].x1
-                            )
-
-                            # Если изображения близко или есть горизонтальное пересечение
-                            if (
-                                vertical_dist < PROXIMITY_THRESHOLD
-                                or horizontal_overlap
-                            ):
-                                current_group.append(img)
-                            else:
-                                groups.append(current_group)
-                                current_group = [img]
-
-                        groups.append(current_group)
-                        return groups
-
-                    image_groups = group_nearby_images(image_rects)
-                    page_img_positions = []
-
-                    for group in image_groups:
-                        if len(group) == 1:
-                            # Одиночное изображение - делаем скриншот области с отступами
-                            # чтобы захватить весь контекст (подписи, текст и т.д.)
-                            rect = group[0]["rect"]
-
-                            # Добавляем отступы со всех сторон
-                            padding_left = 30
-                            padding_right = 30
-                            padding_top = 30
-                            padding_bottom = 30
-
-                            # Получаем размеры страницы для ограничения области
-                            page_rect = page.rect  # type: ignore
-
-                            clip_rect = fitz.Rect(  # type: ignore
-                                max(0, rect.x0 - padding_left),
-                                max(0, rect.y0 - padding_top),
-                                min(page_rect.width, rect.x1 + padding_right),
-                                min(page_rect.height, rect.y1 + padding_bottom),
-                            )
-
-                            # Создаём скриншот области
-                            pix = page.get_pixmap(matrix=fitz.Matrix(2, 2), clip=clip_rect)  # type: ignore
-                            img_bytes = pix.tobytes("png")  # type: ignore
-
-                            marker = f"{{quizbee_unique_image_{global_image_counter}}}"
-
-                            images.append(
-                                PdfImage(
-                                    bytes=img_bytes,
-                                    ext="png",
-                                    width=pix.width,  # type: ignore
-                                    height=pix.height,  # type: ignore
-                                    page=page_num + 1,
-                                    index=len(images) + 1,
-                                    marker=marker,
-                                    file_name=f"img_p{page_num + 1}_{len(images) + 1}.png",
-                                )
-                            )
-
-                            page_img_positions.append((rect.y0, marker))
-                            global_image_counter += 1
-
-                        else:
-                            # Группа изображений - делаем скриншот области
-                            logging.info(
-                                f"Найдена группа из {len(group)} близких изображений на стр. {page_num + 1}, "
-                                f"создаём объединённый скриншот"
-                            )
-
-                            # Находим общий bbox для всех изображений в группе
-                            min_x = min(img["rect"].x0 for img in group)
-                            min_y = min(img["rect"].y0 for img in group)
-                            max_x = max(img["rect"].x1 for img in group)
-                            max_y = max(img["rect"].y1 for img in group)
-
-                            # Добавляем отступы со всех сторон для захвата контекста
-                            padding_left = 30
-                            padding_right = 30
-                            padding_top = 30
-                            padding_bottom = 30
-
-                            # Получаем размеры страницы для ограничения области
-                            page_rect = page.rect  # type: ignore
-
-                            clip_rect = fitz.Rect(  # type: ignore
-                                max(0, min_x - padding_left),
-                                max(0, min_y - padding_top),
-                                min(page_rect.width, max_x + padding_right),
-                                min(page_rect.height, max_y + padding_bottom),
-                            )
-
-                            # Создаём скриншот этой области
-                            pix = page.get_pixmap(matrix=fitz.Matrix(2, 2), clip=clip_rect)  # type: ignore
-                            img_bytes = pix.tobytes("png")  # type: ignore
-
-                            marker = f"{{quizbee_unique_image_{global_image_counter}}}"
-
-                            images.append(
-                                PdfImage(
-                                    bytes=img_bytes,
-                                    ext="png",
-                                    width=pix.width,  # type: ignore
-                                    height=pix.height,  # type: ignore
-                                    page=page_num + 1,
-                                    index=len(images) + 1,
-                                    marker=marker,
-                                    file_name=f"img_p{page_num + 1}_{len(images) + 1}.png",
-                                )
-                            )
-
-                            page_img_positions.append((min_y, marker))
-                            global_image_counter += 1
-                            stats["full_page_screenshots"] += 1
-
-                    if page_img_positions:
-                        # Сортируем по Y-позиции (сверху вниз)
-                        page_img_positions.sort(key=lambda x: x[0])
-                        image_positions[page_num] = page_img_positions
-
-            # Извлечение текста постранично с встраиванием маркеров
+            # TEXT EXTRACTION
             md_text_parts = []
 
             for page_num in range(page_count):
@@ -381,8 +141,7 @@ class FitzPDFParser(PdfParser):
 
             md_text = "\n\n-----\n\n".join(md_text_parts)
 
-            # Извлекаем оглавление перед закрытием документа
-            toc_items = self.extract_table_of_contents(doc)
+            
 
             doc.close()
 
@@ -461,6 +220,254 @@ class FitzPDFParser(PdfParser):
             )
 
         return toc_items
+
+    def extract_pictures(
+        self,
+        doc: fitz.Document,
+        page_count: int,
+        images: list[PdfImage],
+        image_positions: dict,
+        stats: dict,
+    ) -> None:
+        """
+        Вспомогательная функция: извлекает и фильтрует изображения из документа.
+
+        Модифицирует переданные `images`, `image_positions` и `stats` in-place.
+        """
+        # Для отслеживания уже обработанных изображений (дедупликация)
+        seen_xrefs = set()
+
+        # Порог минимального количества текста на странице (в символах), чтобы решать, делать ли скриншот всей страницы
+        MIN_TEXT_LENGTH = 100
+
+        global_image_counter = 1
+
+        for page_num in range(page_count):
+            page = doc.load_page(page_num)
+
+            page_text: str = page.get_text()  # type: ignore
+            text_length = len(page_text.strip())
+
+            # Если текста очень мало, создаём полноразмерный скриншот страницы
+            if text_length < MIN_TEXT_LENGTH:
+                pix = page.get_pixmap()  # type: ignore
+                img_bytes = pix.tobytes("png")  # type: ignore
+
+                marker = f"{{quizbee_unique_image_{global_image_counter}}}"
+
+                images.append(
+                    PdfImage(
+                        bytes=img_bytes,
+                        ext="png",
+                        width=pix.width,  # type: ignore
+                        height=pix.height,  # type: ignore
+                        page=page_num + 1,
+                        index=0,
+                        marker=marker,
+                        file_name=f"img_p{page_num + 1}_0.png",
+                    )
+                )
+
+                image_positions[page_num] = [(0, marker)]
+                global_image_counter += 1
+                stats["full_page_screenshots"] += 1
+
+                continue
+
+            image_list = page.get_images(full=True)  # type: ignore
+
+            if not image_list:
+                continue
+
+            # Получаем bbox для всех изображений на странице
+            image_rects = []
+            for image_index, img in enumerate(image_list):
+                xref = img[0]
+                stats["total"] += 1
+
+                # Проверяем дубликаты
+                if xref in seen_xrefs:
+                    stats["filtered_duplicates"] += 1
+                    continue
+
+                # Получаем все вхождения изображения на странице
+                img_instances = page.get_image_rects(xref)  # type: ignore
+                if img_instances:
+                    # Берем первое вхождение (обычно изображение встречается один раз)
+                    rect = img_instances[0]
+
+                    base_image = doc.extract_image(xref)
+                    width = base_image.get("width", 0)
+                    height = base_image.get("height", 0)
+                    file_size = len(base_image["image"])
+
+                    # Фильтрация
+                    if width < self.min_width or height < self.min_height:
+                        stats["filtered_dimensions"] += 1
+                        continue
+
+                    if file_size < self.min_file_size:
+                        stats["filtered_size"] += 1
+                        continue
+
+                    seen_xrefs.add(xref)
+                    stats["accepted"] += 1
+
+                    image_rects.append(
+                        {
+                            "xref": xref,
+                            "rect": rect,
+                            "image_data": base_image,
+                            "width": width,
+                            "height": height,
+                            "file_size": file_size,
+                        }
+                    )
+
+            if not image_rects:
+                continue
+
+            # Группируем близкие изображения
+            # Порог близости в пунктах (points) - если изображения ближе, объединяем
+            PROXIMITY_THRESHOLD = 50  # пикселей
+
+            def group_nearby_images(img_rects):
+                """Группирует изображения, которые находятся близко друг к другу"""
+                if not img_rects:
+                    return []
+
+                # Сортируем по Y-координате (сверху вниз)
+                sorted_imgs = sorted(img_rects, key=lambda x: x["rect"].y0)
+
+                groups = []
+                current_group = [sorted_imgs[0]]
+
+                for img in sorted_imgs[1:]:
+                    # Проверяем расстояние до последнего изображения в текущей группе
+                    last_img = current_group[-1]
+
+                    # Расстояние по вертикали
+                    vertical_dist = img["rect"].y0 - last_img["rect"].y1
+
+                    # Проверяем пересечение по горизонтали
+                    horizontal_overlap = not (
+                        img["rect"].x1 < last_img["rect"].x0
+                        or img["rect"].x0 > last_img["rect"].x1
+                    )
+
+                    # Если изображения близко или есть горизонтальное пересечение
+                    if vertical_dist < PROXIMITY_THRESHOLD or horizontal_overlap:
+                        current_group.append(img)
+                    else:
+                        groups.append(current_group)
+                        current_group = [img]
+
+                groups.append(current_group)
+                return groups
+
+            image_groups = group_nearby_images(image_rects)
+            page_img_positions = []
+
+            for group in image_groups:
+                if len(group) == 1:
+                    # Одиночное изображение - делаем скриншот области с отступами
+                    # чтобы захватить весь контекст (подписи, текст и т.д.)
+                    rect = group[0]["rect"]
+
+                    # Добавляем отступы со всех сторон
+                    padding_left = 30
+                    padding_right = 30
+                    padding_top = 30
+                    padding_bottom = 30
+
+                    # Получаем размеры страницы для ограничения области
+                    page_rect = page.rect  # type: ignore
+
+                    clip_rect = fitz.Rect(  # type: ignore
+                        max(0, rect.x0 - padding_left),
+                        max(0, rect.y0 - padding_top),
+                        min(page_rect.width, rect.x1 + padding_right),
+                        min(page_rect.height, rect.y1 + padding_bottom),
+                    )
+
+                    # Создаём скриншот области
+                    pix = page.get_pixmap(matrix=fitz.Matrix(2, 2), clip=clip_rect)  # type: ignore
+                    img_bytes = pix.tobytes("png")  # type: ignore
+
+                    marker = f"{{quizbee_unique_image_{global_image_counter}}}"
+
+                    images.append(
+                        PdfImage(
+                            bytes=img_bytes,
+                            ext="png",
+                            width=pix.width,  # type: ignore
+                            height=pix.height,  # type: ignore
+                            page=page_num + 1,
+                            index=len(images) + 1,
+                            marker=marker,
+                            file_name=f"img_p{page_num + 1}_{len(images) + 1}.png",
+                        )
+                    )
+
+                    page_img_positions.append((rect.y0, marker))
+                    global_image_counter += 1
+
+                else:
+                    # Группа изображений - делаем скриншот области
+                    logging.info(
+                        f"Найдена группа из {len(group)} близких изображений на стр. {page_num + 1}, "
+                        f"создаём объединённый скриншот"
+                    )
+
+                    # Находим общий bbox для всех изображений в группе
+                    min_x = min(img["rect"].x0 for img in group)
+                    min_y = min(img["rect"].y0 for img in group)
+                    max_x = max(img["rect"].x1 for img in group)
+                    max_y = max(img["rect"].y1 for img in group)
+
+                    # Добавляем отступы со всех сторон для захвата контекста
+                    padding_left = 30
+                    padding_right = 30
+                    padding_top = 30
+                    padding_bottom = 30
+
+                    # Получаем размеры страницы для ограничения области
+                    page_rect = page.rect  # type: ignore
+
+                    clip_rect = fitz.Rect(  # type: ignore
+                        max(0, min_x - padding_left),
+                        max(0, min_y - padding_top),
+                        min(page_rect.width, max_x + padding_right),
+                        min(page_rect.height, max_y + padding_bottom),
+                    )
+
+                    # Создаём скриншот этой области
+                    pix = page.get_pixmap(matrix=fitz.Matrix(2, 2), clip=clip_rect)  # type: ignore
+                    img_bytes = pix.tobytes("png")  # type: ignore
+
+                    marker = f"{{quizbee_unique_image_{global_image_counter}}}"
+
+                    images.append(
+                        PdfImage(
+                            bytes=img_bytes,
+                            ext="png",
+                            width=pix.width,  # type: ignore
+                            height=pix.height,  # type: ignore
+                            page=page_num + 1,
+                            index=len(images) + 1,
+                            marker=marker,
+                            file_name=f"img_p{page_num + 1}_{len(images) + 1}.png",
+                        )
+                    )
+
+                    page_img_positions.append((min_y, marker))
+                    global_image_counter += 1
+                    stats["full_page_screenshots"] += 1
+
+            if page_img_positions:
+                # Сортируем по Y-позиции (сверху вниз)
+                page_img_positions.sort(key=lambda x: x[0])
+                image_positions[page_num] = page_img_positions
 
     def is_book(self, doc: fitz.Document) -> bool:
         """
