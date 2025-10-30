@@ -1,11 +1,21 @@
 from typing import Annotated
 
 
-from fastapi import Depends, Request
+from fastapi import Depends, HTTPException, Request
 
 from src.apps.v2.quiz_attempter.app.contracts import QuizAttempterApp
 from src.apps.v2.quiz_generator.app.contracts import QuizGeneratorApp
 from src.apps.v2.material_search.app.contracts import MaterialSearchApp
+
+
+def get_user_token(request: Request) -> str:
+    token = request.cookies.get("pb_token")
+    if not token:
+        raise HTTPException(status_code=401, detail="Unauthorized: no pb_token")
+    return token
+
+
+UserTokenDeps = Annotated[str, Depends(get_user_token)]
 
 
 def get_quiz_attempter_app(request: Request) -> QuizAttempterApp:

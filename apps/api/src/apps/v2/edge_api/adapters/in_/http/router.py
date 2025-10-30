@@ -25,7 +25,12 @@ from src.apps.v2.quiz_generator.app.contracts import (
 )
 from src.apps.v2.material_search.app.contracts import AddMaterialCmd, MaterialFile
 
-from .deps import MaterialSearchAppDeps, QuizAttempterAppDeps, QuizGeneratorAppDeps
+from .deps import (
+    MaterialSearchAppDeps,
+    QuizAttempterAppDeps,
+    QuizGeneratorAppDeps,
+    UserTokenDeps,
+)
 from .schemas import StartQuizDto, PatchQuizDto, FinalizeQuizDto
 
 edge_api_router = APIRouter(prefix="/v2", tags=["v2"], dependencies=[])
@@ -42,12 +47,8 @@ async def start_quiz(
     quiz_generator: QuizGeneratorAppDeps,
     quiz_id: str,
     background: BackgroundTasks,
-    request: Request,
+    token: UserTokenDeps,
 ):
-    token = request.cookies.get("pb_token")
-    if not token:
-        raise HTTPException(status_code=401, detail="Unauthorized: no pb_token")
-
     background.add_task(
         quiz_generator.start,
         GenerateCmd(
@@ -72,13 +73,9 @@ async def generate_quiz_items(
     dto: PatchQuizDto,
     quiz_id: str,
     quiz_generator: QuizGeneratorAppDeps,
-    request: Request,
     background: BackgroundTasks,
+    token: UserTokenDeps,
 ):
-    token = request.cookies.get("pb_token")
-    if not token:
-        raise HTTPException(status_code=401, detail="Unauthorized: no pb_token")
-
     background.add_task(
         quiz_generator.generate,
         GenerateCmd(
@@ -101,13 +98,9 @@ async def finalize_quiz(
     dto: FinalizeQuizDto,
     quiz_id: str,
     quiz_generator: QuizGeneratorAppDeps,
-    request: Request,
+    token: UserTokenDeps,
     background: BackgroundTasks,
 ):
-    token = request.cookies.get("pb_token")
-    if not token:
-        raise HTTPException(status_code=401, detail="Unauthorized: no pb_token")
-
     background.add_task(
         quiz_generator.finalize,
         FinalizeQuizCmd(
@@ -130,15 +123,9 @@ async def finalize_attempt(
     attempt_id: str,
     quiz_attempter_app: QuizAttempterAppDeps,
     quiz_id: str,
-    request: Request,
+    token: UserTokenDeps,
     background: BackgroundTasks,
 ):
-    token = request.cookies.get("pb_token")
-    if not token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized: no pb_token"
-        )
-
     background.add_task(
         quiz_attempter_app.finalize,
         FinalizeAttemptCmd(
@@ -161,17 +148,11 @@ async def finalize_attempt(
 async def ask_explainer(
     quiz_id: str,
     attempt_id: str,
+    token: UserTokenDeps,
     quiz_attempter_app: QuizAttempterAppDeps,
-    request: Request,
     query: str = Query(alias="q"),
     item_id: str = Query(alias="item"),
 ):
-    token = request.cookies.get("pb_token")
-    if not token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized: no pb_token"
-        )
-
     async def event_generator():
         async for run in quiz_attempter_app.ask_explainer(
             AskExplainerCmd(
@@ -190,16 +171,12 @@ async def ask_explainer(
 # Material Search
 @edge_api_router.post("/materials", status_code=201)
 async def add_material(
-    request: Request,
+    token: UserTokenDeps,
     material_search_app: MaterialSearchAppDeps,
     file: UploadFile = File(...),
     title: str = Form(...),
     material_id: str = Form(...),
 ):
-    token = request.cookies.get("pb_token")
-    if not token:
-        raise HTTPException(status_code=401, detail="Unauthorized: no pb_token")
-
     file_bytes = await file.read()
     material = await material_search_app.add_material(
         AddMaterialCmd(
