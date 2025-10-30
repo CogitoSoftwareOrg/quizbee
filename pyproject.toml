@@ -1,0 +1,19 @@
+[project]
+name = "quizbee-workspace"
+version = "0.1.0"
+description = "QuizBee monorepo workspace root"
+requires-python = ">=3.13"
+
+[tool.uv.workspace]
+members = [
+    "apps/api",
+    "pkgs/python/*",
+]
+
+[tool.uv]
+# Shared dev dependencies for the entire workspace
+dev-dependencies = []
+
+# Note: In dev mode, this workspace enables hot-reload for packages in pkgs/python/*
+# In production (Coolify), each app builds independently from its own directory
+# and fetches published packages from PyPI

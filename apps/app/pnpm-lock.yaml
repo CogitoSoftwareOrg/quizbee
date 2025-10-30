@@ -26,6 +26,9 @@ importers:
       '@cogisoft/ui-svelte-daisy':
         specifier: ^0.1.16
         version: 0.1.16(lucide-svelte@0.544.0(svelte@5.42.2))(svelte@5.42.2)
+      '@quizbee/pb-types':
+        specifier: workspace:*
+        version: link:../../pkgs/js/pb-types
       '@stripe/stripe-js':
         specifier: ^7.9.0
         version: 7.9.0
