@@ -1,7 +1,8 @@
 import logging
+
 from src.apps.v2.llm_tools.app.contracts import LLMToolsApp
 from src.apps.v2.material_search.app.contracts import MaterialSearchApp, SearchCmd
-from src.apps.v2.user_auth.app.contracts import AuthUserApp
+from src.apps.v2.user_auth.app.contracts import Principal
 
 from ..domain.ports import (
     QuizFinalizer,
@@ -19,7 +20,7 @@ from ..domain.errors import (
 
 from .contracts import (
     GenerateCmd,
-    FinalizeCmd,
+    FinalizeQuizCmd,
     GenMode,
     QuizGeneratorApp,
 )
@@ -28,7 +29,6 @@ from .contracts import (
 class QuizGeneratorAppImpl(QuizGeneratorApp):
     def __init__(
         self,
-        user_auth: AuthUserApp,
         quiz_repository: QuizRepository,
         quiz_indexer: QuizIndexer,
         llm_tools: LLMToolsApp,
@@ -36,7 +36,6 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
         patch_generator: PatchGenerator,
         finalizer: QuizFinalizer,
     ):
-        self.user_auth = user_auth
         self.quiz_repository = quiz_repository
         self.quiz_indexer = quiz_indexer
         self.material_search = material_search
@@ -45,17 +44,16 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
         self.finalizer = finalizer
 
     async def generate(self, cmd: GenerateCmd) -> None:
-        user = await self.user_auth.validate(cmd.token)
         quiz = await self.quiz_repository.get(cmd.quiz_id)
 
-        if quiz.author_id != user.id:
-            raise NotQuizOwnerError(quiz_id=cmd.quiz_id, user_id=user.id)
-        stored = user.remaining
+        if quiz.author_id != cmd.user.id:
+            raise NotQuizOwnerError(quiz_id=cmd.quiz_id, user_id=cmd.user.id)
+        stored = cmd.user.remaining
         cost = PATCH_LIMIT
-        if cost > user.remaining:
+        if cost > cmd.user.remaining:
             raise NotEnoughQuizItemsError(
                 quiz_id=cmd.quiz_id,
-                user_id=user.id,
+                user_id=cmd.user.id,
                 cost=cost,
                 stored=stored,
             )
@@ -70,12 +68,10 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
 
         await self.patch_generator.generate(quiz, cmd.cache_key)
 
-    async def finalize(self, cmd: FinalizeCmd) -> None:
+    async def finalize(self, cmd: FinalizeQuizCmd) -> None:
         quiz = await self.quiz_repository.get(cmd.quiz_id)
-        user = await self.user_auth.validate(cmd.token)
-
-        if quiz.author_id != user.id:
-            raise NotQuizOwnerError(quiz_id=cmd.quiz_id, user_id=user.id)
+        if quiz.author_id != cmd.user.id:
+            raise NotQuizOwnerError(quiz_id=cmd.quiz_id, user_id=cmd.user.id)
 
         quiz.to_answered()
         await self.quiz_repository.save(quiz)
@@ -89,7 +85,7 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
         await self.quiz_repository.save(quiz)
 
         if quiz.need_build_material_content:
-            await self._build_material_content(quiz, quiz.length * 2000, cmd.token)
+            await self._build_material_content(quiz, quiz.length * 2000, cmd.user)
             await self.quiz_repository.save(quiz)
 
         if quiz.avoid_repeat:
@@ -130,16 +126,15 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
         await self.generate(cmd)
 
     async def _build_material_content(
-        self, quiz: Quiz, token_limit: int, token: str
+        self, quiz: Quiz, token_limit: int, user: Principal
     ) -> None:
         logging.info(f"Building material content for quiz {quiz.id}")
         chunks = await self.material_search.search(
             SearchCmd(
                 query=quiz.query,
-                user_id=quiz.author_id,
+                user=user,
                 material_ids=[m.id for m in quiz.materials],
                 limit_tokens=token_limit,
-                token=token,
             )
         )
         logging.info(f"Found {len(chunks)} chunks for quiz {quiz.id}")

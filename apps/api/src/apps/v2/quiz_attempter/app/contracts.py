@@ -1,15 +1,17 @@
 from typing import Any, AsyncGenerator, AsyncIterable, Literal, Protocol
 from dataclasses import dataclass
 
+from src.apps.v2.user_auth.app.contracts import Principal
+
 from ..domain.models import Attempt
 
 
 @dataclass(frozen=True, slots=True)
-class FinalizeCmd:
+class FinalizeAttemptCmd:
     quiz_id: str
     cache_key: str
     attempt_id: str
-    token: str
+    user: Principal
 
 
 @dataclass(frozen=True, slots=True)
@@ -18,7 +20,7 @@ class AskExplainerCmd:
     query: str
     item_id: str
     attempt_id: str
-    token: str
+    user: Principal
 
 
 @dataclass(frozen=True, slots=True)
@@ -30,7 +32,7 @@ class AskExplainerResult:
 
 
 class QuizAttempterApp(Protocol):
-    async def finalize(self, cmd: FinalizeCmd) -> None: ...
+    async def finalize(self, cmd: FinalizeAttemptCmd) -> None: ...
 
     def ask_explainer(
         self, cmd: AskExplainerCmd

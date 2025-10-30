@@ -1,7 +1,7 @@
 import logging
 from typing import AsyncGenerator
 
-from src.apps.v2.user_auth.app.contracts import AuthUserApp
+from src.apps.v2.user_auth.app.contracts import AuthUserApp, Principal
 from src.apps.v2.message_owner.app.contracts import (
     MessageOwnerApp,
     StartMessageCmd,
@@ -30,7 +30,7 @@ from .contracts import (
     AskExplainerCmd,
     AskExplainerResult,
     QuizAttempterApp,
-    FinalizeCmd,
+    FinalizeAttemptCmd,
 )
 
 logger = logging.getLogger(__name__)
@@ -40,23 +40,21 @@ class QuizAttempterAppImpl(QuizAttempterApp):
     def __init__(
         self,
         attempt_repository: AttemptRepository,
-        user_auth: AuthUserApp,
         explainer: Explainer,
         message_owner: MessageOwnerApp,
         llm_tools: LLMToolsApp,
         finalizer: AttemptFinalizer,
     ):
         self.attempt_repository = attempt_repository
-        self.user_auth = user_auth
         self.explainer = explainer
         self.message_owner = message_owner
         self.llm_tools = llm_tools
         self.finalizer = finalizer
 
-    async def finalize(self, cmd: FinalizeCmd) -> None:
+    async def finalize(self, cmd: FinalizeAttemptCmd) -> None:
         logger.info(f"Finalize attempt: {cmd.attempt_id}")
         attempt = await self.attempt_repository.get(cmd.attempt_id)
-        await self.validate_attempt(attempt, cmd.token)
+        await self.validate_attempt(attempt, cmd.user)
         await self.finalizer.finalize(attempt, cmd.cache_key)
 
     async def ask_explainer(
@@ -64,7 +62,7 @@ class QuizAttempterAppImpl(QuizAttempterApp):
     ) -> AsyncGenerator[AskExplainerResult, None]:
         logger.info(f"Ask explainer: {cmd.attempt_id}")
         attempt = await self.attempt_repository.get(cmd.attempt_id)
-        await self.validate_attempt(attempt, cmd.token)
+        await self.validate_attempt(attempt, cmd.user)
 
         ai_message = await self.message_owner.start_message(
             StartMessageCmd(attempt_id=attempt.id, item_id=cmd.item_id)
@@ -100,8 +98,7 @@ class QuizAttempterAppImpl(QuizAttempterApp):
                 text=message.content, msg_id=message.id, i=0, status=status
             )
 
-    async def validate_attempt(self, attempt: Attempt, token: str) -> None:
-        user = await self.user_auth.validate(token)
+    async def validate_attempt(self, attempt: Attempt, user: Principal) -> None:
         if attempt.user_id != user.id:
             raise NotAttemptOwnerError(
                 attempt_id=attempt.id, user_id=user.id, quiz_id=attempt.quiz.id

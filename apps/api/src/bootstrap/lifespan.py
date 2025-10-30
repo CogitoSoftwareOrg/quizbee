@@ -8,6 +8,7 @@ import httpx
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 
+from src.apps.v2.edge_api.di import set_edge_api_app
 from src.lib.settings import settings
 
 from src.apps.v2.llm_tools.di import set_llm_tools
@@ -123,7 +124,6 @@ async def lifespan(app: FastAPI):
         pdf_parser=pdf_parser,
         indexer=material_indexer,
         llm_tools=app.state.llm_tools,
-        user_auth=app.state.auth_user_app,
     )
 
     # V2 QUIZ GENERATOR
@@ -132,7 +132,6 @@ async def lifespan(app: FastAPI):
     )
     set_quiz_generator_app(
         app,
-        user_auth=app.state.auth_user_app,
         llm_tools=app.state.llm_tools,
         material_search=app.state.material_search_app,
         quiz_repository=quiz_repository,
@@ -150,11 +149,19 @@ async def lifespan(app: FastAPI):
     set_quiz_attempter_app(
         app,
         attempt_repository=attempt_repository,
-        user_auth=app.state.auth_user_app,
         explainer=explainer,
         message_owner=app.state.message_owner_app,
         llm_tools=app.state.llm_tools,
         finalizer=finalizer,
+    )
+
+    # V2 EDGE API
+    set_edge_api_app(
+        app,
+        auth_user_app=app.state.auth_user_app,
+        quiz_generator_app=app.state.quiz_generator_app,
+        quiz_attempter_app=app.state.quiz_attempter_app,
+        material_search_app=app.state.material_search_app,
     )
 
     async with contextlib.AsyncExitStack() as stack:

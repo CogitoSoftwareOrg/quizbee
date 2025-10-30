@@ -6,7 +6,6 @@ from src.lib.settings import settings
 
 
 from src.apps.v2.llm_tools.app.usecases import LLMToolsApp
-from src.apps.v2.user_auth.app.contracts import AuthUserApp
 
 from ..domain.models import (
     Material,
@@ -27,6 +26,7 @@ from .contracts import MaterialSearchApp, AddMaterialCmd, SearchCmd
 
 logger = logging.getLogger(__name__)
 
+
 class MaterialSearchAppImpl(MaterialSearchApp):
     def __init__(
         self,
@@ -34,18 +34,15 @@ class MaterialSearchAppImpl(MaterialSearchApp):
         pdf_parser: PdfParser,
         llm_tools: LLMToolsApp,
         indexer: MaterialIndexer,
-        user_auth: AuthUserApp,
     ):
         self.material_repository = material_repository
         self.pdf_parser = pdf_parser
         self.llm_tools = llm_tools
         self.indexer = indexer
-        self.user_auth = user_auth
 
     async def add_material(self, cmd: AddMaterialCmd) -> Material:
         logger.info("MaterialSearchAppImpl.add_material")
         # Validate file size
-        user = await self.user_auth.validate(cmd.token)
 
         file_size_mb = len(cmd.file.file_bytes) / (1024 * 1024)
         if file_size_mb > MAX_SIZE_MB:
@@ -60,7 +57,10 @@ class MaterialSearchAppImpl(MaterialSearchApp):
         text = ""
         pdf_images = []
         material = Material.create(
-            user_id=user.id, title=cmd.title, file=cmd.file, id=cmd.material_id
+            id=cmd.material_id,
+            user_id=cmd.user.id,
+            title=cmd.title,
+            file=cmd.file,
         )
         if cmd.file.file_name.lower().endswith(".pdf"):
             try:
@@ -132,12 +132,11 @@ class MaterialSearchAppImpl(MaterialSearchApp):
         limit_chunks = int(cmd.limit_tokens / self.llm_tools.chunk_size)
         ratio = 0.5 if len(cmd.query.strip().split()) > 3 else 0
 
-
         logger.info(
             f"Searching for material chunks for query: {cmd.query} (limit: {limit_chunks}, ratio: {ratio})"
         )
         chunks = await self.indexer.search(
-            user_id=cmd.user_id,
+            user_id=cmd.user.id,
             query=cmd.query,
             material_ids=cmd.material_ids,
             limit=limit_chunks,

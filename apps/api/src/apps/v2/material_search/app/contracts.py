@@ -2,12 +2,14 @@
 from dataclasses import dataclass
 from typing import Protocol
 
+from src.apps.v2.user_auth.app.contracts import Principal
+
 from ..domain.models import Material, MaterialFile, MaterialChunk
 
 
 @dataclass
 class AddMaterialCmd:
-    token: str
+    user: Principal
     file: MaterialFile
     title: str
     material_id: str
@@ -15,9 +17,8 @@ class AddMaterialCmd:
 
 @dataclass
 class SearchCmd:
-    token: str
+    user: Principal
     query: str
-    user_id: str
     material_ids: list[str]
     limit_tokens: int
 

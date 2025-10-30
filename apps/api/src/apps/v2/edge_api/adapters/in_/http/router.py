@@ -4,9 +4,7 @@ from fastapi import (
     BackgroundTasks,
     File,
     Form,
-    HTTPException,
     Query,
-    Request,
     UploadFile,
     status,
 )
@@ -14,21 +12,19 @@ from fastapi.responses import JSONResponse, StreamingResponse
 
 from src.lib.utils import cache_key, sse
 
-from src.apps.v2.quiz_attempter.app.contracts import (
-    AskExplainerCmd,
-    FinalizeCmd as FinalizeAttemptCmd,
+from src.apps.v2.material_search.app.contracts import MaterialFile
+
+from ....app.contracts import (
+    PublicStartQuizCmd,
+    PublicGenerateQuizItemsCmd,
+    PublicFinalizeQuizCmd,
+    PublicFinalizeAttemptCmd,
+    PublicAskExplainerCmd,
+    PublicAddMaterialCmd,
 )
-from src.apps.v2.quiz_generator.app.contracts import (
-    GenerateCmd,
-    GenMode,
-    FinalizeCmd as FinalizeQuizCmd,
-)
-from src.apps.v2.material_search.app.contracts import AddMaterialCmd, MaterialFile
 
 from .deps import (
-    MaterialSearchAppDeps,
-    QuizAttempterAppDeps,
-    QuizGeneratorAppDeps,
+    EdgeAPIAppDeps,
     UserTokenDeps,
 )
 from .schemas import StartQuizDto, PatchQuizDto, FinalizeQuizDto
@@ -44,17 +40,16 @@ edge_api_router = APIRouter(prefix="/v2", tags=["v2"], dependencies=[])
 )
 async def start_quiz(
     dto: StartQuizDto,
-    quiz_generator: QuizGeneratorAppDeps,
+    edge_api_app: EdgeAPIAppDeps,
     quiz_id: str,
     background: BackgroundTasks,
     token: UserTokenDeps,
 ):
     background.add_task(
-        quiz_generator.start,
-        GenerateCmd(
+        edge_api_app.start_quiz,
+        PublicStartQuizCmd(
             token=token,
             quiz_id=quiz_id,
-            mode=GenMode.Continue,
             cache_key=cache_key(dto.attempt_id),
         ),
     )
@@ -72,17 +67,17 @@ async def start_quiz(
 async def generate_quiz_items(
     dto: PatchQuizDto,
     quiz_id: str,
-    quiz_generator: QuizGeneratorAppDeps,
+    edge_api_app: EdgeAPIAppDeps,
     background: BackgroundTasks,
     token: UserTokenDeps,
 ):
     background.add_task(
-        quiz_generator.generate,
-        GenerateCmd(
-            quiz_id=quiz_id,
+        edge_api_app.generate_quiz_items,
+        PublicGenerateQuizItemsCmd(
             token=token,
-            mode=dto.mode,
+            quiz_id=quiz_id,
             cache_key=cache_key(dto.attempt_id),
+            mode=dto.mode,
         ),
     )
 
@@ -97,13 +92,13 @@ async def generate_quiz_items(
 async def finalize_quiz(
     dto: FinalizeQuizDto,
     quiz_id: str,
-    quiz_generator: QuizGeneratorAppDeps,
+    edge_api_app: EdgeAPIAppDeps,
     token: UserTokenDeps,
     background: BackgroundTasks,
 ):
     background.add_task(
-        quiz_generator.finalize,
-        FinalizeQuizCmd(
+        edge_api_app.finalize_quiz,
+        PublicFinalizeQuizCmd(
             quiz_id=quiz_id,
             token=token,
             cache_key=cache_key(dto.attempt_id),
@@ -121,14 +116,14 @@ async def finalize_quiz(
 )
 async def finalize_attempt(
     attempt_id: str,
-    quiz_attempter_app: QuizAttempterAppDeps,
+    edge_api_app: EdgeAPIAppDeps,
     quiz_id: str,
     token: UserTokenDeps,
     background: BackgroundTasks,
 ):
     background.add_task(
-        quiz_attempter_app.finalize,
-        FinalizeAttemptCmd(
+        edge_api_app.finalize_attempt,
+        PublicFinalizeAttemptCmd(
             quiz_id=quiz_id,
             cache_key=cache_key(attempt_id),
             attempt_id=attempt_id,
@@ -149,13 +144,14 @@ async def ask_explainer(
     quiz_id: str,
     attempt_id: str,
     token: UserTokenDeps,
-    quiz_attempter_app: QuizAttempterAppDeps,
+    edge_api_app: EdgeAPIAppDeps,
     query: str = Query(alias="q"),
     item_id: str = Query(alias="item"),
 ):
     async def event_generator():
-        async for run in quiz_attempter_app.ask_explainer(
-            AskExplainerCmd(
+        async for run in edge_api_app.ask_explainer(
+            PublicAskExplainerCmd(
+                quiz_id=quiz_id,
                 cache_key=cache_key(attempt_id),
                 query=query,
                 item_id=item_id,
@@ -172,15 +168,16 @@ async def ask_explainer(
 @edge_api_router.post("/materials", status_code=201)
 async def add_material(
     token: UserTokenDeps,
-    material_search_app: MaterialSearchAppDeps,
+    edge_api_app: EdgeAPIAppDeps,
     file: UploadFile = File(...),
     title: str = Form(...),
     material_id: str = Form(...),
 ):
     file_bytes = await file.read()
-    material = await material_search_app.add_material(
-        AddMaterialCmd(
+    material = await edge_api_app.add_material(
+        PublicAddMaterialCmd(
             token=token,
+            cache_key=cache_key(material_id),
             file=MaterialFile(
                 file_name=file.filename or "unknown",
                 file_bytes=file_bytes,

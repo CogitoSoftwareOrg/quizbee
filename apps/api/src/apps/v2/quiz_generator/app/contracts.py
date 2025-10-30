@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Protocol
 
+from src.apps.v2.user_auth.app.contracts import Principal
+
 
 class GenMode(StrEnum):
     Continue = "continue"
@@ -9,10 +11,10 @@ class GenMode(StrEnum):
 
 
 @dataclass(frozen=True, slots=True)
-class FinalizeCmd:
+class FinalizeQuizCmd:
     cache_key: str
     quiz_id: str
-    token: str
+    user: Principal
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,10 +22,10 @@ class GenerateCmd:
     cache_key: str
     quiz_id: str
     mode: GenMode
-    token: str
+    user: Principal
 
 
 class QuizGeneratorApp(Protocol):
     async def start(self, cmd: GenerateCmd) -> None: ...
     async def generate(self, cmd: GenerateCmd) -> None: ...
-    async def finalize(self, cmd: FinalizeCmd) -> None: ...
+    async def finalize(self, cmd: FinalizeQuizCmd) -> None: ...

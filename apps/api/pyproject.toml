@@ -29,6 +29,7 @@ dependencies = [
     "fastapi-limiter>=0.1.6",
     "pytest>=8.4.2",
     "nanoid>=2.0.0",
+    "arq>=0.26.3",
 ]
 
 [tool.hatch.build.targets.wheel]
