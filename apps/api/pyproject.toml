@@ -1,5 +1,5 @@
 [project]
-name = "api"
+name = "quizbee"
 version = "0.1.0"
 description = "QuizBee API - AI-powered quiz generation backend"
 readme = "README.md"

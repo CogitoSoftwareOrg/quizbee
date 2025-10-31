@@ -1,0 +1,16 @@
+**
+
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!pyproject.toml
+!uv.lock
+
+!apps/web/**
+!apps/api/**
+
+
+!pkgs/js/**
+!pkgs/python/**
+# !pkgs/js/*/package.json
+# !pkgs/python/*/pyproject.toml
