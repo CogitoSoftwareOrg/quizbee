@@ -15,15 +15,23 @@ services:
     ports:
       - "8000:8000"
 
-  # worker:
-  #   build:
-  #     context: .
-  #     dockerfile: apps/worker/Dockerfile.local
-  #   env_file:
-  #     - ../envs/.env
-  #   volumes:
-  #     - ../apps/worker/src:/app/src
-  #   command: ["uv", "run", "python", "-m", "worker"]
+  worker:
+    build:
+      context: .
+      dockerfile: ../apps/api/Dockerfile.local
+    env_file:
+      - ../envs/.env
+    volumes:
+      - uv-cache:/root/.cache/uv
+      - ../:/repo
+      - /repo/apps/api/.venv
+    working_dir: /repo/apps/api
+    command:
+      - sh
+      - -lc
+      - |
+        uv sync --group dev &&
+        uv run python -m watchfiles --filter python --ignore-path /repo/apps/api/.venv --ignore-path /repo/node_modules "uv run arq src.bootstrap.worker.WorkerSettings" /repo/apps/api/src
 
   web:
     build:

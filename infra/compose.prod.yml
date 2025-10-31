@@ -10,6 +10,22 @@ services:
     ports:
       - "8000:8000"
 
+  worker:
+    build:
+      context: ..
+      dockerfile: ./apps/api/Dockerfile
+    env_file:
+      - ../envs/.env
+    command:
+      [
+        "uv",
+        "run",
+        "--directory",
+        "/repo/apps/api",
+        "arq",
+        "src.bootstrap.worker.WorkerSettings",
+      ]
+
   web:
     build:
       context: ..

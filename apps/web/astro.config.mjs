@@ -45,7 +45,7 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
     ssr: {
-      noExternal: [],
+      noExternal: ["@quizbee/ui-svelte-daisy"],
     },
     envDir: "../../envs",
   },
