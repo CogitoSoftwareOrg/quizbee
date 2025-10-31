@@ -45,9 +45,11 @@
 		},
 		"./package.json": "./package.json"
 	},
-	"peerDependencies": {
-		"svelte": "^5.0.0",
+	"dependencies": {
 		"lucide-svelte": "^0.545.0"
+	},
+	"peerDependencies": {
+		"svelte": "^5.0.0"
 	},
 	"devDependencies": {
 		"@chromatic-com/storybook": "^4.1.1",

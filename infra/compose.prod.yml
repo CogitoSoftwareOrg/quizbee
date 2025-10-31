@@ -14,10 +14,19 @@ services:
     build:
       context: ..
       dockerfile: ./apps/web/Dockerfile
+      network: host
+      args:
+        - PUBLIC_APP_URL=${PUBLIC_APP_URL}
+        - PUBLIC_PB_URL=${PUBLIC_PB_URL}
+        - PB_URL=http://localhost:8090
+        - PB_EMAIL=${PB_EMAIL}
+        - PB_PASSWORD=${PB_PASSWORD}
     env_file:
       - ../envs/.env
     ports:
       - "3001:3000"
+    depends_on:
+      - pb
 
   app:
     build:
