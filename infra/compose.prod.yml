@@ -32,6 +32,8 @@ services:
     build:
       context: ..
       dockerfile: ./apps/app/Dockerfile
+      args:
+        - PUBLIC_PB_URL=${PUBLIC_PB_URL}
     env_file:
       - ../envs/.env
     ports:

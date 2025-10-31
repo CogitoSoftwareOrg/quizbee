@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7
 FROM python:3.13-slim
 
 WORKDIR /repo

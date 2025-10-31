@@ -264,22 +264,25 @@ importers:
 
   pkgs/js/ui-astro:
     dependencies:
+      '@quizbee/ui-svelte-daisy':
+        specifier: workspace:*
+        version: link:../ui-svelte-daisy
+    devDependencies:
+      '@astrojs/check':
+        specifier: ^0.9.4
+        version: 0.9.5(prettier@3.6.2)(typescript@5.9.3)
       '@astrojs/svelte':
         specifier: ^7.0.0
         version: 7.2.1(@types/node@22.18.13)(astro@5.15.3(@capacitor/preferences@7.0.2(@capacitor/core@7.4.4))(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(rollup@4.52.5)(terser@5.44.0)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1))(jiti@2.6.1)(lightningcss@1.30.2)(svelte@5.43.2)(terser@5.44.0)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       '@lucide/astro':
         specifier: ^0.545.0
         version: 0.545.0(astro@5.15.3(@capacitor/preferences@7.0.2(@capacitor/core@7.4.4))(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(rollup@4.52.5)(terser@5.44.0)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1))
-      '@quizbee/ui-svelte-daisy':
-        specifier: workspace:*
-        version: link:../ui-svelte-daisy
       astro:
         specifier: ^5.0.0
         version: 5.15.3(@capacitor/preferences@7.0.2(@capacitor/core@7.4.4))(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(rollup@4.52.5)(terser@5.44.0)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
-    devDependencies:
-      '@astrojs/check':
-        specifier: ^0.9.4
-        version: 0.9.5(prettier@3.6.2)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.9.0
+        version: 5.9.3
 
   pkgs/js/ui-svelte-daisy:
     dependencies:
