@@ -1,0 +1,159 @@
+---
+import DynamicIcon from "./DynamicIcon.astro";
+
+interface Feature {
+  title: string;
+  description: string;
+  icon: string;
+  impact?: {
+    metric: string;
+    value: string;
+    unit: string;
+  };
+}
+
+interface Props {
+  title: string;
+  subtitle?: string;
+  features: Feature[];
+  stats?: {
+    total: string;
+    label: string;
+    description: string;
+  };
+  theme?: "default" | "dark" | "gradient";
+}
+
+const {
+  title,
+  subtitle,
+  features,
+  stats,
+  theme = "default",
+} = Astro.props;
+
+const themeClasses = {
+  default: "",
+  dark: "bg-base-300",
+  gradient: "bg-gradient-to-br from-success/5 to-primary/5",
+};
+---
+
+<section
+  class={`features-section w-full py-16 lg:py-24 overflow-x-hidden ${themeClasses[theme]}`}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="text-center mb-16 space-y-4">
+      {
+        subtitle && (
+          <p class="text-sm font-semibold text-success uppercase tracking-wide">
+            {subtitle}
+          </p>
+        )
+      }
+
+      <h2 class="text-4xl lg:text-5xl font-bold leading-tight">
+        {title}
+      </h2>
+    </div>
+
+    <!-- Features Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+      {
+        features.map((feature, index) => (
+          <div
+            class="group transition-all duration-700 ease-out opacity-0 translate-y-8"
+            data-animate="feature"
+            style={`transition-delay: ${index * 100}ms`}
+          >
+            <div class="relative flex flex-col h-full p-8 rounded-2xl border transition-all duration-300 bg-base-100 shadow-lg hover:shadow-xl hover:-translate-y-2 hover:border-success/30 group-hover:bg-success/5">
+              <!-- Icon -->
+              <div class="p-4 rounded-xl bg-success/10 mb-6 aspect-square flex items-center justify-center border border-success/20 group-hover:bg-success/20 group-hover:border-success/30 transition-colors">
+                <DynamicIcon name={feature.icon} size={64} class="text-success" />
+              </div>
+
+              <!-- Content -->
+              <div class="flex-1 space-y-4">
+                <h3 class="text-xl font-bold text-base-content group-hover:text-success transition-colors">
+                  {feature.title}
+                </h3>
+                <p class="text-base text-base-content/70 leading-relaxed">
+                  {feature.description}
+                </p>
+              </div>
+
+              {/* Impact Metric */}
+              {feature.impact && (
+                <div class="mt-6 pt-4 border-t border-base-200">
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm font-medium text-base-content/60">
+                      {feature.impact.metric}
+                    </span>
+                    <div class="text-right">
+                      <span class="text-2xl font-bold text-success">
+                        {feature.impact.value}
+                      </span>
+                      <span class="text-sm text-base-content/60 ml-1">
+                        {feature.impact.unit}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <!-- Success Indicator -->
+              <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div class="w-3 h-3 bg-success rounded-full animate-pulse" />
+              </div>
+            </div>
+          </div>
+        ))
+      }
+    </div>
+
+    <!-- Bottom Statistics -->
+    {
+      stats && (
+        <div class="text-center">
+          <div class="inline-flex flex-col items-center p-8 rounded-3xl bg-gradient-to-r from-success/10 to-primary/10 border border-success/20">
+            <div class="text-5xl font-bold text-success mb-2">
+              {stats.total}
+            </div>
+            <div class="text-xl font-semibold text-base-content mb-2">
+              {stats.label}
+            </div>
+            <p class="text-base-content/70 max-w-md">{stats.description}</p>
+          </div>
+        </div>
+      )
+    }
+  </div>
+</section>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const sections = document.querySelectorAll(".features-section");
+
+    sections.forEach((section) => {
+      const animateElements = section.querySelectorAll("[data-animate]");
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              animateElements.forEach((element) => {
+                element.classList.remove("opacity-0", "translate-y-8");
+                element.classList.add("opacity-100", "translate-y-0");
+              });
+            }
+          });
+        },
+        { threshold: 0.1 }
+      );
+
+      observer.observe(section);
+    });
+  });
+</script>
+

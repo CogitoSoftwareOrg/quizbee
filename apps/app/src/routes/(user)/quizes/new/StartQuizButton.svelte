@@ -1,7 +1,7 @@
 <script lang="ts">
 	import posthog from 'posthog-js';
 	import { goto } from '$app/navigation';
-	import { Button } from '@cogisoft/ui-svelte-daisy';
+	import { Button } from '@quizbee/ui-svelte-daisy';
 
 	import { putApi } from '$lib/api/call-api';
 	import { uiStore } from '$lib/apps/users/ui.svelte';

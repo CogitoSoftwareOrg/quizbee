@@ -2,7 +2,7 @@
 	import posthog from 'posthog-js';
 	import { Crown } from 'lucide-svelte';
 
-	import { Modal, Button, TextArea } from '@cogisoft/ui-svelte-daisy';
+	import { Modal, Button, TextArea } from '@quizbee/ui-svelte-daisy';
 
 	import { patchApi } from '$lib/api/call-api';
 	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';

@@ -2,7 +2,7 @@
 	import { MediaQuery } from 'svelte/reactivity';
 	import { page } from '$app/state';
 	import { House, ChartBar, CreditCard, Plus, History, Pickaxe } from 'lucide-svelte';
-	import { Button } from '@cogisoft/ui-svelte-daisy';
+	import { Button } from '@quizbee/ui-svelte-daisy';
 
 	import { uiStore } from '$lib/apps/users/ui.svelte';
 	import type { ClassValue } from 'svelte/elements';

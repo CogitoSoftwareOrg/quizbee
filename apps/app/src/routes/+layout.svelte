@@ -3,7 +3,7 @@
 	import '$lib/pb/pb-on-change';
 
 	import { onMount } from 'svelte';
-	import { PortalHost } from '@cogisoft/ui-svelte-daisy';
+	import { PortalHost } from '@quizbee/ui-svelte-daisy';
 
 	import favicon from '$lib/assets/icons/bee_v3.svg';
 	import ThemeLoad from '$lib/features/ThemeLoad.svelte';
@@ -37,9 +37,6 @@
 </script>
 
 <svelte:head>
-
-
-
 	{@html webManifestLink}
 	<link rel="icon" href={favicon} />
 	<link

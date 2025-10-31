@@ -5,6 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 QuizBee is a full-stack AI-powered quiz generation platform with three main applications:
+
 - **API** (Python FastAPI) - Backend services and AI quiz generation
 - **Web** (Astro) - Marketing website and landing pages
 - **App** (SvelteKit SPA + Capacitor) - Interactive quiz application
@@ -19,6 +20,7 @@ make dev
 ```
 
 This command:
+
 1. Starts Docker infrastructure (PocketBase, Meilisearch, Dragonfly)
 2. Starts API on port 8000 (FastAPI with auto-reload)
 3. Starts web on port 4321 (Astro)
@@ -105,6 +107,7 @@ pnpm build:gen-types
 **Location:** `apps/api/src/`
 
 **Structure:**
+
 - `bootstrap/` - FastAPI application initialization and middleware setup
 - `lib/` - Shared utilities and core services
   - `clients/` - External service clients (PocketBase, Meilisearch, Redis)
@@ -119,6 +122,7 @@ pnpm build:gen-types
   - `materials/`, `messages/`, `billing/` - Supporting features
 
 **Key Dependencies:**
+
 - FastAPI + Uvicorn for HTTP
 - Pydantic-AI for LLM orchestration
 - PocketBase (async) for database
@@ -134,6 +138,7 @@ pnpm build:gen-types
 **Location:** `apps/app/src/`
 
 **Structure:**
+
 - `routes/` - SvelteKit file-based routing
   - `(user)/` - Protected user routes (requires auth)
   - `(auth)/` - Authentication routes (sign-in, sign-up)
@@ -147,6 +152,7 @@ pnpm build:gen-types
   - `styles/` - Global styles
 
 **Key Dependencies:**
+
 - SvelteKit with adapter-node
 - Svelte 5 (modern runes: $state, $derived, $effect)
 - Tailwind CSS v4 + daisyUI 5
@@ -162,24 +168,27 @@ pnpm build:gen-types
 **Location:** `apps/web/src/`
 
 **Structure:**
+
 - `pages/` - Astro file-based routing
 - `content/` - Content collections (blog, landings, quizes, pages)
-- `components/` - Reusable components (uses `@cogisoft/astro-sections`)
+- `components/` - Reusable components (uses `@quizbee/astro-sections`)
 - `layouts/` - Page layouts
 - `ssg/` - Static site generation utilities
 - `lib/` - Shared utilities
 - `i18n/` - Internationalization
 
 **Key Dependencies:**
+
 - Astro with Node adapter
 - Svelte 5 integration for interactive components
 - Tailwind CSS v4 + daisyUI 5
 - PocketBase SDK
-- `@cogisoft/astro-sections` for page sections
+- `@quizbee/astro-sections` for page sections
 
 ### Infrastructure
 
 **Services (Docker Compose):**
+
 - **PocketBase** (port 8090) - Database + Auth + File storage
 - **Meilisearch** (port 7700) - Search engine
 - **Dragonfly** (port 6379) - Redis-compatible cache/queue
@@ -195,15 +204,16 @@ pnpm build:gen-types
 - Use Tailwind v4 + daisyUI 5 semantic variables
 - Use `lucide-svelte` icons instead of inline SVGs
 - NEVER use `dark:` variants - theme is handled globally
-- Use `@cogisoft/ui-svelte-daisy` component library
+- Use `@quizbee/ui-svelte-daisy` component library
 
 **Global styles:**
+
 - App: `apps/app/src/app.css`
 - Web: `apps/web/src/styles/global.css`
 
 ### Astro Pages
 
-- Use `@cogisoft/astro-sections` components for pages and landing sections
+- Use `@quizbee/astro-sections` components for pages and landing sections
 - Can embed Svelte components for interactivity
 
 ## Type Safety
@@ -227,17 +237,20 @@ pnpm build:gen-types
 ### Overview
 
 QuizBee uses a **dual-mode workspace** strategy:
+
 - **Development**: Hot-reload workspace packages for fast iteration
 - **Production**: Independent app deployments via Coolify using registry packages
 
 ### JavaScript/TypeScript (pnpm)
 
 **Configuration:**
+
 - Workspace defined in [pnpm-workspace.yaml](pnpm-workspace.yaml)
 - Per-app lock files enabled via [.npmrc](.npmrc) (`shared-workspace-lockfile=false`)
 - Workspace protocol: `workspace:*` in dependencies
 
 **Structure:**
+
 ```
 /
 ├── pnpm-workspace.yaml        # Workspace config
@@ -251,6 +264,7 @@ QuizBee uses a **dual-mode workspace** strategy:
 ```
 
 **Development Workflow:**
+
 ```bash
 # Install with workspace symlinks (hot-reload enabled)
 pnpm install
@@ -260,6 +274,7 @@ pnpm install
 ```
 
 **Production Workflow:**
+
 ```bash
 # 1. Publish workspace packages to npm (when ready)
 cd pkgs/js/pb-types
@@ -272,6 +287,7 @@ pnpm publish
 ```
 
 **Key Features:**
+
 - ✅ Hot-reload in development
 - ✅ Per-app lock files for independent deploys
 - ✅ Workspace symlinks (`@quizbee/pb-types -> ../../../../pkgs/js/pb-types`)
@@ -280,11 +296,13 @@ pnpm publish
 ### Python (uv)
 
 **Configuration:**
+
 - Workspace defined in root [pyproject.toml](pyproject.toml)
 - Development uses workspace lock at `/uv.lock`
 - Production uses per-app locks (generated via script)
 
 **Structure:**
+
 ```
 /
 ├── pyproject.toml             # Workspace root
@@ -298,6 +316,7 @@ pnpm publish
 ```
 
 **Development Workflow:**
+
 ```bash
 # Sync workspace (hot-reload enabled)
 cd /quizbee
@@ -308,6 +327,7 @@ uv sync
 ```
 
 **Production Workflow:**
+
 ```bash
 # 1. Publish workspace packages to PyPI
 cd pkgs/python/example-lib
@@ -324,6 +344,7 @@ python scripts/python/gen_prod_locks.py
 ```
 
 **Key Features:**
+
 - ✅ Hot-reload in development via workspace
 - ✅ `[tool.uv.sources]` workspace override for dev
 - ✅ Production locks without workspace dependencies
@@ -358,6 +379,7 @@ python scripts/python/gen_prod_locks.py
 ### Publishing Packages
 
 **JavaScript/TypeScript:**
+
 ```bash
 cd pkgs/js/pb-types
 pnpm build                     # Generate types from PocketBase
@@ -365,6 +387,7 @@ pnpm publish                   # Publish to npm (@quizbee/pb-types)
 ```
 
 **Python:**
+
 ```bash
 cd pkgs/python/example-lib
 uv build                       # Build wheel
@@ -374,11 +397,13 @@ uv publish                     # Publish to PyPI (quizbee-example-lib)
 ### Lock File Management
 
 **pnpm (automatic):**
+
 - Per-app locks generated automatically via `.npmrc`
 - Run `pnpm install` to update locks
 - Commit all `apps/*/pnpm-lock.yaml` files
 
 **uv (script-assisted):**
+
 - Development lock: `uv sync` (creates `/uv.lock`)
 - Production lock: `python scripts/python/gen_prod_locks.py`
 - Commit both `/uv.lock` and `apps/*/uv.lock` files
@@ -388,16 +413,19 @@ uv publish                     # Publish to PyPI (quizbee-example-lib)
 Each app deploys independently with its own context:
 
 **API (Python):**
+
 - Context: `/apps/api`
 - Dockerfile: `apps/api/Dockerfile`
 - Uses: `apps/api/uv.lock` (PyPI dependencies)
 
 **App (SvelteKit):**
+
 - Context: `/apps/app`
 - Dockerfile: `apps/app/Dockerfile`
 - Uses: `apps/app/pnpm-lock.yaml` (npm dependencies)
 
 **Web (Astro):**
+
 - Context: `/apps/web`
 - Dockerfile: `apps/web/Dockerfile`
 - Uses: `apps/web/pnpm-lock.yaml` (npm dependencies)

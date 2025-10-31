@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Search, Filter, BookOpen, Clock, FileText, Crown } from 'lucide-svelte';
 
-	import { Input, Button } from '@cogisoft/ui-svelte-daisy';
+	import { Input, Button } from '@quizbee/ui-svelte-daisy';
 
 	import type {
 		MaterialsResponse,

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { ChevronsRight } from 'lucide-svelte';
 
-	import { Button } from '@cogisoft/ui-svelte-daisy';
+	import { Button } from '@quizbee/ui-svelte-daisy';
 
 	import type { QuizAttemptsResponse, QuizItemsResponse, QuizesResponse } from '$lib/pb';
 

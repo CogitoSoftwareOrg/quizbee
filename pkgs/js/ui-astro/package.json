@@ -1,0 +1,41 @@
+{
+  "name": "@quizbee/ui-astro",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CogitoSoftwareOrg/quizbee.git"
+  },
+  "version": "0.1.22",
+  "type": "module",
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "peerDependencies": {
+    "astro": "^5.0.0",
+    "@astrojs/svelte": "^7.0.0",
+    "@lucide/astro": "^0.545.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4"
+  },
+  "dependencies": {
+    "@quizbee/ui-svelte-daisy": "workspace:*"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro check && echo 'Nothing to build for library (publishing sources)'",
+    "preview": "astro preview"
+  },
+  "keywords": [
+    "astro",
+    "components",
+    "ui"
+  ]
+}

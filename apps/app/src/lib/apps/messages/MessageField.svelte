@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { TextArea } from '@cogisoft/ui-svelte-daisy';
+	import { TextArea } from '@quizbee/ui-svelte-daisy';
 	import type { QuizAttemptsResponse, QuizItemsResponse, QuizesResponse } from '$lib/pb';
 
 	import type { Sender } from './types';

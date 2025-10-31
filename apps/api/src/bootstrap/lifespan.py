@@ -3,6 +3,8 @@ import logging
 import contextlib
 from contextlib import asynccontextmanager
 
+from quizbee_example_lib import greet
+
 from src.apps.quiz_generator.di import init_quiz_generator_app
 from src.apps.edge_api.di import init_edge_api_app
 
@@ -37,6 +39,7 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     # INIT LOGIC
     logger.info("Starting Quizbee API server")
+    logger.info(greet("World"))
 
     # GLOBAL
     admin_pb, lf, meili, http = init_global_deps()

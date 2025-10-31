@@ -4,7 +4,7 @@
 	import { goto, onNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 
-	import { Button, Modal } from '@cogisoft/ui-svelte-daisy';
+	import { Button, Modal } from '@quizbee/ui-svelte-daisy';
 
 	import { uiStore } from '$lib/apps/users/ui.svelte';
 	import Paywall from '$lib/apps/billing/Paywall.svelte';

@@ -1,4 +1,4 @@
 packages:
-  - 'apps/*'
-  - 'pkgs/js/*'
-  - 'scripts/js'
+  - "apps/*"
+  - "pkgs/js/*"
+  - "scripts/js"

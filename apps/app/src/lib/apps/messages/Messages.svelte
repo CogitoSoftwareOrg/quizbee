@@ -3,7 +3,7 @@
 	import type { ClassValue } from 'svelte/elements';
 	import { fade } from 'svelte/transition';
 
-	import { Button, scrollToBottom } from '@cogisoft/ui-svelte-daisy';
+	import { Button, scrollToBottom } from '@quizbee/ui-svelte-daisy';
 
 	import type { MessagesResponse, QuizesResponse } from '$lib/pb';
 

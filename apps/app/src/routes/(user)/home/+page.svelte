@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Flame, Plus, Sparkles, Target, Crown } from 'lucide-svelte';
 
-	import { Button } from '@cogisoft/ui-svelte-daisy';
+	import { Button } from '@quizbee/ui-svelte-daisy';
 
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte.js';
 	import { materialsStore } from '$lib/apps/materials/materials.svelte.js';
@@ -123,7 +123,7 @@
 
 	<!-- Hero Section -->
 	<section
-		class="from-primary/50 via-primary/40 to-secondary/50 text-base-content rounded-2xl bg-warning/20 p-4 shadow-lg sm:rounded-3xl sm:p-6 md:p-8 lg:p-10"
+		class="from-primary/50 via-primary/40 to-secondary/50 text-base-content bg-warning/20 rounded-2xl p-4 shadow-lg sm:rounded-3xl sm:p-6 md:p-8 lg:p-10"
 	>
 		<div class="mb-4 max-w-3xl space-y-2 sm:mb-6 sm:space-y-3">
 			<p class="text-base-content/60 text-xs font-medium uppercase tracking-widest">

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Button } from '@cogisoft/ui-svelte-daisy';
+	import { Button } from '@quizbee/ui-svelte-daisy';
 
 	import type { QuizAttemptsResponse, QuizItemsResponse, QuizesResponse } from '$lib/pb';
 	import type { Decision } from '$lib/apps/quiz-attempts/types';

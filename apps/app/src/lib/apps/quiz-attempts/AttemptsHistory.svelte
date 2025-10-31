@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Clock, Search } from 'lucide-svelte';
 
-	import { Input } from '@cogisoft/ui-svelte-daisy';
+	import { Input } from '@quizbee/ui-svelte-daisy';
 
 	import type { Answer } from '$lib/apps/quizes/types';
 	import type {

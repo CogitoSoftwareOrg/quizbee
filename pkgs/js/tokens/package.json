@@ -1,0 +1,17 @@
+{
+  "name": "@quizbee/tokens",
+  "version": "0.1.0",
+  "type": "module",
+  "files": [
+    "src",
+    "preset.js",
+    "README.md"
+  ],
+  "exports": {
+    ".": "./src/index.css",
+    "./preset": "./preset.js"
+  },
+  "peerDependencies": {
+    "tailwindcss": "^3.4.0"
+  }
+}

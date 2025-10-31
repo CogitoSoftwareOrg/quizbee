@@ -2,7 +2,7 @@
 	import type { ClassValue } from 'svelte/elements';
 	import { MessageCirclePlus } from 'lucide-svelte';
 
-	import { Button } from '@cogisoft/ui-svelte-daisy';
+	import { Button } from '@quizbee/ui-svelte-daisy';
 
 	import type { QuizesResponse } from '$lib/pb';
 

@@ -1,0 +1,122 @@
+---
+import Bot from "@lucide/astro/icons/bot";
+import SlidersHorizontal from "@lucide/astro/icons/sliders-horizontal";
+import MessageCircle from "@lucide/astro/icons/message-circle";
+import Target from "@lucide/astro/icons/target";
+import FileText from "@lucide/astro/icons/file-text";
+import TrendingUp from "@lucide/astro/icons/trending-up";
+import Bed from "@lucide/astro/icons/bed";
+import BookOpen from "@lucide/astro/icons/book-open";
+import CircleCheck from "@lucide/astro/icons/circle-check";
+import Bolt from "@lucide/astro/icons/bolt";
+import ShieldCheck from "@lucide/astro/icons/shield-check";
+import ChartLine from "@lucide/astro/icons/chart-line";
+import Headset from "@lucide/astro/icons/headset";
+import Plug from "@lucide/astro/icons/plug";
+import ChartNoAxesCombined from "@lucide/astro/icons/chart-no-axes-combined";
+import Bot2 from "@lucide/astro/icons/bot";
+import CreditCard from "@lucide/astro/icons/credit-card";
+import Star from "@lucide/astro/icons/star";
+import Cloud from "@lucide/astro/icons/cloud";
+import Smartphone from "@lucide/astro/icons/smartphone";
+import Users from "@lucide/astro/icons/users";
+import LayoutGrid from "@lucide/astro/icons/layout-grid";
+import FileChartColumnIncreasing from "@lucide/astro/icons/file-chart-column-increasing";
+import Mail from "@lucide/astro/icons/mail";
+import FlaskConical from "@lucide/astro/icons/flask-conical";
+import User from "@lucide/astro/icons/user";
+import MapPin from "@lucide/astro/icons/map-pin";
+import Webhook from "@lucide/astro/icons/webhook";
+import Database from "@lucide/astro/icons/database";
+import Code from "@lucide/astro/icons/code";
+import Network from "@lucide/astro/icons/network";
+import Book from "@lucide/astro/icons/book";
+import FileCode from "@lucide/astro/icons/file-code";
+import Check from "@lucide/astro/icons/check";
+import Clock from "@lucide/astro/icons/clock";
+import Brain from "@lucide/astro/icons/brain";
+import Calendar from "@lucide/astro/icons/calendar";
+import BellRing from "@lucide/astro/icons/bell-ring";
+import Flame from "@lucide/astro/icons/flame";
+import ListTodo from "@lucide/astro/icons/list-todo";
+import Wrench from "@lucide/astro/icons/wrench";
+import ShoppingCart from "@lucide/astro/icons/shopping-cart";
+import UserMinus from "@lucide/astro/icons/user-minus";
+import FileSpreadsheet from "@lucide/astro/icons/file-spreadsheet";
+import Map from "@lucide/astro/icons/map";
+import Hand from "@lucide/astro/icons/hand";
+import Shield from "@lucide/astro/icons/shield";
+import BookOpenText from "@lucide/astro/icons/book-open-text";
+import FileStack from "@lucide/astro/icons/file-stack";
+import MessageCircleX from "@lucide/astro/icons/message-circle-x";
+import Frown from "@lucide/astro/icons/frown";
+
+
+interface Props {
+  name: string;
+  size?: number;
+  class?: string;
+}
+
+const { name, size = 24, class: className = "" } = Astro.props;
+
+// Map icon names to components
+const iconMap: Record<string, any> = {
+  bot: Bot,
+  "sliders-horizontal": SlidersHorizontal,
+  "message-circle": MessageCircle,
+  target: Target,
+  "file-text": FileText,
+  "trending-up": TrendingUp,
+  bed: Bed,
+  "book-open": BookOpen,
+  "circle-check": CircleCheck,
+  bolt: Bolt,
+  "shield-check": ShieldCheck,
+  "chart-line": ChartLine,
+  headset: Headset,
+  plug: Plug,
+  "chart-mixed": ChartNoAxesCombined,
+  robot: Bot2,
+  "credit-card": CreditCard,
+  star: Star,
+  cloud: Cloud,
+  mobile: Smartphone,
+  users: Users,
+  grid: LayoutGrid,
+  "file-chart": FileChartColumnIncreasing,
+  envelope: Mail,
+  flask: FlaskConical,
+  user: User,
+  location: MapPin,
+  webhook: Webhook,
+  database: Database,
+  code: Code,
+  graph: Network,
+  book: Book,
+  "file-doc": FileCode,
+  check: Check,
+  clock: Clock,
+  brain: Brain,
+  calendar: Calendar,
+  bell: BellRing,
+  fire: Flame,
+  list: ListTodo,
+  tools: Wrench,
+  cart: ShoppingCart,
+  "user-minus": UserMinus,
+  file: FileSpreadsheet,
+  map: Map,
+  hand: Hand,
+  shield: Shield,
+  "book-open-text": BookOpenText,
+  "file-stack": FileStack,
+  "message-circle-x": MessageCircleX,
+  "frown": Frown,
+
+};
+
+const IconComponent = iconMap[name];
+---
+
+{IconComponent && <IconComponent size={size} class={className} />}

@@ -2,8 +2,8 @@
 
 @plugin "@tailwindcss/typography";
 
-@source "../../node_modules/@cogisoft/ui-svelte-daisy/dist/*";
-@source "../../node_modules/@cogisoft/ui-astro/src/*";
+@source "../../node_modules/@quizbee/ui-svelte-daisy/dist/*";
+@source "../../node_modules/@quizbee/ui-astro/src/*";
 
 @import "./theme.css";
 @import "./fonts.css";

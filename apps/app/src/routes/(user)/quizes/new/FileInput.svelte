@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
-	// import { TextArea } from '@cogisoft/ui-svelte-daisy';
+	// import { TextArea } from '@quizbee/ui-svelte-daisy';
 
 	import { computeApiUrl } from '$lib/api/compute-url';
 	import { materialsStore } from '$lib/apps/materials/materials.svelte';
@@ -168,9 +168,6 @@
 				const errorText = await response.text();
 				throw new Error(`Failed to upload material: ${errorText}`);
 			}
-
-		
-			
 		} catch (error) {
 			console.error('Failed to upload file:', attachedFile.name, error);
 
