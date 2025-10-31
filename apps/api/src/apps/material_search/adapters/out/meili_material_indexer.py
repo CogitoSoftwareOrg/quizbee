@@ -52,15 +52,11 @@ class MeiliMaterialIndexer(MaterialIndexer):
         instance = cls(lf, llm_tools, meili)
 
         await instance.material_index.update_embedders(
-        await instance.material_index.update_embedders(
             Embedders(embedders=meiliEmbeddings)  # pyright: ignore[reportArgumentType]
         )
         await instance.material_index.update_filterable_attributes(
             ["userId", "materialId"]
-        await instance.material_index.update_filterable_attributes(
-            ["userId", "materialId"]
         )
-
         return instance
 
     async def index(self, material: Material) -> None:
@@ -109,14 +105,6 @@ class MeiliMaterialIndexer(MaterialIndexer):
             timeout_in_ms=int(120 * 1000),
             interval_in_ms=int(1 * 1000),
         )
-                Doc(
-                    id=f"{material.id}-{i}",
-                    materialId=material.id,
-                    userId=material.user_id,
-                    title=material.title,
-                    content=chunk,
-                )
-            )
 
         docs_tokens = sum(
             [

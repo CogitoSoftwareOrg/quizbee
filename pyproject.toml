@@ -10,9 +10,13 @@ members = [
     "pkgs/python/*",
 ]
 
-[tool.uv]
-# Shared dev dependencies for the entire workspace
-dev-dependencies = []
+[dependency-groups]
+dev = [
+  "ruff>=0.6",
+  "mypy>=1.11",
+  "pytest>=8.4",
+  "pre-commit>=3.8",
+]
 
 # Note: In dev mode, this workspace enables hot-reload for packages in pkgs/python/*
 # In production (Coolify), each app builds independently from its own directory

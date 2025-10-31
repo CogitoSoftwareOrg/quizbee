@@ -2,36 +2,19 @@ from fastapi import FastAPI
 import logging
 import contextlib
 from contextlib import asynccontextmanager
-from langfuse import Langfuse
-from meilisearch_python_sdk import AsyncClient
-import httpx
-from pocketbase import PocketBase
 
 from src.apps.quiz_generator.di import init_quiz_generator_app
 from src.apps.edge_api.di import init_edge_api_app
-from src.lib.settings import settings
 
 from src.apps.llm_tools.di import init_llm_tools
-from src.apps.llm_tools.adapters.out import (
-    TiktokenTokenizer,
-    OpenAIImageTokenizer,
-    SimpleChunker,
-)
 
 from src.apps.user_auth.di import init_auth_user_app
-from src.apps.user_auth.adapters.out import PBUserVerifier, PBUserRepository
 
 from src.apps.material_search.di import (
     init_material_search_app,
 )
-from src.apps.material_search.adapters.out import (
-    FitzPDFParser,
-    MeiliMaterialIndexer,
-    PBMaterialRepository,
-)
 
 from src.apps.message_owner.di import init_message_owner_app
-from src.apps.message_owner.adapters.out import PBMessageRepository
 
 from src.apps.quiz_attempter.di import init_quiz_attempter_app
 

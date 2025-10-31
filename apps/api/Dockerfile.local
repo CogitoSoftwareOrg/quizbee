@@ -1,14 +1,20 @@
 FROM python:3.13-slim
+
 WORKDIR /repo
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    UV_LINK_MODE=symlink
+    UV_LINK_MODE=symlink \
+    UV_PROJECT_ENVIRONMENT=/repo/apps/api/.venv
 
-RUN pip install -U uv watchfiles
+# uv как менеджер окружений/зависимостей
+RUN pip install -U uv
 
-# создаём env прямо в каталоге проекта
+# (опционально) полезные системные зависимости для колёс/библиотек
+# RUN apt-get update && apt-get install -y build-essential && rm -rf /var/lib/apt/lists/*
+
+# Запуск dev-сервера
 CMD ["sh", "-lc", "\
-  uv sync -p apps/api --dev && \
-  uv run -p apps/api uvicorn src.bootstrap:app --host 0.0.0.0 --port 8000 --reload \
+  uv --directory /repo/apps/api sync --group dev && \
+  uv --directory /repo/apps/api run uvicorn src.bootstrap:app --host 0.0.0.0 --port 8000 --reload \
 "]

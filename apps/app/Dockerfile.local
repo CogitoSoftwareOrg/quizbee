@@ -1,4 +1,3 @@
-# apps/app/Dockerfile.local
 # syntax=docker/dockerfile:1.7
 FROM node:20-alpine
 WORKDIR /repo
@@ -6,9 +5,17 @@ WORKDIR /repo
 ENV COREPACK_ENABLE_DOWNLOADS=1
 RUN corepack enable && corepack prepare pnpm@10.15.0 --activate
 
+# общий стор в отдельном томе
 ENV PNPM_STORE_DIR=/pnpm
 RUN mkdir -p /pnpm && chmod -R 777 /pnpm
-RUN printf "store-dir=/pnpm\nshared-workspace-lockfile=true\n" > /etc/pnpmrc
+
+# КЛЮЧЕВЫЕ НАСТРОЙКИ PNPM
+RUN printf "\
+store-dir=/pnpm\n\
+shared-workspace-lockfile=true\n\
+link-workspace-packages=true\n\
+node-linker=isolated\n\
+virtual-store-dir=.pnpm\n" > /etc/pnpmrc
 
 CMD ["sh", "-lc", "\
   pnpm -C apps/app install && \
