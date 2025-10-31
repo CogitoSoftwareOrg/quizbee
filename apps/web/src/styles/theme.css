@@ -40,35 +40,50 @@
 
 @plugin "daisyui/theme" {
   name: "QUIZBEE_DARK";
+
   default: false;
   prefersdark: false;
   color-scheme: "dark";
-  --color-base-100: oklch(22% 0.019 237.69);
-  --color-base-200: oklch(20% 0.019 237.69);
-  --color-base-300: oklch(18% 0.019 237.69);
-  --color-base-content: oklch(92% 0.013 255.508);
+  --color-base-100: oklch(17% 0.008 250); /* фон */
+  --color-base-200: oklch(15% 0.008 250); /* карточки/инпуты */
+  --color-base-300: oklch(13% 0.008 250); /* бордеры/вторичный фон */
+  --color-base-content: oklch(96% 0.01 250); /* текст по умолчанию */
+
+  /* Сохраняем палитру из light, но адаптируем контент для контраста */
   --color-primary: oklch(85% 0.199 91.936);
-  --color-primary-content: oklch(14.94% 0.031 39.947);
+  --color-primary-content: oklch(18% 0.02 250);
+
   --color-secondary: oklch(75% 0.183 55.934);
-  --color-secondary-content: oklch(14.507% 0.035 2.72);
-  --color-accent: oklch(71.294% 0.166 299.844);
-  --color-accent-content: oklch(14.258% 0.033 299.844);
-  --color-neutral: oklch(41% 0.019 237.69);
-  --color-neutral-content: oklch(70% 0.019 237.69);
-  --color-info: oklch(85.559% 0.085 206.015);
-  --color-info-content: oklch(17.111% 0.017 206.015);
-  --color-success: oklch(85.56% 0.085 144.778);
-  --color-success-content: oklch(17.112% 0.017 144.778);
-  --color-warning: oklch(85.569% 0.084 74.427);
-  --color-warning-content: oklch(17.113% 0.016 74.427);
-  --color-error: oklch(85.511% 0.078 16.886);
-  --color-error-content: oklch(17.102% 0.015 16.886);
+  --color-secondary-content: oklch(16% 0.02 250);
+
+  /* Акцент — светящийся, но не ядовитый */
+  --color-accent: oklch(78% 0.18 300);
+  --color-accent-content: oklch(14% 0.02 300);
+
+  /* Нейтрали с лёгким холодным оттенком для стабильных бордеров/текста */
+  --color-neutral: oklch(40% 0.01 250);
+  --color-neutral-content: oklch(88% 0.006 250);
+
+  /* Инфо/успех/варнинг/ошибка — более чистые и читаемые */
+  --color-info: oklch(80% 0.12 220);
+  --color-info-content: oklch(16% 0.02 220);
+
+  --color-success: oklch(78% 0.1 150);
+  --color-success-content: oklch(16% 0.02 150);
+
+  --color-warning: oklch(82% 0.16 85);
+  --color-warning-content: oklch(18% 0.02 85);
+
+  --color-error: oklch(78% 0.12 25);
+  --color-error-content: oklch(16% 0.02 25);
+
+  /* Те же скругления и размеры, чуть больше глубины и микрошум */
   --radius-selector: 1rem;
   --radius-field: 2rem;
   --radius-box: 1rem;
   --size-selector: 0.25rem;
   --size-field: 0.25rem;
   --border: 1px;
-  --depth: 0;
-  --noise: 0;
+  --depth: 2; /* лёгкая «матовая» объёмность */
+  --noise: 0; /* едва заметная фактура на базовых слоях */
 }

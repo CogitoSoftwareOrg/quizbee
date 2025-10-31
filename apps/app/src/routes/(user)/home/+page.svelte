@@ -95,7 +95,7 @@
 					</div>
 				</div>
 				<div
-					class="bg-warning text-warning-content group-hover:bg-warning/90 ml-auto inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold shadow-md transition-all group-hover:shadow-lg sm:ml-0 sm:px-5 sm:py-3 sm:text-base"
+					class="bg-primary text-warning-content group-hover:bg-warning/90 ml-auto inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold shadow-md transition-all group-hover:shadow-lg sm:ml-0 sm:px-5 sm:py-3 sm:text-base"
 				>
 					View Plans
 					<Sparkles size={16} class="sm:size-5" />
@@ -123,7 +123,7 @@
 
 	<!-- Hero Section -->
 	<section
-		class="from-primary/50 via-primary/40 to-secondary/50 text-base-content rounded-2xl bg-gradient-to-br p-4 shadow-lg sm:rounded-3xl sm:p-6 md:p-8 lg:p-10"
+		class="from-primary/50 via-primary/40 to-secondary/50 text-base-content rounded-2xl bg-warning/20 p-4 shadow-lg sm:rounded-3xl sm:p-6 md:p-8 lg:p-10"
 	>
 		<div class="mb-4 max-w-3xl space-y-2 sm:mb-6 sm:space-y-3">
 			<p class="text-base-content/60 text-xs font-medium uppercase tracking-widest">

@@ -40,7 +40,7 @@ class PdfParseResult:
 
 
 class PdfParser(Protocol):
-    def parse(self, file_bytes: bytes) -> PdfParseResult: ...
+    def parse(self, file_bytes: bytes, process_images: bool) -> PdfParseResult: ...
 
 
 # Indexer

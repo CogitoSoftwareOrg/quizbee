@@ -27,3 +27,27 @@ input[type='button'] {
 	touch-action: manipulation;
 	-webkit-tap-highlight-color: transparent;
 }
+
+html {
+	font-size: 50px;
+}
+
+@theme {
+	/* 2560px / 16 = 160rem, 3840px / 16 = 240rem */
+	--breakpoint-2k: 160rem;
+	--breakpoint-4k: 240rem;
+}
+
+html {
+	font-size: 16px;
+}
+@media (width >= 160rem) {
+	html {
+		font-size: 100px;
+	}
+} /* 2K */
+@media (width >= 240rem) {
+	html {
+		font-size: 20px;
+	}
+} /* 4K */

@@ -169,21 +169,8 @@
 				throw new Error(`Failed to upload material: ${errorText}`);
 			}
 
-			const material = await response.json();
-
-			attachedFile.materialId = material.id;
-
-			if (material.tokens) {
-				attachedFile.tokens = material.tokens;
-			}
-
-			try {
-				await pb!
-					.collection('quizes')
-					.update(quizTemplateId, { 'materials+': material.id }, { requestKey: material.id });
-			} catch (error) {
-				console.error('Failed to attach material to quiz:', error);
-			}
+		
+			
 		} catch (error) {
 			console.error('Failed to upload file:', attachedFile.name, error);
 

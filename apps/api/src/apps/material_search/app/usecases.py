@@ -77,7 +77,9 @@ class MaterialSearchAppImpl(MaterialSearchApp):
             try:
                 material.kind = MaterialKind.COMPLEX
 
-                pdf_data = self.pdf_parser.parse(cmd.file.file_bytes)
+                pdf_data = self.pdf_parser.parse(
+                    cmd.file.file_bytes, process_images=False
+                )
                 text = pdf_data.text
                 pdf_images = pdf_data.images
                 text_tokens = self.llm_tools.count_text(text)

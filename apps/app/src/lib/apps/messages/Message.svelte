@@ -4,7 +4,7 @@
 	import { DateTime } from 'luxon';
 	import type { ClassValue } from 'svelte/elements';
 
-	import Man from '$lib/assets/images/Man.jpg';
+	import userImageDefault from '$lib/assets/images/user.png';
 	import type { MessagesResponse } from '$lib/pb';
 
 	import type { Sender } from './types';
@@ -49,7 +49,7 @@
 					{#if sender.role === 'ai'}
 						<Bot class="h-full w-full object-cover" />
 					{:else}
-						<img alt={msg.role} src={sender.avatar || Man} class="h-full w-full object-cover" />
+						<img alt={msg.role} src={sender.avatar || userImageDefault} class="h-full w-full object-cover" />
 					{/if}
 				</div>
 			</div>

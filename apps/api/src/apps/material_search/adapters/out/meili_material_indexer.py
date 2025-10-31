@@ -52,8 +52,11 @@ class MeiliMaterialIndexer(MaterialIndexer):
         instance = cls(lf, llm_tools, meili)
 
         await instance.material_index.update_embedders(
+        await instance.material_index.update_embedders(
             Embedders(embedders=meiliEmbeddings)  # pyright: ignore[reportArgumentType]
         )
+        await instance.material_index.update_filterable_attributes(
+            ["userId", "materialId"]
         await instance.material_index.update_filterable_attributes(
             ["userId", "materialId"]
         )
@@ -71,9 +74,41 @@ class MeiliMaterialIndexer(MaterialIndexer):
             raise ValueError("Material has no text")
 
         chunks = self.llm_tools.chunk(text)
+        chunks = self.llm_tools.chunk(text)
         docs = []
         for i, chunk in enumerate(chunks):
             docs.append(
+                Doc(
+                    id=f"{material.id}-{i}",
+                    materialId=material.id,
+                    userId=material.user_id,
+                    title=material.title,
+                    content=chunk,
+                )
+            )
+
+        docs_tokens = sum(
+            [
+                self.llm_tools.count_text(
+                    self._fill_template(doc), LLMS.TEXT_EMBEDDING_3_SMALL
+                )
+                for doc in docs
+            ]
+        )
+        if docs_tokens > MAX_TEXT_INDEX_TOKENS:
+            raise TooManyTextTokensError(docs_tokens)
+
+        task = await self.material_index.add_documents(
+            [asdict(doc) for doc in docs], primary_key="id"
+        )
+
+        logging.info(f"Created task for {len(docs)} documents")
+
+        task = await self.meili.wait_for_task(
+            task.task_uid,
+            timeout_in_ms=int(120 * 1000),
+            interval_in_ms=int(1 * 1000),
+        )
                 Doc(
                     id=f"{material.id}-{i}",
                     materialId=material.id,

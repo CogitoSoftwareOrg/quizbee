@@ -4,7 +4,7 @@
   "meta": {
     "title": "QuizBee - Apprenez Plus Intelligemment avec des Quiz Alimentés par l'IA",
     "description": "Transformez vos supports d'étude en quiz interactifs alimentés par l'IA. Apprentissage adaptatif, tutorat IA et suivi de progrès pour les étudiants et les professionnels.",
-    "image": "/bee_final.svg",
+    "image": "/bee_v3.svg",
     "active": "home",
     "headerCtaHref": "{{APP_URL}}",
     "structuredData": {
@@ -33,7 +33,7 @@
         "title": "Transformez Vos Supports d'Étude en Quiz Interactifs",
         "description": "QuizBee transforme vos documents en quiz captivants alimentés par l'IA. Étudiez plus intelligemment, pas plus dur, avec un apprentissage personnalisé qui s'adapte à vos besoins.",
         "buttonText": "Commencer Gratuitement",
-        "image": "/bee_final.svg",
+        "image": "/bee_v3.svg",
         "position": "right",
         "overlay": false,
         "href": "{{APP_URL}}"
