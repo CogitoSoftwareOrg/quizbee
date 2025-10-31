@@ -84,7 +84,7 @@
 
 		<div class="flex-1">
 			<h4 class="text-sm font-semibold">
-				{isSearchable ? 'Public' : 'Link'}
+				{isSearchable ? 'Public' : 'Private'}
 			</h4>
 			<p class="text-base-content/70 text-xs">
 				{isSearchable ? 'Visible in search results' : 'Shareable only via direct link'}
@@ -92,14 +92,16 @@
 		</div>
 	</div>
 
+	<div class="toggle toggle-lg bg-transparent! [&:before]:bg-current" onclick={handleSearchToggleClick}>
 	<input
 		type="checkbox"
-		class="toggle toggle-primary toggle-md"
+		class="sr-only"
 		checked={isSearchable}
 		disabled={isUpdating}
-		onclick={handleSearchToggleClick}
+		
 		style="--tglbg: oklch(var(--b3));"
 	/>
+	</div>
 </div>
 
 <!-- Confirmation Modal for enabling search -->
@@ -109,7 +111,7 @@
 			<div class="bg-primary/20 text-primary rounded-full p-3">
 				<Search size={32} />
 			</div>
-			<h3 class="text-xl font-bold">Make Quiz Searchable?</h3>
+			<h3 class="text-xl font-bold">Make Quiz Public?</h3>
 		</div>
 
 		<div class="space-y-3">
@@ -124,6 +126,10 @@
 				<li class="flex items-start gap-2">
 					<span class="text-success mt-0.5">✓</span>
 					<span>Reach a wider audience</span>
+				</li>
+				<li class="flex items-start gap-2">
+					<span class="text-base-content/60 mt-0.5">•</span>
+					<span>Nobody will have access to your original files</span>
 				</li>
 				<li class="flex items-start gap-2">
 					<span class="text-base-content/60 mt-0.5">•</span>

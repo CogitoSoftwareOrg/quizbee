@@ -83,7 +83,7 @@
 		<div class="flex items-start justify-center overflow-x-hidden">
 			<div class="quiz-container w-full max-w-3xl px-4">
 				<!-- Header with Title -->
-				<div class="mb-9 text-center">
+				<div class="mb-4 text-center">
 					<div
 						class="group relative mx-auto -mt-3 inline-flex items-center justify-center gap-1 pt-2"
 					>
@@ -122,11 +122,11 @@
 
 				<!-- Main Card -->
 				<div
-					class="card bg-base-100 border-base-300 overflow-x-hidden border-2 shadow-xl backdrop-blur-sm md:pb-0"
+					class="card bg-base-100 border-base-300 overflow-x-hidden border-2 shadow-xl backdrop-blur-sm"
 				>
 					<div class="card-body p-6.5 overflow-x-hidden">
 						<!-- Description Section -->
-						<div class="mb-7">
+						<div class="mb-2">
 							<div class="w-full">
 								<h3 class="mb-3 block text-base font-semibold">Describe your quiz</h3>
 								<FileInput bind:attachedFiles bind:inputText bind:quizTemplateId />
@@ -134,7 +134,7 @@
 						</div>
 
 						<!-- Difficulty and Questions Grid -->
-						<div class="mb-6 grid gap-6 md:grid-cols-2 md:gap-8">
+						<div class="mb-3 grid gap-6 md:grid-cols-2 md:gap-8">
 							<!-- Difficulty -->
 							<div>
 								<h3 class="mb-4 block text-base font-semibold">Choose difficulty level</h3>
@@ -150,7 +150,7 @@
 
 						<!-- Avoid Repeat Questions Section -->
 						{#if previousQuizes.length > 0}
-							<div class="bg-base-200/50 border-base-300 mb-5 rounded-lg border p-5">
+							<div class="bg-base-200/50 border-base-300 mb-3 rounded-lg border p-5">
 								<div
 									class="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between"
 								>
