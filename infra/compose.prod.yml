@@ -1,0 +1,52 @@
+name: quizbee-prod-test
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: ./apps/api/Dockerfile
+    env_file:
+      - ../envs/.env
+    ports:
+      - "8000:8000"
+
+  web:
+    build:
+      context: ..
+      dockerfile: ./apps/web/Dockerfile
+    env_file:
+      - ../envs/.env
+    ports:
+      - "3001:3000"
+
+  app:
+    build:
+      context: ..
+      dockerfile: ./apps/app/Dockerfile
+    env_file:
+      - ../envs/.env
+    ports:
+      - "3002:3000"
+
+  pb:
+    build:
+      context: ..
+      dockerfile: ./infra/pb/Dockerfile
+    env_file:
+      - ../envs/.env
+    ports:
+      - "8090:8090"
+
+  meili:
+    image: getmeili/meilisearch:latest
+    env_file:
+      - ../envs/.env
+    ports:
+      - "7700:7700"
+
+  dragonfly:
+    image: docker.dragonflydb.io/dragonflydb/dragonfly:latest
+    env_file:
+      - ../envs/.env
+    ports:
+      - "6379:6379"

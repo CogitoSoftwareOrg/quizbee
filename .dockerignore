@@ -8,7 +8,9 @@
 
 !apps/web/**
 !apps/api/**
+!apps/app/**
 
+!infra/pb/**
 
 !pkgs/js/**
 !pkgs/python/**
