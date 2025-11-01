@@ -1,10 +1,15 @@
 <script lang="ts">
 	import type { ClassValue } from 'svelte/elements';
 
-	import { Button } from '@cogisoft/ui-svelte-daisy';
+	import { Button } from '@quizbee/ui-svelte-daisy';
 
 	import type { Sender } from '$lib/apps/messages/types';
-	import type { MessagesResponse, QuizAttemptsResponse, QuizItemsResponse } from '$lib/pb';
+	import type {
+		MessagesResponse,
+		QuizAttemptsResponse,
+		QuizItemsResponse,
+		QuizesResponse
+	} from '$lib/pb';
 
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
 	import Messages from '$lib/apps/messages/Messages.svelte';
@@ -18,6 +23,7 @@
 		class?: ClassValue;
 		item: QuizItemsResponse | null;
 		quizAttempt: QuizAttemptsResponse | null;
+		quiz: QuizesResponse | null;
 		itemDecision: Decision | null;
 		messages: MessagesResponse[];
 		userSender: Sender;
@@ -29,6 +35,7 @@
 		class: className,
 		item,
 		quizAttempt,
+		quiz,
 		itemDecision,
 		messages,
 		userSender,
@@ -62,7 +69,7 @@
 				You need to answer the question before interacting with the AI
 			</p>
 		</section>
-	{:else}
+	{:else if quiz}
 		<section class="flex flex-1 flex-col overflow-hidden px-3 py-0">
 			<div class="flex-1 overflow-y-auto pr-1">
 				<Messages
@@ -70,6 +77,7 @@
 					{messages}
 					{userSender}
 					{assistantSender}
+					{quiz}
 					quizAttemptId={quizAttempt.id}
 					itemId={item.id}
 				/>
@@ -100,9 +108,15 @@
 					<Crown class="block" size={24} />
 				</Button>
 			{:else}
-				<MessageField bind:inputText={query} {item} attempt={quizAttempt} sender={userSender} />
+				<MessageField
+					bind:inputText={query}
+					{item}
+					attempt={quizAttempt}
+					{quiz}
+					sender={userSender}
+				/>
 				<div class="flex justify-end">
-					<SendMessage {item} attempt={quizAttempt} sender={userSender} inputText={query} />
+					<SendMessage {item} attempt={quizAttempt} {quiz} sender={userSender} inputText={query} />
 				</div>
 			{/if}
 		</footer>

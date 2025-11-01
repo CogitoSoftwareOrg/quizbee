@@ -2,7 +2,12 @@
 	import { ChevronUp } from 'lucide-svelte';
 
 	import type { Sender } from '$lib/apps/messages/types';
-	import type { MessagesResponse, QuizAttemptsResponse, QuizItemsResponse } from '$lib/pb';
+	import type {
+		MessagesResponse,
+		QuizAttemptsResponse,
+		QuizItemsResponse,
+		QuizesResponse
+	} from '$lib/pb';
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
 
 	import AIChat from './AIChat.svelte';
@@ -10,6 +15,7 @@
 	interface Props {
 		item: QuizItemsResponse | null;
 		quizAttempt: QuizAttemptsResponse | null;
+		quiz: QuizesResponse | null;
 		itemDecision: Decision | null;
 		messages: MessagesResponse[];
 		userSender: Sender;
@@ -20,6 +26,7 @@
 	let {
 		item,
 		quizAttempt,
+		quiz,
 		itemDecision,
 		messages,
 		userSender,
@@ -231,6 +238,7 @@
 			class="flex h-full flex-col"
 			{item}
 			{quizAttempt}
+			{quiz}
 			{itemDecision}
 			{messages}
 			{userSender}

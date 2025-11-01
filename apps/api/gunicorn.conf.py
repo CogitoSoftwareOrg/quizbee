@@ -5,7 +5,7 @@ import os
 bind = os.getenv("GUNICORN_BIND", "0.0.0.0:8000")
 
 # Workers: 2-4 x CPU cores is a common baseline
-workers = int(os.getenv("GUNICORN_WORKERS", (multiprocessing.cpu_count() * 2) + 1))
+workers = int(os.getenv("GUNICORN_WORKERS", (multiprocessing.cpu_count())))
 
 # Worker class: Uvicorn ASGI worker
 worker_class = "uvicorn.workers.UvicornWorker"

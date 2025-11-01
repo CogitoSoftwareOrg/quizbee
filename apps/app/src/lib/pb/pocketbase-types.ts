@@ -198,6 +198,9 @@ export enum MaterialsStatusOptions {
 	"too big" = "too big",
 	"uploaded" = "uploaded",
 	"used" = "used",
+	"indexing" = "indexing",
+	"indexed" = "indexed",
+	"deleting" = "deleting",
 }
 
 export enum MaterialsKindOptions {

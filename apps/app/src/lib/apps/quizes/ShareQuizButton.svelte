@@ -4,7 +4,7 @@
 	import QRCode from 'qrcode';
 	import { onMount } from 'svelte';
 
-	import { Modal, Button } from '@cogisoft/ui-svelte-daisy';
+	import { Modal, Button } from '@quizbee/ui-svelte-daisy';
 	import type { ClassValue } from 'svelte/elements';
 
 	interface Props {

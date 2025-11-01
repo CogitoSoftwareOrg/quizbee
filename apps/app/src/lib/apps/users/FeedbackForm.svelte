@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Send, MessageSquare, Bug, Lightbulb } from 'lucide-svelte';
 
-	import { Button, TextArea } from '@cogisoft/ui-svelte-daisy';
+	import { Button, TextArea } from '@quizbee/ui-svelte-daisy';
 
 	import { pb } from '$lib/pb';
 

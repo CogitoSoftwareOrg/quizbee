@@ -1,0 +1,34 @@
+{
+  "name": "quizbee-workspace",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "pnpm -r --filter ./pkgs/** run build",
+    "dev": "pnpm -r --parallel --filter \"apps/*\" run dev",
+    "test": "pnpm -r --filter ./pkgs/** test",
+    "lint": "pnpm -r lint",
+    "version:changes": "changeset version",
+    "publish:changes": "changeset publish",
+    "release": "pnpm version:changes && pnpm -r build && pnpm publish:changes",
+    "ci:build": "pnpm -r --filter \"@quizbee/*\" --if-present build",
+    "ci:publish": "pnpm -r --filter \"@quizbee/*\" install && pnpm run -w ci:build && pnpm changeset publish"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.20.0+sha512.cf9998222162dd85864d0a8102e7892e7ba4ceadebbf5a31f9c2fce48dfce317a9c53b9f6464d1ef9042cba2e02ae02a9f7c143a2b438cd93c91840f0192b9dd",
+  "devDependencies": {
+    "@changesets/cli": "^2.29.7",
+    "prettier": "^2.8.8",
+    "prettier-plugin-svelte": "^2.10.1",
+    "prettier-plugin-tailwindcss": "0.2.8"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "core-js",
+      "esbuild",
+      "sharp"
+    ]
+  }
+}

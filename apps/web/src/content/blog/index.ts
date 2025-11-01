@@ -1,7 +1,7 @@
 // src/content/config.ts (или где ты объявляешь коллекции)
 import { defineCollection, z } from "astro:content";
 
-import { pb, pbPublic, urlWithPR } from "@/lib";
+import { pb, pbPub, urlWithPR } from "@/lib";
 
 // Вспомогательно: оценка времени чтения (по числу слов)
 function estimateReadingTime(html: string): number {

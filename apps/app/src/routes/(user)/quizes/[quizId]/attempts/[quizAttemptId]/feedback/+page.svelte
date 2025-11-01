@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import { Search, ChevronRight, ChevronLeft, Sparkles } from 'lucide-svelte';
 
-	import { Button, Input } from '@cogisoft/ui-svelte-daisy';
+	import { Button, Input } from '@quizbee/ui-svelte-daisy';
 
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';

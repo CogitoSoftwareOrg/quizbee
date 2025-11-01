@@ -1,13 +1,14 @@
 <script lang="ts">
-	import { Button } from '@cogisoft/ui-svelte-daisy';
+	import { Button } from '@quizbee/ui-svelte-daisy';
 
-	import type { QuizAttemptsResponse, QuizItemsResponse } from '$lib/pb';
+	import type { QuizAttemptsResponse, QuizItemsResponse, QuizesResponse } from '$lib/pb';
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
 	import type { Sender } from '$lib/apps/messages/types';
 	import ExplainMore from '$lib/apps/messages/ExplainMore.svelte';
 
 	interface Props {
 		quizAttempt: QuizAttemptsResponse;
+		quiz: QuizesResponse;
 		quizItems: QuizItemsResponse[];
 		order: number;
 		itemDecision: Decision | null;
@@ -20,6 +21,7 @@
 
 	let {
 		quizAttempt,
+		quiz,
 		quizItems,
 		order,
 		itemDecision,
@@ -34,7 +36,13 @@
 <div class="-mb-2 hidden justify-between gap-4 px-3 pt-6 sm:px-12 md:flex">
 	<div class="flex-1">
 		{#if itemDecision}
-			<ExplainMore sender={userSender} quizAttemptId={quizAttempt.id} {itemId} bind:chatOpen />
+			<ExplainMore
+				{quiz}
+				sender={userSender}
+				quizAttemptId={quizAttempt.id}
+				{itemId}
+				bind:chatOpen
+			/>
 		{/if}
 	</div>
 

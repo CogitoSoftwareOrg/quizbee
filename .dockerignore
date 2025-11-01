@@ -1,0 +1,27 @@
+**
+
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!pyproject.toml
+!uv.lock
+
+!apps/web/**
+!apps/api/**
+!apps/app/**
+
+!infra/pb/**
+
+!pkgs/js/**
+!pkgs/python/**
+# !pkgs/js/*/package.json
+# !pkgs/python/*/pyproject.toml
+
+# Exclude compiled dist and node_modules from workspace packages
+pkgs/js/*/dist/
+pkgs/js/*/node_modules/
+pkgs/js/*/.svelte-kit/
+pkgs/js/ui-astro/tsconfig.json
+
+pkgs/python/*/__pycache__/
+pkgs/python/*/.venv/

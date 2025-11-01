@@ -1,6 +1,6 @@
 import { defineCollection, z } from "astro:content";
 
-import { setByPath } from "@cogisoft/ui-astro";
+import { setByPath } from "@quizbee/ui-astro";
 
 import { pb } from "@/lib";
 

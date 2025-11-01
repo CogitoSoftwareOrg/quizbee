@@ -1,13 +1,14 @@
 <script lang="ts">
 	import posthog from 'posthog-js';
 	import { goto } from '$app/navigation';
-	import { Button } from '@cogisoft/ui-svelte-daisy';
+	import { Button } from '@quizbee/ui-svelte-daisy';
 
-	import { postApi } from '$lib/api/call-api';
+	import { putApi } from '$lib/api/call-api';
 	import { uiStore } from '$lib/apps/users/ui.svelte';
 	import type { AttachedFile } from '$lib/types/attached-file';
 	import { pb } from '$lib/pb';
 	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
+	import { userStore } from '$lib/apps/users/user.svelte';
 
 	interface Props {
 		quizTemplateId: string;
@@ -17,6 +18,8 @@
 	}
 
 	let { quizTemplateId, attachedFiles, inputText, questionCount }: Props = $props();
+
+	const user = $derived(userStore.user);
 
 	const hasFiles = $derived(attachedFiles.length > 0);
 	const hasText = $derived(inputText.trim().length > 0);
@@ -45,19 +48,24 @@
 				}
 			}
 
-			const { quiz_id: quizId, quiz_attempt_id: quizAttemptsId } = await postApi('quizes', {
-				quiz_id: quizTemplateId
+			const attempt = await pb!.collection('quizAttempts').create({
+				quiz: quizTemplateId,
+				user: user?.id
+			});
+
+			const { quiz_id: quizId, attempt_id: attemptId } = await putApi(`quizes/${quizTemplateId}`, {
+				attempt_id: attempt.id
 			});
 
 			posthog.capture('quiz_creation_started', {
 				quizId,
-				quizAttemptsId
+				attemptId
 			});
 
-			console.log('Quiz created:', quizId, 'Attempt created:', quizAttemptsId);
+			console.log('Quiz created:', quizId, 'Attempt created:', attemptId);
 
 			uiStore.setGlobalSidebarOpen(false);
-			await goto(`/quizes/${quizId}/attempts/${quizAttemptsId}`);
+			await goto(`/quizes/${quizId}/attempts/${attemptId}`);
 
 			return true;
 		} catch (error) {

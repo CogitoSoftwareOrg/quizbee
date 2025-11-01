@@ -1,0 +1,20 @@
+from typing import Protocol
+
+from src.lib.config import LLMS
+
+
+class TextTokenizer(Protocol):
+    def encode(self, text: str, llm: LLMS = LLMS.GPT_5_MINI) -> list[int]: ...
+    def decode(self, tokens: list[int], llm: LLMS = LLMS.GPT_5_MINI) -> str: ...
+    def count_text(self, text: str, llm: LLMS = LLMS.GPT_5_MINI) -> int: ...
+
+
+class ImageTokenizer(Protocol):
+    def count_image(self, width: int, height: int) -> int: ...
+
+
+class Chunker(Protocol):
+    @property
+    def chunk_size(self) -> int: ...
+
+    def chunk(self, text: str) -> list[str]: ...

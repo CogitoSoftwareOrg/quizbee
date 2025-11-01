@@ -23,9 +23,15 @@ class Settings(BaseSettings):
     )
 
     env: str = Field(default="local")
+
+    # Logging configuration
+    log_level: str = Field(default="INFO")
+    log_format: str = Field(default="pretty" if env == "local" else "json")
+    log_requests: bool = Field(default=True)
+    log_slow_requests_threshold: float = Field(default=1.0)
+
     coolify_url: str | None = Field(default=None)
     pr_id: int | None = Field(default=None)
-    redis_prefix: str = Field(default="")
 
     app_url: str = Field(default="http://localhost:5173", alias="PUBLIC_APP_URL")
 
@@ -40,15 +46,6 @@ class Settings(BaseSettings):
     meili_url: str = Field(default="http://localhost:7700")
     meili_master_key: str = Field(default="key")
 
-    brave_search_url: str = Field(default="https://search.brave.com")
-    brave_search_api_key: str = Field(default="key")
-
-    # Logging configuration
-    log_level: str = Field(default="INFO")
-    log_format: str = Field(default="json")
-    log_requests: bool = Field(default=True)
-    log_slow_requests_threshold: float = Field(default=1.0)
-
     # Langfuse configuration
     langfuse_public_key: str = Field(default="key")
     langfuse_secret_key: str = Field(default="key")
@@ -61,6 +58,13 @@ class Settings(BaseSettings):
     # Stripe configuration
     stripe_api_key: str = Field(default="key")
     stripe_webhook_secret: str = Field(default="key")
+
+    @property
+    def arq_job_prefix(self) -> str:
+        """Префикс для ARQ задач в preview окружениях для изоляции."""
+        if self.env == "preview" and self.pr_id is not None:
+            return f"pr_{self.pr_id}_"
+        return ""
 
     @model_validator(mode="after")
     def derive_pr_id(self) -> "Settings":

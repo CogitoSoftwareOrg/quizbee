@@ -5,7 +5,7 @@ from pydantic_ai import AgentRunResult
 from pydantic_ai.result import StreamedRunResult
 
 
-from src.lib.config.llms import LLMCosts
+from src.lib.config.llms import LLMS, LLMCosts
 
 
 async def update_span_with_result(
@@ -14,7 +14,7 @@ async def update_span_with_result(
     span: LangfuseSpan,
     user_id: str,
     session_id: str,
-    model: str,
+    model: LLMS,
     # costs: LLMCosts,
 ):
     if isinstance(result, StreamedRunResult):
@@ -23,6 +23,8 @@ async def update_span_with_result(
         output = result.output
     else:
         raise ValueError(f"Unexpected result type: {type(result)}")
+
+    messages = result.all_messages()
 
     usage = result.usage()
     input_nc = usage.input_tokens - usage.cache_read_tokens
@@ -34,7 +36,7 @@ async def update_span_with_result(
     # outp_price = round(outp * costs.output, 4)
 
     lf.update_current_generation(
-        input=f"{input_nc} input tokens, {input_cah} cache read tokens, {outp} output tokens",
+        input=messages,
         output=output,
         model=model,
         usage_details={

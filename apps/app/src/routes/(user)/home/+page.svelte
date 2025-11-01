@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Flame, Plus, Sparkles, Target, Crown } from 'lucide-svelte';
 
-	import { Button } from '@cogisoft/ui-svelte-daisy';
+	import { Button } from '@quizbee/ui-svelte-daisy';
 
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte.js';
 	import { materialsStore } from '$lib/apps/materials/materials.svelte.js';

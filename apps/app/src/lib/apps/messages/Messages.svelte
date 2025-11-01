@@ -3,9 +3,9 @@
 	import type { ClassValue } from 'svelte/elements';
 	import { fade } from 'svelte/transition';
 
-	import { Button, scrollToBottom } from '@cogisoft/ui-svelte-daisy';
+	import { Button, scrollToBottom } from '@quizbee/ui-svelte-daisy';
 
-	import type { MessagesResponse } from '$lib/pb';
+	import type { MessagesResponse, QuizesResponse } from '$lib/pb';
 
 	import type { Sender } from './types';
 	import Message from './Message.svelte';
@@ -15,6 +15,7 @@
 		quizAttemptId: string;
 		itemId: string;
 		messages: MessagesResponse[];
+		quiz: QuizesResponse;
 		userSender: Sender;
 		assistantSender: Sender;
 		class?: ClassValue;
@@ -26,7 +27,8 @@
 		userSender,
 		assistantSender,
 		quizAttemptId,
-		itemId
+		itemId,
+		quiz
 	}: Props = $props();
 
 	let messagesContainer: HTMLElement | null = $state(null);
@@ -54,7 +56,7 @@
 			<div class="flex h-full flex-col items-center justify-center text-center">
 				<div class="mb-4 text-6xl">💬</div>
 				<p class="text-base-content/70 text-lg font-medium">No messages yet, waiting...</p>
-				<ExplainMore sender={userSender} {quizAttemptId} {itemId} />
+				<ExplainMore sender={userSender} {quizAttemptId} {itemId} {quiz} />
 			</div>
 		{:else}
 			{#each messages as msg (msg)}

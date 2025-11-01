@@ -1,0 +1,206 @@
+---
+import { Image } from "astro:assets";
+
+import { Button } from "@quizbee/ui-svelte-daisy";
+
+interface Props {
+  title: string;
+  description: string;
+  buttonText: string;
+  href?: string;
+  modalId?: string;
+  overlay?: boolean;
+  image?: string;
+  position?: "left" | "right";
+  center?: boolean;
+  imageWidth?: number;
+  imageHeight?: number;
+  titleSize?: string;
+  descriptionSize?: string;
+  textWidth?: string;
+  badge?: string;
+  titleHighlight?: string;
+  titleAlign?: "left" | "center" | "right";
+  descriptionAlign?: "left" | "center" | "right";
+  footerAlign?: "left" | "center" | "right";
+  secondaryButtonText?: string;
+  secondaryButtonHref?: string;
+  footerText?: string;
+  verticalAlign?: "start" | "center" | "end";
+  buttonTextSize?: string;
+}
+
+const {
+  title,
+  description,
+  buttonText,
+  image,
+  href,
+  overlay = false,
+  center = false,
+  position = "right",
+  modalId,
+  imageWidth = 512,
+  imageHeight = 512,
+  titleSize = "text-4xl",
+  descriptionSize = "py-6",
+  textWidth = "max-w-xs",
+  badge,
+  titleHighlight,
+  titleAlign = "left",
+  descriptionAlign = "left",
+  footerAlign = "left",
+  secondaryButtonText,
+  secondaryButtonHref,
+  footerText,
+  verticalAlign = "center",
+  buttonTextSize = "text-base",
+} = Astro.props;
+
+const positionClasses = {
+  left: "lg:flex-row",
+  right: "lg:flex-row-reverse",
+};
+
+const verticalAlignClasses = {
+  start: "items-start",
+  center: "items-center",
+  end: "items-end",
+};
+
+const alignToClass = (align: "left" | "center" | "right") => {
+  switch (align) {
+    case "center":
+      return "text-center";
+    case "right":
+      return "text-right";
+    default:
+      return "text-left";
+  }
+};
+---
+
+<section
+  class={`hero min-h-screen relative overflow-x-hidden ${!overlay ? "bg-base-200" : ""}`}
+  style={overlay && image ? `background-image: url(${image});` : ""}
+  data-modal-id={modalId}
+>
+  {overlay && image && <div class="hero-overlay" />}
+
+  <div
+    class={`hero-content flex-col gap-6 w-full pb-4 ${positionClasses[position]} ${verticalAlignClasses[verticalAlign]} ${overlay && center ? "text-center" : ""} ${overlay ? "text-neutral-content" : ""}`}
+  >
+    {
+      image && !overlay && (
+        <Image
+          src={image}
+          alt={title}
+          width={imageWidth}
+          height={imageHeight}
+          class="w-full max-w-sm rounded-2xl shadow-2xl"
+          loading="eager"
+          format="webp"
+        />
+      )
+    }
+
+    <div class={`${textWidth} space-y-4`}>
+      {
+        badge && (
+          <div class={`flex mb-6 ${center ? "justify-center" : ""}`}>
+            <span class="badge badge-primary badge-outline badge-lg px-6 py-4 text-sm font-medium">
+              {badge}
+            </span>
+          </div>
+        )
+      }
+
+      <h1
+        class={`${titleSize} font-bold ${titleHighlight ? "" : "bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"} ${alignToClass(titleAlign)}`}
+      >
+        {
+          titleHighlight ? (
+            <>
+              <span>{title}</span>
+              <br />
+              <span class="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                {titleHighlight}
+              </span>
+            </>
+          ) : (
+            title
+          )
+        }
+      </h1>
+
+      <p
+        class={`${descriptionSize} font-semibold ${alignToClass(descriptionAlign)}`}
+      >
+        {description}
+      </p>
+
+      <div class={`flex gap-4 pt-4 ${center ? "justify-center" : ""}`}>
+        <Button
+          href={href}
+          target="_blank"
+          size="lg"
+          class={`hero-button ${buttonTextSize}`}
+        >
+          {buttonText}
+        </Button>
+
+        {
+          secondaryButtonText && (
+            <Button
+              href={secondaryButtonHref}
+              target="_blank"
+              size="lg"
+              variant="outline"
+              class={`hero-button-secondary ${buttonTextSize}`}
+            >
+              {secondaryButtonText}
+            </Button>
+          )
+        }
+      </div>
+
+      {
+        footerText && (
+          <p class={`text-sm pt-4 ${alignToClass(footerAlign)}`}>
+            {footerText}
+          </p>
+        )
+      }
+    </div>
+  </div>
+
+  <div class="absolute bottom-16 w-full flex justify-center">
+    <span class="loading loading-ball loading-xl text-primary"></span>
+  </div>
+</section>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const heroSections = document.querySelectorAll(".hero");
+
+    heroSections.forEach((section) => {
+      const modalId = section.getAttribute("data-modal-id");
+      const button = section.querySelector(".hero-button");
+
+      if (modalId && button) {
+        const checkModal = setInterval(() => {
+          const modalElement = document.getElementById(
+            modalId
+          ) as HTMLDialogElement;
+          if (modalElement) {
+            button.addEventListener("click", (e) => {
+              e.preventDefault();
+              modalElement.showModal();
+            });
+            clearInterval(checkModal);
+          }
+        }, 200);
+      }
+    });
+  });
+</script>
