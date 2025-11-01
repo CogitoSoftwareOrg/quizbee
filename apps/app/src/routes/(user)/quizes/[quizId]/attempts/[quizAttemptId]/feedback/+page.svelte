@@ -143,6 +143,7 @@
 				<p class="mt-1 text-center text-sm opacity-70">
 					Score: {correctCount} / {quizItems.length}
 				</p>
+				
 			</div>
 
 			<div>
@@ -179,20 +180,24 @@
 	{/if}
 
 	<section class="flex flex-1 flex-col gap-3 sm:min-h-0">
-		<div class="flex">
+		<div class="flex items-center justify-between gap-4">
+			
+			{#if quiz}
+				<h1 class="text-center text-2xl font-bold leading-tight flex-1">{quiz?.title || 'Quiz'}</h1>
+			{:else}
+				<h1 class="text-center text-2xl font-bold leading-tight flex-1">Loading...</h1>
+			{/if}
 			<Button
 				color="neutral"
 				style="ghost"
 				href={`/quizes/${quiz?.id}`}
-				class="hidden underline sm:block"
+				class="hidden sm:flex h-10 w-10 p-0"
 			>
-				<ChevronLeft /> 
+				<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<path d="M18 6 6 18"/>
+					<path d="m6 6 12 12"/>
+				</svg>
 			</Button>
-			{#if quiz}
-				<h1 class="text-center text-2xl font-bold leading-tight">{quiz?.title || 'Quiz'}</h1>
-			{:else}
-				<h1 class="text-center text-2xl font-bold leading-tight">Loading...</h1>
-			{/if}
 		</div>
 
 		<Input

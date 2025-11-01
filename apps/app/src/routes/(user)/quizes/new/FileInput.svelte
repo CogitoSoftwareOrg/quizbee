@@ -52,18 +52,14 @@
 
 	const allowedExtensions = [
 		'pdf',
+		'pptx',
+		'docx',
 		'md',
 		'txt',
-		'js',
-		'ts',
 		'html',
-		'css',
-		'json',
-		'xml',
-		'svg',
-		'jpg',
-		'jpeg',
-		'png'
+		'xlsx',
+		'csv'
+		
 	];
 	onMount(() => {
 		document.addEventListener('click', handleClickOutside);
@@ -80,6 +76,8 @@
 		};
 	});
 
+
+	// первая функция которая дергается когда в проводнике мы выбираем файлы
 	function processFiles(files: File[]) {
 		for (const file of files) {
 			const extension = file.name.split('.').pop()?.toLowerCase();
@@ -145,7 +143,7 @@
 		}
 	}
 
-	// Асинхронная загрузка файла
+	// Асинхронная загрузка файла (эта функция вызывается из processFiles)
 	async function uploadFileAsync(attachedFile: AttachedFile) {
 		try {
 			const formData = new FormData();
@@ -258,18 +256,7 @@
 	function getFileIcon(filename: string): string {
 		const extension = filename.split('.').pop()?.toLowerCase();
 
-		const iconMap: Record<string, string> = {
-			pdf: 'pdf',
-			md: 'md',
-			txt: 'txt',
-			js: 'js',
-			ts: 'js',
-			html: 'html',
-			css: 'css',
-			json: 'json'
-		};
-
-		return iconMap[extension || ''] || 'unknown';
+		return extension || '';
 	}
 
 	function truncateFileName(filename: string, maxLength: number = 50): string {
@@ -420,7 +407,7 @@
 		<textarea
 			placeholder="Attach relevant files and/or describe what you'd like the questions to be about"
 			bind:value={inputText}
-			class="flex-grow resize-none border-none bg-transparent py-0 pl-4 text-lg leading-6 outline-none focus:shadow-none focus:outline-none focus:ring-0 max-h-[70px] overflow-y-auto"
+			class="flex-grow resize-none border-none bg-transparent py-0 pl-4 text-lg leading-6 outline-none focus:shadow-none focus:outline-none focus:ring-0 max-h-[55px] 3xl:max-h-[100px] overflow-y-auto"
 			onpaste={handlePaste}
 			rows="1"
 			oninput={handleTextareaResize}
@@ -503,3 +490,5 @@
 		</div>
 	{/if}
 </div>
+
+<!-- max-height handled via Tailwind classes: `max-h-[55px] xxl:max-h-[70px]` -->

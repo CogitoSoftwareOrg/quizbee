@@ -242,7 +242,7 @@
 
 	<!-- Right column: Quiz attempts history -->
 	<section class="bg-base-200 flex flex-1 flex-col gap-4 rounded-2xl p-4 sm:min-h-0">
-		<h2 class="text-xl font-semibold">Questions</h2>
+		<h2 class="text-xl text-center font-semibold">Questions</h2>
 
 		<Input
 			class="w-full sm:shrink-0"
