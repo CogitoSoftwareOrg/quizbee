@@ -63,7 +63,7 @@
 			{#if paid}
 				<Button
 					onclick={async () => {
-						const response = await postApi('billing/portal', {
+						const response = await postApi('portal', {
 							return_url: 'profile'
 						});
 						window.location.href = response.url;

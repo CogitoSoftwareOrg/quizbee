@@ -75,7 +75,7 @@
 				plan: priceKey
 			});
 
-			const response = await fetch(`${computeApiUrl()}billing/stripe/checkout`, {
+			const response = await fetch(`${computeApiUrl()}stripe/checkout`, {
 				method: 'POST',
 				body: JSON.stringify({ price, return_url: page.url.pathname.slice(1) }),
 				headers: {

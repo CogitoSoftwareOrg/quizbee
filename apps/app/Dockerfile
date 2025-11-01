@@ -6,7 +6,7 @@ WORKDIR /repo
 RUN apk add --no-cache git
 
 ENV COREPACK_ENABLE_DOWNLOADS=1
-RUN corepack enable && corepack prepare pnpm@10.18.2 --activate
+RUN corepack enable && corepack prepare pnpm@10.20.0 --activate
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN printf "store-dir=/pnpm\nshared-workspace-lockfile=true\n" > /etc/pnpmrc

@@ -7,7 +7,7 @@ from src.lib.settings import settings
 
 from .deps import AdminPBDeps, UserTokenDeps
 from .schemas import CreateStripeCheckoutDto, CreateBillingPortalSessionDto
-from .stripe_legacy import stripe_subscription_to_pb, verify, STRIPE_PRICES_MAP
+from .stripe_legacy import stripe_subscription_to_pb, verify, PRICES_MAP
 
 logger = logging.getLogger(__name__)
 
@@ -97,13 +97,13 @@ async def create_stripe_checkout(
         )
         return JSONResponse(content={"url": portal.url})
 
-    price_id = STRIPE_PRICES_MAP.get(dto.price)
-    if not price_id:
+    price = PRICES_MAP.get(dto.price)
+    if not price:
         raise HTTPException(status_code=400, detail="Invalid price label")
 
     kwargs = dict(
         mode="subscription",
-        line_items=[{"price": price_id, "quantity": 1}],
+        line_items=[{"price": price.id, "quantity": 1}],
         success_url=f"{settings.app_url}{dto.return_url}?session_id={{CHECKOUT_SESSION_ID}}",
         cancel_url=f"{settings.app_url}{dto.return_url}",
         client_reference_id=user.get("id"),

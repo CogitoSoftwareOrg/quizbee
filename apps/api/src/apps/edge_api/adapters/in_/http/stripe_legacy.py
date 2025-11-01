@@ -1,36 +1,49 @@
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from fastapi import HTTPException
 from pocketbase import PocketBase
 from pocketbase.models.dtos import Record
 
 from src.lib.settings import settings
+from src.lib.stripe import stripe
 
-STRIPE_PRICES_MAP = {
-    "plus_monthly": "price_1SHi0fCrmGGYHLx7oHb9VCLF",
-    "plus_yearly": "price_1SHhyyCrmGGYHLx7Z5iGCnEy",
-    "pro_monthly": "price_1SHi3SCrmGGYHLx7TTE00Gau",
-    "pro_yearly": "price_1SHi4BCrmGGYHLx7jx9QYOs7",
-}
+STRIPE_LOOKUPS = [
+    "plus_monthly",
+    "plus_yearly",
+    "pro_monthly",
+    "pro_yearly",
+]
 
-STRIPE_TARIFS_MAP = {
-    "price_1SHi0fCrmGGYHLx7oHb9VCLF": "plus",
-    "price_1SHhyyCrmGGYHLx7Z5iGCnEy": "plus",
-    "price_1SHi3SCrmGGYHLx7TTE00Gau": "pro",
-    "price_1SHi4BCrmGGYHLx7jx9QYOs7": "pro",
-}
 
-STRIPE_MONTHLY_LIMITS_MAP = {
-    "plus": {
-        "quizItemsLimit": 1000,
-        "messagesLimit": 1000,
-        "bytesLimit": 8_388_608,  # 1GB
-    },
-    "pro": {
-        "quizItemsLimit": 2000,
-        "messagesLimit": 2000,
-        "bytesLimit": 83_886_080,  # 10GB
-    },
-}
+@dataclass(slots=True, kw_only=True)
+class Limits:
+    quizItemsLimit: int
+    bytesLimit: int
+
+
+@dataclass(slots=True, kw_only=True)
+class Price:
+    id: str
+    lookup: str
+    tariff: str
+    limits: Limits
+
+
+PRICES_MAP: dict[str, Price] = {}
+for lookup in STRIPE_LOOKUPS:
+    tariff = lookup.split("_")[0]
+    price = stripe.Price.list(lookup_keys=[lookup]).data[0]
+    if not price:
+        raise Exception(f"Stripe price not found for {lookup}")
+    PRICES_MAP[lookup] = Price(
+        id=price.id,
+        lookup=lookup,
+        tariff=tariff,
+        limits=Limits(
+            quizItemsLimit=1000 if tariff == "plus" else 2000,
+            bytesLimit=8_388_608 if tariff == "plus" else 83_886_080,  # 1GB
+        ),
+    )
 
 
 PB_DT_FMT = "%Y-%m-%d %H:%M:%S.%fZ"
@@ -99,8 +112,11 @@ async def stripe_subscription_to_pb(
         }
     )
 
-    tariff = STRIPE_TARIFS_MAP.get(price_id) or "free"
-    limits = STRIPE_MONTHLY_LIMITS_MAP.get(tariff)
+    price = PRICES_MAP.get(price_id)
+    if not price:
+        raise Exception(f"Stripe price not found for {price_id}")
+    tariff = price.tariff
+    limits = price.limits
 
     record = {
         "stripeSubscription": stripe_subscription_id,
@@ -119,7 +135,7 @@ async def stripe_subscription_to_pb(
     patch = _maybe_reset_usage_on_period_change(existing, cp_start_raw)
     record.update(patch)
     if limits:
-        record.update(limits)
+        record.update(asdict(limits))
 
     await admin_pb.collection("subscriptions").update(existing.get("id", ""), record)
     return existing.get("id", "")
