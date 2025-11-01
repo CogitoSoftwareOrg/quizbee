@@ -5,8 +5,13 @@ services:
     build:
       context: ../..
       dockerfile: ./infra/pb/Dockerfile
-    env_file:
-      - ../../envs/.env
+    environment:
+      - TG_TOKEN=${TG_TOKEN}
+      - TG_ID=${TG_ID}
+      - API_URL=${API_URL}
+      - API_SECRET=${API_SECRET}
+      - PB_EMAIL=${PB_EMAIL}
+      - PB_PASSWORD=${PB_PASSWORD}
     volumes:
       - pb_data:/pb/pb_data
 
