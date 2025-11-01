@@ -59,6 +59,13 @@ class Settings(BaseSettings):
     stripe_api_key: str = Field(default="key")
     stripe_webhook_secret: str = Field(default="key")
 
+    @property
+    def arq_job_prefix(self) -> str:
+        """Префикс для ARQ задач в preview окружениях для изоляции."""
+        if self.env == "preview" and self.pr_id is not None:
+            return f"pr_{self.pr_id}_"
+        return ""
+
     @model_validator(mode="after")
     def derive_pr_id(self) -> "Settings":
         if self.env == "preview" and self.coolify_url is not None:

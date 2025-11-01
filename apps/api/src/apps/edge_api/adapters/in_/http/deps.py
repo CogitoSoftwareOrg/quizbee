@@ -1,6 +1,5 @@
 from typing import Annotated
-
-
+from arq import ArqRedis
 from fastapi import Depends, HTTPException, Request
 
 from ....app.contracts import EdgeAPIApp
@@ -21,3 +20,11 @@ def get_edge_api_app(request: Request) -> EdgeAPIApp:
 
 
 EdgeAPIAppDeps = Annotated[EdgeAPIApp, Depends(get_edge_api_app)]
+
+
+def get_arq_pool(request: Request) -> ArqRedis:
+    """Получить ARQ Redis pool из app.state для отправки задач в очередь."""
+    return request.app.state.arq_pool
+
+
+ArqPoolDeps = Annotated[ArqRedis, Depends(get_arq_pool)]

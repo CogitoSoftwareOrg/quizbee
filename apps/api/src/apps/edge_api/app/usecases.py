@@ -106,6 +106,7 @@ class EdgeAPIAppImpl(EdgeAPIApp):
         user = await self.user_auth.validate(cmd.token)
         material = await self.material_search.add_material(
             AddMaterialCmd(
+                quiz_id=cmd.quiz_id,
                 user=user,
                 file=cmd.file,
                 title=cmd.title,

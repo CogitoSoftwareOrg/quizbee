@@ -1,7 +1,6 @@
 from dataclasses import asdict
 from fastapi import (
     APIRouter,
-    BackgroundTasks,
     File,
     Form,
     Query,
@@ -11,6 +10,7 @@ from fastapi import (
 from fastapi.responses import JSONResponse, StreamingResponse
 
 from src.lib.utils import cache_key, sse
+from src.lib.settings import settings
 
 from src.apps.material_search.app.contracts import MaterialFile
 
@@ -23,11 +23,16 @@ from ....app.contracts import (
     PublicAddMaterialCmd,
 )
 
+from ....domain.constants import ARQ_QUEUE_NAME
+from ....app.contracts import JobName
+
 from .deps import (
     EdgeAPIAppDeps,
     UserTokenDeps,
+    ArqPoolDeps,
 )
 from .schemas import StartQuizDto, PatchQuizDto, FinalizeQuizDto
+
 
 edge_api_router = APIRouter(prefix="", tags=["v2"], dependencies=[])
 
@@ -42,16 +47,16 @@ async def start_quiz(
     dto: StartQuizDto,
     edge_api_app: EdgeAPIAppDeps,
     quiz_id: str,
-    background: BackgroundTasks,
+    arq_pool: ArqPoolDeps,
     token: UserTokenDeps,
 ):
-    background.add_task(
-        edge_api_app.start_quiz,
-        PublicStartQuizCmd(
-            token=token,
-            quiz_id=quiz_id,
-            cache_key=cache_key(dto.attempt_id),
-        ),
+    cmd = PublicStartQuizCmd(
+        token=token,
+        quiz_id=quiz_id,
+        cache_key=cache_key(dto.attempt_id),
+    )
+    await arq_pool.enqueue_job(
+        JobName.start_quiz, asdict(cmd), _queue_name=ARQ_QUEUE_NAME
     )
 
     return JSONResponse(
@@ -68,17 +73,17 @@ async def generate_quiz_items(
     dto: PatchQuizDto,
     quiz_id: str,
     edge_api_app: EdgeAPIAppDeps,
-    background: BackgroundTasks,
+    arq_pool: ArqPoolDeps,
     token: UserTokenDeps,
 ):
-    background.add_task(
-        edge_api_app.generate_quiz_items,
-        PublicGenerateQuizItemsCmd(
-            token=token,
-            quiz_id=quiz_id,
-            cache_key=cache_key(dto.attempt_id),
-            mode=dto.mode,
-        ),
+    cmd = PublicGenerateQuizItemsCmd(
+        token=token,
+        quiz_id=quiz_id,
+        cache_key=cache_key(dto.attempt_id),
+        mode=dto.mode,
+    )
+    await arq_pool.enqueue_job(
+        JobName.generate_quiz_items, asdict(cmd), _queue_name=ARQ_QUEUE_NAME
     )
 
     return JSONResponse(content={"scheduled": True, "quiz_id": quiz_id})
@@ -94,15 +99,15 @@ async def finalize_quiz(
     quiz_id: str,
     edge_api_app: EdgeAPIAppDeps,
     token: UserTokenDeps,
-    background: BackgroundTasks,
+    arq_pool: ArqPoolDeps,
 ):
-    background.add_task(
-        edge_api_app.finalize_quiz,
-        PublicFinalizeQuizCmd(
-            quiz_id=quiz_id,
-            token=token,
-            cache_key=cache_key(dto.attempt_id),
-        ),
+    cmd = PublicFinalizeQuizCmd(
+        quiz_id=quiz_id,
+        token=token,
+        cache_key=cache_key(dto.attempt_id),
+    )
+    await arq_pool.enqueue_job(
+        JobName.finalize_quiz, asdict(cmd), _queue_name=ARQ_QUEUE_NAME
     )
 
     return JSONResponse(
@@ -119,16 +124,16 @@ async def finalize_attempt(
     edge_api_app: EdgeAPIAppDeps,
     quiz_id: str,
     token: UserTokenDeps,
-    background: BackgroundTasks,
+    arq_pool: ArqPoolDeps,
 ):
-    background.add_task(
-        edge_api_app.finalize_attempt,
-        PublicFinalizeAttemptCmd(
-            quiz_id=quiz_id,
-            cache_key=cache_key(attempt_id),
-            attempt_id=attempt_id,
-            token=token,
-        ),
+    cmd = PublicFinalizeAttemptCmd(
+        quiz_id=quiz_id,
+        cache_key=cache_key(attempt_id),
+        attempt_id=attempt_id,
+        token=token,
+    )
+    await arq_pool.enqueue_job(
+        JobName.finalize_attempt, asdict(cmd), _queue_name=ARQ_QUEUE_NAME
     )
 
     return JSONResponse(
@@ -165,9 +170,10 @@ async def ask_explainer(
 
 
 # Material Search
-@edge_api_router.post("/materials", status_code=201)
+@edge_api_router.post("/quizes/{quiz_id}/materials", status_code=201)
 async def add_material(
-    background: BackgroundTasks,
+    quiz_id: str,
+    arq_pool: ArqPoolDeps,
     token: UserTokenDeps,
     edge_api_app: EdgeAPIAppDeps,
     file: UploadFile = File(...),
@@ -175,17 +181,18 @@ async def add_material(
     material_id: str = Form(...),
 ):
     file_bytes = await file.read()
-    background.add_task(
-        edge_api_app.add_material,
-        PublicAddMaterialCmd(
-            token=token,
-            cache_key=cache_key(material_id),
-            file=MaterialFile(
-                file_name=file.filename or "unknown",
-                file_bytes=file_bytes,
-            ),
-            title=title,
-            material_id=material_id,
+    cmd = PublicAddMaterialCmd(
+        quiz_id=quiz_id,
+        token=token,
+        cache_key=cache_key(material_id),
+        file=MaterialFile(
+            file_name=file.filename or "unknown",
+            file_bytes=file_bytes,
         ),
+        title=title,
+        material_id=material_id,
+    )
+    await arq_pool.enqueue_job(
+        JobName.add_material, asdict(cmd), _queue_name=ARQ_QUEUE_NAME
     )
     return JSONResponse(content={"scheduled": True, "material_id": material_id})

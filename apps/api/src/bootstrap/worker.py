@@ -18,6 +18,8 @@ from src.apps.edge_api.di import init_edge_api_app
 
 from src.lib.settings import settings
 
+from src.apps.edge_api.domain.constants import ARQ_QUEUE_NAME
+
 from .di import (
     init_global_deps,
     init_llm_tools_deps,
@@ -118,6 +120,8 @@ async def shutdown(ctx):
 
 
 class WorkerSettings:
+    max_jobs = 32
+    queue_name = ARQ_QUEUE_NAME
     redis_settings = RedisSettings.from_dsn(settings.redis_dsn)
     functions = [
         start_quiz_job,

@@ -1,6 +1,9 @@
 import logging
 
+from arq import func
+
 from src.apps.edge_api.app.contracts import (
+    JobName,
     EdgeAPIApp,
     PublicStartQuizCmd,
     PublicFinalizeQuizCmd,
@@ -9,10 +12,19 @@ from src.apps.edge_api.app.contracts import (
     PublicAskExplainerCmd,
     PublicAddMaterialCmd,
 )
+from src.apps.material_search.app.contracts import MaterialFile
 
 logger = logging.getLogger(__name__)
 
 
+def job(**opts):
+    def deco(fn):
+        return func(fn, **opts)
+
+    return deco
+
+
+@job(name=JobName.start_quiz, max_tries=3)
 async def start_quiz_job(ctx, payload: dict):
     logger.info(f"Starting quiz job with payload: {payload}")
     edge: EdgeAPIApp = ctx["edge"]
@@ -20,6 +32,7 @@ async def start_quiz_job(ctx, payload: dict):
     return await edge.start_quiz(cmd)
 
 
+@job(name=JobName.finalize_quiz, max_tries=3)
 async def finalize_quiz_job(ctx, payload: dict):
     logger.info(f"Finalizing quiz job with payload: {payload}")
     edge: EdgeAPIApp = ctx["edge"]
@@ -27,6 +40,7 @@ async def finalize_quiz_job(ctx, payload: dict):
     return await edge.finalize_quiz(cmd)
 
 
+@job(name=JobName.generate_quiz_items, max_tries=3)
 async def generate_quiz_items_job(ctx, payload: dict):
     logger.info(f"Generating quiz items job with payload: {payload}")
     edge: EdgeAPIApp = ctx["edge"]
@@ -34,6 +48,7 @@ async def generate_quiz_items_job(ctx, payload: dict):
     return await edge.generate_quiz_items(cmd)
 
 
+@job(name=JobName.finalize_attempt, max_tries=3)
 async def finalize_attempt_job(ctx, payload: dict):
     logger.info(f"Finalizing attempt job with payload: {payload}")
     edge: EdgeAPIApp = ctx["edge"]
@@ -41,10 +56,21 @@ async def finalize_attempt_job(ctx, payload: dict):
     return await edge.finalize_attempt(cmd)
 
 
+@job(name=JobName.add_material, max_tries=3)
 async def add_material_job(ctx, payload: dict):
     logger.info(f"Adding material job with payload: {payload}")
     edge: EdgeAPIApp = ctx["edge"]
-    cmd = PublicAddMaterialCmd(**payload)
+    # Reconstruct MaterialFile from dict
+    file_dict = payload["file"]
+    file = MaterialFile(**file_dict)
+    cmd = PublicAddMaterialCmd(
+        quiz_id=payload["quiz_id"],
+        file=file,
+        token=payload["token"],
+        cache_key=payload["cache_key"],
+        title=payload["title"],
+        material_id=payload["material_id"],
+    )
     return await edge.add_material(cmd)
 
 
