@@ -4,7 +4,9 @@ services:
   dragonfly:
     image: docker.dragonflydb.io/dragonflydb/dragonfly:latest
     environment:
-      - DRAGONFLY_PASSWORD=${DRAGONFLY_PASSWORD}
+      - DFLY_requirepass=${DRAGONFLY_PASSWORD}
+      - DFLY_maxmemory=${DFLY_MAXMEMORY:-8gb}
+      - DFLY_cache_mode=${DFLY_CACHE_MODE:-true}
     volumes:
       - dragonfly_data:/data
 

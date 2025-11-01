@@ -11,7 +11,6 @@ services:
       - LOG_FORMAT=${LOG_FORMAT:-json}
 
       - PUBLIC_APP_URL=${PUBLIC_APP_URL}
-      - PUBLIC_PB_URL=${PUBLIC_PB_URL}
 
       - PB_URL=${PB_URL}
       - PB_EMAIL=${PB_EMAIL}
