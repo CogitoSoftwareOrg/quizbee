@@ -1,10 +1,10 @@
-View Transitions
-/* @media (prefers-reduced-motion: reduce) {
+/* View Transitions */
+@media (prefers-reduced-motion: reduce) {
 	::view-transition-old(root),
 	::view-transition-new(root) {
 		animation: none !important;
 	}
-} */
+}
 
 /* View transition только для page-root */
 #page-root {
