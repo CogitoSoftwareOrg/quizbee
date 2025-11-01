@@ -1,0 +1,14 @@
+name: quizbee-pb-prod
+
+services:
+  pb:
+    build:
+      context: ../..
+      dockerfile: ./infra/pb/Dockerfile
+    env_file:
+      - ../../envs/.env
+    volumes:
+      - pb_data:/pb/pb_data
+
+volumes:
+  pb_data:

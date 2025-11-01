@@ -46,9 +46,6 @@ class Settings(BaseSettings):
     meili_url: str = Field(default="http://localhost:7700")
     meili_master_key: str = Field(default="key")
 
-    brave_search_url: str = Field(default="https://search.brave.com")
-    brave_search_api_key: str = Field(default="key")
-
     # Langfuse configuration
     langfuse_public_key: str = Field(default="key")
     langfuse_secret_key: str = Field(default="key")
