@@ -10,7 +10,6 @@ from fastapi import (
 from fastapi.responses import JSONResponse, StreamingResponse
 
 from src.lib.utils import cache_key, sse
-from src.lib.settings import settings
 
 from src.apps.material_search.app.contracts import MaterialFile
 
@@ -34,7 +33,7 @@ from .deps import (
 from .schemas import StartQuizDto, PatchQuizDto, FinalizeQuizDto
 
 
-edge_api_router = APIRouter(prefix="", tags=["v2"], dependencies=[])
+edge_api_router = APIRouter(prefix="", tags=["main logic"], dependencies=[])
 
 
 # Quiz Generator

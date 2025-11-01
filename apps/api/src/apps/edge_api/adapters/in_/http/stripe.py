@@ -1,33 +1,33 @@
 import logging
-from fastapi import APIRouter, Depends, HTTPException, Request
-from pydantic import BaseModel
-from starlette.responses import JSONResponse
+from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import JSONResponse
 
-from src.apps.auth import auth_user, User
-from src.lib.clients import AdminPBDeps, stripe_client
+from src.lib.stripe import stripe
 from src.lib.settings import settings
-from src.lib.config import STRIPE_PRICES_MAP
 
-from .utils import stripe_subscription_to_pb
-from .middleware import load_subscription, Subscription
+from .deps import AdminPBDeps, UserTokenDeps
+from .schemas import CreateStripeCheckoutDto, CreateBillingPortalSessionDto
+from .stripe_legacy import stripe_subscription_to_pb, verify, STRIPE_PRICES_MAP
 
-billing_router = APIRouter(prefix="/billing", tags=["billing"])
+logger = logging.getLogger(__name__)
+
+stripe_router = APIRouter(prefix="/stripe", tags=["stripe legacy"])
 
 
-@billing_router.post("/stripe/webhook", status_code=200)
+@stripe_router.post("/webhook", status_code=200)
 async def stripe_webhook(request: Request, admin_pb: AdminPBDeps):
     # Verify the signature
     raw = await request.body()
     sig_header = request.headers.get("stripe-signature")
 
     try:
-        event = stripe_client.Webhook.construct_event(
+        event = stripe.Webhook.construct_event(
             payload=raw,
             sig_header=sig_header,
             secret=settings.stripe_webhook_secret,
         )
     except (
-        stripe_client.error.SignatureVerificationError  # pyright: ignore[reportAttributeAccessIssue]
+        stripe.error.SignatureVerificationError  # pyright: ignore[reportAttributeAccessIssue]
     ) as e:
         raise HTTPException(status_code=400, detail=f"Invalid signature: {str(e)}")
     except Exception as e:
@@ -56,7 +56,7 @@ async def stripe_webhook(request: Request, admin_pb: AdminPBDeps):
         )
         subscription_id = obj.get("subscription")
         if subscription_id:
-            sub = stripe_client.Subscription.retrieve(
+            sub = stripe.Subscription.retrieve(
                 subscription_id, expand=["items.data.price"]
             )
             await stripe_subscription_to_pb(admin_pb, sub, user_id)
@@ -68,34 +68,22 @@ async def stripe_webhook(request: Request, admin_pb: AdminPBDeps):
     ):
         sub = obj
         if sub.get("items", {}).get("data") and "price" not in sub["items"]["data"][0]:
-            sub = stripe_client.Subscription.retrieve(
-                sub["id"], expand=["items.data.price"]
-            )
+            sub = stripe.Subscription.retrieve(sub["id"], expand=["items.data.price"])
         await stripe_subscription_to_pb(admin_pb, sub)
     elif event.type in ("invoice.payment_succeeded", "invoice.payment_failed"):
         sub_id = obj.get("subscription")
         if sub_id:
-            sub = stripe_client.Subscription.retrieve(
-                sub_id, expand=["items.data.price"]
-            )
+            sub = stripe.Subscription.retrieve(sub_id, expand=["items.data.price"])
             await stripe_subscription_to_pb(admin_pb, sub)
 
 
-class CreateStripeCheckoutDto(BaseModel):
-    price: str
-    return_url: str = ""
-    idempotency_key: str | None = None
-
-
-@billing_router.post(
-    "/stripe/checkout",
-    dependencies=[Depends(auth_user), Depends(load_subscription)],
-)
+@stripe_router.post("/checkout")
 async def create_stripe_checkout(
     dto: CreateStripeCheckoutDto,
-    user: User,
-    subscription: Subscription,
+    token: UserTokenDeps,
 ):
+    user, subscription = await verify(token)
+
     sub_status = subscription.get("status")
     cpe = subscription.get("currentPeriodEnd")
     stripeCustomer = subscription.get("stripeCustomer")
@@ -103,7 +91,7 @@ async def create_stripe_checkout(
         f"Sub status: {sub_status}, CPE: {cpe}, Stripe customer: {stripeCustomer}"
     )
     if sub_status in {"active", "trialing", "past_due"} and cpe and stripeCustomer:
-        portal = stripe_client.billing_portal.Session.create(
+        portal = stripe.billing_portal.Session.create(
             customer=stripeCustomer,
             return_url=f"{settings.app_url}{dto.return_url}",
         )
@@ -136,7 +124,7 @@ async def create_stripe_checkout(
         # extra = {}
         # if idempotency_key:
         #     extra["idempotency_key"] = idempotency_key
-        session = stripe_client.checkout.Session.create(
+        session = stripe.checkout.Session.create(
             **kwargs,  # pyright: ignore[reportArgumentType]
             # **extra,
         )
@@ -145,26 +133,21 @@ async def create_stripe_checkout(
     return JSONResponse(content={"url": session.url})
 
 
-class CreateBillingPortalSessionDto(BaseModel):
-    return_url: str = ""
-
-
-@billing_router.post(
+@stripe_router.post(
     "/portal",
     status_code=200,
-    dependencies=[Depends(auth_user), Depends(load_subscription)],
 )
 async def create_billing_portal_session(
-    user: User,
-    subscription: Subscription,
+    token: UserTokenDeps,
     dto: CreateBillingPortalSessionDto,
 ):
+    _, subscription = await verify(token)
     customer = subscription.get("stripeCustomer")
     if not customer:
         raise HTTPException(400, "No Stripe customer for this user")
 
     try:
-        portal = stripe_client.billing_portal.Session.create(
+        portal = stripe.billing_portal.Session.create(
             customer=customer,
             return_url=f"{settings.app_url}{dto.return_url}",
         )

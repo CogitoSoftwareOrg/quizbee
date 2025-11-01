@@ -1,12 +1,36 @@
-import logging
-from datetime import datetime
-from datetime import timezone
-
+from datetime import datetime, timezone
 from fastapi import HTTPException
+from pocketbase import PocketBase
 from pocketbase.models.dtos import Record
 
-from src.lib.clients import AdminPBDeps
-from src.lib.config import STRIPE_TARIFS_MAP, STRIPE_MONTHLY_LIMITS_MAP
+from src.lib.settings import settings
+
+STRIPE_PRICES_MAP = {
+    "plus_monthly": "price_1SHi0fCrmGGYHLx7oHb9VCLF",
+    "plus_yearly": "price_1SHhyyCrmGGYHLx7Z5iGCnEy",
+    "pro_monthly": "price_1SHi3SCrmGGYHLx7TTE00Gau",
+    "pro_yearly": "price_1SHi4BCrmGGYHLx7jx9QYOs7",
+}
+
+STRIPE_TARIFS_MAP = {
+    "price_1SHi0fCrmGGYHLx7oHb9VCLF": "plus",
+    "price_1SHhyyCrmGGYHLx7Z5iGCnEy": "plus",
+    "price_1SHi3SCrmGGYHLx7TTE00Gau": "pro",
+    "price_1SHi4BCrmGGYHLx7jx9QYOs7": "pro",
+}
+
+STRIPE_MONTHLY_LIMITS_MAP = {
+    "plus": {
+        "quizItemsLimit": 1000,
+        "messagesLimit": 1000,
+        "bytesLimit": 8_388_608,  # 1GB
+    },
+    "pro": {
+        "quizItemsLimit": 2000,
+        "messagesLimit": 2000,
+        "bytesLimit": 83_886_080,  # 10GB
+    },
+}
 
 
 PB_DT_FMT = "%Y-%m-%d %H:%M:%S.%fZ"
@@ -52,7 +76,7 @@ def _maybe_reset_usage_on_period_change(sub: Record, new_cp_start_ts: int):
 
 
 async def stripe_subscription_to_pb(
-    admin_pb: AdminPBDeps, sub: dict, user_id: str | None = None
+    admin_pb: PocketBase, sub: dict, user_id: str | None = None
 ):
     stripe_subscription_id = sub["id"]
     status = sub.get("status")
@@ -101,7 +125,7 @@ async def stripe_subscription_to_pb(
     return existing.get("id", "")
 
 
-async def ensure_active_and_maybe_reset(admin_pb: AdminPBDeps, sub: Record):
+async def ensure_active_and_maybe_reset(admin_pb: PocketBase, sub: Record):
     allowed = {"active", "trialing", "past_due"}
     if sub.get("status") not in allowed:
         raise HTTPException(402, "Subscription inactive")
@@ -114,5 +138,19 @@ async def ensure_active_and_maybe_reset(admin_pb: AdminPBDeps, sub: Record):
     return sub
 
 
-def remaining(sub, field):
-    return int(sub.get(f"{field}Limit", 0) - sub.get(f"{field}Usage", 0))
+async def verify(token: str):
+
+    pb = PocketBase(settings.pb_url)
+    pb._inners.auth.set_user({"token": token, "record": {}})
+
+    try:
+        user = (
+            await pb.collection("users").auth.refresh(
+                {"params": {"expand": "subscriptions_via_user"}}
+            )
+        ).get("record", {})
+        sub = user.get("expand", {}).get("subscriptions_via_user", [])[0]
+        return user, sub
+
+    except Exception:
+        raise HTTPException(401, "Unauthorized")

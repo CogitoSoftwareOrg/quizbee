@@ -14,3 +14,13 @@ class PatchQuizDto(BaseModel):
 
 class FinalizeQuizDto(BaseModel):
     attempt_id: str
+
+
+class CreateStripeCheckoutDto(BaseModel):
+    price: str
+    return_url: str = ""
+    idempotency_key: str | None = None
+
+
+class CreateBillingPortalSessionDto(BaseModel):
+    return_url: str = ""

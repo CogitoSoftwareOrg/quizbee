@@ -1,3 +1,4 @@
+import os
 import json
 import logging
 from contextvars import ContextVar
@@ -6,11 +7,20 @@ from typing import Any
 
 from uvicorn.logging import DefaultFormatter
 
-from src.lib.settings import settings
-
 # Контекстные переменные для request_id и user_id
 request_id_context: ContextVar[str] = ContextVar("request_id", default="")
 user_id_context: ContextVar[str] = ContextVar("user_id", default="")
+
+log_level = os.getenv("LOG_LEVEL", "INFO")
+
+log_format = os.getenv("LOG_FORMAT", "pretty" if log_level == "local" else "json")
+
+if log_format == "json":
+    app_formatter_name = "app_json"
+elif log_format == "pretty":
+    app_formatter_name = "app_pretty"
+else:  # human or default
+    app_formatter_name = "app_human"
 
 
 class RequestContextFilter(logging.Filter):
@@ -90,16 +100,6 @@ class PrettyJSONFormatter(logging.Formatter):
         return " ".join(parts)
 
 
-# Выбираем форматтер в зависимости от настроек
-log_format = settings.log_format.lower()
-
-if log_format == "json":
-    app_formatter_name = "app_json"
-elif log_format == "pretty":
-    app_formatter_name = "app_pretty"
-else:  # human or default
-    app_formatter_name = "app_human"
-
 LOGGING_CONFIG = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -145,43 +145,43 @@ LOGGING_CONFIG = {
         # Логгеры uvicorn
         "uvicorn": {
             "handlers": ["uvicorn"],
-            "level": settings.log_level,
+            "level": log_level,
             "propagate": False,
         },
         "uvicorn.error": {
             "handlers": ["uvicorn"],
-            "level": settings.log_level,
+            "level": log_level,
             "propagate": False,
         },
         "uvicorn.access": {
             "handlers": ["uvicorn"],
-            "level": settings.log_level,
+            "level": log_level,
             "propagate": False,
         },
         # Семья логгеров приложения
         "app": {
             "handlers": ["app_console"],
-            "level": settings.log_level,
+            "level": log_level,
             "propagate": False,
         },
         "app.http": {
             "handlers": ["app_console"],
-            "level": settings.log_level,
+            "level": log_level,
             "propagate": False,
         },
         "app.usecases": {
             "handlers": ["app_console"],
-            "level": settings.log_level,
+            "level": log_level,
             "propagate": False,
         },
         "app.adapters": {
             "handlers": ["app_console"],
-            "level": settings.log_level,
+            "level": log_level,
             "propagate": False,
         },
     },
     "root": {
-        "level": settings.log_level,
+        "level": log_level,
         "handlers": ["app_console"],
     },
 }

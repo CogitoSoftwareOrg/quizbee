@@ -1,5 +1,6 @@
 from typing import Annotated
 from arq import ArqRedis
+from pocketbase import PocketBase
 from fastapi import Depends, HTTPException, Request
 
 from ....app.contracts import EdgeAPIApp
@@ -28,3 +29,10 @@ def get_arq_pool(request: Request) -> ArqRedis:
 
 
 ArqPoolDeps = Annotated[ArqRedis, Depends(get_arq_pool)]
+
+
+def get_admin_pb(request: Request) -> PocketBase:
+    return request.app.state.admin_pb
+
+
+AdminPBDeps = Annotated[PocketBase, Depends(get_admin_pb)]
