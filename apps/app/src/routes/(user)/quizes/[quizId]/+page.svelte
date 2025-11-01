@@ -118,12 +118,21 @@
 	<section class="flex flex-1 flex-col gap-4 sm:min-h-0">
 		{#if quiz}
 			<div class="bg-base-200 space-y-4 rounded-2xl p-4">
+
+				
 				<div class="flex flex-wrap items-start justify-between gap-3">
 					<h1 class="text-3xl font-bold leading-tight">{quiz.title || 'Quiz'}</h1>
+
+					<!-- {#if quiz?.summary}
+					<p class="text-base-content/70 text-sm">{quiz.summary}</p>
+					{/if} -->
+
 					{#if quiz.visibility === QuizesVisibilityOptions.public || quiz.visibility === QuizesVisibilityOptions.search}
 						<ShareQuizButton block quizId={quiz.id} quizTitle={quiz.title || 'Quiz'} />
 					{/if}
 				</div>
+
+				
 
 				{#if user?.id === quiz.author}
 					<ToggleQuizVisibility
@@ -132,7 +141,7 @@
 					/>
 				{/if}
 
-				{#if user?.id === quiz.author && quiz.materials && quiz.materials.length > 0}
+				<!-- {#if user?.id === quiz.author && quiz.materials && quiz.materials.length > 0}
 					<div>
 						<p class="text-base-content/70 mb-2 text-sm font-medium">Materials:</p>
 						<div class="flex flex-wrap gap-2">
@@ -149,7 +158,7 @@
 					<p class="text-base-content/70 mb-2 text-sm">
 						Total questions: <span class="font-semibold">{quizItems.length}</span>
 					</p>
-				</div>
+				</div> -->
 			</div>
 
 			<div class="bg-base-200 flex flex-1 flex-col gap-3 rounded-2xl p-4 sm:min-h-0">
@@ -233,7 +242,7 @@
 
 	<!-- Right column: Quiz attempts history -->
 	<section class="bg-base-200 flex flex-1 flex-col gap-4 rounded-2xl p-4 sm:min-h-0">
-		<h2 class="text-xl font-semibold">Questions</h2>
+		<h2 class="text-xl text-center font-semibold">Questions</h2>
 
 		<Input
 			class="w-full sm:shrink-0"

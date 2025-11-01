@@ -21,6 +21,7 @@
 	// Import profile components
 	import ProfileCard from './ProfileCard.svelte';
 	import SubscriptionCard from './SubscriptionCard.svelte';
+	import LegalCard from './LegalCard.svelte';
 	import LearningGoalsCard from './LearningGoalsCard.svelte';
 	import LearningTopicsCard from './LearningTopicsCard.svelte';
 
@@ -77,7 +78,7 @@
 	}
 </script>
 
-<div class="mx-auto w-full max-w-7xl space-y-4 p-4 sm:space-y-6 sm:p-6 lg:p-8">
+<div class="mx-auto w-full max-w-7xl space-y-4 p-4 sm:space-y-0 sm:p-6 lg:p-4">
 	<!-- Header -->
 	<div class="flex items-center justify-between">
 		<h1 class="mx-auto text-2xl font-bold sm:text-3xl">Profile & Settings</h1>
@@ -86,12 +87,16 @@
 	<!-- Main Grid Layout -->
 
 	<!-- Left Column: Profile Info -->
-	<div class="mx-auto max-w-xl space-y-4 sm:space-y-6 lg:col-span-1">
+	<div class="mx-auto max-w-xl space-y-0 sm:space-y-2 lg:col-span-1">
 		<ProfileCard />
 
 		<div class="divider"></div>
 
 		<SubscriptionCard />
+
+		<div class="divider"></div>
+
+		<LegalCard />
 
 		<!-- Logout Button -->
 		<Button onclick={logout} color="error" style="soft" block>

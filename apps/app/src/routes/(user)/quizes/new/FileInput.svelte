@@ -52,18 +52,14 @@
 
 	const allowedExtensions = [
 		'pdf',
+		'pptx',
+		'docx',
 		'md',
 		'txt',
-		'js',
-		'ts',
 		'html',
-		'css',
-		'json',
-		'xml',
-		'svg',
-		'jpg',
-		'jpeg',
-		'png'
+		'xlsx',
+		'csv'
+		
 	];
 	onMount(() => {
 		document.addEventListener('click', handleClickOutside);
@@ -80,6 +76,8 @@
 		};
 	});
 
+
+	// первая функция которая дергается когда в проводнике мы выбираем файлы
 	function processFiles(files: File[]) {
 		for (const file of files) {
 			const extension = file.name.split('.').pop()?.toLowerCase();
@@ -145,7 +143,7 @@
 		}
 	}
 
-	// Асинхронная загрузка файла
+	// Асинхронная загрузка файла (эта функция вызывается из processFiles)
 	async function uploadFileAsync(attachedFile: AttachedFile) {
 		try {
 			const formData = new FormData();
@@ -168,6 +166,9 @@
 				const errorText = await response.text();
 				throw new Error(`Failed to upload material: ${errorText}`);
 			}
+
+		
+			
 		} catch (error) {
 			console.error('Failed to upload file:', attachedFile.name, error);
 
@@ -255,18 +256,7 @@
 	function getFileIcon(filename: string): string {
 		const extension = filename.split('.').pop()?.toLowerCase();
 
-		const iconMap: Record<string, string> = {
-			pdf: 'pdf',
-			md: 'md',
-			txt: 'txt',
-			js: 'js',
-			ts: 'js',
-			html: 'html',
-			css: 'css',
-			json: 'json'
-		};
-
-		return iconMap[extension || ''] || 'unknown';
+		return extension || '';
 	}
 
 	function truncateFileName(filename: string, maxLength: number = 50): string {
@@ -289,6 +279,8 @@
 
 	export { addExistingMaterial };
 </script>
+
+
 
 <div
 	class={[
@@ -415,17 +407,12 @@
 		<textarea
 			placeholder="Attach relevant files and/or describe what you'd like the questions to be about"
 			bind:value={inputText}
-			class="max-h-[7.5rem] min-h-[1.5rem] flex-grow resize-none border-none bg-transparent py-1 pl-4 text-lg leading-6 outline-none focus:shadow-none focus:outline-none focus:ring-0"
+			class="flex-grow resize-none border-none bg-transparent py-0 pl-4 text-lg leading-6 outline-none focus:shadow-none focus:outline-none focus:ring-0 max-h-[55px] 3xl:max-h-[100px] overflow-y-auto"
 			onpaste={handlePaste}
 			rows="1"
 			oninput={handleTextareaResize}
 		></textarea>
-		<!-- <TextArea
-			bind:value={inputText}
-			placeholder="Attach relevant files and/or describe what you'd like the questions to be about"
-			onpaste={handlePaste}
-			oninput={handleTextareaResize}
-		></TextArea> -->
+		
 		<input
 			type="file"
 			bind:this={inputElement}
@@ -454,10 +441,11 @@
 		</div>
 	{/if}
 	{#if attachedFiles.length > 0}
-		<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+		<div class="flex gap-3 overflow-x-auto pb-2 px-1"
+		style="scrollbar-width: auto;">
 			{#each attachedFiles as attachedFile, index}
 				<div
-					class="bg-base-300 border-base-content/20 group relative aspect-square w-full rounded-lg border-2 p-2"
+					class="bg-base-300 border-base-content/20 group relative aspect-square w-24 h-24 shrink-0 rounded-lg border-2 p-1.5 mb-0.5"
 				>
 					{#if attachedFile.previewUrl}
 						<img
@@ -467,15 +455,15 @@
 						/>
 					{:else}
 						<div
-							class="text-base-content/60 flex h-full w-full flex-col items-center gap-5 text-center"
+							class="text-base-content/60 flex flex-col items-center gap-5 text-center"
 						>
 							<img
 								src="/file-format-icons/{getFileIcon(attachedFile.name)}.svg"
 								alt="File icon"
-								class="file-icon h-10 w-10"
+								class="file-icon h-8 w-8"
 							/>
 							<span
-								class="line-clamp-3 break-all text-[14px] leading-tight"
+								class="-mt-2 line-clamp-3 break-all text-[12px] leading-tight"
 								title={attachedFile.name}>{attachedFile.name}</span
 							>
 						</div>
@@ -502,3 +490,5 @@
 		</div>
 	{/if}
 </div>
+
+<!-- max-height handled via Tailwind classes: `max-h-[55px] xxl:max-h-[70px]` -->

@@ -314,7 +314,7 @@
 		{/if}
 	</header>
 
-	<section class="flex flex-col gap-4 md:min-h-0 md:flex-1">
+	<section class="flex flex-col gap-4 md:min-h-0 md:flex-1 -ml-5">
 		{#if filteredQuizes.length === 0}
 			<div
 				class="border-base-200 bg-base-100 flex flex-col items-center gap-3 rounded-xl border p-8 text-center shadow-sm"

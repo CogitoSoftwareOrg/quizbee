@@ -5,6 +5,7 @@
 	import { pb } from '$lib/pb';
 	
 	import userImageDefault from '$lib/assets/images/user.png';
+	import userImageDefaultDark from '$lib/assets/images/user-dark-theme.png';
 
 	import { userStore } from '$lib/apps/users/user.svelte';
 	import { uiStore } from '$lib/apps/users/ui.svelte';
@@ -29,15 +30,18 @@
 		class={['border-base-200 flex cursor-pointer items-center justify-center gap-2 border-t p-1']}
 		href="/profile"
 	>
-		<div
-			class:size-8={!expanded}
-			class:size-10={expanded}
-			class="border-base-300 overflow-hidden rounded-full"
-		>
+	<div
+		class:size-8={!expanded}
+		class:size-10={expanded}
+		class="border-base-300 overflow-hidden rounded-full"
+	>
+		{#if user?.avatar}
 			<img src={avatar} alt="avatar" />
-		</div>
-
-		{#if expanded}
+		{:else}
+			<img src={userImageDefault} alt="avatar" class="block dark:hidden" />
+			<img src={userImageDefaultDark} alt="avatar" class="hidden dark:block" />
+		{/if}
+	</div>		{#if expanded}
 			<div class="flex h-full flex-1 flex-col gap-1">
 				<p class="truncate text-sm font-semibold">{user?.name || user?.email}</p>
 <!-- 

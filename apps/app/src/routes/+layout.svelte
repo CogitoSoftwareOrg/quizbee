@@ -37,6 +37,9 @@
 </script>
 
 <svelte:head>
+
+
+
 	{@html webManifestLink}
 	<link rel="icon" href={favicon} />
 	<link
