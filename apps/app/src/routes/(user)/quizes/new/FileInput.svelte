@@ -11,17 +11,20 @@
 	import { generateId } from '$lib/utils/generate-id';
 	import { removeFile } from '../new/removeFile';
 	import { addExistingMaterial } from '../new/addExistingMaterial';
+	import PreviousQuizes from './PreviousQuizes.svelte';
 
 	interface Props {
 		inputText: string;
 		attachedFiles: AttachedFile[];
 		quizTemplateId?: string;
+		previousQuizesLength: number;
 	}
 
 	let {
 		inputText = $bindable(''),
 		attachedFiles = $bindable([]),
-		quizTemplateId = $bindable('')
+		quizTemplateId = $bindable(''),
+		previousQuizesLength = 0
 	}: Props = $props();
 
 	const maxTokensWithABook = 450000;
@@ -407,7 +410,7 @@
 		<textarea
 			placeholder="Attach relevant files and/or describe what you'd like the questions to be about"
 			bind:value={inputText}
-			class="flex-grow resize-none border-none bg-transparent py-0 pl-4 text-lg leading-6 outline-none focus:shadow-none focus:outline-none focus:ring-0 max-h-[55px] 3xl:max-h-[100px] overflow-y-auto"
+			class="flex-grow resize-none border-none bg-transparent py-0 pl-4 text-lg leading-6 outline-none focus:shadow-none focus:outline-none focus:ring-0 {previousQuizesLength === 0 ? 'max-h-[80px] 3xl:max-h-[150px]' : 'max-h-[55px] 3xl:max-h-[100px]'} overflow-y-auto"
 			onpaste={handlePaste}
 			rows="1"
 			oninput={handleTextareaResize}
@@ -463,7 +466,7 @@
 								class="file-icon h-8 w-8"
 							/>
 							<span
-								class="-mt-2 line-clamp-3 break-all text-[12px] leading-tight"
+								class="-mt-2 line-clamp-3 break-all text-[0.7rem] leading-tight"
 								title={attachedFile.name}>{attachedFile.name}</span
 							>
 						</div>

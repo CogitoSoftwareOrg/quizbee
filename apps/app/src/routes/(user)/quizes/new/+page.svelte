@@ -83,7 +83,7 @@
 		<div class="flex items-start justify-center overflow-x-hidden">
 			<div class="quiz-container w-full max-w-3xl px-4">
 				<!-- Header with Title -->
-				<div class="mb-4 text-center">
+				<div class="{previousQuizes.length === 0 ? 'mb-8' : 'mb-4'} text-center">
 					<div
 						class="group relative mx-auto -mt-3 inline-flex items-center justify-center gap-1 pt-2"
 					>
@@ -92,7 +92,7 @@
 							bind:this={inputElement}
 							type="text"
 							placeholder=""
-							class="hover:text-warning min-w-0 max-w-full cursor-pointer border-none bg-transparent px-0 text-center text-4xl font-bold leading-tight transition-colors focus:outline-none focus:ring-0 md:text-5xl"
+							class="hover:text-warning min-w-0 max-w-full cursor-pointer border-none bg-transparent px-0 text-center text-4xl font-bold leading-tight transition-colors focus:outline-none focus:ring-0 md:text-5xl {previousQuizes.length === 0 ? 'mt-3' : 'mt-0'} "
 							style="width: auto;"
 							oninput={(e) => {
 								const target = e.target as HTMLInputElement;
@@ -126,15 +126,15 @@
 				>
 					<div class="card-body p-6.5 overflow-x-hidden">
 						<!-- Description Section -->
-						<div class="mb-2">
+						<div class="{previousQuizes.length === 0 ? 'mb-6' : 'mb-2'}">
 							<div class="w-full">
-								<h3 class="mb-3 block text-base font-semibold">Describe your quiz</h3>
-								<FileInput bind:attachedFiles bind:inputText bind:quizTemplateId />
+								<h3 class="mb-3 {previousQuizes.length === 0 ? 'p-1' : ''} block text-base font-semibold">Describe your quiz</h3>
+								<FileInput bind:attachedFiles bind:inputText bind:quizTemplateId previousQuizes.length/>
 							</div>
 						</div>
 
 						<!-- Difficulty and Questions Grid -->
-						<div class="mb-3 grid gap-6 md:grid-cols-2 md:gap-8">
+						<div class="{previousQuizes.length === 0 ? 'mb-6' : 'mb-3'} {previousQuizes.length === 0 ? 'p-1' : ''} grid gap-6 md:grid-cols-2 md:gap-8">
 							<!-- Difficulty -->
 							<div>
 								<h3 class="mb-4 block text-base font-semibold">Choose difficulty level</h3>
