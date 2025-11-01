@@ -5,13 +5,13 @@ from pocketbase import PocketBase
 from pocketbase.models.dtos import Record
 
 from src.lib.settings import settings
-from src.lib.stripe import stripe
+from src.lib.stripe import stripe_client
 
 STRIPE_LOOKUPS = [
-    "plus_monthly",
-    "plus_yearly",
-    "pro_monthly",
-    "pro_yearly",
+    "plus_early_monthly",
+    "plus_early_yearly",
+    "pro_early_monthly",
+    "pro_early_yearly",
 ]
 
 
@@ -30,14 +30,14 @@ class Price:
 
 
 PRICES_MAP: dict[str, Price] = {}
-for lookup in STRIPE_LOOKUPS:
-    tariff = lookup.split("_")[0]
-    price = stripe.Price.list(lookup_keys=[lookup]).data[0]
-    if not price:
-        raise Exception(f"Stripe price not found for {lookup}")
-    PRICES_MAP[lookup] = Price(
+prices = stripe_client.Price.list(lookup_keys=STRIPE_LOOKUPS).data
+for price in prices:
+    if not price.lookup_key:
+        continue
+    tariff = price.lookup_key.split("_")[0]
+    PRICES_MAP[price.lookup_key] = Price(
         id=price.id,
-        lookup=lookup,
+        lookup=price.lookup_key,
         tariff=tariff,
         limits=Limits(
             quizItemsLimit=1000 if tariff == "plus" else 2000,

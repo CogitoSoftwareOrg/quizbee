@@ -181,7 +181,7 @@
 	open={uiStore.paywallOpen}
 	onclose={() => uiStore.setPaywallOpen(false)}
 >
-	<Paywall />
+	<Paywall stripePrices={data?.stripePrices ?? []} />
 </Modal>
 
 <Modal

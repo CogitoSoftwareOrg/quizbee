@@ -6,15 +6,25 @@
 	import { Button } from '@quizbee/ui-svelte-daisy';
 	import { computeApiUrl } from '$lib/api/compute-url';
 
-	type Price = 'plus_monthly' | 'pro_monthly' | 'plus_yearly' | 'pro_yearly';
+	interface StripePrice {
+		lookup: string;
+		tariff: string;
+		amount: number; // in dollars
+	}
+
+	const { stripePrices }: { stripePrices: StripePrice[] } = $props();
 
 	let billingPeriod = $state<'monthly' | 'yearly'>('yearly');
 	let loading = $state(false);
 
+	// Create a map of prices by lookup key
+	const priceMap = $derived(
+		new Map<string, StripePrice>(stripePrices.map((price) => [price.lookup, price]))
+	);
+
 	const plans = [
 		{
 			name: 'Plus',
-			basePrice: 7.99,
 			description: 'Perfect for serious learners',
 			features: [
 				'All public quizzes',
@@ -24,12 +34,11 @@
 				'Real-time difficulty adjustment',
 				'Topic refinement'
 			],
-			priceKey: 'plus',
+			lookupPrefix: 'plus_early',
 			badge: 'Most Popular'
 		},
 		{
 			name: 'Pro',
-			basePrice: 15.99,
 			description: 'For power users & professionals',
 			features: [
 				'Everything in Plus',
@@ -39,45 +48,73 @@
 				'Priority queue for quiz creation',
 				'AI Tutor with full context & Advanced analytics'
 			],
-			priceKey: 'pro',
+			lookupPrefix: 'pro_early',
 			highlighted: true,
 			badge: 'Maximum Value'
 		}
 	];
 
-	function calculatePrice(basePrice: number, period: 'monthly' | 'yearly') {
-		const earlyAdopterDiscount = 0.2; // 20% off
-		const yearlyDiscount = 0.2; // Additional 20% off
+	function calculatePrice(plan: (typeof plans)[number], period: 'monthly' | 'yearly') {
+		const monthlyLookup = `${plan.lookupPrefix}_monthly`;
+		const yearlyLookup = `${plan.lookupPrefix}_yearly`;
 
-		if (period === 'yearly') {
+		const monthlyPrice = priceMap.get(monthlyLookup);
+		const yearlyPrice = priceMap.get(yearlyLookup);
+
+		if (!monthlyPrice || !yearlyPrice) {
+			// Fallback if prices are not loaded yet
 			return {
-				monthly: basePrice * (1 - (yearlyDiscount + earlyAdopterDiscount)),
-				yearly: basePrice * (1 - (yearlyDiscount + earlyAdopterDiscount)) * 12,
-				discount: 40
+				monthly: 0,
+				yearly: null,
+				basePrice: 0,
+				discount: 0
 			};
 		}
 
+		// Prices are already 80% of base price (early adopter discount applied)
+		// For monthly: price = basePrice * 0.8
+		// For yearly: price = basePrice * 0.8 * 0.8 = basePrice * 0.64
+		const baseMonthlyPrice = monthlyPrice.amount / 0.8; // Reverse early adopter discount
+		const yearlyMonthlyEquivalent = yearlyPrice.amount / 12; // Monthly equivalent of yearly price
+
+		if (period === 'yearly') {
+			// Yearly price already includes both discounts (early adopter + yearly)
+			// Calculate discount: basePrice * 0.64 vs basePrice = 36% off total
+			const discount = Math.round((1 - yearlyPrice.amount / (baseMonthlyPrice * 12)) * 100);
+
+			return {
+				monthly: yearlyMonthlyEquivalent,
+				yearly: yearlyPrice.amount,
+				basePrice: baseMonthlyPrice,
+				discount
+			};
+		}
+
+		// Monthly price already includes early adopter discount (20% off)
+		const discount = Math.round((1 - monthlyPrice.amount / baseMonthlyPrice) * 100);
+
 		return {
-			monthly: basePrice * (1 - earlyAdopterDiscount),
+			monthly: monthlyPrice.amount,
 			yearly: null,
-			discount: 20
+			basePrice: baseMonthlyPrice,
+			discount
 		};
 	}
 
-	async function checkoutSession(priceKey: string) {
+	async function checkoutSession(lookupPrefix: string) {
 		loading = true;
-		const price: Price = `${priceKey}_${billingPeriod}` as Price;
+		const lookup = `${lookupPrefix}_${billingPeriod}`;
 
 		try {
 			posthog.capture('checkout_started', {
-				price,
+				price: lookup,
 				return_url: page.url.pathname.slice(1),
-				plan: priceKey
+				plan: lookupPrefix
 			});
 
 			const response = await fetch(`${computeApiUrl()}stripe/checkout`, {
 				method: 'POST',
-				body: JSON.stringify({ price, return_url: page.url.pathname.slice(1) }),
+				body: JSON.stringify({ price: lookup, return_url: page.url.pathname.slice(1) }),
 				headers: {
 					'Content-Type': 'application/json'
 				},
@@ -85,7 +122,7 @@
 			});
 			const data = await response.json();
 			posthog.capture('checkout_completed', {
-				price,
+				price: lookup,
 				...data
 			});
 
@@ -146,7 +183,7 @@
 	<!-- Pricing Cards -->
 	<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
 		{#each plans as plan}
-			{@const pricing = calculatePrice(plan.basePrice, billingPeriod)}
+			{@const pricing = calculatePrice(plan, billingPeriod)}
 			<div
 				class={[
 					'border-base-200 bg-base-100 relative flex h-full flex-col rounded-xl border p-3 shadow-md transition-all duration-300 sm:rounded-2xl sm:p-5',
@@ -170,23 +207,27 @@
 
 				<!-- Pricing -->
 				<div class="border-base-200 mb-3 border-b pb-3 sm:mb-4 sm:pb-4">
-					<div class="mb-0.5 flex items-baseline gap-1 sm:mb-1">
-						<span class="text-3xl font-bold sm:text-4xl">${pricing.monthly.toFixed(2)}</span>
-						<span class="text-base-content/60 text-base sm:text-lg">/mo</span>
-					</div>
-					{#if pricing.yearly}
-						<p class="text-base-content/50 mb-1.5 text-xs">
-							${pricing.yearly.toFixed(2)} billed annually
-						</p>
+					{#if pricing.monthly > 0}
+						<div class="mb-0.5 flex items-baseline gap-1 sm:mb-1">
+							<span class="text-3xl font-bold sm:text-4xl">€{pricing.monthly.toFixed(2)}</span>
+							<span class="text-base-content/60 text-base sm:text-lg">/mo</span>
+						</div>
+						{#if pricing.yearly !== null}
+							<p class="text-base-content/50 mb-1.5 text-xs">
+								€{pricing.yearly.toFixed(2)} billed annually
+							</p>
+						{/if}
+						<div class="flex items-center gap-1.5">
+							<span class="text-base-content/40 text-xs line-through">
+								€{pricing.basePrice.toFixed(2)}/mo
+							</span>
+							<span class="badge badge-success badge-xs sm:badge-sm font-semibold">
+								{pricing.discount}% OFF
+							</span>
+						</div>
+					{:else}
+						<div class="text-base-content/60 text-sm">Loading prices...</div>
 					{/if}
-					<div class="flex items-center gap-1.5">
-						<span class="text-base-content/40 text-xs line-through">
-							${plan.basePrice}/mo
-						</span>
-						<span class="badge badge-success badge-xs sm:badge-sm font-semibold">
-							{pricing.discount}% OFF
-						</span>
-					</div>
 				</div>
 
 				<!-- Features -->
@@ -205,8 +246,8 @@
 					color={plan.highlighted ? 'primary' : 'neutral'}
 					size="md"
 					block
-					disabled={loading}
-					onclick={() => checkoutSession(plan.priceKey)}
+					disabled={loading || pricing.monthly === 0}
+					onclick={() => checkoutSession(plan.lookupPrefix)}
 					class="sm:btn-lg"
 				>
 					{loading ? 'Processing...' : `Get ${plan.name}`}

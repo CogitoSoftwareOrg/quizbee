@@ -55,6 +55,8 @@ services:
     build:
       context: .
       dockerfile: ../apps/app/Dockerfile.local
+      args:
+        - STRIPE_API_KEY=${STRIPE_API_KEY}
     environment:
       - CI=true
       - CHOKIDAR_USEPOLLING=1

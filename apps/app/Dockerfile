@@ -29,8 +29,10 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm \
 COPY apps/app apps/app
 
 # Build args for SvelteKit env vars (PUBLIC_ prefix required by SvelteKit)
+ARG STRIPE_API_KEY
 ARG PUBLIC_PB_URL
-ENV PUBLIC_PB_URL=$PUBLIC_PB_URL
+ENV STRIPE_API_KEY=$STRIPE_API_KEY PUBLIC_PB_URL=$PUBLIC_PB_URL
+
 
 RUN pnpm -C apps/app build
 

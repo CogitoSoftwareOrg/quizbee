@@ -7,9 +7,11 @@ services:
       dockerfile: ./apps/app/Dockerfile
       args:
         - PUBLIC_PB_URL=${PUBLIC_PB_URL}
+        - STRIPE_API_KEY=${STRIPE_API_KEY}
     environment:
       - PUBLIC_ENV=${PUBLIC_ENV:-production}
       - PUBLIC_WEB_URL=${PUBLIC_WEB_URL:-https://quizbee.academy/}
       - PUBLIC_API_URL=${PUBLIC_API_URL:-https://api.quizbee.academy/}
       - PUBLIC_PB_URL=${PUBLIC_PB_URL:-https://pb.quizbee.academy/}
       - PUBLIC_POSTHOG=${PUBLIC_POSTHOG}
+      - STRIPE_API_KEY=${STRIPE_API_KEY}

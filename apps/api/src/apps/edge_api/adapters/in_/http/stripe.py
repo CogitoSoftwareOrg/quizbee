@@ -2,7 +2,7 @@ import logging
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
 
-from src.lib.stripe import stripe
+from src.lib.stripe import stripe_client
 from src.lib.settings import settings
 
 from .deps import AdminPBDeps, UserTokenDeps
@@ -21,13 +21,13 @@ async def stripe_webhook(request: Request, admin_pb: AdminPBDeps):
     sig_header = request.headers.get("stripe-signature")
 
     try:
-        event = stripe.Webhook.construct_event(
+        event = stripe_client.Webhook.construct_event(
             payload=raw,
             sig_header=sig_header,
             secret=settings.stripe_webhook_secret,
         )
     except (
-        stripe.error.SignatureVerificationError  # pyright: ignore[reportAttributeAccessIssue]
+        stripe_client.error.SignatureVerificationError  # pyright: ignore[reportAttributeAccessIssue]
     ) as e:
         raise HTTPException(status_code=400, detail=f"Invalid signature: {str(e)}")
     except Exception as e:
@@ -56,7 +56,7 @@ async def stripe_webhook(request: Request, admin_pb: AdminPBDeps):
         )
         subscription_id = obj.get("subscription")
         if subscription_id:
-            sub = stripe.Subscription.retrieve(
+            sub = stripe_client.Subscription.retrieve(
                 subscription_id, expand=["items.data.price"]
             )
             await stripe_subscription_to_pb(admin_pb, sub, user_id)
@@ -68,12 +68,16 @@ async def stripe_webhook(request: Request, admin_pb: AdminPBDeps):
     ):
         sub = obj
         if sub.get("items", {}).get("data") and "price" not in sub["items"]["data"][0]:
-            sub = stripe.Subscription.retrieve(sub["id"], expand=["items.data.price"])
+            sub = stripe_client.Subscription.retrieve(
+                sub["id"], expand=["items.data.price"]
+            )
         await stripe_subscription_to_pb(admin_pb, sub)
     elif event.type in ("invoice.payment_succeeded", "invoice.payment_failed"):
         sub_id = obj.get("subscription")
         if sub_id:
-            sub = stripe.Subscription.retrieve(sub_id, expand=["items.data.price"])
+            sub = stripe_client.Subscription.retrieve(
+                sub_id, expand=["items.data.price"]
+            )
             await stripe_subscription_to_pb(admin_pb, sub)
 
 
@@ -91,7 +95,7 @@ async def create_stripe_checkout(
         f"Sub status: {sub_status}, CPE: {cpe}, Stripe customer: {stripeCustomer}"
     )
     if sub_status in {"active", "trialing", "past_due"} and cpe and stripeCustomer:
-        portal = stripe.billing_portal.Session.create(
+        portal = stripe_client.billing_portal.Session.create(
             customer=stripeCustomer,
             return_url=f"{settings.app_url}{dto.return_url}",
         )
@@ -124,7 +128,7 @@ async def create_stripe_checkout(
         # extra = {}
         # if idempotency_key:
         #     extra["idempotency_key"] = idempotency_key
-        session = stripe.checkout.Session.create(
+        session = stripe_client.checkout.Session.create(
             **kwargs,  # pyright: ignore[reportArgumentType]
             # **extra,
         )
@@ -147,7 +151,7 @@ async def create_billing_portal_session(
         raise HTTPException(400, "No Stripe customer for this user")
 
     try:
-        portal = stripe.billing_portal.Session.create(
+        portal = stripe_client.billing_portal.Session.create(
             customer=customer,
             return_url=f"{settings.app_url}{dto.return_url}",
         )

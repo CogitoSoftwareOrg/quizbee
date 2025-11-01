@@ -1,3 +1,4 @@
+export const ssr = false;
 export const prerender = false;
 
 import { pb } from '$lib/pb';
