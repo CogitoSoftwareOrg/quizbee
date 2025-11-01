@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Modal, Button } from '@cogisoft/ui-svelte-daisy';
+	import { Modal, Button } from '@quizbee/ui-svelte-daisy';
 
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
 	import { materialsStore } from '$lib/apps/materials/materials.svelte';
@@ -23,7 +23,6 @@
 		previousQuizes: any[];
 		avoidRepeat: boolean;
 	}
-	
 
 	let {
 		title = $bindable(),
@@ -99,10 +98,9 @@
 	$effect(() => {
 		const _ = inputText;
 		untrack(() => {
-			scheduleUpdate({ query: inputText  });
+			scheduleUpdate({ query: inputText });
 		});
 	});
-
 
 	$effect(() => {
 		const _ = avoidRepeat;
@@ -113,7 +111,6 @@
 
 	// if there are no drafts of this user -> create one. otherwise take the first draft he has
 	onMount(() => {
-		
 		if (quizesStore.quizes.filter((q) => q.status === 'draft').length == 0) {
 			const newDraft = createDraft();
 			quizTemplateId = newDraft.id;
@@ -178,7 +175,7 @@
 
 {#if previousQuizes.length > 0}
 	<button
-		class="btn btn-outline rounded-lg flex items-center gap-2 text-lg whitespace-nowrap shadow-lg mr-2 mt-1"
+		class="btn btn-outline mr-2 mt-1 flex items-center gap-2 whitespace-nowrap rounded-lg text-lg shadow-lg"
 		onclick={() => (showModal = true)}
 	>
 		<FilePlus class="h-5 w-5" />

@@ -1,0 +1,250 @@
+---
+import { Button } from "@quizbee/ui-svelte-daisy";
+
+import DynamicIcon from "./DynamicIcon.astro";
+
+interface Plan {
+  name: string;
+  price: string;
+  period?: string;
+  description: string;
+  features: string[];
+  highlighted?: boolean;
+  buttonText?: string;
+  buttonHref?: string;
+  badge?: string;
+}
+
+interface PlanSet {
+  label: string;
+  plans: Plan[];
+}
+
+interface Props {
+  title: string;
+  subtitle?: string;
+  plans?: Plan[];
+  planSets?: PlanSet[];
+  theme?: "default" | "dark" | "gradient";
+}
+
+const { title, subtitle, plans, planSets, theme = "default" } = Astro.props;
+
+// Use planSets if provided, otherwise wrap plans in a single set
+const finalPlanSets = planSets || (plans ? [{ label: "", plans }] : []);
+
+const themeClasses = {
+  default: "",
+  dark: "bg-base-300",
+  gradient: "bg-gradient-to-br from-primary/5 to-accent/5",
+};
+---
+
+<section
+  class={`pricing-section w-full py-16 lg:py-24 overflow-x-hidden ${themeClasses[theme]}`}
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="text-center mb-16 space-y-4">
+      {
+        subtitle && (
+          <p class="text-sm font-semibold text-primary uppercase tracking-wide">
+            {subtitle}
+          </p>
+        )
+      }
+
+      <h2 class="text-4xl lg:text-5xl font-bold leading-tight">
+        {title}
+      </h2>
+
+      {/* Toggle for plan sets */}
+      {
+        planSets && planSets.length > 1 && (
+          <div class="flex justify-center mt-8">
+            <div class="join">
+              {planSets.map((planSet, idx) => (
+                <input
+                  class="join-item btn"
+                  type="radio"
+                  name="pricing-options"
+                  aria-label={planSet.label}
+                  data-plan-set={idx}
+                  checked={idx === 0}
+                />
+              ))}
+            </div>
+          </div>
+        )
+      }
+    </div>
+
+    <!-- Pricing Cards Container(s) -->
+    {
+      finalPlanSets.map((planSet, setIndex) => (
+        <div
+          class={`pricing-cards grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto ${setIndex > 0 ? "hidden" : ""}`}
+          data-plan-set-content={setIndex}
+        >
+          {planSet.plans.map((plan, index) => (
+            <div
+              class={`group transition-all duration-700 ease-out opacity-0 translate-y-8 ${plan.highlighted ? "md:-translate-y-4" : ""}`}
+              data-animate="pricing"
+              style={`transition-delay: ${index * 100}ms`}
+            >
+              <div
+                class={`relative h-full flex flex-col p-8 rounded-2xl border transition-all duration-300 shadow-lg hover:shadow-2xl ${
+                  plan.highlighted
+                    ? "bg-primary text-primary-content border-primary scale-105 hover:scale-110"
+                    : "bg-base-100 border-base-200 hover:border-primary/30 hover:-translate-y-2"
+                }`}
+              >
+                {/* Badge */}
+                {plan.badge && (
+                  <div class="absolute -top-4 left-1/2 -translate-x-1/2">
+                    <span class="badge badge-secondary badge-lg font-bold px-4 py-3">
+                      {plan.badge}
+                    </span>
+                  </div>
+                )}
+
+                {/* Plan Name */}
+                <h3
+                  class={`text-2xl font-bold mb-2 ${plan.highlighted ? "text-primary-content" : "text-base-content"}`}
+                >
+                  {plan.name}
+                </h3>
+
+                {/* Description */}
+                <p
+                  class={`text-sm mb-6 ${plan.highlighted ? "text-primary-content/80" : "text-base-content/60"}`}
+                >
+                  {plan.description}
+                </p>
+
+                {/* Price */}
+                <div class="mb-6">
+                  <div class="flex items-baseline gap-2">
+                    <span
+                      class={`text-5xl font-bold ${plan.highlighted ? "text-primary-content" : "text-base-content"}`}
+                    >
+                      {plan.price}
+                    </span>
+                    {plan.period && (
+                      <span
+                        class={`text-lg ${plan.highlighted ? "text-primary-content/70" : "text-base-content/60"}`}
+                      >
+                        /{plan.period}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Features */}
+                <ul class="space-y-4 mb-8 flex-1">
+                  {plan.features.map((feature) => (
+                    <li class="flex items-start gap-3">
+                      <DynamicIcon
+                        name="circle-check"
+                        size={20}
+                        class={
+                          plan.highlighted
+                            ? "text-primary-content flex-shrink-0 mt-0.5"
+                            : "text-success flex-shrink-0 mt-0.5"
+                        }
+                      />
+                      <span
+                        class={`text-sm leading-relaxed ${plan.highlighted ? "text-primary-content" : "text-base-content/80"}`}
+                      >
+                        {feature}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* CTA Button */}
+                <Button
+                  target="_blank"
+                  href={plan.buttonHref || "/app"}
+                  style="primary"
+                  size="lg"
+                  block
+                  class={
+                    plan.highlighted
+                      ? "!bg-primary-content !text-primary !border-primary-content hover:!bg-primary-content/90"
+                      : ""
+                  }
+                >
+                  {plan.buttonText || "Get Started"}
+                </Button>
+
+                {/* Hover Glow Effect */}
+                {!plan.highlighted && (
+                  <div class="absolute inset-0 rounded-2xl bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity -z-10" />
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      ))
+    }
+
+    <!-- Bottom Note -->
+    <div class="text-center mt-12">
+      <p class="text-base-content/60">
+        All plans include 14-day money-back guarantee. No credit card required
+        for free trial.
+      </p>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const sections = document.querySelectorAll(".pricing-section");
+
+    sections.forEach((section) => {
+      const animateElements = section.querySelectorAll("[data-animate]");
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              animateElements.forEach((element) => {
+                element.classList.remove("opacity-0", "translate-y-8");
+                element.classList.add("opacity-100", "translate-y-0");
+              });
+            }
+          });
+        },
+        { threshold: 0.1 }
+      );
+
+      observer.observe(section);
+
+      // Handle plan set toggle
+      const toggleButtons = section.querySelectorAll(
+        'input[name="pricing-options"]'
+      );
+      const planSetContainers = section.querySelectorAll(
+        "[data-plan-set-content]"
+      );
+
+      toggleButtons.forEach((button) => {
+        button.addEventListener("change", (e) => {
+          const target = e.target as HTMLInputElement;
+          if (target.checked) {
+            const planSetIndex = target.getAttribute("data-plan-set");
+            planSetContainers.forEach((container, idx) => {
+              if (idx.toString() === planSetIndex) {
+                container.classList.remove("hidden");
+              } else {
+                container.classList.add("hidden");
+              }
+            });
+          }
+        });
+      });
+    });
+  });
+</script>

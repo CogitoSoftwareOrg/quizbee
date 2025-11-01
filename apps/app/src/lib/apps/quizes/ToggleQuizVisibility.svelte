@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Link, Search } from 'lucide-svelte';
 
-	import { Modal, Button } from '@cogisoft/ui-svelte-daisy';
+	import { Modal, Button } from '@quizbee/ui-svelte-daisy';
 
 	import { pb } from '$lib/pb/client';
 	import { QuizesVisibilityOptions } from '$lib/pb';

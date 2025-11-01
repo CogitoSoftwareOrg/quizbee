@@ -7,7 +7,7 @@
 		Menu,
 		MessageCircleHeart
 	} from 'lucide-svelte';
-	import { Button } from '@cogisoft/ui-svelte-daisy';
+	import { Button } from '@quizbee/ui-svelte-daisy';
 
 	import { uiStore } from '$lib/apps/users/ui.svelte';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';

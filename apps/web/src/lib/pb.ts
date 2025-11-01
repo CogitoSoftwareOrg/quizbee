@@ -13,5 +13,5 @@ const publicUrl = urlWithPR(
 export const pb = new PocketBase(adminUrl) as TypedPocketBase;
 pb.autoCancellation(false);
 
-export const pbPublic = new PocketBase(publicUrl) as TypedPocketBase;
-pbPublic.autoCancellation(true);
+export const pbPub = new PocketBase(publicUrl) as TypedPocketBase;
+pbPub.autoCancellation(true);

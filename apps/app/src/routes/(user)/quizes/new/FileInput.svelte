@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
-	// import { TextArea } from '@cogisoft/ui-svelte-daisy';
+	// import { TextArea } from '@quizbee/ui-svelte-daisy';
 
 	import { computeApiUrl } from '$lib/api/compute-url';
 	import { materialsStore } from '$lib/apps/materials/materials.svelte';
@@ -124,7 +124,7 @@
 						setTimeout(() => {
 							warningTooBigFile = null;
 						}, 5000);
-					} else if (foundMaterial.status === 'uploaded') {
+					} else if (foundMaterial.status === 'indexed') {
 						attachedFile.tokens = foundMaterial.tokens;
 						attachedFile.isBook = foundMaterial.isBook;
 						attachedFile.isUploading = false;
@@ -158,7 +158,7 @@
 			// 	body: formData,
 			// 	credentials: 'include'
 			// });
-			const response = await fetch(`${computeApiUrl()}v2/materials`, {
+			const response = await fetch(`${computeApiUrl()}quizes/${quizTemplateId}/materials`, {
 				method: 'POST',
 				body: formData,
 				credentials: 'include'
@@ -168,9 +168,6 @@
 				const errorText = await response.text();
 				throw new Error(`Failed to upload material: ${errorText}`);
 			}
-
-		
-			
 		} catch (error) {
 			console.error('Failed to upload file:', attachedFile.name, error);
 

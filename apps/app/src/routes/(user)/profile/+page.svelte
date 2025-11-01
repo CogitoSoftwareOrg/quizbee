@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 	import posthog from 'posthog-js';
 
-	import { Button } from '@cogisoft/ui-svelte-daisy';
+	import { Button } from '@quizbee/ui-svelte-daisy';
 
 	import { pb } from '$lib/pb';
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte';

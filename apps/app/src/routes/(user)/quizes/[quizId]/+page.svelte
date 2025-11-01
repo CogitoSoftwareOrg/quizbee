@@ -4,7 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { Clock, Search, BookOpen, Play, ChevronDown, ChevronRight } from 'lucide-svelte';
 
-	import { Button, Input } from '@cogisoft/ui-svelte-daisy';
+	import { Button, Input } from '@quizbee/ui-svelte-daisy';
 
 	import { userStore } from '$lib/apps/users/user.svelte.js';
 	import { pb } from '$lib/pb/client.js';

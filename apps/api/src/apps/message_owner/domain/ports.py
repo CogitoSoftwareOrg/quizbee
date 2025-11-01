@@ -1,0 +1,9 @@
+from typing import Protocol
+
+from .models import Message
+
+
+class MessageRepository(Protocol):
+    async def get(self, id: str) -> Message: ...
+    async def get_attempt(self, attempt_id: str, limit: int) -> list[Message]: ...
+    async def save(self, messages: list[Message]) -> None: ...

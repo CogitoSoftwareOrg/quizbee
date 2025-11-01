@@ -1,0 +1,20 @@
+name: quizbee-web-prod
+
+services:
+  web:
+    build:
+      context: ../..
+      dockerfile: ./apps/web/Dockerfile
+      args:
+        - PUBLIC_APP_URL=${PUBLIC_APP_URL:-https://app.quizbee.academy/}
+        - PUBLIC_PB_URL=${PUBLIC_PB_URL:-https://pb.quizbee.academy/}
+        - PB_URL=${PB_URL:-https://pb.quizbee.academy/}
+        - PB_EMAIL=${PB_EMAIL}
+        - PB_PASSWORD=${PB_PASSWORD}
+    environment:
+      - PUBLIC_APP_URL=${PUBLIC_APP_URL:-https://app.quizbee.academy/}
+      - PUBLIC_PB_URL=${PUBLIC_PB_URL:-https://pb.quizbee.academy/}
+      - PB_URL=${PB_URL:-https://pb.quizbee.academy/}
+      - PB_EMAIL=${PB_EMAIL}
+      - PB_PASSWORD=${PB_PASSWORD}
+      - PUBLIC_POSTHOG=${PUBLIC_POSTHOG}

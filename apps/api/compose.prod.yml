@@ -1,0 +1,34 @@
+name: quizbee-api-prod
+
+services:
+  api:
+    build:
+      context: ../..
+      dockerfile: ./apps/api/Dockerfile
+    environment:
+      - ENV=${ENV:-production}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_FORMAT=${LOG_FORMAT:-json}
+
+      - PUBLIC_APP_URL=${PUBLIC_APP_URL}
+
+      - PB_URL=${PB_URL}
+      - PB_EMAIL=${PB_EMAIL}
+      - PB_PASSWORD=${PB_PASSWORD}
+
+      - REDIS_DSN=${REDIS_DSN}
+
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+
+      - MEILI_URL=${MEILI_URL}
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
+
+      - TG_TOKEN=${TG_TOKEN}
+      - TG_ID=${TG_ID}
+
+      - STRIPE_API_KEY=${STRIPE_API_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
+      - LANGFUSE_HOST=${LANGFUSE_HOST}

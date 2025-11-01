@@ -1,25 +1,96 @@
 name: quizbee-local
 
 services:
-  pb:
+  # APPS
+  api:
     build:
-      context: ../apps/pb
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ../apps/api/Dockerfile.local
     env_file:
       - ../envs/.env
     volumes:
-      - ../apps/pb/pb_data:/pb/pb_data
-      - ../apps/pb/pb_migrations:/pb/pb_migrations
-      - ../apps/pb/pb_hooks:/pb/pb_hooks
+      - uv-cache:/root/.cache/uv
+      - ../:/repo
+      - /repo/apps/api/.venv
+    ports:
+      - "8000:8000"
+
+  worker:
+    build:
+      context: .
+      dockerfile: ../apps/api/Dockerfile.local
+    env_file:
+      - ../envs/.env
+    volumes:
+      - uv-cache:/root/.cache/uv
+      - ../:/repo
+      - /repo/apps/api/.venv
+    working_dir: /repo/apps/api
+    command:
+      - sh
+      - -lc
+      - |
+        uv sync --group dev &&
+        uv run python -m watchfiles --filter python --ignore-path /repo/apps/api/.venv --ignore-path /repo/node_modules "uv run arq src.bootstrap.worker.WorkerSettings" /repo/apps/api/src
+
+  web:
+    build:
+      context: .
+      dockerfile: ../apps/web/Dockerfile.local
+    env_file:
+      - ../envs/.env
+    environment:
+      - CI=true
+      - CHOKIDAR_USEPOLLING=1
+    volumes:
+      - ../:/repo
+      - pnpm-store:/pnpm
+      - /repo/node_modules
+      - /repo/apps/web/node_modules
+    working_dir: /repo
+    ports:
+      - "4321:4321"
+
+  app:
+    build:
+      context: .
+      dockerfile: ../apps/app/Dockerfile.local
+      args:
+        - STRIPE_API_KEY=${STRIPE_API_KEY}
+    environment:
+      - CI=true
+      - CHOKIDAR_USEPOLLING=1
+    env_file:
+      - ../envs/.env
+    volumes:
+      - ../:/repo
+      - pnpm-store:/pnpm
+      - /repo/node_modules
+      - /repo/apps/app/node_modules
+    working_dir: /repo
+    ports:
+      - "5173:5173"
+
+  # INFRA
+  pb:
+    build:
+      context: .
+      dockerfile: ./pb/Dockerfile.local
+    env_file:
+      - ../envs/.env
+    volumes:
+      - ./pb/pb_data:/pb/pb_data
+      - ./pb/pb_migrations:/pb/pb_migrations:ro
+      - ./pb/pb_hooks:/pb/pb_hooks:ro
     ports:
       - "8090:8090"
 
-  meilisearch:
+  meili:
     image: getmeili/meilisearch:latest
     ports:
       - "7700:7700"
     volumes:
-      - ../apps/meilisearch/data:/meili_data
+      - ./meilisearch/data:/meili_data
     env_file:
       - ../envs/.env
 
@@ -28,6 +99,10 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - ../apps/dragonfly/data:/data
+      - ./dragonfly/data:/data
     env_file:
       - ../envs/.env
+
+volumes:
+  pnpm-store:
+  uv-cache:

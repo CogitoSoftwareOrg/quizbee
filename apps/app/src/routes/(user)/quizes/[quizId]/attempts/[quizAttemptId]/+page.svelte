@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 
-	import { Button } from '@cogisoft/ui-svelte-daisy';
+	import { Button } from '@quizbee/ui-svelte-daisy';
 
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte.js';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte.js';
@@ -88,8 +88,8 @@
 	// Messages
 	const messages = $derived(
 		messagesStore.messages.filter((m) => {
-			const meta = m.metadata as { itemId: string };
-			const itemId = meta?.itemId;
+			const meta = m.metadata as { item_id: string };
+			const itemId = meta?.item_id;
 			return itemId === item?.id;
 		})
 	);
@@ -239,6 +239,7 @@
 						{#if item && quiz && quizAttempt}
 							<QuizItemsNavigation
 								{quizAttempt}
+								{quiz}
 								{quizItems}
 								{order}
 								{itemDecision}
@@ -288,6 +289,7 @@
 			<AIChat
 				class="flex h-full flex-col px-2"
 				{item}
+				{quiz}
 				{quizAttempt}
 				{itemDecision}
 				{messages}
@@ -300,6 +302,7 @@
 </div>
 <!-- Mobile AI Chat (bottom sheet) -->
 <MobileAIChat
+	{quiz}
 	{item}
 	{quizAttempt}
 	{itemDecision}

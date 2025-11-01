@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Crown, Settings, Rocket } from 'lucide-svelte';
 
-	import { Button } from '@cogisoft/ui-svelte-daisy';
+	import { Button } from '@quizbee/ui-svelte-daisy';
 
 	import { postApi } from '$lib/api/call-api';
 	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
@@ -63,7 +63,7 @@
 			{#if paid}
 				<Button
 					onclick={async () => {
-						const response = await postApi('billing/portal', {
+						const response = await postApi('portal', {
 							return_url: 'profile'
 						});
 						window.location.href = response.url;

@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import { Search, ChevronRight, ChevronLeft, Sparkles } from 'lucide-svelte';
 
-	import { Button, Input } from '@cogisoft/ui-svelte-daisy';
+	import { Button, Input } from '@quizbee/ui-svelte-daisy';
 
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
@@ -186,7 +186,7 @@
 				href={`/quizes/${quiz?.id}`}
 				class="hidden underline sm:block"
 			>
-				<ChevronLeft /> 
+				<ChevronLeft />
 			</Button>
 			{#if quiz}
 				<h1 class="text-center text-2xl font-bold leading-tight">{quiz?.title || 'Quiz'}</h1>

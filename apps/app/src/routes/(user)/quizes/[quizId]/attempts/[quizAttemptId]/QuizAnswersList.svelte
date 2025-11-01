@@ -14,6 +14,7 @@
 	import { ChevronDown, ChevronRight, Info } from 'lucide-svelte';
 	import { patchApi, putApi } from '$lib/api/call-api';
 	import { QuizItemsStatusOptions } from '$lib/pb/pocketbase-types';
+	import { userStore } from '$lib/apps/users/user.svelte.js';
 
 	interface Props {
 		class?: ClassValue;
@@ -36,6 +37,8 @@
 		quizAttempt,
 		itemDecision = $bindable(null)
 	}: Props = $props();
+
+	const user = $derived(userStore.user);
 
 	const readyItems = $derived(
 		quizItems.filter((item) => ['final', 'generated', 'generating'].includes(item.status))
@@ -100,15 +103,23 @@
 		});
 	});
 
-	async function createFeedback() {
-		if (!quizAttempt.id || quizAttempt.feedback) return;
-
-		posthog.capture('quiz_feedback_started', {
+	async function finalizeQuiz() {
+		posthog.capture('quiz_finalize_started', {
 			quizId: quiz.id,
-			quizAttemptId: quizAttempt.id,
-			itemId: item.id
+			quizAttemptId: quizAttempt.id
 		});
-		const res = await putApi(`quiz_attempts/${quizAttempt.id}`, {});
+		const res = await putApi(`quizes/${quiz.id}/finalize`, {
+			attempt_id: quizAttempt.id
+		});
+		console.log(res);
+	}
+
+	async function finalizeAttempt() {
+		posthog.capture('attempt_finalize_started', {
+			quizId: quiz.id,
+			quizAttemptId: quizAttempt.id
+		});
+		const res = await putApi(`quizes/${quiz.id}/attempts/${quizAttempt.id}`, {});
 		console.log(res);
 	}
 </script>
@@ -141,10 +152,9 @@
 										answerIndex: index,
 										correct: answer.correct
 									};
+
 									const newDecisions = [...quizDecisions, itemDecision];
-
 									item.status = QuizItemsStatusOptions.final;
-
 									await Promise.all([
 										pb!.collection('quizAttempts').update(quizAttempt!.id, {
 											choices: newDecisions
@@ -154,18 +164,20 @@
 										})
 									]);
 
-									if (toAnswer === 3 && quizItems.some((qi) => ['blank'].includes(qi.status))) {
+									if (toAnswer <= 3 && quizItems.some((qi) => ['blank'].includes(qi.status))) {
 										const result = await patchApi(`quizes/${quiz?.id}`, {
 											attempt_id: quizAttempt!.id,
-											limit: 5,
 											mode: 'continue'
 										});
 										console.log('Quiz settings updated:', result);
 									}
 
-									if (item.order + 1 === quizItems.length) {
-										await createFeedback();
-										return;
+									if (item.order + 1 === quizItems.length && !quizAttempt.feedback) {
+										await finalizeAttempt();
+									}
+
+									if (item.order + 1 === quizItems.length && quiz.author === user?.id) {
+										await finalizeQuiz();
 									}
 
 									return;
