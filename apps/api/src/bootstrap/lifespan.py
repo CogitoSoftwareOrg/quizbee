@@ -2,6 +2,7 @@ from fastapi import FastAPI
 import logging
 import contextlib
 from contextlib import asynccontextmanager
+from arq.connections import RedisSettings, create_pool
 
 from quizbee_example_lib import greet
 
@@ -19,6 +20,8 @@ from src.apps.material_search.di import (
 from src.apps.message_owner.di import init_message_owner_app
 
 from src.apps.quiz_attempter.di import init_quiz_attempter_app
+
+from src.lib.settings import settings
 
 from .mcp import mcp
 from .di import (
@@ -118,6 +121,11 @@ async def lifespan(app: FastAPI):
     app.state.admin_pb = admin_pb
     app.state.edge_api_app = edge_api_app
 
+    # ARQ Redis pool для отправки задач
+    redis_settings = RedisSettings.from_dsn(settings.redis_dsn)
+    arq_pool = await create_pool(redis_settings)
+    app.state.arq_pool = arq_pool
+
     async with contextlib.AsyncExitStack() as stack:
         await stack.enter_async_context(mcp.session_manager.run())
         yield
@@ -125,5 +133,6 @@ async def lifespan(app: FastAPI):
     # CLEANUP LOGIC
     logger.info("Shutting down Quizbee API server")
     # await app.state.meili_client.aclose()
+    await arq_pool.close()
     await http.aclose()
     await meili.aclose()
