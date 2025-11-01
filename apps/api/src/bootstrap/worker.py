@@ -110,6 +110,7 @@ async def startup(ctx):
     )
 
     ctx["edge"] = edge_api_app
+    ctx["pb"] = admin_pb
     ctx["meili"] = meili
     ctx["http"] = http
 

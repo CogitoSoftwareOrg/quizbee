@@ -158,7 +158,7 @@
 			// 	body: formData,
 			// 	credentials: 'include'
 			// });
-			const response = await fetch(`${computeApiUrl()}v2/materials`, {
+			const response = await fetch(`${computeApiUrl()}quizes/${quizTemplateId}/materials`, {
 				method: 'POST',
 				body: formData,
 				credentials: 'include'

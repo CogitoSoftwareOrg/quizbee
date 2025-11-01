@@ -108,7 +108,7 @@
 			quizId: quiz.id,
 			quizAttemptId: quizAttempt.id
 		});
-		const res = await putApi(`v2/quizes/${quiz.id}/finalize`, {
+		const res = await putApi(`quizes/${quiz.id}/finalize`, {
 			attempt_id: quizAttempt.id
 		});
 		console.log(res);
@@ -119,7 +119,7 @@
 			quizId: quiz.id,
 			quizAttemptId: quizAttempt.id
 		});
-		const res = await putApi(`v2/quizes/${quiz.id}/attempts/${quizAttempt.id}`, {});
+		const res = await putApi(`quizes/${quiz.id}/attempts/${quizAttempt.id}`, {});
 		console.log(res);
 	}
 </script>
@@ -165,7 +165,7 @@
 									]);
 
 									if (toAnswer <= 3 && quizItems.some((qi) => ['blank'].includes(qi.status))) {
-										const result = await patchApi(`v2/quizes/${quiz?.id}`, {
+										const result = await patchApi(`quizes/${quiz?.id}`, {
 											attempt_id: quizAttempt!.id,
 											mode: 'continue'
 										});

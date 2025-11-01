@@ -1,2 +1,2 @@
 from .pb_user_verifier import PBUserVerifier
-from .pb_repository import PBUserRepository
+from .pb_user_repository import PBUserRepository

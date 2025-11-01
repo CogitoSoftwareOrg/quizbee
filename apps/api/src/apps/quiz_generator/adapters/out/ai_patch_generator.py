@@ -24,6 +24,7 @@ from ...domain.models import Quiz, QuizItem, QuizItemStatus, QuizItemVariant
 
 
 PATCH_GENERATOR_LLM = LLMS.GPT_5_MINI
+IN_QUERY = "Generate Quiz Patch"
 
 
 @dataclass
@@ -114,6 +115,7 @@ class AIPatchGenerator(PatchGenerator):
         try:
             with self._lf.start_as_current_span(name=f"quiz-patch") as span:
                 async with self._ai.run_stream(
+                    IN_QUERY,
                     deps=AIPatchGeneratorDeps(quiz=quiz),
                     model_settings={
                         "extra_body": {

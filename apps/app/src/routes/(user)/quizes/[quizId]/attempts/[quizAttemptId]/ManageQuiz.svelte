@@ -197,7 +197,7 @@
 						topic,
 						additionalQuery
 					});
-					await patchApi(`v2/quizes/${quiz.id}`, {
+					await patchApi(`quizes/${quiz.id}`, {
 						attempt_id: quizAttempt.id,
 						mode: 'regenerate'
 					});

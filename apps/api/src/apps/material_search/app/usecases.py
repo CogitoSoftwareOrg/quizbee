@@ -78,7 +78,7 @@ class MaterialSearchAppImpl(MaterialSearchApp):
                 material.kind = MaterialKind.COMPLEX
 
                 pdf_data = self.pdf_parser.parse(
-                    cmd.file.file_bytes, process_images=False
+                    cmd.file.file_bytes, process_images=True
                 )
                 text = pdf_data.text
                 pdf_images = pdf_data.images

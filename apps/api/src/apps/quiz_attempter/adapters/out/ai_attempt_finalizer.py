@@ -20,6 +20,7 @@ from ...domain.ports import AttemptFinalizer, AttemptRepository
 from ...domain.models import Attempt, Feedback
 
 ATTEMPT_FINALIZER_LLM = LLMS.GPT_5_MINI
+IN_QUERY = "Finalize Attempt"
 
 
 @dataclass
@@ -78,6 +79,7 @@ class AIAttemptFinalizer(AttemptFinalizer):
     async def finalize(self, attempt: Attempt, cache_key: str) -> None:
         with self._lf.start_as_current_span(name="attempt-finalizer") as span:
             res = await self._ai.run(
+                IN_QUERY,
                 deps=AttemptFinalizerDeps(attempt=attempt),
                 model_settings={
                     "extra_body": {

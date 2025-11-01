@@ -63,7 +63,7 @@ class MessagesStore {
 		await pb!.collection('messages').create(msg);
 
 		const es = new EventSource(
-			`${computeApiUrl()}v2/quizes/${quizId}/attempts/${attemptId}/messages/sse?q=${encodeURIComponent(content)}&item=${itemId}`,
+			`${computeApiUrl()}quizes/${quizId}/attempts/${attemptId}/messages/sse?q=${encodeURIComponent(content)}&item=${itemId}`,
 			{
 				withCredentials: true
 			}

@@ -23,6 +23,7 @@ from ...domain.ports import QuizFinalizer, QuizRepository
 
 
 QUIZ_FINALIZER_LLM = LLMS.GPT_5_MINI
+IN_QUERY = "Finilize Quiz"
 
 
 @dataclass
@@ -90,6 +91,7 @@ class AIQuizFinalizer(QuizFinalizer):
         # SUMMARIZE
         with self._lf.start_as_current_span(name="quiz-finalizer") as span:
             res = await self._ai.run(
+                IN_QUERY,
                 deps=QuizFinalizerDeps(quiz=quiz),
                 model_settings={
                     "extra_body": {

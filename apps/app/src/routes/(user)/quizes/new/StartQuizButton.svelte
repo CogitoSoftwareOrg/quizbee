@@ -53,10 +53,9 @@
 				user: user?.id
 			});
 
-			const { quiz_id: quizId, attempt_id: attemptId } = await putApi(
-				`v2/quizes/${quizTemplateId}`,
-				{ attempt_id: attempt.id }
-			);
+			const { quiz_id: quizId, attempt_id: attemptId } = await putApi(`quizes/${quizTemplateId}`, {
+				attempt_id: attempt.id
+			});
 
 			posthog.capture('quiz_creation_started', {
 				quizId,
