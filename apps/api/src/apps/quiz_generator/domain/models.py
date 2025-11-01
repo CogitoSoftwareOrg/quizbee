@@ -85,6 +85,12 @@ class QuizItem:
             raise ValueError("Item is not in generating status for failing")
         self.status = QuizItemStatus.FAILED
 
+    def update(self, item: "QuizItem") -> None:
+        self.question = item.question
+        self.variants = item.variants
+        self.order = item.order
+        self.status = item.status
+
 
 @dataclass(slots=True, kw_only=True)
 class Quiz:
@@ -205,11 +211,9 @@ class Quiz:
             item.to_failed()
 
     def update_item(self, item: QuizItem):
-        for i, existing_item in enumerate(self.items):
-            if existing_item.id == item.id:
-                self.items[i] = item
+        for itm in self.items:
+            if itm.id == item.id:
+                itm.update(item)
                 return
-        raise ValueError(f"Item {item.id} not found")
 
-    # def attach_material(self, material_id: str):
-    #     self.materials.append(MaterialRef(id=material_id))
+        raise ValueError(f"Item {item.id} not found")

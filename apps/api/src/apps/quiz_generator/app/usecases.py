@@ -45,18 +45,8 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
 
     async def generate(self, cmd: GenerateCmd) -> None:
         quiz = await self.quiz_repository.get(cmd.quiz_id)
-
         if quiz.author_id != cmd.user.id:
             raise NotQuizOwnerError(quiz_id=cmd.quiz_id, user_id=cmd.user.id)
-        stored = cmd.user.remaining
-        cost = PATCH_LIMIT
-        if cost > cmd.user.remaining:
-            raise NotEnoughQuizItemsError(
-                quiz_id=cmd.quiz_id,
-                user_id=cmd.user.id,
-                cost=cost,
-                stored=stored,
-            )
 
         if cmd.mode == GenMode.Regenerate:
             logging.info(f"Incrementing generation for quiz {cmd.quiz_id}")
