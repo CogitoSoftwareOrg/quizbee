@@ -20,7 +20,7 @@ export const load = async () => {
 		stripePrices: prices.data.map((price) => ({
 			lookup: price.lookup_key,
 			tariff: price.lookup_key!.split('_')[0] ?? '',
-			amount: price.unit_amount ?? 0
+			amount: (price.unit_amount ?? 0) / 100
 		}))
 	};
 };
