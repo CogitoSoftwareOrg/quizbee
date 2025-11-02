@@ -8,7 +8,7 @@ from pocketbase.models.dtos import Record
 
 from src.lib.settings import settings
 
-from ...domain.models import Attempt
+from ...domain.models import Attempt, Feedback
 from ...domain.refs import Choice, QuizItemRef, QuizRef
 from ...domain.ports import AttemptRepository
 
@@ -22,31 +22,36 @@ class PBAttemptRepository(AttemptRepository):
         rec = await self.admin_pb.collection("quizAttempts").get_one(
             id, options={"params": {"expand": "quiz,quiz.quizItems_via_quiz"}}
         )
-        return await self._to_attempt(rec)
+        return await self._rec_to_attempt(rec)
 
     async def save(self, attempt: Attempt) -> None:
         try:
             await self.admin_pb.collection("quizAttempts").create(
-                self._to_record(attempt)
+                self._attempt_to_rec(attempt)
             )
         except:
             await self.admin_pb.collection("quizAttempts").update(
-                attempt.id, self._to_record(attempt)
+                attempt.id, self._attempt_to_rec(attempt)
             )
 
-    def _to_record(self, attempt: Attempt) -> dict[str, Any]:
+    def _attempt_to_rec(self, attempt: Attempt) -> dict[str, Any]:
         dto = {
             "id": attempt.id,
             "quiz": attempt.quiz.id,
             "user": attempt.user_id,
+            "feedback": (
+                self._feedback_to_rec(attempt.feedback) if attempt.feedback else None
+            ),
         }
 
         if attempt.choices:
-            dto["choices"] = json.dumps([asdict(c) for c in attempt.choices])
+            dto["choices"] = json.dumps(
+                [self._choice_to_rec(c) for c in attempt.choices]
+            )
 
         return dto
 
-    async def _to_attempt(self, rec: Record) -> Attempt:
+    async def _rec_to_attempt(self, rec: Record) -> Attempt:
         quiz_rec = rec.get("expand", {}).get("quiz", {})
         choices = rec.get("choices", [])
 
@@ -58,21 +63,39 @@ class PBAttemptRepository(AttemptRepository):
             for choice in choices
         ]
 
-        quiz = await self._to_quiz(quiz_rec, choices)
+        quiz = await self._rec_to_quiz(quiz_rec, choices)
+
+        feedback_rec = rec.get("feedback")
+        feedback = self._rec_to_feedback(feedback_rec) if feedback_rec else None
 
         return Attempt(
+            feedback=feedback,
             id=rec.get("id", ""),
             choices=choices,
             quiz=quiz,
             user_id=rec.get("user", ""),
         )
 
-    async def _to_quiz(self, rec: Record, choices: list[Choice]) -> QuizRef:
+    def _rec_to_feedback(self, rec: Record) -> Feedback:
+        return Feedback(
+            overview=rec.get("overview", ""),
+            problem_topics=rec.get("problemTopics", []),
+            uncovered_topics=rec.get("uncoveredTopics", []),
+        )
+
+    def _feedback_to_rec(self, feedback: Feedback):
+        return {
+            "overview": feedback.overview,
+            "problemTopics": feedback.problem_topics,
+            "uncoveredTopics": feedback.uncovered_topics,
+        }
+
+    async def _rec_to_quiz(self, rec: Record, choices: list[Choice]) -> QuizRef:
         items_recs = rec.get("expand", {}).get("quizItems_via_quiz", [])
 
         padded_choices = choices + [None] * (len(items_recs) - len(choices))
         items = [
-            self._to_item(item, choice)
+            self._rec_to_item(item, choice)
             for item, choice in zip(items_recs, padded_choices)
         ]
 
@@ -91,13 +114,19 @@ class PBAttemptRepository(AttemptRepository):
             material_content=material_content,
         )
 
-    def _to_choice(self, rec: Record):
+    def _rec_to_choice(self, rec: Record):
         return Choice(
             idx=rec.get("answerIndex", 0),
             correct=rec.get("correct", False),
         )
 
-    def _to_item(self, rec: Record, choice: Choice | None) -> QuizItemRef:
+    def _choice_to_rec(self, choice: Choice):
+        return {
+            "answerIndex": choice.idx,
+            "correct": choice.correct,
+        }
+
+    def _rec_to_item(self, rec: Record, choice: Choice | None) -> QuizItemRef:
         answers_recs = rec.get("answers") or []
         answers = [
             f"Answer {i+1} {a.get('correct', False)}: {a.get('content', '')}\n\nExplanation: {a.get('explanation', '')}\n\n"

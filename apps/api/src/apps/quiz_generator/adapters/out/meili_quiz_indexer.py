@@ -123,12 +123,14 @@ class MeiliQuizIndexer(QuizIndexer):
         return instance
 
     async def index(self, quiz: Quiz) -> None:
-        total_tokens = 0
 
         if quiz.summary is None or quiz.tags is None or quiz.category is None:
             raise InvalidQuiz("Quiz summary, tags, and category are required")
 
         doc = Doc.from_quiz(quiz)
+        total_tokens = self.llm_tools.count_text(
+            self._fill_template(doc), LLMS.TEXT_EMBEDDING_3_SMALL
+        )
 
         task = await self.quiz_index.add_documents(
             [self._to_camel_case(asdict(doc))], primary_key="id"
@@ -155,7 +157,6 @@ class MeiliQuizIndexer(QuizIndexer):
         else:
             logging.error(f"Unknown task status: {task}")
 
-        # Third: Log to langfuse after all tasks are complete and tokens are counted
         self._log_langfuse(quiz.author_id, quiz.id, total_tokens, "quiz-index-add")
 
     async def search(
@@ -184,7 +185,7 @@ class MeiliQuizIndexer(QuizIndexer):
             hybrid=hybrid,
             ranking_score_threshold=threshold,
             limit=limit,
-            # filter=f,
+            filter=f,
         )
 
         if hybrid is not None:
@@ -223,7 +224,7 @@ class MeiliQuizIndexer(QuizIndexer):
     def _log_langfuse(
         self, user_id: str, session_id: str, total_tokens: int, name: str
     ) -> None:
-        with self._lf.start_as_current_span(name="material-indexing") as span:
+        with self._lf.start_as_current_span(name=name) as span:
             self._lf.update_current_generation(
                 model=LLMS.TEXT_EMBEDDING_3_SMALL,
                 usage_details={
@@ -244,3 +245,13 @@ class MeiliQuizIndexer(QuizIndexer):
             camel_key = parts[0] + "".join(word.capitalize() for word in parts[1:])
             camel_case[camel_key] = value
         return camel_case
+
+    def _fill_template(self, doc: Doc):
+        return (
+            EMBEDDER_TEMPLATE.replace("{{doc.title}}", doc.title)
+            .replace("{{doc.summary}}", doc.summary)
+            .replace("{{doc.tags}}", ", ".join(doc.tags))
+            .replace("{{doc.category}}", doc.category)
+            .replace("{{doc.difficulty}}", doc.difficulty)
+            .replace("{{doc.query}}", doc.query)
+        )

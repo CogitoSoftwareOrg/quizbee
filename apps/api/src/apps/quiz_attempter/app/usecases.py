@@ -56,6 +56,7 @@ class QuizAttempterAppImpl(QuizAttempterApp):
         attempt = await self.attempt_repository.get(cmd.attempt_id)
         await self.validate_attempt(attempt, cmd.user)
         await self.finalizer.finalize(attempt, cmd.cache_key)
+        await self.attempt_repository.save(attempt)
 
     async def ask_explainer(
         self, cmd: AskExplainerCmd
@@ -78,7 +79,9 @@ class QuizAttempterAppImpl(QuizAttempterApp):
 
         item = attempt.get_item(cmd.item_id)
 
-        logger.info(f"Explain attempt: {attempt.id}")
+        logger.info(
+            f"Explain attempt: {attempt.id} with material content: {len(attempt.quiz.material_content)}"
+        )
         async for message in self.explainer.explain(
             cmd.query, attempt, item, ai_message_ref, cmd.cache_key
         ):

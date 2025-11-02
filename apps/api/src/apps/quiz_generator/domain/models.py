@@ -173,7 +173,7 @@ class Quiz:
         self.category = category
 
     def set_slug(self, slug: str):
-        self.slug = slug
+        self.slug = f"{slug}-{self.id[:6]}"
 
     def add_negative_questions(self, questions: list[str]):
         self.gen_config.negative_questions.extend(questions)
