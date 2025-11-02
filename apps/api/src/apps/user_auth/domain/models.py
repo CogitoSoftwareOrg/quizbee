@@ -1,4 +1,11 @@
 from dataclasses import dataclass
+from enum import StrEnum
+
+
+class Tariff(StrEnum):
+    FREE = "free"
+    PRO = "pro"
+    PLUS = "plus"
 
 
 @dataclass(slots=True, kw_only=True)
@@ -12,5 +19,3 @@ class Subscription:
 class User:
     id: str
     subscription: Subscription
-
-

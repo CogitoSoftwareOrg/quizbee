@@ -50,8 +50,6 @@ class PBAttemptRepository(AttemptRepository):
         quiz_rec = rec.get("expand", {}).get("quiz", {})
         choices = rec.get("choices", [])
 
-        quiz = await self._to_quiz(quiz_rec, choices)
-
         choices = [
             Choice(
                 idx=choice.get("answerIndex", 0),
@@ -59,6 +57,8 @@ class PBAttemptRepository(AttemptRepository):
             )
             for choice in choices
         ]
+
+        quiz = await self._to_quiz(quiz_rec, choices)
 
         return Attempt(
             id=rec.get("id", ""),
@@ -89,6 +89,12 @@ class PBAttemptRepository(AttemptRepository):
             items=items,
             query=rec.get("query", ""),
             material_content=material_content,
+        )
+
+    def _to_choice(self, rec: Record):
+        return Choice(
+            idx=rec.get("answerIndex", 0),
+            correct=rec.get("correct", False),
         )
 
     def _to_item(self, rec: Record, choice: Choice | None) -> QuizItemRef:

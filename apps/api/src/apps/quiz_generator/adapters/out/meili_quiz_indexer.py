@@ -1,7 +1,7 @@
 import asyncio
 from dataclasses import asdict, dataclass
 import logging
-from typing import TypedDict
+from typing import Any, TypedDict
 from langfuse import Langfuse
 from meilisearch_python_sdk import AsyncClient
 from meilisearch_python_sdk.models.search import Hybrid
@@ -130,7 +130,9 @@ class MeiliQuizIndexer(QuizIndexer):
 
         doc = Doc.from_quiz(quiz)
 
-        task = await self.quiz_index.add_documents([asdict(doc)], primary_key="id")
+        task = await self.quiz_index.add_documents(
+            [self._to_camel_case(asdict(doc))], primary_key="id"
+        )
 
         logging.info(f"Created task for document")
 
@@ -154,33 +156,20 @@ class MeiliQuizIndexer(QuizIndexer):
             logging.error(f"Unknown task status: {task}")
 
         # Third: Log to langfuse after all tasks are complete and tokens are counted
-        with self._lf.start_as_current_span(name="quiz-indexing") as span:
-            self._lf.update_current_generation(
-                model=LLMS.TEXT_EMBEDDING_3_SMALL,
-                usage_details={
-                    "total": total_tokens,
-                },
-            )
-            span.update_trace(
-                input=f"Quiz: {quiz.id}",
-                output=f"Total tokens: {total_tokens}",
-                metadata={
-                    "quiz_id": quiz.id,
-                    "total_tokens": total_tokens,
-                },
-                user_id=quiz.author_id,
-                session_id=quiz.id,
-            )
+        self._log_langfuse(quiz.author_id, quiz.id, total_tokens, "quiz-index-add")
 
     async def search(
         self,
         user_id: str,
         query: str,
-        limit: int = 100,
+        limit=100,
         ratio=0.5,
         threshold=0.4,
     ) -> list[Quiz]:
-        f = f"userId = {user_id}"
+        f = f"userId = '{user_id}'"
+
+        total_tokens = self.llm_tools.count_text(query, LLMS.TEXT_EMBEDDING_3_SMALL)
+
         hybrid = (
             Hybrid(
                 semantic_ratio=ratio,
@@ -194,16 +183,19 @@ class MeiliQuizIndexer(QuizIndexer):
             query=query,
             hybrid=hybrid,
             ranking_score_threshold=threshold,
-            filter=f,
             limit=limit,
+            # filter=f,
         )
 
-        logging.info(f"Meili Searching... {f} (hits: {len(res.hits)})")
+        if hybrid is not None:
+            self._log_langfuse(user_id, "", total_tokens, "quiz-index-search")
+
+        logging.info(f"Meili Search Results: {f} (hits: {len(res.hits)})")
 
         docs: list[Doc] = [Doc.from_hit(hit) for hit in res.hits]
-        logging.info(f"Docs: {docs}")
+        logging.info(f"Docs: {len(docs)}")
         quizes = await asyncio.gather(
-            *[self.quiz_repository.get(doc.quiz_id) for doc in docs]
+            *[self.quiz_repository.get(doc.id) for doc in docs]
         )
 
         return quizes
@@ -227,3 +219,28 @@ class MeiliQuizIndexer(QuizIndexer):
             logging.info(f"Deleted materials: {material_ids}")
         else:
             logging.error(f"Unknown task status: {task}")
+
+    def _log_langfuse(
+        self, user_id: str, session_id: str, total_tokens: int, name: str
+    ) -> None:
+        with self._lf.start_as_current_span(name="material-indexing") as span:
+            self._lf.update_current_generation(
+                model=LLMS.TEXT_EMBEDDING_3_SMALL,
+                usage_details={
+                    "total": total_tokens,
+                },
+            )
+            span.update_trace(
+                input=f"User: {user_id}, Session: {session_id}",
+                output=f"Total tokens: {total_tokens}",
+                user_id=user_id,
+                session_id=session_id,
+            )
+
+    def _to_camel_case(self, snake_case: dict[str, Any]) -> dict[str, Any]:
+        camel_case = {}
+        for key, value in snake_case.items():
+            parts = key.split("_")
+            camel_key = parts[0] + "".join(word.capitalize() for word in parts[1:])
+            camel_case[camel_key] = value
+        return camel_case
