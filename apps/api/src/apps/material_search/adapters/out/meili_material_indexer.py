@@ -62,14 +62,20 @@ class MeiliMaterialIndexer(MaterialIndexer):
     async def index(self, material: Material) -> None:
         total_tokens = 0
 
+        # Extract text from material
         if material.kind == MaterialKind.SIMPLE:
             text = material.file.file_bytes.decode("utf-8")
         elif material.text_file is not None:
             text = material.text_file.file_bytes.decode("utf-8")
         else:
-            raise ValueError("Material has no text")
+            logging.warning(
+                f"Material {material.id} is COMPLEX but has no text_file, trying to decode file as text"
+            )
+            raise ValueError("Material has no text content")
 
-        chunks = self.llm_tools.chunk(text)
+        if not text or not text.strip():
+            raise ValueError("Material has no text content")
+
         chunks = self.llm_tools.chunk(text)
         docs = []
         for i, chunk in enumerate(chunks):
@@ -82,29 +88,6 @@ class MeiliMaterialIndexer(MaterialIndexer):
                     content=chunk,
                 )
             )
-
-        docs_tokens = sum(
-            [
-                self.llm_tools.count_text(
-                    self._fill_template(doc), LLMS.TEXT_EMBEDDING_3_SMALL
-                )
-                for doc in docs
-            ]
-        )
-        if docs_tokens > MAX_TEXT_INDEX_TOKENS:
-            raise TooManyTextTokensError(docs_tokens)
-
-        task = await self.material_index.add_documents(
-            [asdict(doc) for doc in docs], primary_key="id"
-        )
-
-        logging.info(f"Created task for {len(docs)} documents")
-
-        task = await self.meili.wait_for_task(
-            task.task_uid,
-            timeout_in_ms=int(120 * 1000),
-            interval_in_ms=int(1 * 1000),
-        )
 
         docs_tokens = sum(
             [

@@ -27,12 +27,12 @@ FILTERABLE_ATTRIBUTES = [
 
 EMBEDDER_NAME = "quizSummaries"
 EMBEDDER_TEMPLATE = """
-Quiz {{doc.title}}
-Query: {{doc.query}}
-Summary: {{doc.summary}}
-Difficulty: {{doc.difficulty}}
-Tags: {{doc.tags}}
-Category: {{doc.category}}
+Quiz "{{ doc.title }}"
+Summary: {{ doc.summary }}
+Difficulty: {{ doc.difficulty }}
+Tags: {{ doc.tags }}
+Category: {{ doc.category }}
+Query: {{ doc.query | default: "" }}
 """
 
 meiliEmbeddings = {
