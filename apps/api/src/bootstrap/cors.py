@@ -31,18 +31,18 @@ def _allowed_origins():
         pr = settings.pr_id
         assert pr is not None
         allowed_origins = [
-            f"https://{pr}-app.quizbee.academy",
-            f"https://{pr}-web.quizbee.academy",
+            f"https://{pr}-qa-app.quizbee.academy",
+            f"https://{pr}-qa.quizbee.academy",
         ]
     elif settings.env == "quality-assurance":
         allowed_origins = [
             "https://qa-app.quizbee.academy",
-            "https://qa-web.quizbee.academy",
+            "https://qa.quizbee.academy",
         ]
     elif settings.env == "production":
         allowed_origins = [
             "https://app.quizbee.academy",
-            "https://web.quizbee.academy",
+            "https://quizbee.academy",
         ]
 
     return allowed_origins
