@@ -26,3 +26,6 @@ test-prod-build-infra:
 
 test-prod-up-infra:
 	docker compose -f infra/compose.prod.test.yml --env-file envs/.env up pb meili dragonfly -d
+
+pr:
+	gh pr create --base main --draft --fill

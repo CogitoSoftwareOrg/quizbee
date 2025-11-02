@@ -136,7 +136,7 @@
 	// Асинхронная загрузка файла (эта функция вызывается из processFiles)
 	async function uploadFileAsync(attachedFile: AttachedFile) {
 		try {
-			if ((attachedFile.file?.bytes.length || 0) > 1024 * 1024 * 200) {
+			if ((attachedFile.file?.size || 0) > 1024 * 1024 * 200) {
 				console.warn('File is too big');
 				return;
 			}
@@ -377,7 +377,7 @@
 										stroke-width="2"
 										stroke-linecap="round"
 										stroke-linejoin="round"
-										class="lucide lucide-check flex-shrink-0"
+										class="lucide lucide-check shrink-0"
 									>
 										<path d="M20 6 9 17l-5-5" />
 									</svg>
@@ -391,7 +391,7 @@
 		<textarea
 			placeholder="Attach relevant files and/or describe what you'd like the questions to be about"
 			bind:value={inputText}
-			class="3xl:max-h-[100px] max-h-[55px] flex-grow resize-none overflow-y-auto border-none bg-transparent py-0 pl-4 text-lg leading-6 outline-none focus:shadow-none focus:outline-none focus:ring-0"
+			class="3xl:max-h-[100px] max-h-[55px] grow resize-none overflow-y-auto border-none bg-transparent py-0 pl-4 text-lg leading-6 outline-none focus:shadow-none focus:outline-none focus:ring-0"
 			onpaste={handlePaste}
 			rows="1"
 			oninput={handleTextareaResize}
