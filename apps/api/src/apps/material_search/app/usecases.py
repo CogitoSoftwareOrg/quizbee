@@ -118,6 +118,9 @@ class MaterialSearchAppImpl(MaterialSearchApp):
                 except UnicodeDecodeError as e:
                     logger.warning(f"Error decoding text: {e}")
 
+        logger.info(
+            f"Parsed material {material.kind} with file len {len(material.file.file_bytes)} and text_file {len(material.text_file.file_bytes) if material.text_file else 0}"
+        )
         await self.material_repository.save(material)
 
         if material.kind == "complex" and len(text) > 0:

@@ -135,7 +135,7 @@ class MeiliMaterialIndexer(MaterialIndexer):
         material_ids: list[str] | None = None,
         limit: int = 100,
         ratio: float = 0.5,
-        threshold: float = 0.4,
+        threshold: float = 0,
     ) -> list[MaterialChunk]:
         f = f"userId = {user_id}"
         if material_ids is not None:
