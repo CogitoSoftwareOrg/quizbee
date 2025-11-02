@@ -28,12 +28,14 @@ input[type='button'] {
 	-webkit-tap-highlight-color: transparent;
 }
 
-html {
+/* html {
 	font-size: 50px;
-}
+} */
 
 @theme {
 	--breakpoint-xs: 30rem;
-	--breakpoint-2xl: 100rem;
-	--breakpoint-3xl: 120rem;
+	--breakpoint-lg: 80rem; /* 1366 pixels*/
+	--breakpoint-xl: 110rem;/* 1920 pixels*/
+	--breakpoint-2xl: 150rem;/* 2560 pixels*/
+	--breakpoint-3xl: 220rem;/* 2880 pixels*/
 }

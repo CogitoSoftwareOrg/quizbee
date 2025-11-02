@@ -247,6 +247,8 @@
 		const maxHeight = 7.5 * 16;
 		target.style.height = Math.min(scrollHeight, maxHeight) + 'px';
 
+
+
 		if (target.value.length > 100000) {
 			target.value = target.value.slice(0, 100000);
 			inputText = target.value;
@@ -287,7 +289,7 @@
 
 <div
 	class={[
-		'flex w-full flex-col gap-2.5 rounded-lg font-sans transition-colors duration-200',
+		'flex w-full flex-col gap-2 rounded-lg font-sans transition-colors duration-200',
 		isDragging && 'border-primary bg-primary/10 border-2 border-dashed'
 	]}
 	ondragover={handleDragOver}
@@ -410,7 +412,7 @@
 		<textarea
 			placeholder="Attach relevant files and/or describe what you'd like the questions to be about"
 			bind:value={inputText}
-			class="flex-grow resize-none border-none bg-transparent py-0 pl-4 text-lg leading-6 outline-none focus:shadow-none focus:outline-none focus:ring-0 {previousQuizesLength === 0 ? 'max-h-[80px] 3xl:max-h-[150px]' : 'max-h-[55px] 3xl:max-h-[100px]'} overflow-y-auto"
+			class="flex-grow resize-none border-none bg-transparent py-0 pl-4 text-lg leading-6 outline-none focus:shadow-none focus:outline-none focus:ring-0 max-h-[4.5rem] overflow-y-auto"
 			onpaste={handlePaste}
 			rows="1"
 			oninput={handleTextareaResize}
@@ -444,7 +446,7 @@
 		</div>
 	{/if}
 	{#if attachedFiles.length > 0}
-		<div class="flex gap-3 overflow-x-auto pb-2 px-1"
+		<div class="flex gap-3 overflow-x-auto pb-0 px-1"
 		style="scrollbar-width: auto;">
 			{#each attachedFiles as attachedFile, index}
 				<div

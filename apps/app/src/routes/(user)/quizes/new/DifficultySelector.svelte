@@ -36,7 +36,7 @@
 		<button
 			type="button"
 			onclick={() => selectDifficulty(difficulty.value)}
-			class="flex w-full items-center gap-3 rounded-lg border-2 p-4 transition-all duration-100 {selectedDifficulty ===
+			class="flex w-full items-center gap-3 rounded-lg border-2 p-3 transition-all duration-100 {selectedDifficulty ===
 			difficulty.value
 				? 'border-base-content bg-base-100 shadow-sm'
 				: 'border-base-300 bg-base-100 hover:border-base-content/50 hover:bg-base-200/50'}"
