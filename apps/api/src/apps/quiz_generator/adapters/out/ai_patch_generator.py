@@ -150,7 +150,7 @@ class AIPatchGenerator(PatchGenerator):
                                 seen : seen + len(payload.quiz_items)
                             ]
                             payload._merge(quiz, items)
-                            await self._quiz_repository.save(quiz)
+                            await self._quiz_repository.update(quiz)
                             seen += len(payload.quiz_items)
 
                 await update_span_with_result(
@@ -305,4 +305,4 @@ class AIPatchGenerator(PatchGenerator):
 
         logging.exception("Agent run failed for quiz %s: %s", quiz.id, e)
         quiz.fail()
-        await self._quiz_repository.save(quiz)
+        await self._quiz_repository.update(quiz)

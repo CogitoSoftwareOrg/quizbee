@@ -103,7 +103,7 @@ class AIAttemptFinalizer(AttemptFinalizer):
             payload: AttemptFinalizerOutput = res.output.data
 
             payload._merge(attempt)
-            await self._attempt_repository.save(attempt)
+            await self._attempt_repository.update(attempt)
 
     async def _inject_request_prompt(
         self, ctx: RunContext[AttemptFinalizerDeps], messages: list[ModelMessage]

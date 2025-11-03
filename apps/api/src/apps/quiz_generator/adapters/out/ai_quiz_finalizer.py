@@ -115,7 +115,7 @@ class AIQuizFinalizer(QuizFinalizer):
 
             payload: QuizFinalizerOutput = res.output.data
             payload._merge(quiz)
-            await self._quiz_repository.save(quiz)
+            await self._quiz_repository.update(quiz)
 
     async def _inject_request_prompt(
         self, ctx: RunContext[QuizFinalizerDeps], messages: list[ModelMessage]
