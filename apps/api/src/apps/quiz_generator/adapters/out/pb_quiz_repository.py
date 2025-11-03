@@ -45,15 +45,21 @@ class PBQuizRepository(QuizRepository):
 
         return [await self._rec_to_quiz(rec) for rec in recs]
 
-    async def save(self, quiz: Quiz):
-        await asyncio.gather(*[self.save_item(item) for item in quiz.items])
-
+    async def create(self, quiz: Quiz):
         try:
+            await asyncio.gather(*[self.save_item(item) for item in quiz.items])
+            await self.admin_pb.collection("quizes").create(await self._to_record(quiz))
+        except:
+            raise
+
+    async def update(self, quiz: Quiz):
+        try:
+            await asyncio.gather(*[self.save_item(item) for item in quiz.items])
             await self.admin_pb.collection("quizes").update(
                 quiz.id, await self._to_record(quiz)
             )
         except:
-            await self.admin_pb.collection("quizes").create(await self._to_record(quiz))
+            raise
 
     async def save_item(self, item: QuizItem):
         try:

@@ -51,10 +51,10 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
         if cmd.mode == GenMode.Regenerate:
             logging.info(f"Incrementing generation for quiz {cmd.quiz_id}")
             quiz.increment_generation()
-            await self.quiz_repository.save(quiz)
+            await self.quiz_repository.update(quiz)
 
         quiz.generate_patch()
-        await self.quiz_repository.save(quiz)
+        await self.quiz_repository.update(quiz)
 
         await self.patch_generator.generate(quiz, cmd.cache_key)
 
@@ -64,7 +64,7 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
             raise NotQuizOwnerError(quiz_id=cmd.quiz_id, user_id=cmd.user.id)
 
         quiz.to_answered()
-        await self.quiz_repository.save(quiz)
+        await self.quiz_repository.update(quiz)
         await self.finalizer.finalize(quiz, cmd.cache_key)
 
         await self.quiz_indexer.index(quiz)
@@ -72,11 +72,11 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
     async def start(self, cmd: GenerateCmd) -> None:
         quiz = await self.quiz_repository.get(cmd.quiz_id)
         quiz.to_preparing()
-        await self.quiz_repository.save(quiz)
+        await self.quiz_repository.update(quiz)
 
         if quiz.need_build_material_content:
             await self._build_material_content(quiz, quiz.length * 2000, cmd.user)
-            await self.quiz_repository.save(quiz)
+            await self.quiz_repository.update(quiz)
 
         if quiz.avoid_repeat:
             logging.info(f"Avoiding repeat for quiz {quiz.id}")
@@ -107,11 +107,11 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
                 logging.info(
                     f"Adding negative questions for quiz {quiz.id} questions: {len(quiz.gen_config.negative_questions)}"
                 )
-                await self.quiz_repository.save(quiz)
+                await self.quiz_repository.update(quiz)
 
         quiz.to_creating()
         quiz.increment_generation()
-        await self.quiz_repository.save(quiz)
+        await self.quiz_repository.update(quiz)
 
         await self.generate(cmd)
 

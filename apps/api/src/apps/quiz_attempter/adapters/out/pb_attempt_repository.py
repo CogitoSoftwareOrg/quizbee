@@ -24,15 +24,19 @@ class PBAttemptRepository(AttemptRepository):
         )
         return await self._rec_to_attempt(rec)
 
-    async def save(self, attempt: Attempt) -> None:
+    async def create(self, attempt: Attempt) -> None:
         try:
-            await self.admin_pb.collection("quizAttempts").create(
-                self._attempt_to_rec(attempt)
-            )
-        except:
-            await self.admin_pb.collection("quizAttempts").update(
-                attempt.id, self._attempt_to_rec(attempt)
-            )
+            dto = self._attempt_to_rec(attempt)
+            await self.admin_pb.collection("quizAttempts").create(dto)
+        except Exception as e:
+            raise
+
+    async def update(self, attempt: Attempt) -> None:
+        try:
+            dto = self._attempt_to_rec(attempt)
+            await self.admin_pb.collection("quizAttempts").update(attempt.id, dto)
+        except Exception as e:
+            raise
 
     def _attempt_to_rec(self, attempt: Attempt) -> dict[str, Any]:
         dto = {

@@ -24,12 +24,12 @@ class MessageOwnerAppImpl(MessageOwnerApp):
         logger.info(f"Starting message for attempt {cmd.attempt_id}")
         message = Message.create(cmd.attempt_id, MessageRole.AI, cmd.item_id)
         message.to_streaming()
-        await self.message_repository.save([message])
+        await self.message_repository.create([message])
         return message
 
     async def finalize_message(self, cmd: FinalizeMessageCmd) -> None:
         logger.info(f"Finalizing message {cmd.message_id}")
         message = await self.message_repository.get(cmd.message_id)
         message.to_final(cmd.content, cmd.metadata)
-        await self.message_repository.save([message])
+        await self.message_repository.update([message])
         return None
