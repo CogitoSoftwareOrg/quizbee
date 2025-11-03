@@ -34,7 +34,7 @@ from .deps import (
 from .schemas import StartQuizDto, PatchQuizDto, FinalizeQuizDto
 
 
-edge_api_router = APIRouter(prefix="", tags=["main logic"], dependencies=[])
+edge_api_router = APIRouter(prefix="", tags=["Edge Logic"], dependencies=[])
 
 
 # Quiz Generator
