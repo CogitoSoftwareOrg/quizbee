@@ -110,7 +110,7 @@
 		<!-- Desktop Sidebar -->
 		<aside
 			class={[
-				'desktop-sidebar bg-base-100 z-10 h-full shrink-0 flex-col transition-all duration-300 ease-in-out',
+				'desktop-sidebar bg-base-100 transition-width z-10 h-full shrink-0 flex-col duration-300 ease-in-out',
 				uiStore.globalSidebarOpen ? 'w-56' : 'w-14',
 				'hidden sm:flex'
 			]}

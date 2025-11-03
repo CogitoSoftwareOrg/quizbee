@@ -52,6 +52,9 @@ class ExplainerOutput(BaseModel):
     explanation: str
 
 
+logger = logging.getLogger(__name__)
+
+
 class AIExplainer(Explainer):
     def __init__(self, lf: Langfuse, ai: Agent[ExplainerDeps, Any]):
         self._lf = lf
@@ -153,6 +156,9 @@ class AIExplainer(Explainer):
             user_contents.append(f"User query:\n{deps.quiz.query}")
 
         if deps.quiz.material_content:
+            logger.info(
+                f"Attaching quiz materials to prompt: {len(deps.quiz.material_content)}"
+            )
             user_contents.append("Quiz materials:")
             user_contents.append(deps.quiz.material_content)
 

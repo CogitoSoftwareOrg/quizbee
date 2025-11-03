@@ -67,10 +67,12 @@ async def finalize_attempt_job(ctx, payload: dict):
 async def add_material_job(ctx, payload: dict):
     logger.info(f"Adding material job with payload: {payload["title"]}")
     await ensure_admin_pb(ctx)
+
     edge: EdgeAPIApp = ctx["edge"]
     # Reconstruct MaterialFile from dict
     file_dict = payload["file"]
     file = MaterialFile(**file_dict)
+
     cmd = PublicAddMaterialCmd(
         quiz_id=payload["quiz_id"],
         file=file,

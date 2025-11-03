@@ -10,7 +10,7 @@ export function urlWithPR(raw?: string | URL) {
   if (env === "preview" && coolify) {
     // валидируем только если реально есть coolify
     const cu = new URL(coolify);
-    const pr = cu.hostname.split(".")[0];
+    const pr = cu.hostname.split("-")[0];
     u.hostname = `${pr}-${u.hostname}`;
   }
   return u.toString();

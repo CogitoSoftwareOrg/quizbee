@@ -29,13 +29,14 @@ class Price:
     limits: Limits
 
 
-PRICES_MAP: dict[str, Price] = {}
+PRICES_MAP_BY_ID: dict[str, Price] = {}
+PRICES_MAP_BY_LOOKUP: dict[str, Price] = {}
 prices = stripe_client.Price.list(lookup_keys=STRIPE_LOOKUPS).data
 for price in prices:
     if not price.lookup_key:
         continue
     tariff = price.lookup_key.split("_")[0]
-    PRICES_MAP[price.lookup_key] = Price(
+    price_obj = Price(
         id=price.id,
         lookup=price.lookup_key,
         tariff=tariff,
@@ -44,6 +45,11 @@ for price in prices:
             bytesLimit=8_388_608 if tariff == "plus" else 83_886_080,  # 1GB
         ),
     )
+    PRICES_MAP_BY_ID[price.id] = price_obj
+    PRICES_MAP_BY_LOOKUP[price.lookup_key] = price_obj
+
+# Backward compatibility
+PRICES_MAP = PRICES_MAP_BY_LOOKUP
 
 
 PB_DT_FMT = "%Y-%m-%d %H:%M:%S.%fZ"
@@ -112,7 +118,7 @@ async def stripe_subscription_to_pb(
         }
     )
 
-    price = PRICES_MAP.get(price_id)
+    price = PRICES_MAP_BY_ID.get(price_id)
     if not price:
         raise Exception(f"Stripe price not found for {price_id}")
     tariff = price.tariff

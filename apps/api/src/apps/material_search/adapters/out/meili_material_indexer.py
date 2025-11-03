@@ -62,14 +62,20 @@ class MeiliMaterialIndexer(MaterialIndexer):
     async def index(self, material: Material) -> None:
         total_tokens = 0
 
+        # Extract text from material
         if material.kind == MaterialKind.SIMPLE:
             text = material.file.file_bytes.decode("utf-8")
         elif material.text_file is not None:
             text = material.text_file.file_bytes.decode("utf-8")
         else:
-            raise ValueError("Material has no text")
+            logging.warning(
+                f"Material {material.id} is COMPLEX but has no text_file, trying to decode file as text"
+            )
+            raise ValueError("Material has no text content")
 
-        chunks = self.llm_tools.chunk(text)
+        if not text or not text.strip():
+            raise ValueError("Material has no text content")
+
         chunks = self.llm_tools.chunk(text)
         docs = []
         for i, chunk in enumerate(chunks):
@@ -82,29 +88,6 @@ class MeiliMaterialIndexer(MaterialIndexer):
                     content=chunk,
                 )
             )
-
-        docs_tokens = sum(
-            [
-                self.llm_tools.count_text(
-                    self._fill_template(doc), LLMS.TEXT_EMBEDDING_3_SMALL
-                )
-                for doc in docs
-            ]
-        )
-        if docs_tokens > MAX_TEXT_INDEX_TOKENS:
-            raise TooManyTextTokensError(docs_tokens)
-
-        task = await self.material_index.add_documents(
-            [asdict(doc) for doc in docs], primary_key="id"
-        )
-
-        logging.info(f"Created task for {len(docs)} documents")
-
-        task = await self.meili.wait_for_task(
-            task.task_uid,
-            timeout_in_ms=int(120 * 1000),
-            interval_in_ms=int(1 * 1000),
-        )
 
         docs_tokens = sum(
             [
@@ -143,16 +126,18 @@ class MeiliMaterialIndexer(MaterialIndexer):
         else:
             logging.error(f"Unknown task status: {task}")
 
-        self._log_langfuse(material.user_id, material.id, total_tokens)
+        self._log_langfuse(
+            material.user_id, material.id, total_tokens, "material-index-add"
+        )
 
     async def search(
         self,
         user_id: str,
         query: str,
         material_ids: list[str] | None = None,
-        limit: int = 100,
-        ratio: float = 0.5,
-        threshold: float = 0.4,
+        limit=100,
+        ratio=0.5,
+        threshold=0,
     ) -> list[MaterialChunk]:
         f = f"userId = {user_id}"
         if material_ids is not None:
@@ -160,28 +145,26 @@ class MeiliMaterialIndexer(MaterialIndexer):
 
         logging.info(f"Meili Searching... {f}")
 
-        if ratio == 0:
-            res = await self.material_index.search(
-                query=query,
-                ranking_score_threshold=threshold,
-                filter=f,
-                limit=limit,
+        total_tokens = self.llm_tools.count_text(query, LLMS.TEXT_EMBEDDING_3_SMALL)
+        hybrid = (
+            Hybrid(
+                semantic_ratio=ratio,
+                embedder=EMBEDDER_NAME,
             )
-        else:
-            total_tokens = self.llm_tools.count_text(query, LLMS.TEXT_EMBEDDING_3_SMALL)
+            if ratio > 0
+            else None
+        )
 
-            res = await self.material_index.search(
-                query=query,
-                hybrid=Hybrid(
-                    semantic_ratio=ratio,
-                    embedder=EMBEDDER_NAME,
-                ),
-                ranking_score_threshold=threshold,
-                filter=f,
-                limit=limit,
-            )
+        res = await self.material_index.search(
+            query=query,
+            hybrid=hybrid,
+            ranking_score_threshold=threshold,
+            filter=f,
+            limit=limit,
+        )
 
-            self._log_langfuse(user_id, "", total_tokens)
+        if hybrid is not None:
+            self._log_langfuse(user_id, "", total_tokens, "material-index-search")
 
         docs: list[Doc] = [Doc(**hit) for hit in res.hits]
         chunks = [self._doc_to_chunk(doc) for doc in docs]
@@ -228,8 +211,10 @@ class MeiliMaterialIndexer(MaterialIndexer):
             "{{doc.content}}", doc.content
         )
 
-    def _log_langfuse(self, user_id: str, session_id: str, total_tokens: int) -> None:
-        with self._lf.start_as_current_span(name="material-indexing") as span:
+    def _log_langfuse(
+        self, user_id: str, session_id: str, total_tokens: int, name: str
+    ) -> None:
+        with self._lf.start_as_current_span(name=name) as span:
             self._lf.update_current_generation(
                 model=LLMS.TEXT_EMBEDDING_3_SMALL,
                 usage_details={

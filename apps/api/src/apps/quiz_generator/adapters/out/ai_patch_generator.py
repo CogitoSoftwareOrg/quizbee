@@ -70,9 +70,9 @@ class AIPatchGeneratorOutput(BaseModel):
     ]
 
     def _merge(self, quiz: Quiz, items: list[QuizItem]):
-        for original_item, schema in zip(items, self.quiz_items):
-            updated_item = QuizItem(
-                id=original_item.id,
+        for itm, schema in zip(items, self.quiz_items):
+            upd = QuizItem(
+                id=itm.id,
                 question=schema.question,
                 variants=[
                     QuizItemVariant(
@@ -82,10 +82,10 @@ class AIPatchGeneratorOutput(BaseModel):
                     )
                     for a in schema.answers
                 ],
-                order=original_item.order,
+                order=itm.order,
                 status=QuizItemStatus.GENERATED,
             )
-            quiz.update_item(updated_item)
+            quiz.update_item(upd)
 
 
 class AIPatchGenerator(PatchGenerator):

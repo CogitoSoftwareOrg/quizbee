@@ -45,18 +45,8 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
 
     async def generate(self, cmd: GenerateCmd) -> None:
         quiz = await self.quiz_repository.get(cmd.quiz_id)
-
         if quiz.author_id != cmd.user.id:
             raise NotQuizOwnerError(quiz_id=cmd.quiz_id, user_id=cmd.user.id)
-        stored = cmd.user.remaining
-        cost = PATCH_LIMIT
-        if cost > cmd.user.remaining:
-            raise NotEnoughQuizItemsError(
-                quiz_id=cmd.quiz_id,
-                user_id=cmd.user.id,
-                cost=cost,
-                stored=stored,
-            )
 
         if cmd.mode == GenMode.Regenerate:
             logging.info(f"Incrementing generation for quiz {cmd.quiz_id}")
@@ -93,10 +83,10 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
             await self._estimate_summary(quiz, 7_000)
             similar_quizes = await self.quiz_indexer.search(
                 user_id=quiz.author_id,
-                query=f"title:{quiz.title} query:{quiz.query} Summary:{quiz.summary}",
+                query=self._build_query(quiz),
                 limit=10,
                 ratio=0.5,
-                threshold=0.4,
+                threshold=0.0,
             )
 
             logging.info(
@@ -113,10 +103,10 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
                         ]
                     )
                 )
-                logging.info(
-                    f"Adding negative questions for quiz {quiz.id} questions: {len(questions)}"
-                )
                 quiz.add_negative_questions(questions)
+                logging.info(
+                    f"Adding negative questions for quiz {quiz.id} questions: {len(quiz.gen_config.negative_questions)}"
+                )
                 await self.quiz_repository.save(quiz)
 
         quiz.to_creating()
@@ -151,3 +141,10 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
                 break
             summary += f"\n<CHUNK>\n{chunk}"
         quiz.set_summary(summary)
+
+    def _build_query(self, quiz: Quiz):
+        return f"""
+Quiz title: {quiz.title}
+Query: {quiz.query}
+Summary: {quiz.summary}    
+"""
