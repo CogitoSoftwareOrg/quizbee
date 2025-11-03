@@ -1,4 +1,4 @@
-from arq.connections import RedisSettings
+from arq.connections import RedisSettings, create_pool
 
 from src.apps.edge_api.adapters.in_.events.subscribers import (
     start_quiz_job,
@@ -109,6 +109,10 @@ async def startup(ctx):
         material_search_app=material_search_app,
     )
 
+    redis_settings = RedisSettings.from_dsn(settings.redis_dsn)
+    arq_pool = await create_pool(redis_settings)
+    ctx["arq_pool"] = arq_pool
+
     ctx["edge"] = edge_api_app
     ctx["pb"] = admin_pb
     ctx["meili"] = meili
@@ -118,6 +122,7 @@ async def startup(ctx):
 async def shutdown(ctx):
     await ctx["http"].aclose()
     await ctx["meili"].aclose()
+    await ctx["arq_pool"].close()
 
 
 class WorkerSettings:

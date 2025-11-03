@@ -5,9 +5,8 @@
   "pythonVersion": "3.13",
   "executionEnvironments": [
     {
-      "root": "api",
-      "venv": ".venv",
-      "extraPaths": ["api/src"]
+      "root": "apps/api",
+      "pythonVersion": "3.13"
     }
   ]
 }

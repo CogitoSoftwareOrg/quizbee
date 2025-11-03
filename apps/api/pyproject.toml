@@ -47,3 +47,6 @@ quizbee-example-lib = { workspace = true }
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src" = ""
