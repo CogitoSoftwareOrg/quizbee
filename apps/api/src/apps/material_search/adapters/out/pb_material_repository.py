@@ -46,6 +46,12 @@ class PBMaterialRepository(MaterialRepository):
         except:
             raise
 
+    async def delete(self, material_id: str):
+        try:
+            await self.pb.collection("materials").delete(material_id)
+        except:
+            raise
+
     def _to_material(
         self,
         rec: Record,

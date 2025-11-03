@@ -11,6 +11,7 @@ from src.apps.edge_api.app.contracts import (
     PublicFinalizeAttemptCmd,
     PublicAskExplainerCmd,
     PublicAddMaterialCmd,
+    PublicRemoveMaterialCmd,
 )
 from src.apps.material_search.app.contracts import MaterialFile
 
@@ -84,9 +85,10 @@ async def add_material_job(ctx, payload: dict):
     return await edge.add_material(cmd)
 
 
-# async def ask_explainer_job(ctx, payload: dict):
-#     logger.info(f"Asking explainer job with payload: {payload}")
-#     edge: EdgeAPIApp = ctx["edge"]
-#     cmd = PublicAskExplainerCmd(**payload)
-#     async for result in edge.ask_explainer(cmd):
-#         yield result
+@job(name=JobName.remove_material, max_tries=3)
+async def remove_material_job(ctx, payload: dict):
+    logger.info(f"Removing material job with payload: {payload}")
+    await ensure_admin_pb(ctx)
+    edge: EdgeAPIApp = ctx["edge"]
+    cmd = PublicRemoveMaterialCmd(**payload)
+    return await edge.remove_material(cmd)

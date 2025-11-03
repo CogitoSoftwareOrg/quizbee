@@ -6,6 +6,7 @@ from src.apps.edge_api.adapters.in_.events.subscribers import (
     generate_quiz_items_job,
     finalize_attempt_job,
     add_material_job,
+    remove_material_job,
 )
 
 from src.apps.llm_tools.di import init_llm_tools
@@ -135,6 +136,7 @@ class WorkerSettings:
         generate_quiz_items_job,
         finalize_attempt_job,
         add_material_job,
+        remove_material_job,
     ]
     on_startup = startup
     on_shutdown = shutdown

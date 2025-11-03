@@ -10,7 +10,7 @@ def cors_middleware(app: FastAPI):
         CORSMiddleware,
         allow_origins=allowed_origins,
         allow_origin_regex=None,
-        allow_methods=["GET", "POST", "OPTIONS", "PATCH", "PUT"],
+        allow_methods=["GET", "POST", "OPTIONS", "PATCH", "PUT", "DELETE"],
         allow_credentials=True,
         allow_headers=["*"],
         # expose_headers=["Mcp-Session-Id"], # Only for stateful mode

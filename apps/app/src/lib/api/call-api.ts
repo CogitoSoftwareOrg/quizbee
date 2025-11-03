@@ -10,6 +10,10 @@ export async function putApi(url: string, body: unknown) {
 	return await callApi(url, 'PUT', body);
 }
 
+export async function deleteApi(url: string) {
+	return await callApi(url, 'DELETE', undefined);
+}
+
 export async function patchApi(url: string, body: unknown) {
 	return await callApi(url, 'PATCH', body);
 }

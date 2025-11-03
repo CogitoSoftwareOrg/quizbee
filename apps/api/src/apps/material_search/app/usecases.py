@@ -22,7 +22,7 @@ from ..domain.ports import (
 from ..domain.errors import TooLargeFileError
 from ..domain.constants import MAX_SIZE_MB, IMAGE_EXTENSIONS
 
-from .contracts import MaterialSearchApp, AddMaterialCmd, SearchCmd
+from .contracts import MaterialSearchApp, AddMaterialCmd, RemoveMaterialCmd, SearchCmd
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ class MaterialSearchAppImpl(MaterialSearchApp):
                 ),
             )
             material.to_big()
-            await self.material_repository.save(material)
+            await self.material_repository.create(material)
             raise TooLargeFileError(file_size_mb)
 
         # material = await self._deduplicate_material(cmd)
@@ -121,7 +121,7 @@ class MaterialSearchAppImpl(MaterialSearchApp):
         logger.info(
             f"Parsed material {material.kind} with file len {len(material.file.file_bytes)} and text_file {len(material.text_file.file_bytes) if material.text_file else 0}"
         )
-        await self.material_repository.save(material)
+        await self.material_repository.create(material)
 
         if material.kind == "complex" and len(text) > 0:
             marker_to_url = {}
@@ -135,12 +135,12 @@ class MaterialSearchAppImpl(MaterialSearchApp):
                 text = text.replace(marker, f"\n{{quizbee_unique_image_url:{url}}}\n")
 
         material.status = MaterialStatus.INDEXING
-        await self.material_repository.save(material)
+        await self.material_repository.update(material)
 
         await self.indexer.index(material)
         material.status = MaterialStatus.INDEXED
         await self.material_repository.attach_to_quiz(material, cmd.quiz_id)
-        await self.material_repository.save(material)
+        await self.material_repository.update(material)
 
         return material
 
@@ -161,6 +161,19 @@ class MaterialSearchAppImpl(MaterialSearchApp):
         )
 
         return chunks
+
+    async def remove_material(self, cmd: RemoveMaterialCmd) -> None:
+        material = await self.material_repository.get(cmd.material_id)
+        if material is None:
+            raise ValueError("Material not found")
+
+        if material.user_id != cmd.user.id:
+            raise ValueError("User does not have permission to remove material")
+
+        if material.status == MaterialStatus.INDEXED:
+            await self.indexer.delete([cmd.material_id])
+
+        await self.material_repository.delete(cmd.material_id)
 
     async def _deduplicate_material(self, cmd: AddMaterialCmd) -> Material | None:
         material = await self.material_repository.get(cmd.material_id)
