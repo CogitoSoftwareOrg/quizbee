@@ -24,18 +24,31 @@ class PBMaterialRepository(MaterialRepository):
         else:
             return self._to_material(rec, file_bytes)
 
-    async def save(self, material: Material):
+    async def create(self, material: Material):
         dto = self._to_record(material)
         try:
             await self.pb.collection("materials").create(dto)
         except Exception as e:
+            raise
+
+    async def update(self, material: Material):
+        dto = self._to_record(material)
+        try:
             await self.pb.collection("materials").update(material.id, dto)
+        except Exception as e:
+            raise
 
     async def attach_to_quiz(self, material: Material, quiz_id: str):
         try:
             await self.pb.collection("quizes").update(
                 quiz_id, {"materials+": material.id}
             )
+        except:
+            raise
+
+    async def delete(self, material_id: str):
+        try:
+            await self.pb.collection("materials").delete(material_id)
         except:
             raise
 

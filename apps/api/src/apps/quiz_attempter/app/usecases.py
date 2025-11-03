@@ -56,7 +56,7 @@ class QuizAttempterAppImpl(QuizAttempterApp):
         attempt = await self.attempt_repository.get(cmd.attempt_id)
         await self.validate_attempt(attempt, cmd.user)
         await self.finalizer.finalize(attempt, cmd.cache_key)
-        await self.attempt_repository.save(attempt)
+        await self.attempt_repository.update(attempt)
 
     async def ask_explainer(
         self, cmd: AskExplainerCmd

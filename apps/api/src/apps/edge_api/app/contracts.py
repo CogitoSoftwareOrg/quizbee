@@ -14,6 +14,7 @@ class JobName(StrEnum):
     finalize_quiz = "finalize_quiz_job"
     finalize_attempt = "finalize_attempt_job"
     add_material = "add_material_job"
+    remove_material = "remove_material_job"
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,6 +57,11 @@ class PublicAddMaterialCmd(BaseCmd):
     material_id: str
 
 
+@dataclass(frozen=True, slots=True)
+class PublicRemoveMaterialCmd(BaseCmd):
+    material_id: str
+
+
 class EdgeAPIApp(Protocol):
     async def start_quiz(self, cmd: PublicStartQuizCmd) -> None: ...
     async def generate_quiz_items(self, cmd: PublicGenerateQuizItemsCmd) -> None: ...
@@ -63,6 +69,7 @@ class EdgeAPIApp(Protocol):
     async def finalize_attempt(self, cmd: PublicFinalizeAttemptCmd) -> None: ...
 
     async def add_material(self, cmd: PublicAddMaterialCmd) -> Material: ...
+    async def remove_material(self, cmd: PublicRemoveMaterialCmd) -> None: ...
 
     def ask_explainer(
         self, cmd: PublicAskExplainerCmd

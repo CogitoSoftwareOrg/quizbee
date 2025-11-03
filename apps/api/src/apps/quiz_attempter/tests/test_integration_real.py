@@ -155,7 +155,7 @@ class TestFullStackIntegration:
     async def real_app(self):
         """Реальное FastAPI приложение со всеми зависимостями"""
         from fastapi import FastAPI
-        from src.bootstrap.app import create_app
+        from bootstrap.app import create_app
 
         # Создаем приложение как в продакшене
         app = create_app()

@@ -2,6 +2,15 @@ from pydantic import BaseModel, Field
 
 from src.apps.quiz_generator.app.contracts import GenMode
 
+from ....app.contracts import (
+    JobName,
+    PublicAddMaterialCmd,
+    PublicFinalizeAttemptCmd,
+    PublicFinalizeQuizCmd,
+    PublicGenerateQuizItemsCmd,
+    PublicStartQuizCmd,
+)
+
 
 class StartQuizDto(BaseModel):
     attempt_id: str
@@ -24,3 +33,22 @@ class CreateStripeCheckoutDto(BaseModel):
 
 class CreateBillingPortalSessionDto(BaseModel):
     return_url: str = ""
+
+
+class FinalizeAttemptDto(BaseModel): ...
+
+
+class JobDto(BaseModel):
+    name: JobName
+    payload: (
+        PublicStartQuizCmd
+        | PublicGenerateQuizItemsCmd
+        | PublicFinalizeQuizCmd
+        | PublicFinalizeAttemptCmd
+        | PublicAddMaterialCmd
+        | None
+    )
+
+
+class SheduleJobsDto(BaseModel):
+    jobs: list[JobDto]
