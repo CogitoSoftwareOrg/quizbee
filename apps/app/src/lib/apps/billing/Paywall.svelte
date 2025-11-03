@@ -4,7 +4,10 @@
 	import { Check, Sparkles } from 'lucide-svelte';
 
 	import { Button } from '@quizbee/ui-svelte-daisy';
+
 	import { computeApiUrl } from '$lib/api/compute-url';
+
+	import { uiStore } from '../users/ui.svelte';
 
 	interface StripePrice {
 		lookup: string;
@@ -127,6 +130,7 @@
 			});
 
 			window.location.href = data.url;
+			uiStore.setPaywallOpen(false);
 		} finally {
 			loading = false;
 		}
