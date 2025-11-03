@@ -27,9 +27,8 @@ class MessageOwnerAppImpl(MessageOwnerApp):
         await self.message_repository.create([message])
         return message
 
-    async def finalize_message(self, cmd: FinalizeMessageCmd) -> None:
+    async def finalize_message(self, cmd: FinalizeMessageCmd):
         logger.info(f"Finalizing message {cmd.message_id}")
         message = await self.message_repository.get(cmd.message_id)
         message.to_final(cmd.content, cmd.metadata)
         await self.message_repository.update([message])
-        return None
