@@ -43,8 +43,8 @@
 
 	const feedback = $derived(quizAttempt?.feedback as Feedback | undefined);
 
-	function findDecision(itemId: string): Decision | undefined {
-		return quizDecisions.find((d) => d.itemId === itemId);
+	function findDecision(item: QuizItemsResponse): Decision | undefined {
+		return quizDecisions.at(item.order);
 	}
 
 	let searchQuery = $state('');
@@ -226,7 +226,7 @@
 		{:else if quiz && quizAttempt}
 			<ul class="flex flex-1 flex-col gap-2 pr-1 sm:min-h-0 sm:overflow-y-auto">
 				{#each filteredItems as item, index}
-					{@const d = findDecision(item.id)}
+					{@const d = findDecision(item)}
 					<li>
 						<a
 							class="hover:bg-base-200 border-base-300 group flex items-center justify-between gap-3 rounded-lg border p-3 no-underline shadow-sm transition hover:no-underline focus:no-underline"

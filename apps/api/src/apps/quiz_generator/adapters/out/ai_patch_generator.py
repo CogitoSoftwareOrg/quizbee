@@ -69,24 +69,6 @@ class AIPatchGeneratorOutput(BaseModel):
         ),
     ]
 
-    def _merge(self, quiz: Quiz, items: list[QuizItem]):
-        for itm, schema in zip(items, self.quiz_items):
-            upd = QuizItem(
-                id=itm.id,
-                question=schema.question,
-                variants=[
-                    QuizItemVariant(
-                        content=a.answer,
-                        is_correct=a.correct,
-                        explanation=a.explanation,
-                    )
-                    for a in schema.answers
-                ],
-                order=itm.order,
-                status=QuizItemStatus.GENERATED,
-            )
-            quiz.update_item(upd)
-
 
 class AIPatchGenerator(PatchGenerator):
     def __init__(
@@ -110,7 +92,10 @@ class AIPatchGenerator(PatchGenerator):
         seen = 0
         cancelled = False
 
-        generating_items = quiz.generating_items()
+        # Кэшируем начальные generating items ДО начала стриминга
+        # Иначе после обновления статуса на GENERATED они исчезнут из generating_items()
+        initial_generating_items = quiz.generating_items()
+        logging.info(f"Initial generating items count: {len(initial_generating_items)}")
 
         try:
             with self._lf.start_as_current_span(name=f"quiz-patch") as span:
@@ -130,28 +115,82 @@ class AIPatchGenerator(PatchGenerator):
                         if output.data.mode != "quiz":
                             raise ValueError(f"Unexpected output type: {type(output)}")
 
-                        quiz = await self._quiz_repository.get(quiz.id)
-                        if quiz.generation != generation:
+                        # Перезагружаем quiz для проверки generation и актуального состояния
+                        fresh_quiz = await self._quiz_repository.get(quiz.id)
+                        if fresh_quiz.generation != generation:
                             logging.info(
                                 "Quiz generation changed during patch generation: %s -> %s",
                                 generation,
-                                quiz.generation,
+                                fresh_quiz.generation,
                             )
                             cancelled = True
                             break
 
                         logging.info(
-                            f"Quiz generation is the same: {generation} == {quiz.generation}"
+                            f"Quiz generation is the same: {generation} == {fresh_quiz.generation}"
                         )
 
+                        # Используем fresh_quiz для дальнейших операций (защита от race-condition)
+                        quiz = fresh_quiz
+
                         payload: AIPatchGeneratorOutput = output.data
-                        if len(payload.quiz_items) > 0:
-                            items = generating_items[
-                                seen : seen + len(payload.quiz_items)
+                        # Стриминг накопительный - обрабатываем только новые items
+                        new_items_count = len(payload.quiz_items) - seen
+
+                        if new_items_count > 0:
+                            # Берем новые items из payload (начиная с индекса seen)
+                            new_quiz_items = payload.quiz_items[seen:]
+
+                            # Берем соответствующие items из НАЧАЛЬНОГО списка (закэшированного)
+                            items_to_update = initial_generating_items[
+                                seen : seen + new_items_count
                             ]
-                            payload._merge(quiz, items)
+
+                            if len(items_to_update) != len(new_quiz_items):
+                                logging.warning(
+                                    f"Mismatch: expected {len(items_to_update)} items (from initial_generating_items[{seen}:{seen + new_items_count}]), got {len(new_quiz_items)} new items from payload"
+                                )
+
+                            logging.info(
+                                f"Updating {len(items_to_update)} items: seen={seen}, new_count={new_items_count}"
+                            )
+
+                            # Мержим только новые items
+                            for itm, schema in zip(items_to_update, new_quiz_items):
+                                # ВРЕМЕННОЕ РЕШЕНИЕ race-condition:
+                                # Если айтем уже FINAL (пользователь ответил), не затираем его
+                                # Проверяем актуальный статус из quiz.items (который теперь fresh_quiz)
+                                current_item = next(
+                                    (item for item in quiz.items if item.id == itm.id),
+                                    None,
+                                )
+                                if (
+                                    current_item
+                                    and current_item.status == QuizItemStatus.FINAL
+                                ):
+                                    logging.info(
+                                        f"Skipping update for item {itm.id} - already FINAL (user answered)"
+                                    )
+                                    continue
+
+                                upd = QuizItem(
+                                    id=itm.id,
+                                    question=schema.question,
+                                    variants=[
+                                        QuizItemVariant(
+                                            content=a.answer,
+                                            is_correct=a.correct,
+                                            explanation=a.explanation,
+                                        )
+                                        for a in schema.answers
+                                    ],
+                                    order=itm.order,
+                                    status=QuizItemStatus.GENERATED,
+                                )
+                                quiz.update_item(upd)
+
                             await self._quiz_repository.update(quiz)
-                            seen += len(payload.quiz_items)
+                            seen += new_items_count
 
                 await update_span_with_result(
                     self._lf,

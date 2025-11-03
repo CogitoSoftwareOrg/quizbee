@@ -34,33 +34,20 @@
 
 	// Stable itemDecision - preserve optimistic updates, only sync when server data differs
 	let itemDecision = $state<Decision | null>(null);
+	let lastOrder = $state<number | null>(null);
+
 	$effect(() => {
-		const foundDecision = quizDecisions.find((d) => d.itemId === item?.id) || null;
+		const currentOrder = item?.order ?? null;
 
-		// If nothing found and nothing set, do nothing
-		if (!foundDecision && !itemDecision) return;
-
-		// If we have optimistic decision but server hasn't confirmed yet, keep optimistic
-		if (!foundDecision && itemDecision) {
-			// Only clear if we switched to a different item
-			if (itemDecision.itemId !== item?.id) {
-				itemDecision = null;
-			}
-			return;
+		// Reset itemDecision when navigating to a different item
+		if (currentOrder !== lastOrder) {
+			lastOrder = currentOrder;
+			itemDecision = null;
 		}
 
-		// If no optimistic decision, take server value
-		if (!itemDecision) {
-			itemDecision = foundDecision;
-			return;
-		}
-
-		// If both exist, only update if data actually changed
-		if (
-			itemDecision.itemId !== foundDecision!.itemId ||
-			itemDecision.answerIndex !== foundDecision!.answerIndex ||
-			itemDecision.correct !== foundDecision!.correct
-		) {
+		// Load decision from server if it exists
+		const foundDecision = quizDecisions.at(currentOrder ?? 0) || null;
+		if (foundDecision) {
 			itemDecision = foundDecision;
 		}
 	});
@@ -157,9 +144,7 @@
 	const canSwipeRight = $derived(!!itemDecision);
 
 	const currentItem = $derived(quizItems.find((qi) => qi.order === order));
-	const itemToAnswer = $derived(
-		quizItems.find((qi) => !quizDecisions.some((d) => d.itemId === qi.id))
-	);
+	const itemToAnswer = $derived(quizItems.find((qi) => !quizDecisions.at(qi.order)));
 	const showManage = $derived(
 		Boolean(
 			quiz?.status !== 'final' &&
@@ -178,7 +163,7 @@
 	<header class="px-4 py-2 sm:block">
 		<ul class="hidden flex-1 flex-wrap items-center gap-1 sm:flex">
 			{#each quizItems as quizItem, index}
-				{@const decision = quizDecisions.find((d) => d.itemId === quizItem.id)}
+				{@const decision = quizDecisions.at(quizItem.order)}
 
 				<li>
 					<Button
