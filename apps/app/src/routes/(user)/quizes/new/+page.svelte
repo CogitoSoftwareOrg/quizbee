@@ -124,7 +124,7 @@
 				<div
 					class="card bg-base-100 border-base-300 overflow-x-hidden border-2 shadow-xl backdrop-blur-sm"
 				>
-					<div class="card-body p-6.5 overflow-x-hidden">
+					<div class="card-body px-5 py-3.5 overflow-x-hidden">
 						<!-- Description Section -->
 						<div class="{previousQuizes.length === 0 ? 'mb-2' : 'mb-2'}">
 							<div class="w-full">
