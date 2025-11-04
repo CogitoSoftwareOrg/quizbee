@@ -1,0 +1,11 @@
+name: meilisearch-ui
+
+services:
+  dashboard:
+    image: riccoxie/meilisearch-ui:latest
+    ports:
+      - "24900:24900"
+    environment:
+      - SINGLETON_MODE=${SINGLETON_MODE:-false}
+      - SINGLETON_HOST=${MEILI_URL:-https://meili.quizbee.academy}
+      - SINGLETON_API_KEY=${MEILI_MASTER_KEY}
