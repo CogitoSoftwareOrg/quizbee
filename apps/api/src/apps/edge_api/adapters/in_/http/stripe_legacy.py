@@ -3,9 +3,12 @@ from datetime import datetime, timezone
 from fastapi import HTTPException
 from pocketbase import PocketBase
 from pocketbase.models.dtos import Record
+import logging
 
 from src.lib.settings import settings
 from src.lib.stripe import stripe_client
+
+logger = logging.getLogger(__name__)
 
 STRIPE_LOOKUPS = [
     "plus_early_monthly",
@@ -32,9 +35,12 @@ class Price:
 PRICES_MAP_BY_ID: dict[str, Price] = {}
 PRICES_MAP_BY_LOOKUP: dict[str, Price] = {}
 prices = stripe_client.Price.list(lookup_keys=STRIPE_LOOKUPS).data
+logger.info(f"Loaded {len(prices)} prices from Stripe")
 for price in prices:
     if not price.lookup_key:
+        logger.warning(f"Price {price.id} has no lookup_key")
         continue
+    logger.info(f"Processing price: {price.lookup_key} (ID: {price.id})")
     tariff = price.lookup_key.split("_")[0]
     price_obj = Price(
         id=price.id,
@@ -47,6 +53,8 @@ for price in prices:
     )
     PRICES_MAP_BY_ID[price.id] = price_obj
     PRICES_MAP_BY_LOOKUP[price.lookup_key] = price_obj
+
+logger.info(f"Final PRICES_MAP_BY_LOOKUP keys: {list(PRICES_MAP_BY_LOOKUP.keys())}")
 
 # Backward compatibility
 PRICES_MAP = PRICES_MAP_BY_LOOKUP
