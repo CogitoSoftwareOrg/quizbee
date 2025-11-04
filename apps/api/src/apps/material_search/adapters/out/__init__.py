@@ -1,3 +1,3 @@
 from .pb_material_repository import PBMaterialRepository
-from .fitz_pdf_parser import FitzPDFParser
+from .document_parsing_adapter import DocumentParsingAdapter
 from .meili_material_indexer import MeiliMaterialIndexer

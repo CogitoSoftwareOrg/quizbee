@@ -12,3 +12,8 @@ IMAGE_EXTENSIONS = (
     ".svg",
     ".ico",
 )
+
+COMPLEX_EXTENSIONS = (
+    ".pdf",
+    ".docx",
+    ".pptx")

@@ -50,15 +50,15 @@ async def startup(ctx):
     )
 
     # V2 MATERIAL SEARCH
-    material_repository, pdf_parser, material_indexer = await init_material_search_deps(
+    material_repository, document_parsing, material_indexer = await init_material_search_deps(
         lf=lf,
         admin_pb=admin_pb,
         meili=meili,
         llm_tools=llm_tools,
     )
     material_search_app = init_material_search_app(
-        llm_tools=llm_tools,
-        pdf_parser=pdf_parser,
+        llm_tools_app=llm_tools,
+        document_parsing=document_parsing,
         indexer=material_indexer,
         material_repository=material_repository,
     )

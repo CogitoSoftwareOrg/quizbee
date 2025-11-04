@@ -1,12 +1,14 @@
-import fitz  # PyMuPDF для извлечения изображений
+import fitz  # PyMuPDF 
 from io import BytesIO
 from typing import Any
 import logging
 import re
 
-from ...domain.ports import PdfParser, PdfParseResult, PdfImage
+from ....domain.ports import DocumentParser
+from ....domain.models import ParsedDocument, DocumentImage
 
-class FitzPDFParser(PdfParser):
+
+class FitzPDFParser(DocumentParser):
     def __init__(
         self,
         min_width: int = 50,
@@ -17,43 +19,34 @@ class FitzPDFParser(PdfParser):
         self.min_height = min_height
         self.min_file_size = min_file_size
 
-    def parse(self, file_bytes: bytes, process_images: bool = False) -> PdfParseResult:
+    def parse(self, file_bytes: bytes, file_name: str, process_images: bool = False) -> ParsedDocument:
         """
         Извлекает текст и изображения из PDF-файла, фильтруя слишком маленькие изображения.
 
         Использует PyMuPDF для извлечения текста и изображений.
 
-        В текст вставляются маркеры вида {quizbee_unique_image_1}, {quizbee_unique_image_2} и т.д. на места,
-        где находятся изображения, для последующего восстановления их позиций.
-
-        Фильтрация изображений по нескольким критериям:
-        - Размер (ширина/высота) - отсеивает слишком маленькие
-        - Размер файла - отсеивает черные экраны и другой "мусор" с низкой энтропией
-
         Args:
             file_bytes: Байты PDF файла
+            file_name: Имя файла (для логирования)
+            process_images: Обрабатывать ли изображения
 
         Returns:
-            Словарь с извлеченным текстом и списком отфильтрованных изображений:
-            {
-                "text": str,  # Текст с маркерами {quizbee_unique_image_N}
-                "images": list[dict[str, any]]  # каждое изображение содержит bytes, ext, width, height, marker, size
-                "contents": list[dict[str, any]]  # оглавление документа
-                "isBook": bool  # является ли документ книгой
-            }
+            ParsedDocument с извлечённым текстом и списком отфильтрованных изображений
 
         Raises:
             Exception: Если не удается обработать PDF файл
         """
         try:
+            logging.info(f"📄 Парсинг PDF: {file_name}")
             pdf_stream = BytesIO(file_bytes)
             doc = fitz.open(stream=pdf_stream, filetype="pdf")
             page_count = len(doc)
             logging.info(f"PDF открыт. Количество страниц: {page_count}")
 
-            images: list[PdfImage] = []
+            images: list[DocumentImage] = []
             image_positions = {}
             is_book_doc = self.is_book(doc)
+            toc_items = []  # Инициализируем пустым списком
 
             # Статистика фильтрации
             stats = {
@@ -155,7 +148,9 @@ class FitzPDFParser(PdfParser):
                 f"скриншотов_страниц={stats['full_page_screenshots']}"
             )
 
-            return PdfParseResult(
+            logging.info(f"✅ PDF парсинг завершён: {len(md_text)} символов, {len(images)} изображений")
+
+            return ParsedDocument(
                 text=md_text,
                 images=images,
                 contents=toc_items,
@@ -163,6 +158,7 @@ class FitzPDFParser(PdfParser):
             )
 
         except Exception as e:
+            logging.error(f"❌ Ошибка при парсинге PDF файла {file_name}: {str(e)}")
             raise Exception(f"Ошибка при парсинге PDF файла: {str(e)}")
 
     def extract_table_of_contents(self, doc: fitz.Document) -> list[dict[str, Any]]:
@@ -225,7 +221,7 @@ class FitzPDFParser(PdfParser):
         self,
         doc: fitz.Document,
         page_count: int,
-        images: list[PdfImage],
+        images: list[DocumentImage],
         image_positions: dict,
         stats: dict,
     ) -> None:
@@ -256,7 +252,7 @@ class FitzPDFParser(PdfParser):
                 marker = f"{{quizbee_unique_image_{global_image_counter}}}"
 
                 images.append(
-                    PdfImage(
+                    DocumentImage(
                         bytes=img_bytes,
                         ext="png",
                         width=pix.width,  # type: ignore
@@ -397,7 +393,7 @@ class FitzPDFParser(PdfParser):
                     marker = f"{{quizbee_unique_image_{global_image_counter}}}"
 
                     images.append(
-                        PdfImage(
+                        DocumentImage(
                             bytes=img_bytes,
                             ext="png",
                             width=pix.width,  # type: ignore
@@ -448,7 +444,7 @@ class FitzPDFParser(PdfParser):
                     marker = f"{{quizbee_unique_image_{global_image_counter}}}"
 
                     images.append(
-                        PdfImage(
+                        DocumentImage(
                             bytes=img_bytes,
                             ext="png",
                             width=pix.width,  # type: ignore

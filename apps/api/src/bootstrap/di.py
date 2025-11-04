@@ -20,9 +20,10 @@ from src.apps.user_auth.adapters.out import PBUserVerifier, PBUserRepository
 
 
 from src.apps.material_search.adapters.out import (
-    FitzPDFParser,
+    DocumentParsingAdapter,
     MeiliMaterialIndexer,
     PBMaterialRepository,
+    DocumentParsingAdapter,
 )
 
 from src.apps.message_owner.adapters.out import PBMessageRepository
@@ -102,13 +103,13 @@ def init_user_auth_deps(admin_pb: PocketBase):
 
 async def init_material_search_deps(
     lf: Langfuse, admin_pb: PocketBase, meili: AsyncClient, llm_tools: LLMToolsApp
-) -> tuple[PBMaterialRepository, FitzPDFParser, MeiliMaterialIndexer]:
+) -> tuple[PBMaterialRepository, DocumentParsingAdapter, MeiliMaterialIndexer]:
     material_repository = PBMaterialRepository(admin_pb)
-    pdf_parser = FitzPDFParser()
+    document_parsing = DocumentParsingAdapter()
     material_indexer = await MeiliMaterialIndexer.ainit(
         lf=lf, llm_tools=llm_tools, meili=meili
     )
-    return material_repository, pdf_parser, material_indexer
+    return material_repository, document_parsing, material_indexer
 
 
 # Factory functions for dependency initialization
