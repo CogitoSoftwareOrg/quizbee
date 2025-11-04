@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Protocol
 
+from ..domain.models import Tariff
+
 
 @dataclass(slots=True, kw_only=True)
 class Principal:
@@ -8,6 +10,7 @@ class Principal:
     remaining: int
     used: int
     limit: int
+    tariff: Tariff
 
 
 class AuthUserApp(Protocol):

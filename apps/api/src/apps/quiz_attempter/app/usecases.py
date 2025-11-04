@@ -15,6 +15,7 @@ from src.apps.message_owner.domain.models import (
     MessageStatus,
 )
 from src.apps.llm_tools.app.contracts import LLMToolsApp
+from src.apps.user_auth.domain.models import Tariff
 
 from ..domain.models import Attempt
 from ..domain.refs import (

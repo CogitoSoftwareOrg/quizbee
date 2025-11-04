@@ -13,6 +13,7 @@ class Subscription:
     id: str
     quiz_items_limit: int
     quiz_items_usage: int
+    tariff: Tariff
 
 
 @dataclass(slots=True, kw_only=True)

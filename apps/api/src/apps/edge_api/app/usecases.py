@@ -16,6 +16,7 @@ from src.apps.material_search.app.contracts import (
     RemoveMaterialCmd,
 )
 from src.apps.user_auth.app.contracts import AuthUserApp
+from src.apps.user_auth.domain.models import Tariff
 
 from ..domain.errors import NotEnoughQuizItemsError
 from ..domain.constants import PATCH_LIMIT
@@ -95,6 +96,9 @@ class EdgeAPIAppImpl(EdgeAPIApp):
 
     async def finalize_attempt(self, cmd: PublicFinalizeAttemptCmd) -> None:
         user = await self.user_auth.validate(cmd.token)
+        if user.tariff == Tariff.FREE:
+            raise ValueError("Free tier does not support finalizing attempts")
+
         await self.quiz_attempter.finalize(
             FinalizeAttemptCmd(
                 user=user,
