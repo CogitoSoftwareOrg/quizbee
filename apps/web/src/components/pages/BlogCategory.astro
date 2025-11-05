@@ -1,12 +1,13 @@
 ---
 import type { Page } from "astro";
-import { Image } from "astro:assets";
 
 import Root from "@/layouts/Root.astro";
 import { useTranslatedPath } from "@/i18n/utils";
 import { defaultLang, type languages } from "@/i18n/ui";
 
-import CategoryCover from "@/assets/images/pchel.png";
+import CategoryCover from "@/components/blog/CategoryCover.astro";
+import PostCover from "@/components/blog/PostCover.astro";
+import Pagination from "@/components/blog/Pagination.astro";
 
 const { page } = Astro.props as {
   page: Page;
@@ -53,18 +54,7 @@ const pageHref = (n: number) => tp(`/blog/${category}/page/${n}`);
     <div
       class="relative w-full h-full aspect-video max-h-[calc(40vh)] mx-auto mt-6"
     >
-      <Image
-        src={CategoryCover}
-        alt={category}
-        width={1920}
-        height={1080}
-        widths={[480, 768, 1024, 1280, 1600, 1920]}
-        sizes="(min-width: 1024px) 800px, 100vw"
-        fit="cover"
-        class="h-full w-full object-cover rounded-2xl shadow-sm"
-        fetchpriority="high"
-        loading="eager"
-      />
+      <CategoryCover category={category} alt={category} priority="high" />
     </div>
   </section>
 
@@ -72,7 +62,7 @@ const pageHref = (n: number) => tp(`/blog/${category}/page/${n}`);
   <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
     {
       posts.map((post: any) => {
-        const href = tp(`/blog/${post.data.category}/${post.data.slug}`);
+        const href = tp(`/blog/${post.data.category}/posts/${post.data.slug}`);
         const cover = post.data.article?.coverUrl ?? null;
         const date = post.data.article?.datePublished
           ? new Date(post.data.article.datePublished).toLocaleDateString(locale)
@@ -85,26 +75,13 @@ const pageHref = (n: number) => tp(`/blog/${category}/page/${n}`);
           >
             {/* preview image (надёжно для любых remote URL) */}
             <div class="relative aspect-video bg-muted overflow-hidden">
-              {cover ? (
-                <div class="relative w-full h-full aspect-video max-h-[calc(50vh)] mx-auto mt-6">
-                  <Image
-                    src={cover}
-                    alt={post.data.meta?.title}
-                    width={1920}
-                    height={1080}
-                    widths={[480, 768, 1024, 1280, 1600, 1920]}
-                    sizes="(min-width: 1024px) 800px, 100vw"
-                    fit="cover"
-                    class="h-full w-full object-cover rounded-2xl shadow-sm"
-                    fetchpriority="high"
-                    loading="eager"
-                  />
-                </div>
-              ) : (
-                <div class="absolute inset-0 grid place-items-center text-xs text-muted-foreground">
-                  no cover
-                </div>
-              )}
+              <div class="relative w-full h-full aspect-video max-h-[calc(50vh)] mx-auto mt-6">
+                <PostCover
+                  coverUrl={cover}
+                  alt={post.data.meta?.title || post.data.slug}
+                  priority="low"
+                />
+              </div>
             </div>
 
             <div class="p-4">
@@ -150,63 +127,5 @@ const pageHref = (n: number) => tp(`/blog/${category}/page/${n}`);
     }
   </section>
 
-  <!-- PAGINATION -->
-  {
-    page.lastPage > 1 && (
-      <nav
-        class="mt-10 flex items-center justify-center gap-2"
-        aria-label="Pagination"
-      >
-        {/* Prev */}
-        {page.url.prev ? (
-          <a
-            href={page.url.prev}
-            rel="prev"
-            class="rounded-md border px-3 py-2 text-sm hover:bg-muted/60"
-          >
-            ← Prev
-          </a>
-        ) : (
-          <span class="rounded-md border px-3 py-2 text-sm opacity-40 cursor-not-allowed">
-            ← Prev
-          </span>
-        )}
-
-        {/* Pages window */}
-        {Array.from({ length: page.lastPage }, (_, i) => i + 1).map((n) => {
-          const isActive = n === page.currentPage;
-          return isActive ? (
-            <span
-              class="rounded-md px-3 py-2 text-sm font-medium bg-foreground text-background border border-foreground"
-              aria-current="page"
-            >
-              {n}
-            </span>
-          ) : (
-            <a
-              href={pageHref(n)}
-              class="rounded-md border px-3 py-2 text-sm hover:bg-muted/60"
-            >
-              {n}
-            </a>
-          );
-        })}
-
-        {/* Next */}
-        {page.url.next ? (
-          <a
-            href={page.url.next}
-            rel="next"
-            class="rounded-md border px-3 py-2 text-sm hover:bg-muted/60"
-          >
-            Next →
-          </a>
-        ) : (
-          <span class="rounded-md border px-3 py-2 text-sm opacity-40 cursor-not-allowed">
-            Next →
-          </span>
-        )}
-      </nav>
-    )
-  }
+  <Pagination page={page} getPageHref={pageHref} />
 </Root>

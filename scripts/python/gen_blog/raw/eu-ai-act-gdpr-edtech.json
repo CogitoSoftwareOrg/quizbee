@@ -1,0 +1,33 @@
+{
+  "topic": "The EU AI Act Meets the Classroom: Compliance and Design Patterns for EdTech",
+  "target_audience": "edtech founders, product managers, DPOs, school leaders in the EU",
+  "tone": "professional",
+  "length": "long",
+  "category": "edtechTrends",
+  "languages": ["en", "es", "fr", "de", "pt"],
+  "keywords": [
+    "EU AI Act",
+    "GDPR",
+    "education policy",
+    "privacy",
+    "transparency"
+  ],
+  "refs": [
+    {
+      "url": "https://www.eursc.eu/BasicTexts/2025-01-D-66-en-2.pdf",
+      "ref_string": "European Schools (2025) Legal & pedagogical guidelines",
+      "content": "Requires GDPR- and EU AI Act–aligned use; pupils cannot be required to use GenAI unless tools are approved and guidance provided."
+    },
+    {
+      "url": "https://education.ec.europa.eu/focus-topics/digital-education/action-plan/ethical-guidelines-for-educators-on-using-ai",
+      "ref_string": "European Commission (2025) Ethical guidelines for educators",
+      "content": "Goals and practical guidance for AI and data in education; risk awareness and informed use."
+    },
+    {
+      "url": "https://www.edpb.europa.eu/system/files/2024-12/edpb_opinion_202428_ai-models_en.pdf",
+      "ref_string": "EDPB Opinion 28/2024 on AI models",
+      "content": "Interprets GDPR aspects for AI models; emphasizes lawful basis, transparency, data minimization, and rights of data subjects."
+    }
+  ],
+  "special_instructions": "Translate policy into product checklists (risk class, DPIA, transparency, child-specific safeguards); include example parental consent flows and data maps."
+}

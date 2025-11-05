@@ -1,0 +1,32 @@
+{
+  "topic": "From Policing to Designing: Authentic Assessment in the GenAI Era",
+  "target_audience": "assessment designers, program directors, quality assurance teams",
+  "tone": "professional",
+  "length": "long",
+  "category": "edtechTrends",
+  "languages": ["en", "es", "fr", "de", "pt"],
+  "keywords": [
+    "authentic assessment",
+    "GenAI in education",
+    "policy",
+    "assessment redesign"
+  ],
+  "refs": [
+    {
+      "url": "https://nationalcentreforai.jiscinvolve.org/wp/files/2024/08/Embracing-Generative-AI-in-Assessments-Flowchart.pdf",
+      "ref_string": "Jisc (2024) Guided approach flowchart",
+      "content": "Decision flows for adapting assessment: allow use with acknowledgement, assess process, stress human intelligence, align outcomes."
+    },
+    {
+      "url": "https://www.theguardian.com/education/2025/feb/26/uk-universities-warned-to-stress-test-assessments-as-92-of-students-use-ai",
+      "ref_string": "Guardian (2025) 92% HE students use AI",
+      "content": "HEPI/Kortext survey prompts UK universities to stress-test assessments and staff training as AI use surges."
+    },
+    {
+      "url": "https://www.theaustralian.com.au/higher-education/universities-watchdog-warns-ai-cheats-are-impossible-to-detect/news-story/4a636523fd32cc5b5e37a9c14c584c4f",
+      "ref_string": "TEQSA (2025) detection limits & secure tasks",
+      "content": "Australian regulator advises shifting toward secure/authentic assessments; warns against overreliance on detectors."
+    }
+  ],
+  "special_instructions": "Offer redesign patterns (studio critiques, oral defenses, lab practicals, live code), workload estimates, and student comms templates."
+}

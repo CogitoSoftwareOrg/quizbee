@@ -30,40 +30,49 @@
     {
       "type": "Hero",
       "props": {
-        "title": "Verwandeln Sie Ihre Lernmaterialien in Interaktive Quiz",
-        "description": "QuizBee verwandelt Ihre Dokumente in ansprechende, KI-gestützte Quiz. Lernen Sie intelligenter, nicht härter, mit personalisiertem Lernen, das sich an Ihre Bedürfnisse anpasst.",
-        "buttonText": "Kostenlos Starten",
-        "image": "/bee_v3.svg",
+        "title": "Verwandeln Sie Ihre Lernmaterialien in",
+        "titleHighlight": "Interaktive Quiz",
+        "description": "Laden Sie Ihre Vorlesungsnotizen, Lehrbücher oder Lernratgeber hoch. QuizBee nutzt KI, um personalisierte Quiz zu generieren, die Ihnen bei Ihren Klausuren und Prüfungen helfen.",
+        "buttonText": "Anfangen, Quiz zu erstellen",
+        "footerText": "Kostenlos zu beginnen • Keine Kreditkarte erforderlich",
+        "href": "{{APP_URL}}",
+        "image": "",
+        "titleAlign": "center",
+        "descriptionAlign": "center",
+        "footerAlign": "center",
         "position": "right",
-        "overlay": false,
-        "href": "{{APP_URL}}"
+        "center": true,
+        "textWidth": "max-w-5xl",
+        "titleSize": "text-7xl 2xl:text-8xl",
+        "descriptionSize": "text-xl 2xl:text-2xl py-6",
+        "buttonSize": "xl"
       }
     },
     {
       "type": "Pains",
       "props": {
-        "title": "Haben Sie Schwierigkeiten, Beim Lernen Engagiert zu Bleiben?",
-        "theme": "gradient",
+        "title": "Sind Sie Es Leid, Zu Lernen, Ohne Etwas Zu Behalten?",
+        "theme": "",
         "pains": [
           {
-            "title": "Passives Lesen ist Ineffektiv",
-            "description": "Einfaches Lesen von Materialien hilft Ihnen nicht, Informationen zu behalten. Sie brauchen aktives Engagement, um wirklich zu lernen.",
-            "icon": "bed"
+            "title": "Sie Lesen… und Vergessen",
+            "description": "Sie verbringen Stunden damit, erneut zu lesen, aber wenn Prüfungen anstehen, verschwindet alles aus Ihrem Gedächtnis.",
+            "icon": "book-open-text"
           },
           {
-            "title": "Generische Tests Passen Nicht zu Ihren Materialien",
-            "description": "Vorgefertigte Quiz stimmen selten mit Ihrem spezifischen Lerninhalt überein und hinterlassen Lücken in Ihrer Vorbereitung.",
-            "icon": "book-open"
+            "title": "Materialien Überall, Keine Struktur",
+            "description": "Notizen, PDFs, Screenshots, aber keine Möglichkeit, sie in etwas Nützliches zum wirklichen Lernen umzuwandeln.",
+            "icon": "file-stack"
           },
           {
-            "title": "Kein Feedback, Wenn Sie Feststecken",
-            "description": "Traditionelle Lernmethoden lassen Sie allein, wenn Sie Hilfe beim Verständnis schwieriger Konzepte benötigen.",
-            "icon": "circle-help"
+            "title": "Müde Unendlicher KI-Chats",
+            "description": "Müde davon, dieselben Inhalte immer wieder zu KI-Chats hochzuladen und erneut zu erklären?",
+            "icon": "message-circle-x"
           },
           {
-            "title": "Schwer, Echten Fortschritt zu Verfolgen",
-            "description": "Ohne adaptive Schwierigkeit können Sie nicht sagen, ob Sie das Material wirklich beherrschen oder nur auswendig lernen.",
-            "icon": "chart-no-axes-combined"
+            "title": "Harte Arbeit, Unsichere Ergebnisse",
+            "description": "Sie lernen hart, aber vor der Prüfung wissen Sie nicht, was Sie wiederholen sollen oder was Ihnen entgangen ist.",
+            "icon": "frown"
           }
         ]
       }
@@ -78,32 +87,17 @@
           {
             "title": "KI-Generierte Quiz",
             "description": "Laden Sie Ihre Lernmaterialien hoch und erhalten Sie sofort maßgeschneiderte Quiz, die auf Ihre Inhalte zugeschnitten sind. PDFs, Dokumente, Notizen - wir verarbeiten alles.",
-            "icon": "bot",
-            "impact": {
-              "metric": "Quiz-Erstellung",
-              "value": "30",
-              "unit": "Sekunden"
-            }
-          },
-          {
-            "title": "Dynamische Schwierigkeitsanpassung",
-            "description": "Steuern Sie die Schwierigkeit in Echtzeit, während Sie Quiz durchführen. Zu einfach? Erhöhen Sie die Schwierigkeit. Zu schwer? Senken Sie sie. Das Quiz passt sich Ihrem Lerntempo an.",
-            "icon": "sliders-horizontal",
-            "impact": {
-              "metric": "Behaltensverbesserung",
-              "value": "3x",
-              "unit": "besser"
-            }
+            "icon": "bot"
           },
           {
             "title": "KI-Tutor-Gespräche",
             "description": "Nach jeder Frage chatten Sie mit einem KI-Tutor, der Ihre Materialien kennt. Erhalten Sie Erklärungen, Klarstellungen und tiefere Einblicke sofort.",
-            "icon": "message-circle",
-            "impact": {
-              "metric": "Verständnis",
-              "value": "100%",
-              "unit": "Klarheit"
-            }
+            "icon": "message-circle"
+          },
+          {
+            "title": "Dynamische Schwierigkeitsanpassung",
+            "description": "Steuern Sie die Schwierigkeit in Echtzeit, während Sie Quiz durchführen. Zu einfach? Erhöhen Sie. Zu schwer? Senken Sie. Das Quiz passt sich Ihrem Lerntempo an.",
+            "icon": "sliders-horizontal"
           },
           {
             "title": "Themenverfeinerung",
@@ -114,12 +108,17 @@
             "title": "Fortschrittsverfolgung",
             "description": "Überwachen Sie Ihre Leistung im Laufe der Zeit. Sehen Sie, welche Themen Sie gemeistert haben und welche mehr Aufmerksamkeit benötigen.",
             "icon": "trending-up"
+          },
+          {
+            "title": "Teilen und Gemeinsam Lernen",
+            "description": "Teilen Sie Ihre benutzerdefinierten Quiz mit Freunden und Klassenkameraden. Lernen Sie zusammen, fordern Sie sich gegenseitig heraus und beherrschen Sie Ihre Fächer als Team.",
+            "icon": "users"
           }
         ],
         "stats": {
-          "total": "10.000+",
+          "total": "200+",
           "label": "Täglich Erstellte Quiz",
-          "description": "Schließen Sie sich Tausenden von Studenten und Fachleuten an, die QuizBee nutzen, um ihre Materialien zu meistern"
+          "description": "Schließen Sie sich Hunderten von Studenten und Fachleuten an, die QuizBee nutzen, um ihre Materialien zu meistern"
         }
       }
     },
@@ -128,7 +127,7 @@
       "props": {
         "title": "Beginnen Sie in 4 Einfachen Schritten",
         "subtitle": "Wie QuizBee Funktioniert",
-        "theme": "gradient",
+        "theme": "",
         "steps": [
           {
             "number": 1,
@@ -158,39 +157,31 @@
       "props": {
         "title": "Häufig Gestellte Fragen",
         "subtitle": "Fragen?",
-        "theme": "gradient",
+        "theme": "",
         "questions": [
           {
-            "question": "Wie unterscheidet sich QuizBee von Quizlet oder anderen Quiz-Apps?",
-            "answer": "Im Gegensatz zu herkömmlichen Kartenflip-Apps nutzt QuizBee KI, um Fragen direkt aus IHREN Materialien zu generieren - nicht aus vorgefertigten Decks. Außerdem bekommen Sie einen persönlichen KI-Tutor, der jeden Konzept aus Ihren Materialien in Echtzeit erklären kann. Es ist wie einen Studienfreund zu haben, der alles gelesen hat, was Sie haben."
+            "question": "Gibt es eine kostenlose Stufe?",
+            "answer": "Ja. Wir bieten eine kostenlose Stufe mit begrenzten Funktionen, um Ihnen den Einstieg zu erleichtern. Wenn Sie die Plus- oder Pro-Stufen testen möchten, können Sie immer eine Rückerstattung innerhalb von 14 Tagen nach dem Kauf erhalten."
+          },
+          {
+            "question": "Wie werden meine Zahlungsinformationen behandelt?",
+            "answer": "Ihre Kreditkarteninformationen werden vollständig von Stripe verarbeitet, einer hochzuverlässigen und sicheren Zahlungsplattform. Wir haben nie Zugriff auf Ihre Kartendetails."
           },
           {
             "question": "Welche Dateiformate unterstützen Sie?",
-            "answer": "Wir unterstützen PDF, DOCX, TXT und mehr. Sie können Vorlesungsnotizen, Lehrbücher, Lernratgeber, Artikel - praktisch alle textbasierten Lernmaterialien hochladen. Unsere KI analysiert den Inhalt und generiert relevante Fragen."
+            "answer": "Wir unterstützen PDF, DOCX, PPTX, Markdown, TXT und mehr. Sie können Vorlesungsnotizen, Lehrbücher, Lernratgeber, Artikel - praktisch alle textbasierten Lernmaterialien hochladen."
           },
           {
             "question": "Wie funktioniert der KI-Tutor?",
             "answer": "Nach jeder Quiz-Frage können Sie mit unserem KI-Tutor ein Gespräch starten. Er hat vollständigen Kontext Ihrer Lernmaterialien und kann Konzepte erklären, Beispiele geben, verwirrendende Themen klären und Follow-up-Fragen beantworten - alles auf Basis IHRER spezifischen Materialien."
           },
           {
-            "question": "Kann ich QuizBee auf meinem Telefon nutzen?",
-            "answer": "Ja! QuizBee funktioniert auf jedem Gerät mit einem Webbrowser - Desktop, Tablet oder Mobiltelefon. Lernen Sie überall, jederzeit. Ihr Fortschritt wird auf allen Geräten automatisch synchronisiert."
-          },
-          {
-            "question": "Wie funktioniert die adaptive Schwierigkeit?",
-            "answer": "Sie können die Schwierigkeit während eines Quiz anpassen, wenn Fragen zu einfach oder zu schwer sind. Darüber hinaus lernt QuizBee aus Ihren Fehlern im Laufe der Zeit und konzentriert sich auf Themen, mit denen Sie kämpfen. Es ist personalisiertes Lernen, das mit Ihnen wächst."
-          },
-          {
             "question": "Sind meine Daten sicher und privat?",
-            "answer": "Absolut. Ihre Lernmaterialien und Quiz-Geschichte sind verschlüsselt und privat. Wir geben Ihre Daten niemals an Dritte weiter. Sie besitzen Ihren Inhalt und können ihn jederzeit löschen."
+            "answer": "Absolut. Ihre Lernmaterialien und Quiz-Geschichte sind mit AES-256 verschlüsselt und sicher gespeichert. Als europaisches Unternehmen befolgen wir strikt die GDPR. Wir teilen Ihre Daten nie für nicht autorisierte Verwendung - Sie besitzen sie und können sie jederzeit löschen."
           },
           {
             "question": "Kann ich mein Abonnement jederzeit kündigen?",
             "answer": "Ja! Keine langfristigen Verträge oder Verpflichtungen. Kündigen Sie mit einem Klick aus Ihren Kontoeinstellungen. Sie behalten Zugriff bis zum Ende Ihres Abrechnungszeitraums und wir bieten eine 14-tägige Geld-zurück-Garantie."
-          },
-          {
-            "question": "Bieten Sie Studentenrabatte an?",
-            "answer": "Ja! Studenten mit einer gültigen .edu-E-Mail-Adresse erhalten 20% Rabatt auf Pro-Pläne. Melden Sie sich einfach mit Ihrer Student-E-Mail an und erhalten Sie automatisch den Rabatt."
           }
         ]
       }
@@ -199,10 +190,10 @@
       "type": "CTA",
       "props": {
         "headline": "Bereit, Ihr Lernen zu Transformieren?",
-        "subheadline": "Schließen Sie sich 50.000+ Schülern an, die mit KI-gestützten Quiz intelligenter studieren. Laden Sie Ihr erstes Material hoch und erstellen Sie in Sekunden ein Quiz. Keine Kreditkarte erforderlich.",
+        "subheadline": "Schließen Sie sich Hunderten von Schülern an, die mit KI-gestützten Quiz intelligenter studieren. Laden Sie Ihr erstes Material hoch und erstellen Sie in Sekunden ein Quiz. Keine Kreditkarte erforderlich.",
         "buttonText": "Kostenlos Starten - Keine Kreditkarte Erforderlich",
         "buttonHref": "{{APP_URL}}",
-        "theme": "gradient"
+        "theme": ""
       }
     }
   ]

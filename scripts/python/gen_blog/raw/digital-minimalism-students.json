@@ -1,0 +1,34 @@
+{
+  "topic": "Digital Minimalism for Students: Cut Noise, Keep Value",
+  "target_audience": "students feeling overwhelmed by devices, feeds, and notifications",
+  "tone": "friendly",
+  "length": "medium",
+  "category": "general",
+  "languages": [
+    "en",
+    "es",
+    "fr",
+    "de",
+    "pt"
+  ],
+  "keywords": [
+    "digital minimalism",
+    "attention",
+    "habit design",
+    "notifications",
+    "focus"
+  ],
+  "refs": [
+    {
+      "url": "https://www.penguinrandomhouse.com/books/599177/digital-minimalism-by-cal-newport/",
+      "ref_string": "Newport (2019) Digital Minimalism",
+      "content": "Philosophy and practices for a focused digital life; 30-day 'digital declutter' and value-based tool selection."
+    },
+    {
+      "url": "https://dl.acm.org/doi/10.1145/2858036.2858535",
+      "ref_string": "Pielot, Church & de Oliveira (2014) Notifications",
+      "content": "Field studies show notification load impacts attention and wellbeing; batching and control reduce disruption."
+    }
+  ],
+  "special_instructions": "Offer a 7-day declutter plan, notification audit checklist, and 'focus mode' recipes for phone and laptop."
+}

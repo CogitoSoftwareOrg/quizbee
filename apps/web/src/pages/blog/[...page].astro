@@ -1,0 +1,22 @@
+---
+import type { Page } from "astro";
+
+import BlogIndex from "@/components/pages/BlogIndex.astro";
+import { getStaticBlogPaths } from "@/ssg/blog";
+
+type CatInfo = {
+  name: string;
+  count: number;
+  cover?: string | null;
+  description?: string | null;
+};
+
+export const getStaticPaths = getStaticBlogPaths;
+
+const { page, categories } = Astro.props as {
+  page: Page;
+  categories: CatInfo[];
+};
+---
+
+<BlogIndex page={page} categories={categories} />

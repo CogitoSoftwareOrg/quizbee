@@ -116,28 +116,14 @@ def init_quiz_attempter_deps(
     lf: Langfuse, admin_pb: PocketBase, http: httpx.AsyncClient, llm_tools: LLMToolsApp
 ) -> tuple[PBAttemptRepository, AIExplainer, AIAttemptFinalizer]:
     attempt_repository = PBAttemptRepository(admin_pb, http=http)
-    explainer_ai = Agent(
-        # instrument=True,
-        model=EXPLAINER_LLM,
-        deps_type=ExplainerDeps,
-        history_processors=[],
-        output_type=AgentEnvelope,
-    )
     explainer = AIExplainer(
         lf=lf,
-        ai=explainer_ai,
-    )
-
-    finalizer_ai = Agent(
-        model=ATTEMPT_FINALIZER_LLM,
-        deps_type=AttemptFinalizerDeps,
-        history_processors=[],
         output_type=AgentEnvelope,
     )
     finalizer = AIAttemptFinalizer(
         lf=lf,
         attempt_repository=attempt_repository,
-        ai=finalizer_ai,
+        output_type=AgentEnvelope,
     )
     return attempt_repository, explainer, finalizer
 
@@ -150,27 +136,15 @@ async def init_quiz_generator_deps(
     llm_tools: LLMToolsApp,
 ) -> tuple[PBQuizRepository, AIPatchGenerator, AIQuizFinalizer, MeiliQuizIndexer]:
     quiz_repository = PBQuizRepository(admin_pb, http=http)
-    patch_generator_ai = Agent(
-        model=PATCH_GENERATOR_LLM,
-        deps_type=AIPatchGeneratorDeps,
-        history_processors=[],
-        output_type=AgentEnvelope,
-    )
     patch_generator = AIPatchGenerator(
         lf=lf,
         quiz_repository=quiz_repository,
-        ai=patch_generator_ai,
-    )
-    finalizer_ai = Agent(
-        model=QUIZ_FINALIZER_LLM,
-        deps_type=QuizFinalizerDeps,
-        history_processors=[],
         output_type=AgentEnvelope,
     )
     finalizer = AIQuizFinalizer(
         lf=lf,
         quiz_repository=quiz_repository,
-        ai=finalizer_ai,
+        output_type=AgentEnvelope,
     )
     quiz_indexer = await MeiliQuizIndexer.ainit(
         lf=lf,

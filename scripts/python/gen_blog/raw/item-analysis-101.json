@@ -1,0 +1,39 @@
+{
+  "topic": "Item Analysis 101: Difficulty, Discrimination and Distractor Efficiency",
+  "target_audience": "assessment authors and data‑curious teachers",
+  "tone": "professional",
+  "length": "long",
+  "category": "quizMaking",
+  "languages": [
+    "en",
+    "es",
+    "fr",
+    "de",
+    "pt"
+  ],
+  "keywords": [
+    "item analysis",
+    "p‑value",
+    "point‑biserial",
+    "distractor analysis",
+    "test improvement"
+  ],
+  "refs": [
+    {
+      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3581536/",
+      "ref_string": "Considine, Botti & Thomas (2005)",
+      "content": "Introduces item difficulty (p‑value) and discrimination (point‑biserial) with classroom‑level interpretation and thresholds."
+    },
+    {
+      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3385173/",
+      "ref_string": "Tapia & Marsh (2004)",
+      "content": "Worked examples of distractor analysis—how non‑functioning distractors lower discrimination and how to revise them."
+    },
+    {
+      "url": "https://higherlogicdownload.s3.amazonaws.com/AMPED/6a0a7b61-0b52-4a5c-87f9-bdb6c28f7c44/UploadedImages/Point_Biserial_Correlation_Coefficient.pdf",
+      "ref_string": "Point‑biserial explainer (AMPED)",
+      "content": "Technical note on computing/reading point‑biserial correlations and caveats for small cohorts."
+    }
+  ],
+  "special_instructions": "Include formulas and a step‑by‑step example dataset (10 items × 30 students) with computed stats and decision rules for revision."
+}

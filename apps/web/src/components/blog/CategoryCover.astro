@@ -1,0 +1,37 @@
+---
+import { Image } from "astro:assets";
+import PchelImage from "@/assets/images/pchel.png";
+
+type Props = {
+  category: string;
+  alt?: string;
+  class?: string;
+  priority?: "high" | "low" | "auto";
+};
+
+const { category, alt, class: className, priority = "high" } = Astro.props;
+
+// Маппинг категорий на изображения
+const categoryImages: Record<string, any> = {
+  // TODO: добавить изображения для конкретных категорий
+  // "tutorial": TutorialImage,
+  // "news": NewsImage,
+  // и т.д.
+};
+
+// Получаем изображение для категории или используем fallback
+const coverImage = categoryImages[category] || PchelImage;
+---
+
+<Image
+  src={coverImage}
+  alt={alt || category}
+  width={1920}
+  height={1080}
+  widths={[480, 768, 1024, 1280, 1600, 1920]}
+  sizes="(min-width: 1024px) 800px, 100vw"
+  fit="cover"
+  class={className || "h-full w-full object-cover rounded-2xl shadow-sm"}
+  fetchpriority={priority}
+  loading={priority === "high" ? "eager" : "lazy"}
+/>

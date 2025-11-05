@@ -1,0 +1,39 @@
+{
+  "topic": "Habit Formation for Students: Make Good Study Habits Stick",
+  "target_audience": "students building sustainable routines",
+  "tone": "friendly",
+  "length": "medium",
+  "category": "general",
+  "languages": [
+    "en",
+    "es",
+    "fr",
+    "de",
+    "pt"
+  ],
+  "keywords": [
+    "habits",
+    "behavior change",
+    "Tiny Habits",
+    "cue-action-reward",
+    "automaticity"
+  ],
+  "refs": [
+    {
+      "url": "https://psycnet.apa.org/record/2010-15406-007",
+      "ref_string": "Lally et al. (2010) Habit formation",
+      "content": "In daily-life study, habit automaticity grew asymptotically; median ~66 days but wide range depending on behavior and person."
+    },
+    {
+      "url": "https://www.penguinrandomhouse.com/books/610065/tiny-habits-by-bj-fogg-phd/",
+      "ref_string": "Fogg (2019) Tiny Habits",
+      "content": "Start tiny, anchor to existing routines, celebrate; practical recipes to lower activation energy."
+    },
+    {
+      "url": "https://psycnet.apa.org/record/1982-29165-001",
+      "ref_string": "Wood & Neal (2007/2009) Habit automaticity reviews",
+      "content": "Habits as context–response associations; environment design is key to sustaining behavior."
+    }
+  ],
+  "special_instructions": "Give a habit loop worksheet (cue→routine→reward), anchor maps to class schedule, and troubleshooting for lapses."
+}

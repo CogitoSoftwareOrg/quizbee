@@ -1,0 +1,38 @@
+{
+  "topic": "The Feynman Technique: Learn Faster by Teaching What You Know",
+  "target_audience": "students learning complex concepts in STEM and humanities",
+  "tone": "educational",
+  "length": "medium",
+  "category": "general",
+  "languages": [
+    "en",
+    "es",
+    "fr",
+    "de",
+    "pt"
+  ],
+  "keywords": [
+    "Feynman Technique",
+    "explanation effect",
+    "self-explanation",
+    "active learning"
+  ],
+  "refs": [
+    {
+      "url": "https://psycnet.apa.org/record/1989-14233-001",
+      "ref_string": "Chi et al. (1989) Self-explanation",
+      "content": "Self-explanation during learning improves problem solving and transfer—mechanism underpinning Feynman-like explanation."
+    },
+    {
+      "url": "https://link.springer.com/article/10.1007/s10648-016-9373-1",
+      "ref_string": "Wylie & Chi (2014) Review",
+      "content": "Synthesizes evidence for self-explanation across domains; provides design principles for prompts and activities."
+    },
+    {
+      "url": "https://www.penguinrandomhouse.com/books/226380/make-it-stick-by-peter-c-brown-henry-l-roediger-iii-and-mark-a-mcdaniel/",
+      "ref_string": "Brown, Roediger & McDaniel (2014) Make It Stick",
+      "content": "Popular science synthesis of retrieval, spacing, interleaving, and elaboration; accessible framing for explanation-based learning."
+    }
+  ],
+  "special_instructions": "Turn the technique into a 4-step worksheet; include STEM and non-STEM examples and pitfalls (illusion of understanding)."
+}

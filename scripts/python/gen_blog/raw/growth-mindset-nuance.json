@@ -1,0 +1,38 @@
+{
+  "topic": "Growth Mindset with Nuance: What Helps, What Doesn’t, and Why",
+  "target_audience": "teachers and students applying mindset ideas responsibly",
+  "tone": "professional",
+  "length": "medium",
+  "category": "general",
+  "languages": [
+    "en",
+    "es",
+    "fr",
+    "de",
+    "pt"
+  ],
+  "keywords": [
+    "growth mindset",
+    "motivation",
+    "metacognition",
+    "education psychology"
+  ],
+  "refs": [
+    {
+      "url": "https://www.guilford.com/books/Mindset/Carol-Dweck/9780345472328",
+      "ref_string": "Dweck (2006) Mindset",
+      "content": "Introduces fixed vs growth mindsets; emphasizes effort + strategy + help-seeking rather than effort alone."
+    },
+    {
+      "url": "https://www.pnas.org/doi/10.1073/pnas.1717339115",
+      "ref_string": "Sisk et al. (2018) Meta-analysis",
+      "content": "Average effects of mindset interventions on achievement are small; stronger for at-risk students and when well-designed."
+    },
+    {
+      "url": "https://www.nature.com/articles/s41586-019-0912-7",
+      "ref_string": "Yeager et al. (2019) National experiment",
+      "content": "Brief growth mindset intervention improved grades among lower-achieving students in supportive contexts."
+    }
+  ],
+  "special_instructions": "Provide classroom scripts focusing on strategies and feedback; warn against 'toxic positivity' and effort-only messages."
+}

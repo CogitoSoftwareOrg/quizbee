@@ -1,0 +1,33 @@
+{
+  "topic": "Making EdTech Systems Talk: xAPI, Caliper, and OneRoster 1.2 in 2025",
+  "target_audience": "CTOs, platform architects, district tech leads",
+  "tone": "professional",
+  "length": "medium",
+  "category": "edtechTrends",
+  "languages": ["en", "es", "fr", "de", "pt"],
+  "keywords": [
+    "xAPI",
+    "Caliper Analytics",
+    "OneRoster 1.2",
+    "interoperability",
+    "learning analytics"
+  ],
+  "refs": [
+    {
+      "url": "https://www.imsglobal.org/spec/oneroster/v1p2",
+      "ref_string": "1EdTech OneRoster 1.2 (spec)",
+      "content": "Standard for exchanging people/courses/enrollments/grades; supports CSV and REST services; latest version 1.2."
+    },
+    {
+      "url": "https://www.imsglobal.org/initial-xapicaliper-comparison",
+      "ref_string": "1EdTech comparison: xAPI vs Caliper",
+      "content": "Explains different origins and use cases; not either/or—choose per context ('horses for courses')."
+    },
+    {
+      "url": "https://npuls.nl/_assets/2cbc8f9f-5e03-4e62-9c95-2722f46f0161/Magazine-Npuls-learning-analytics-EN.pdf",
+      "ref_string": "NPuls (2024) Learning analytics practice with xAPI",
+      "content": "Case-based lessons on xAPI recipes, LRS deployment, and human factors in learning analytics adoption."
+    }
+  ],
+  "special_instructions": "Provide integration patterns and data diagrams; include a minimal event schema and privacy notes for analytics under GDPR."
+}

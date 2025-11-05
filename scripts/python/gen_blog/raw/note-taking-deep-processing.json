@@ -1,0 +1,28 @@
+{
+  "topic": "Note‑Taking that Sticks: When Handwriting Helps and How to Type Without Losing Depth",
+  "target_audience": "students deciding how to take notes and teachers setting policies",
+  "tone": "educational",
+  "length": "medium",
+  "category": "education",
+  "languages": ["en", "es", "fr", "de", "pt"],
+  "keywords": [
+    "note-taking",
+    "handwriting",
+    "laptop notes",
+    "generative processing",
+    "education"
+  ],
+  "refs": [
+    {
+      "url": "https://journals.sagepub.com/doi/abs/10.1177/0956797614524581",
+      "ref_string": "Mueller & Oppenheimer (2014)",
+      "content": "Longhand led to better performance on conceptual questions; laptop notes contained more verbatim transcription."
+    },
+    {
+      "url": "https://www.researchgate.net/publication/330856100_How_Much_Mightier_Is_the_Pen_than_the_Keyboard_for_Note-Taking_A_Replication_and_Extension_of_Mueller_and_Oppenheimer_2014",
+      "ref_string": "Morehead, Dunlosky & Rawson (2019) Replication",
+      "content": "Mixed replication: finds limited or inconsistent longhand advantage; suggests benefits depend on conditions."
+    }
+  ],
+  "special_instructions": "Present balanced view: teach generative note‑taking (summarize, question, organize) for both paper and laptops; include templates."
+}

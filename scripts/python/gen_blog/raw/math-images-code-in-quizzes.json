@@ -1,0 +1,39 @@
+{
+  "topic": "Math, Images, and Code in Quizzes: Rendering, Licensing, and Grading Tips",
+  "target_audience": "STEM instructors and edtech authors building rich items",
+  "tone": "professional",
+  "length": "medium",
+  "category": "quizMaking",
+  "languages": [
+    "en",
+    "es",
+    "fr",
+    "de",
+    "pt"
+  ],
+  "keywords": [
+    "KaTeX",
+    "MathJax",
+    "syntax highlighting",
+    "image licensing",
+    "STEM assessment"
+  ],
+  "refs": [
+    {
+      "url": "https://katex.org/docs/",
+      "ref_string": "KaTeX Documentation",
+      "content": "Fast, server/client rendering of LaTeX math; guidelines for delimiters, accessibility and screenshot‑proof typography."
+    },
+    {
+      "url": "https://docs.mathjax.org/en/latest/",
+      "ref_string": "MathJax Documentation",
+      "content": "Configuring TeX/MathML/AsciiMath inputs and output renderers; accessibility extensions and assistive‑MML."
+    },
+    {
+      "url": "https://creativecommons.org/licenses/",
+      "ref_string": "Creative Commons Licenses",
+      "content": "How to select and attribute CC‑licensed images/diagrams in quiz items; NC/SA/ND implications for educational reuse."
+    }
+  ],
+  "special_instructions": "Include do/don’t examples for math rendering, code blocks, and image attribution; add rubric ideas for partial credit on multi‑step math."
+}

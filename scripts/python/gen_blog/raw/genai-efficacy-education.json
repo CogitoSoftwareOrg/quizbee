@@ -1,0 +1,33 @@
+{
+  "topic": "Do AI Tutors Actually Work? What 2024–2025 Meta-analyses Say",
+  "target_audience": "institutional leaders, instructional designers, and faculty considering AI tutoring tools",
+  "tone": "professional",
+  "length": "long",
+  "category": "edtechTrends",
+  "languages": ["en", "es", "fr", "de", "pt"],
+  "keywords": [
+    "AI tutors",
+    "intelligent tutoring systems",
+    "generative AI in education",
+    "learning gains",
+    "meta-analysis"
+  ],
+  "refs": [
+    {
+      "url": "https://www.sciencedirect.com/science/article/pii/S2666920X25000955",
+      "ref_string": "Qi Xia et al. (2025) Systematic review & meta-analysis",
+      "content": "Across higher education, GenAI applications show positive, significant effects on behaviour and cognitive achievement; calls out study-design heterogeneity and publication bias checks."
+    },
+    {
+      "url": "https://files.eric.ed.gov/fulltext/EJ1465704.pdf",
+      "ref_string": "Zhang & Jantakoon (2025) Meta-analysis of AI in Education",
+      "content": "Aggregates 13 empirical studies; reports a significant overall effect of AI technologies in educational settings; discusses methodological considerations in effect-size estimation."
+    },
+    {
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12078640/",
+      "ref_string": "Létourneau et al. (2025) Systematic review of K–12 ITS",
+      "content": "Growth of AI-driven intelligent tutoring systems; mixed but generally positive learning effects; highlights evaluation design issues and context-dependence."
+    }
+  ],
+  "special_instructions": "Summarize effect sizes and boundaries of current evidence; provide a due-diligence checklist for piloting AI tutors (data, pedagogy, outcomes, safeguards)."
+}

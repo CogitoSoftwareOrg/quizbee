@@ -30,40 +30,49 @@
     {
       "type": "Hero",
       "props": {
-        "title": "Transforma Tus Materiales de Estudio en Cuestionarios Interactivos",
-        "description": "QuizBee convierte tus documentos en cuestionarios atractivos impulsados por IA. Estudia de manera más inteligente, no más difícil, con aprendizaje personalizado que se adapta a tus necesidades.",
-        "buttonText": "Comenzar Gratis",
-        "image": "/bee_v3.svg",
+        "title": "Transforma Tus Materiales de Estudio en",
+        "titleHighlight": "Cuestionarios Interactivos",
+        "description": "Sube tus notas de clase, libros de texto o guías de estudio. QuizBee utiliza IA para generar cuestionarios personalizados que te ayudan a aprobar tus exámenes.",
+        "buttonText": "Comenzar a crear cuestionarios",
+        "footerText": "Gratis para empezar • Sin tarjeta de crédito requerida",
+        "href": "{{APP_URL}}",
+        "image": "",
+        "titleAlign": "center",
+        "descriptionAlign": "center",
+        "footerAlign": "center",
         "position": "right",
-        "overlay": false,
-        "href": "{{APP_URL}}"
+        "center": true,
+        "textWidth": "max-w-5xl",
+        "titleSize": "text-7xl 2xl:text-8xl",
+        "descriptionSize": "text-xl 2xl:text-2xl py-6",
+        "buttonSize": "xl"
       }
     },
     {
       "type": "Pains",
       "props": {
-        "title": "¿Tienes Dificultades para Mantenerte Comprometido Mientras Estudias?",
-        "theme": "gradient",
+        "title": "¿Cansado de Estudiar Sin Que Se Te Quede Nada?",
+        "theme": "",
         "pains": [
           {
-            "title": "La Lectura Pasiva es Ineficaz",
-            "description": "Simplemente leer materiales no te ayuda a retener información. Necesitas participación activa para aprender verdaderamente.",
-            "icon": "bed"
+            "title": "Lees... y Olvidas",
+            "description": "Pasas horas releyendo, pero cuando llega el examen, todo desaparece de tu memoria.",
+            "icon": "book-open-text"
           },
           {
-            "title": "Las Pruebas Genéricas No Coinciden con Tus Materiales",
-            "description": "Los cuestionarios prediseñados rara vez se alinean con tu contenido de estudio específico, dejando brechas en tu preparación.",
-            "icon": "book-open"
+            "title": "Materiales por Todos Lados, Sin Estructura",
+            "description": "Notas, PDFs, capturas de pantalla, pero sin forma de convertirlos en algo útil para aprender de verdad.",
+            "icon": "file-stack"
           },
           {
-            "title": "Sin Retroalimentación Cuando Te Atascas",
-            "description": "Los métodos de estudio tradicionales te dejan solo cuando necesitas ayuda para entender conceptos difíciles.",
-            "icon": "circle-help"
+            "title": "Harto de Chats Infinitos con IA",
+            "description": "¿Cansado de subir y re-explicar el mismo contenido una y otra vez a chats de IA?",
+            "icon": "message-circle-x"
           },
           {
-            "title": "Difícil Seguir el Progreso Real",
-            "description": "Sin dificultad adaptativa, no puedes saber si realmente dominas el material o solo memorizas.",
-            "icon": "chart-no-axes-combined"
+            "title": "Trabajo Duro, Resultados Inciertos",
+            "description": "Estudias mucho, pero antes del examen no sabes qué repasar ni qué te has perdido.",
+            "icon": "frown"
           }
         ]
       }
@@ -78,32 +87,17 @@
           {
             "title": "Cuestionarios Generados por IA",
             "description": "Sube tus materiales de estudio y obtén instantáneamente cuestionarios personalizados adaptados a tu contenido. PDFs, documentos, notas: manejamos todo.",
-            "icon": "bot",
-            "impact": {
-              "metric": "Creación de Cuestionario",
-              "value": "30",
-              "unit": "segundos"
-            }
-          },
-          {
-            "title": "Ajuste Dinámico de Dificultad",
-            "description": "Controla la dificultad en tiempo real mientras realizas los cuestionarios. ¿Demasiado fácil? Aumenta la dificultad. ¿Demasiado difícil? Reduce la dificultad. El cuestionario se adapta a tu ritmo de aprendizaje.",
-            "icon": "sliders-horizontal",
-            "impact": {
-              "metric": "Mejora de Retención",
-              "value": "3x",
-              "unit": "mejor"
-            }
+            "icon": "bot"
           },
           {
             "title": "Conversaciones con Tutor de IA",
-            "description": "Después de cada pregunta, chatea con un tutor de IA que conoce tus materiales. Obtén explicaciones, aclaraciones e insights más profundos instantáneamente.",
-            "icon": "message-circle",
-            "impact": {
-              "metric": "Comprensión",
-              "value": "100%",
-              "unit": "claridad"
-            }
+            "description": "Después de cada pregunta puedes chatear con un tutor de IA que conoce tus materiales. Obtén explicaciones, aclaraciones e ideas más profundas al instante.",
+            "icon": "message-circle"
+          },
+          {
+            "title": "Ajuste Dinámico de Dificultad",
+            "description": "Controla la dificultad en tiempo real mientras realizas los cuestionarios. ¿Demasiado fácil? Aumenta. ¿Demasiado difícil? Reduce. El cuestionario se adapta a tu ritmo de aprendizaje.",
+            "icon": "sliders-horizontal"
           },
           {
             "title": "Refinamiento de Temas",
@@ -114,12 +108,17 @@
             "title": "Seguimiento de Progreso",
             "description": "Monitorea tu rendimiento con el tiempo. Ve qué temas has dominado y cuáles necesitan más atención.",
             "icon": "trending-up"
+          },
+          {
+            "title": "Comparte y Estudia Juntos",
+            "description": "Comparte tus cuestionarios personalizados con amigos y compañeros. Estudien juntos, desafíense mutuamente y dominen sus materias en equipo.",
+            "icon": "users"
           }
         ],
         "stats": {
-          "total": "10,000+",
+          "total": "200+",
           "label": "Cuestionarios Generados Diariamente",
-          "description": "Únete a miles de estudiantes y profesionales que usan QuizBee para dominar sus materiales"
+          "description": "Únete a cientos de estudiantes y profesionales que usan QuizBee para dominar sus materiales"
         }
       }
     },
@@ -128,7 +127,7 @@
       "props": {
         "title": "Comienza en 4 Simples Pasos",
         "subtitle": "Cómo Funciona QuizBee",
-        "theme": "gradient",
+        "theme": "",
         "steps": [
           {
             "number": 1,
@@ -158,39 +157,31 @@
       "props": {
         "title": "Preguntas Frecuentes",
         "subtitle": "¿Tienes Preguntas?",
-        "theme": "gradient",
+        "theme": "",
         "questions": [
           {
-            "question": "¿En qué se diferencia QuizBee de Quizlet u otras aplicaciones de cuestionarios?",
-            "answer": "A diferencia de las aplicaciones tradicionales de tarjetas, QuizBee utiliza IA para generar preguntas directamente de TUS materiales, no de decks prefabricados. Además, obtienes un tutor de IA personal que puede explicar cualquier concepto de tus materiales en tiempo real. Es como tener un compañero de estudio que ha leído todo lo que tú has."
+            "question": "¿Hay un nivel gratuito?",
+            "answer": "Sí. Ofrecemos un nivel gratuito con funciones limitadas para ayudarte a comenzar. Si quieres probar los niveles Plus o Pro, siempre puedes obtener un reembolso dentro de 14 días de la compra."
+          },
+          {
+            "question": "¿Cómo se maneja mi información de pago?",
+            "answer": "Tu información de tarjeta de crédito se procesa completamente a través de Stripe, una plataforma de pago altamente confiable y segura. Nunca tenemos acceso a los detalles de tu tarjeta en ningún momento."
           },
           {
             "question": "¿Qué formatos de archivo admiten?",
-            "answer": "Admitimos PDF, DOCX, TXT y más. Puedes subir notas de clase, libros de texto, guías de estudio, artículos, prácticamente cualquier material de estudio basado en texto. Nuestra IA analiza el contenido y genera preguntas relevantes."
+            "answer": "Admitimos PDF, DOCX, PPTX, Markdown, TXT y más. Puedes subir notas de clase, libros de texto, guías de estudio, artículos, prácticamente cualquier material de estudio basado en texto."
           },
           {
             "question": "¿Cómo funciona el tutor de IA?",
             "answer": "Después de cada pregunta del cuestionario, puedes iniciar una conversación con nuestro tutor de IA. Tiene contexto completo de tus materiales de estudio y puede explicar conceptos, proporcionar ejemplos, aclarar temas confusos y responder preguntas de seguimiento, todo basado en TUS materiales específicos."
           },
           {
-            "question": "¿Puedo usar QuizBee en mi teléfono?",
-            "answer": "¡Sí! QuizBee funciona en cualquier dispositivo con un navegador web: computadora de escritorio, tableta o teléfono móvil. Estudia en cualquier lugar, en cualquier momento. Tu progreso se sincroniza automáticamente en todos los dispositivos."
-          },
-          {
-            "question": "¿Cómo funciona la dificultad adaptativa?",
-            "answer": "Puedes ajustar la dificultad durante el cuestionario si las preguntas son demasiado fáciles o demasiado difíciles. Además, QuizBee aprende de tus errores con el tiempo, enfocando cuestionarios futuros en temas con los que luchas. Es aprendizaje personalizado que crece contigo."
-          },
-          {
             "question": "¿Son mis datos seguros y privados?",
-            "answer": "Absolutamente. Tus materiales de estudio e historial de cuestionarios están encriptados y son privados. Nunca compartimos tus datos con terceros. Eres dueño de tu contenido y puedes eliminarlo en cualquier momento."
+            "answer": "Absolutamente. Tus materiales de estudio e historial de cuestionarios están encriptados con AES-256 y almacenados de forma segura. Como empresa con sede en Europa, seguimos estrictamente la GDPR. Nunca compartimos tus datos para usos no autorizados, los datos te pertenecen y puedes eliminarlos en cualquier momento."
           },
           {
             "question": "¿Puedo cancelar mi suscripción en cualquier momento?",
             "answer": "¡Sí! Sin contratos a largo plazo ni compromisos. Cancela con un clic desde la configuración de tu cuenta. Mantendrás acceso hasta el final de tu período de facturación, y ofrecemos una garantía de devolución de dinero de 14 días."
-          },
-          {
-            "question": "¿Ofrecen descuentos para estudiantes?",
-            "answer": "¡Sí! Los estudiantes con una dirección de correo electrónico .edu válida obtienen un 20% de descuento en los planes Pro. Simplemente regístrate con tu correo electrónico de estudiante para recibir automáticamente el descuento."
           }
         ]
       }
@@ -199,10 +190,10 @@
       "type": "CTA",
       "props": {
         "headline": "¿Listo para Transformar Tu Aprendizaje?",
-        "subheadline": "Únete a 50,000+ estudiantes que estudian de manera más inteligente con cuestionarios impulsados por IA. Sube tu primer material y crea un cuestionario en segundos. No se requiere tarjeta de crédito.",
+        "subheadline": "Únete a cientos de estudiantes que estudian de manera más inteligente con cuestionarios impulsados por IA. Sube tu primer material y crea un cuestionario en segundos. No se requiere tarjeta de crédito.",
         "buttonText": "Comenzar Gratis - Sin Tarjeta de Crédito Requerida",
         "buttonHref": "{{APP_URL}}",
-        "theme": "gradient"
+        "theme": ""
       }
     }
   ]

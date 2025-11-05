@@ -1,0 +1,33 @@
+{
+  "topic": "Worked Examples: Faster Skill Acquisition with Less Cognitive Load",
+  "target_audience": "math/science teachers and students learning procedures",
+  "tone": "educational",
+  "length": "medium",
+  "category": "education",
+  "languages": ["en", "es", "fr", "de", "pt"],
+  "keywords": [
+    "worked examples",
+    "faded examples",
+    "self-explanation",
+    "problem solving",
+    "cognitive load"
+  ],
+  "refs": [
+    {
+      "url": "https://www.danamillercotto.com/uploads/4/7/7/2/47725475/barbieri_et_al__2023__we_meta-analysis.pdf",
+      "ref_string": "Barbieri et al. (2023) Meta-analysis",
+      "content": "Across K–postsecondary math, worked examples show medium effect (g≈0.48); stronger when not overloading with prompts."
+    },
+    {
+      "url": "https://link.springer.com/article/10.1007/s10648-010-9136-5",
+      "ref_string": "Wittwer & Renkl (2010) Meta-analysis",
+      "content": "Instructional explanations often yield small benefits unless targeted at learners' knowledge gaps."
+    },
+    {
+      "url": "https://pact.cs.cmu.edu/pubs/SaldenEtAl-BeneficialEffectsWorkedExamplesinTutoredProbSolving-EdPsychRev2010.pdf",
+      "ref_string": "Salden et al. (2010) Review",
+      "content": "Combining examples with tutored problem solving and fading can produce durable transfer."
+    }
+  ],
+  "special_instructions": "Provide templates for fully worked → partially worked (fading). Show incorrect-example use and when to switch to problems."
+}

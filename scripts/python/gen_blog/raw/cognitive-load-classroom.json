@@ -1,0 +1,34 @@
+{
+  "topic": "Cognitive Load in the Classroom: Design Principles That Actually Help Students Learn",
+  "target_audience": "teachers and instructional designers; advanced students optimizing self-instruction",
+  "tone": "educational",
+  "length": "long",
+  "category": "education",
+  "languages": ["en", "es", "fr", "de", "pt"],
+  "keywords": [
+    "cognitive load theory",
+    "working memory",
+    "intrinsic load",
+    "extraneous load",
+    "germane load",
+    "instructional design"
+  ],
+  "refs": [
+    {
+      "url": "https://leadinglearner.me/wp-content/uploads/2019/02/sweller2019_article_cognitivearchitectureandinstru.pdf",
+      "ref_string": "Sweller et al. (2019) Review",
+      "content": "Updates CLT; clarifies intrinsic/extraneous/germane load and design implications (worked examples, modality, redundancy)."
+    },
+    {
+      "url": "https://repub.eur.nl/pub/128824/Repub_128824_O-A.pdf",
+      "ref_string": "Paas et al. (2020) Methods",
+      "content": "Methods to manage working-memory load for complex tasks; concrete tactics for reducing extraneous load."
+    },
+    {
+      "url": "https://selfdeterminationtheory.org/wp-content/uploads/2024/01/2024_EvansVansteenkisteParkerEtAL_CognitiveLoad.pdf",
+      "ref_string": "Evans et al. (2024) Motivation link",
+      "content": "Load reduction instruction correlates with academic motivation and engagement in HS cohorts."
+    }
+  ],
+  "special_instructions": "Turn principles into checklists (split-attention, signaling, modality, worked examples). Include classroom vignettes and pitfalls (seductive details)."
+}

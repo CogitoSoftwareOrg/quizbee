@@ -1,0 +1,33 @@
+{
+  "topic": "Aligning Questions to Bloom’s Taxonomy (Revised): From Remember to Create",
+  "target_audience": "curriculum designers and teachers writing outcomes‑aligned quizzes",
+  "tone": "professional",
+  "length": "medium",
+  "category": "quizMaking",
+  "languages": [
+    "en",
+    "es",
+    "fr",
+    "de",
+    "pt"
+  ],
+  "keywords": [
+    "Bloom’s taxonomy",
+    "learning outcomes",
+    "cognitive complexity",
+    "assessment alignment"
+  ],
+  "refs": [
+    {
+      "url": "https://www.depauw.edu/files/resources/revised-blooms-handout.pdf",
+      "ref_string": "Anderson & Krathwohl (2001) Revision (handout)",
+      "content": "Presents the revised taxonomy (Remember→Understand→Apply→Analyze→Evaluate→Create) with action verbs and examples."
+    },
+    {
+      "url": "https://cft.vanderbilt.edu/guides-sub-pages/blooms-taxonomy/",
+      "ref_string": "Vanderbilt CFT Guide",
+      "content": "Accessible mapping of question prompts to Bloom’s levels; tips for assessing higher‑order thinking."
+    }
+  ],
+  "special_instructions": "Give 12 template stems per level and show how to scale the same concept across levels without changing content scope."
+}

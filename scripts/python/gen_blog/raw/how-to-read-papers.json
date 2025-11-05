@@ -1,0 +1,33 @@
+{
+  "topic": "How to Read Research Papers without Drowning: A Three-Pass Method",
+  "target_audience": "students entering research-heavy courses or projects",
+  "tone": "educational",
+  "length": "medium",
+  "category": "general",
+  "languages": [
+    "en",
+    "es",
+    "fr",
+    "de",
+    "pt"
+  ],
+  "keywords": [
+    "reading papers",
+    "three-pass method",
+    "literature review",
+    "critical thinking"
+  ],
+  "refs": [
+    {
+      "url": "https://dl.acm.org/doi/10.1145/1273445.1273458",
+      "ref_string": "Keshav (2007) Three-pass method",
+      "content": "Outlines a three-pass approach for efficiently understanding and classifying papers; practical heuristics for newcomers."
+    },
+    {
+      "url": "https://homes.cs.washington.edu/~mernst/advice/reading-papers.pdf",
+      "ref_string": "Ernst (reading papers advice)",
+      "content": "Concrete tactics for targeted reading, note structuring, and building a related-work map."
+    }
+  ],
+  "special_instructions": "Include a one-page reading worksheet, red flags for weak studies, and a citation tracker template."
+}
