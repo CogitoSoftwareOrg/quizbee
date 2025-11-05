@@ -158,7 +158,7 @@ const jsonLd = {
               {previousPost ? (
                 <a
                   href={tp(
-                    `/blog/${previousPost.category}/${previousPost.slug}`
+                    `/blog/${previousPost.category}/posts/${previousPost.slug}`
                   )}
                   class="group rounded-xl border bg-card p-4 shadow-sm hover:bg-muted/40 transition text-left"
                   rel="prev"
@@ -175,7 +175,7 @@ const jsonLd = {
               )}
               {nextPost ? (
                 <a
-                  href={tp(`/blog/${nextPost.category}/${nextPost.slug}`)}
+                  href={tp(`/blog/${nextPost.category}/posts/${nextPost.slug}`)}
                   class="group rounded-xl border bg-card p-4 shadow-sm hover:bg-muted/40 transition text-right"
                   rel="next"
                 >

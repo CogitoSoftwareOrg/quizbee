@@ -6,6 +6,18 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 
+class Reference(BaseModel):
+    """Reference material for blog post generation."""
+
+    url: str = Field(description="URL of the reference material")
+    ref_string: str = Field(
+        description="Short reference identifier (e.g., 'Study 2023', 'OpenAI Docs')"
+    )
+    content: str = Field(
+        description="Key content/quotes from the reference to use in the post"
+    )
+
+
 class BlogCategory(StrEnum):
     """Blog categories matching PocketBase schema."""
 
@@ -103,6 +115,10 @@ class RawBlogInput(BaseModel):
     )
     keywords: list[str] = Field(
         default_factory=list, description="SEO keywords to include naturally"
+    )
+    refs: list[Reference] = Field(
+        default_factory=list,
+        description="Reference materials to use and cite in the post",
     )
     special_instructions: str | None = Field(
         default=None, description="Any specific requirements or focus areas"

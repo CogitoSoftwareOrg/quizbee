@@ -19,12 +19,14 @@ Your task is to generate high-quality, SEO-optimized blog posts based on the pro
    - Use <h3> for subsections
    - Each heading MUST have a unique id attribute for TOC navigation (use lowercase-with-hyphens format)
    - Example: <h2 id="introduction">Introduction</h2>
+   - ALWAYS end with <h2 id="references">References</h2> section if references are provided
 
 2. **HTML Format**: 
    - Use semantic HTML tags: <p>, <ul>, <ol>, <strong>, <em>, <a>, <blockquote>
    - Use <code> for inline code and <pre><code> for code blocks
    - Add appropriate classes for styling (e.g., "text-center" for centered text)
-   - Include images with <img> tags where relevant (use descriptive alt text)
+   - **NEVER** add <img> tags or image URLs unless explicitly provided in references
+   - **NEVER** add external <a href> links unless explicitly provided in references or special instructions
    
 3. **Content Quality**:
    - Write engaging, informative content
@@ -32,7 +34,7 @@ Your task is to generate high-quality, SEO-optimized blog posts based on the pro
    - Break long paragraphs into digestible chunks
    - Use bullet points and numbered lists for clarity
    - Include practical examples and actionable tips
-   - Add relevant internal/external links where appropriate
+   - Only link to provided reference materials
 
 4. **SEO Optimization**:
    - Title: 50-80 characters, include main keyword
@@ -58,7 +60,15 @@ Your task is to generate high-quality, SEO-optimized blog posts based on the pro
    - All lowercase, single words or hyphenated phrases
    - Example: ["quiz-tips", "education", "ai", "study-hacks"]
 
-8. **Multiple Languages**:
+8. **References and Citations**:
+   - When reference materials are provided, cite them inline using superscript numbers: <sup>[1]</sup>
+   - Use the content from references to support your claims
+   - ALWAYS include a "References" section at the end with numbered list
+   - Format: <ol><li><a href="url">Reference Name</a> - Brief description</li></ol>
+   - Only cite provided references, NEVER make up sources
+   - If no references provided, skip the References section
+
+9. **Multiple Languages**:
    - If multiple languages requested, generate COMPLETE, ORIGINAL content for each
    - Do NOT simply translate - adapt to cultural context and idioms
    - Maintain same structure and key points across languages
@@ -70,22 +80,39 @@ Return a structured JSON with:
 - `blog`: Main blog data (slug, category, tags, etc.)
 - `i18n_entries`: Array of language-specific content with HTML and metadata
 
-Example HTML structure:
+Example HTML structure (with references):
+```html
+<p>Introduction paragraph with <strong>important concepts</strong>.</p>
+
+<h2 id="main-section">Main Section Title</h2>
+<p>Research shows that effective learning techniques<sup>[1]</sup> improve retention by 40%.</p>
+
+<h3 id="subsection">Subsection Title</h3>
+<ul>
+  <li>Point one with details</li>
+  <li>Point two with examples from study<sup>[2]</sup></li>
+</ul>
+
+<blockquote>
+  <p>An insightful quote from reference material<sup>[1]</sup>.</p>
+</blockquote>
+
+<h2 id="conclusion">Conclusion</h2>
+<p>Wrap up with actionable advice...</p>
+
+<h2 id="references">References</h2>
+<ol>
+  <li><a href="https://example.com/study" target="_blank" rel="noopener">Study 2023</a> - Key findings on learning effectiveness</li>
+  <li><a href="https://example.com/research" target="_blank" rel="noopener">Research Paper</a> - Analysis of study techniques</li>
+</ol>
+```
+
+Example HTML structure (without references):
 ```html
 <p>Introduction paragraph with <strong>important concepts</strong>.</p>
 
 <h2 id="main-section">Main Section Title</h2>
 <p>Content for this section...</p>
-
-<h3 id="subsection">Subsection Title</h3>
-<ul>
-  <li>Point one with details</li>
-  <li>Point two with examples</li>
-</ul>
-
-<blockquote>
-  <p>An insightful quote or key takeaway.</p>
-</blockquote>
 
 <h2 id="conclusion">Conclusion</h2>
 <p>Wrap up with actionable advice...</p>
@@ -137,11 +164,21 @@ async def generate_blog_post(
 **Languages**: {', '.join(raw_input.languages)}
 
 **Keywords**: {', '.join(raw_input.keywords) if raw_input.keywords else 'None specified'}
-
-**Special Instructions**: {raw_input.special_instructions or 'None'}
-
-Please generate a complete, high-quality blog post following all content guidelines.
 """
+
+    # Add references if provided
+    if raw_input.refs:
+        user_prompt += "\n**Reference Materials**:\n"
+        for i, ref in enumerate(raw_input.refs, 1):
+            user_prompt += f"\n[{i}] {ref.ref_string} ({ref.url})\n"
+            user_prompt += f"Content: {ref.content}\n"
+        user_prompt += "\nPlease cite these references appropriately in the post and include a References section at the end.\n"
+
+    # Add special instructions
+    if raw_input.special_instructions:
+        user_prompt += f"\n**Special Instructions**: {raw_input.special_instructions}\n"
+
+    user_prompt += "\nPlease generate a complete, high-quality blog post following all content guidelines."
 
     logger.info(f"Generating blog post for topic: {raw_input.topic}")
 
