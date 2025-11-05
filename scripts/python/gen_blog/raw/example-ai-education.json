@@ -1,0 +1,16 @@
+{
+  "topic": "How AI is Revolutionizing Education: The Future of Personalized Learning",
+  "target_audience": "teachers, educational administrators, and ed-tech enthusiasts",
+  "tone": "professional",
+  "length": "long",
+  "category": "guides",
+  "languages": ["en", "ru"],
+  "keywords": [
+    "AI in education",
+    "personalized learning",
+    "adaptive learning",
+    "educational technology",
+    "AI tutors"
+  ],
+  "special_instructions": "Discuss current trends in AI education, benefits and challenges. Include statistics and research findings. Provide examples of AI applications (quiz generation, adaptive learning, feedback). Keep balanced perspective - acknowledge limitations. Mention QuizBee as an example of practical AI application."
+}

@@ -166,7 +166,7 @@ const pageHref = (n: number) => tp(`/blog/${n}`);
   <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
     {
       posts.map((post: any) => {
-        const href = tp(`/blog/${post.data.category}/${post.data.slug}`);
+        const href = tp(`/blog/${post.data.category}/posts/${post.data.slug}`);
         const cover = post.data.article?.coverUrl ?? null;
         const date = post.data.article?.datePublished
           ? new Date(post.data.article.datePublished).toLocaleDateString(locale)

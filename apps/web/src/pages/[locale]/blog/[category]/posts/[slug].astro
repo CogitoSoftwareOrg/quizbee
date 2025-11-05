@@ -6,7 +6,7 @@ import Root from "@/layouts/Root.astro";
 import { useTranslatedPath } from "@/i18n/utils";
 
 export const getStaticPaths = async () => {
-  const posts = await getCollection("blog");
+  const posts = await getCollection("blogPb");
 
   const groups = new Map<string, any[]>();
   for (const p of posts) {
