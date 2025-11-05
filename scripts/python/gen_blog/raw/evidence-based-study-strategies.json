@@ -1,0 +1,39 @@
+{
+  "topic": "Evidence-Based Study Strategies: What Actually Works (and What Doesn’t)",
+  "target_audience": "students and educators who want a science-grounded study plan",
+  "tone": "educational",
+  "length": "long",
+  "category": "general",
+  "languages": [
+    "en",
+    "es",
+    "fr",
+    "de",
+    "pt"
+  ],
+  "keywords": [
+    "effective learning",
+    "study strategies",
+    "spaced repetition",
+    "retrieval practice",
+    "interleaving"
+  ],
+  "refs": [
+    {
+      "url": "https://journals.sagepub.com/doi/10.1177/1529100612453266",
+      "ref_string": "Dunlosky et al. (2013) Review of learning techniques",
+      "content": "Classifies 10 popular techniques by utility; high-utility: practice testing and distributed practice; low-utility: highlighting, rereading."
+    },
+    {
+      "url": "https://www.learningscientists.org/",
+      "ref_string": "The Learning Scientists (ongoing)",
+      "content": "Practical classroom/student guides translating cognitive psychology into usable strategies (retrieval, spacing, interleaving, dual coding)."
+    },
+    {
+      "url": "https://psycnet.apa.org/record/1994-97967-000",
+      "ref_string": "Roediger & Karpicke (2006)",
+      "content": "Demonstrates testing effect: repeated retrieval produces better long-term retention than repeated study."
+    }
+  ],
+  "special_instructions": "Provide a 4-week study plan template using spacing + retrieval; include quick myth-busting callouts for rereading and highlighting."
+}

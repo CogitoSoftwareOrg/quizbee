@@ -1,7 +1,10 @@
 """AI agent for blog post generation."""
 
 import logging
+from langfuse import observe
 from pydantic_ai import Agent
+
+from ..config.langfuse import lf
 
 from .models import BlogGenerationOutput, RawBlogInput
 
@@ -125,7 +128,7 @@ Generate comprehensive, professional content that provides real value to readers
 def create_blog_agent() -> Agent[None, BlogGenerationOutput]:
     """Create and configure the blog generation agent."""
     agent = Agent(
-        model="openai:gpt-5",
+        model="openai:gpt-5-mini",
         output_type=BlogGenerationOutput,
         system_prompt=SYSTEM_PROMPT,
         history_processors=[],
@@ -135,6 +138,7 @@ def create_blog_agent() -> Agent[None, BlogGenerationOutput]:
     return agent
 
 
+@observe()
 async def generate_blog_post(
     raw_input: RawBlogInput,
 ) -> BlogGenerationOutput:

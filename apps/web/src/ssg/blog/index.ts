@@ -46,9 +46,12 @@ const buildCategoryMap = (posts: any[]): CatInfo[] => {
 const filterByLocale = async (
   onlyDefaultLang: boolean
 ): Promise<Map<string, any[]>> => {
-  const all = await getCollection("blogPb", (post) =>
-    onlyDefaultLang ? post.id.includes(defaultLang) : true
-  );
+  const all = await getCollection("blogPb", (post) => {
+    // ID format: ${locale}/${category}/${slug}
+    // Extract locale from ID (first part before /)
+    const postLocale = post.id.split("/")[0];
+    return onlyDefaultLang ? postLocale === defaultLang : true;
+  });
 
   const byLocale = new Map<string, any[]>();
   for (const p of all) {

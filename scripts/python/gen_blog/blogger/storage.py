@@ -9,7 +9,7 @@ from .models import BlogGenerationOutput
 
 logger = logging.getLogger(__name__)
 
-OUTPUT_DIR = Path(__file__).parent / "output"
+OUTPUT_DIR = Path(__file__).parent.parent / "output"
 
 
 def save_blog_output(output: BlogGenerationOutput, input_file: str) -> Path:

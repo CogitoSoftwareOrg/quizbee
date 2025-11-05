@@ -88,6 +88,49 @@ def select_file_interactive(files: list[Path], prompt: str) -> Path | None:
             return None
 
 
+def select_files_interactive(files: list[Path], prompt: str) -> list[Path]:
+    """Interactive multiple file selection with rich table."""
+    if not files:
+        return []
+
+    console.print(f"\n[bold cyan]{prompt}[/bold cyan]")
+
+    table = Table(show_header=True, header_style="bold yellow")
+    table.add_column("#", style="cyan", justify="right")
+    table.add_column("File Name", style="white")
+    table.add_column("Modified", style="dim")
+
+    for i, file in enumerate(files, 1):
+        from datetime import datetime
+
+        mtime = datetime.fromtimestamp(file.stat().st_mtime)
+        table.add_row(str(i), file.name, mtime.strftime("%Y-%m-%d %H:%M"))
+
+    console.print(table)
+
+    while True:
+        try:
+            choice = console.input(
+                "\n[bold]Enter numbers separated by spaces (or 'q' to quit, 'all' for all files):[/bold] "
+            ).strip()
+            if choice.lower() == "q":
+                return []
+            if choice.lower() == "all":
+                return files
+
+            # Parse space-separated numbers
+            indices = [int(x.strip()) - 1 for x in choice.split()]
+
+            # Validate all indices
+            if all(0 <= idx < len(files) for idx in indices):
+                selected = [files[idx] for idx in indices]
+                console.print(f"[green]Selected {len(selected)} file(s)[/green]")
+                return selected
+            console.print("[red]Invalid selection. Try again.[/red]")
+        except (ValueError, KeyboardInterrupt):
+            return []
+
+
 def print_success(message: str):
     """Print success message with icon."""
     console.print(f"[green]✓[/green] {message}")

@@ -1,0 +1,38 @@
+{
+  "topic": "Beat Procrastination with Commitments: Implementation Intentions and Self-Imposed Deadlines",
+  "target_audience": "students who struggle to start or finish tasks on time",
+  "tone": "friendly",
+  "length": "medium",
+  "category": "general",
+  "languages": [
+    "en",
+    "es",
+    "fr",
+    "de",
+    "pt"
+  ],
+  "keywords": [
+    "procrastination",
+    "implementation intentions",
+    "commitment devices",
+    "deadlines"
+  ],
+  "refs": [
+    {
+      "url": "https://psycnet.apa.org/record/1999-01577-001",
+      "ref_string": "Gollwitzer (1999) Implementation Intentions",
+      "content": "If–then planning increases goal attainment by automating cue–response links; strong evidence across domains."
+    },
+    {
+      "url": "https://www.jstor.org/stable/10.1086/209651",
+      "ref_string": "Ariely & Wertenbroch (2002) Procrastination & deadlines",
+      "content": "Self-imposed deadlines can improve performance, though not optimally; commitment devices counter present bias."
+    },
+    {
+      "url": "https://www.pnas.org/doi/10.1073/pnas.1010076108",
+      "ref_string": "Duckworth et al. (2011) Self-control",
+      "content": "Self-control predicts academic outcomes; structures and precommitment reduce demands on willpower."
+    }
+  ],
+  "special_instructions": "Give a plug-and-play plan: define trigger cues, set public mini-deadlines, use calendar holds, create friction for distractions."
+}

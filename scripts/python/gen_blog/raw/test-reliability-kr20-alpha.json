@@ -1,0 +1,39 @@
+{
+  "topic": "Test Reliability Made Practical: KR‑20, Cronbach’s α, and Building a Consistent Quiz",
+  "target_audience": "assessment leads, teachers managing large banks",
+  "tone": "professional",
+  "length": "medium",
+  "category": "quizMaking",
+  "languages": [
+    "en",
+    "es",
+    "fr",
+    "de",
+    "pt"
+  ],
+  "keywords": [
+    "reliability",
+    "KR‑20",
+    "Cronbach alpha",
+    "internal consistency",
+    "assessment quality"
+  ],
+  "refs": [
+    {
+      "url": "https://www.jstor.org/stable/2278459",
+      "ref_string": "Kuder & Richardson (1937)",
+      "content": "Introduces KR‑20 for dichotomous items; foundational internal consistency coefficient for test reliability."
+    },
+    {
+      "url": "https://psycnet.apa.org/record/1951-05956-001",
+      "ref_string": "Cronbach (1951)",
+      "content": "α as a general reliability coefficient; assumptions, interpretation and links to test length and variance."
+    },
+    {
+      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4913118/",
+      "ref_string": "Tavakol & Dennick (2011)",
+      "content": "Practical guidance on using α in medical education; cautions about dimensionality and item homogeneity."
+    }
+  ],
+  "special_instructions": "Provide rule‑of‑thumb thresholds, how to raise reliability (length, quality, alignment), and a caution box about multidimensional tests."
+}

@@ -6,7 +6,7 @@ lf = Langfuse(
     public_key=os.getenv("LANGFUSE_PUBLIC_KEY"),
     secret_key=os.getenv("LANGFUSE_SECRET_KEY"),
     host=os.getenv("LANGFUSE_HOST"),
-    environment=os.getenv("ENV"),
+    environment=os.getenv("PUBLIC_ENV"),
 )
 
 Agent.instrument_all()

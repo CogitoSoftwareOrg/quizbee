@@ -18,6 +18,7 @@ from ..blogger.uploader import BlogUploader
 from .utils import (
     display_blog_preview,
     select_file_interactive,
+    select_files_interactive,
     print_success,
     print_error,
     print_info,
@@ -28,7 +29,7 @@ from .utils import (
 logger = logging.getLogger(__name__)
 
 # Load environment
-loaded = load_dotenv(dotenv_path="../../envs/.env")
+loaded = load_dotenv(dotenv_path="../../envs/.env.production")
 if not loaded:
     print_error("Failed to load .env file from envs/.env")
 
@@ -37,8 +38,8 @@ PB_EMAIL = os.getenv("PB_EMAIL", "")
 PB_PASSWORD = os.getenv("PB_PASSWORD", "")
 
 # Paths
-RAW_DIR = Path(__file__).parent / "raw"
-OUTPUT_DIR = Path(__file__).parent / "output"
+RAW_DIR = Path(__file__).parent.parent / "raw"
+OUTPUT_DIR = Path(__file__).parent.parent / "output"
 
 
 def list_raw_files() -> list[Path]:
@@ -57,80 +58,141 @@ def load_raw_input(file_path: Path) -> RawBlogInput:
     return RawBlogInput.model_validate(data)
 
 
-async def cmd_generate():
-    """Generate new blog post from raw input."""
-    console.print("\n[bold blue]═══ Generate Blog Post ═══[/bold blue]\n")
+async def _generate_single_blog(
+    raw_file: Path, progress_task=None
+) -> tuple[Path, BlogGenerationOutput | None, str | None]:
+    """Generate a single blog post. Returns (raw_file, output, error_message)."""
+    try:
+        # Load input
+        raw_input = load_raw_input(raw_file)
 
-    # Select raw input file
+        # Generate blog post
+        output = await generate_blog_post(raw_input)
+
+        # Save to local storage
+        output_path = save_blog_output(output, raw_file.name)
+
+        return (raw_file, output, None)
+    except Exception as e:
+        logger.exception(f"Generation error for {raw_file.name}")
+        return (raw_file, None, str(e))
+
+
+async def cmd_generate():
+    """Generate new blog post(s) from raw input(s)."""
+    console.print("\n[bold blue]═══ Generate Blog Post(s) ═══[/bold blue]\n")
+
+    # Select raw input file(s)
     raw_files = list_raw_files()
     if not raw_files:
         print_error(f"No raw input files found in {RAW_DIR}")
         print_info(f"Please create a JSON file in {RAW_DIR}")
         return
 
-    selected = select_file_interactive(raw_files, "Select raw input file:")
-    if not selected:
+    selected_files = select_files_interactive(raw_files, "Select raw input file(s):")
+    if not selected_files:
         print_warning("Cancelled.")
         return
 
-    try:
-        # Load input
-        raw_input = load_raw_input(selected)
-        print_success(f"Loaded input: {selected.name}")
+    console.print(
+        f"\n[bold]Processing {len(selected_files)} file(s) in parallel...[/bold]\n"
+    )
 
-        # Generate blog post with progress indicator
+    try:
+        # Generate all blog posts in parallel with progress indicator
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
             console=console,
         ) as progress:
             progress.add_task(
-                description="Generating blog post with AI (30-60 seconds)...",
+                description=f"Generating {len(selected_files)} blog post(s) with AI (30-60 seconds each)...",
                 total=None,
             )
-            output = await generate_blog_post(raw_input)
+            results = await asyncio.gather(
+                *[_generate_single_blog(f) for f in selected_files],
+                return_exceptions=False,
+            )
 
-        print_success("Blog post generated successfully!")
+        # Process results
+        successful = []
+        failed = []
 
-        # Display preview
-        display_blog_preview(output)
+        for raw_file, output, error in results:
+            if error:
+                failed.append((raw_file, error))
+            else:
+                successful.append((raw_file, output))
 
-        # Save to local storage
-        output_path = save_blog_output(output, selected.name)
-        print_success(f"Saved to: {output_path.name}")
+        # Display results
+        console.print()
+        if successful:
+            print_success(f"Successfully generated {len(successful)} blog post(s)!")
+            for raw_file, output in successful:
+                console.print(f"\n[bold cyan]═══ {raw_file.name} ═══[/bold cyan]")
+                display_blog_preview(output)
+                output_path = OUTPUT_DIR / f"{raw_file.stem}.json"
+                console.print(f"  [dim]Saved to: {output_path.name}[/dim]")
+
+        if failed:
+            console.print()
+            print_error(f"Failed to generate {len(failed)} blog post(s):")
+            for raw_file, error in failed:
+                console.print(f"  [red]✗[/red] {raw_file.name}: {error}")
 
     except Exception as e:
-        print_error(f"Generation failed: {e}")
-        logger.exception("Generation error")
+        print_error(f"Batch generation failed: {e}")
+        logger.exception("Batch generation error")
+
+
+async def _upload_single_blog(
+    output_file: Path, pb: PocketBase
+) -> tuple[Path, dict | None, str | None]:
+    """Upload a single blog post. Returns (output_file, result, error_message)."""
+    try:
+        # Load output
+        output = load_blog_output(output_file)
+
+        # Upload
+        uploader = BlogUploader(pb)
+        result = await uploader.upload_blog_post(output)
+
+        return (output_file, result, None)
+    except Exception as e:
+        logger.exception(f"Upload error for {output_file.name}")
+        return (output_file, None, str(e))
 
 
 async def cmd_upload():
-    """Upload generated blog post to PocketBase."""
-    console.print("\n[bold blue]═══ Upload Blog Post ═══[/bold blue]\n")
+    """Upload generated blog post(s) to PocketBase."""
+    console.print("\n[bold blue]═══ Upload Blog Post(s) ═══[/bold blue]\n")
 
-    # Select output file
+    # Select output file(s)
     output_files = list_output_files()
     if not output_files:
         print_error(f"No generated blog posts found in {OUTPUT_DIR}")
         print_info("Please generate a blog post first using 'generate' command.")
         return
 
-    selected = select_file_interactive(output_files, "Select blog post to upload:")
-    if not selected:
+    selected_files = select_files_interactive(
+        output_files, "Select blog post(s) to upload:"
+    )
+    if not selected_files:
         print_warning("Cancelled.")
         return
 
     try:
-        # Load output
-        output = load_blog_output(selected)
-        print_success(f"Loaded: {selected.name}")
-
-        # Display preview
-        display_blog_preview(output)
+        # Display previews
+        for selected in selected_files:
+            output = load_blog_output(selected)
+            console.print(f"\n[bold cyan]═══ {selected.name} ═══[/bold cyan]")
+            display_blog_preview(output)
 
         # Confirm upload
         confirm = (
-            console.input("\n[bold yellow]Upload to PocketBase? (y/n):[/bold yellow] ")
+            console.input(
+                f"\n[bold yellow]Upload {len(selected_files)} blog post(s) to PocketBase? (y/n):[/bold yellow] "
+            )
             .strip()
             .lower()
         )
@@ -150,23 +212,49 @@ async def cmd_upload():
 
         print_success("Connected to PocketBase")
 
-        # Upload
+        # Upload all posts in parallel
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
             console=console,
         ) as progress:
-            progress.add_task(description="Uploading blog post...", total=None)
-            uploader = BlogUploader(pb)
-            result = await uploader.upload_blog_post(output)
+            progress.add_task(
+                description=f"Uploading {len(selected_files)} blog post(s)...",
+                total=None,
+            )
+            results = await asyncio.gather(
+                *[_upload_single_blog(f, pb) for f in selected_files],
+                return_exceptions=False,
+            )
 
-        print_success("Uploaded successfully!")
-        console.print(f"  [cyan]Blog ID:[/cyan] {result['blog_id']}")
-        console.print(f"  [cyan]I18n IDs:[/cyan] {result['i18n_ids']}")
+        # Process results
+        successful = []
+        failed = []
+
+        for output_file, result, error in results:
+            if error:
+                failed.append((output_file, error))
+            else:
+                successful.append((output_file, result))
+
+        # Display results
+        console.print()
+        if successful:
+            print_success(f"Successfully uploaded {len(successful)} blog post(s)!")
+            for output_file, result in successful:
+                console.print(f"\n[bold cyan]═══ {output_file.name} ═══[/bold cyan]")
+                console.print(f"  [cyan]Blog ID:[/cyan] {result['blog_id']}")
+                console.print(f"  [cyan]I18n IDs:[/cyan] {result['i18n_ids']}")
+
+        if failed:
+            console.print()
+            print_error(f"Failed to upload {len(failed)} blog post(s):")
+            for output_file, error in failed:
+                console.print(f"  [red]✗[/red] {output_file.name}: {error}")
 
     except Exception as e:
-        print_error(f"Upload failed: {e}")
-        logger.exception("Upload error")
+        print_error(f"Batch upload failed: {e}")
+        logger.exception("Batch upload error")
 
 
 async def cmd_update(blog_id: str | None = None):
@@ -242,45 +330,74 @@ async def cmd_update(blog_id: str | None = None):
 
 async def cmd_full():
     """Generate and upload in one go."""
-    console.print("\n[bold blue]═══ Generate & Upload Blog Post ═══[/bold blue]\n")
+    console.print("\n[bold blue]═══ Generate & Upload Blog Post(s) ═══[/bold blue]\n")
 
-    # Select raw input file
+    # Select raw input file(s)
     raw_files = list_raw_files()
     if not raw_files:
         print_error(f"No raw input files found in {RAW_DIR}")
         return
 
-    selected = select_file_interactive(raw_files, "Select raw input file:")
-    if not selected:
+    selected_files = select_files_interactive(raw_files, "Select raw input file(s):")
+    if not selected_files:
         print_warning("Cancelled.")
         return
 
-    try:
-        # Load and generate
-        raw_input = load_raw_input(selected)
-        print_success(f"Loaded input: {selected.name}")
+    console.print(
+        f"\n[bold]Processing {len(selected_files)} file(s) in parallel...[/bold]\n"
+    )
 
+    try:
+        # Generate all blog posts in parallel
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
             console=console,
         ) as progress:
             progress.add_task(
-                description="Generating blog post with AI (30-60 seconds)...",
+                description=f"Generating {len(selected_files)} blog post(s) with AI (30-60 seconds each)...",
                 total=None,
             )
-            output = await generate_blog_post(raw_input)
+            gen_results = await asyncio.gather(
+                *[_generate_single_blog(f) for f in selected_files],
+                return_exceptions=False,
+            )
 
-        print_success("Blog post generated successfully!")
+        # Process generation results
+        successful_gen = []
+        failed_gen = []
 
-        # Display and save
-        display_blog_preview(output)
-        output_path = save_blog_output(output, selected.name)
-        print_success(f"Saved to: {output_path.name}")
+        for raw_file, output, error in gen_results:
+            if error:
+                failed_gen.append((raw_file, error))
+            else:
+                successful_gen.append((raw_file, output))
+
+        # Display generation results
+        console.print()
+        if successful_gen:
+            print_success(f"Successfully generated {len(successful_gen)} blog post(s)!")
+            for raw_file, output in successful_gen:
+                console.print(f"\n[bold cyan]═══ {raw_file.name} ═══[/bold cyan]")
+                display_blog_preview(output)
+                output_path = OUTPUT_DIR / f"{raw_file.stem}.json"
+                console.print(f"  [dim]Saved to: {output_path.name}[/dim]")
+
+        if failed_gen:
+            console.print()
+            print_error(f"Failed to generate {len(failed_gen)} blog post(s):")
+            for raw_file, error in failed_gen:
+                console.print(f"  [red]✗[/red] {raw_file.name}: {error}")
+
+        if not successful_gen:
+            print_warning("No blog posts to upload.")
+            return
 
         # Confirm upload
         confirm = (
-            console.input("\n[bold yellow]Upload to PocketBase? (y/n):[/bold yellow] ")
+            console.input(
+                f"\n[bold yellow]Upload {len(successful_gen)} blog post(s) to PocketBase? (y/n):[/bold yellow] "
+            )
             .strip()
             .lower()
         )
@@ -288,7 +405,7 @@ async def cmd_full():
             print_info("Skipped upload. Use 'upload' command to upload later.")
             return
 
-        # Connect and upload
+        # Connect to PocketBase
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
@@ -300,21 +417,54 @@ async def cmd_full():
 
         print_success("Connected to PocketBase")
 
+        # Upload all successfully generated posts in parallel
+        output_files_to_upload = [
+            OUTPUT_DIR / f"{raw_file.stem}.json" for raw_file, _ in successful_gen
+        ]
+
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
             console=console,
         ) as progress:
-            progress.add_task(description="Uploading blog post...", total=None)
-            uploader = BlogUploader(pb)
-            result = await uploader.upload_blog_post(output)
+            progress.add_task(
+                description=f"Uploading {len(output_files_to_upload)} blog post(s)...",
+                total=None,
+            )
+            upload_results = await asyncio.gather(
+                *[_upload_single_blog(f, pb) for f in output_files_to_upload],
+                return_exceptions=False,
+            )
 
-        print_success("Uploaded successfully!")
-        console.print(f"  [cyan]Blog ID:[/cyan] {result['blog_id']}")
-        console.print(f"  [cyan]I18n IDs:[/cyan] {result['i18n_ids']}")
+        # Process upload results
+        successful_upload = []
+        failed_upload = []
+
+        for output_file, result, error in upload_results:
+            if error:
+                failed_upload.append((output_file, error))
+            else:
+                successful_upload.append((output_file, result))
+
+        # Display upload results
+        console.print()
+        if successful_upload:
+            print_success(
+                f"Successfully uploaded {len(successful_upload)} blog post(s)!"
+            )
+            for output_file, result in successful_upload:
+                console.print(f"\n[bold cyan]═══ {output_file.name} ═══[/bold cyan]")
+                console.print(f"  [cyan]Blog ID:[/cyan] {result['blog_id']}")
+                console.print(f"  [cyan]I18n IDs:[/cyan] {result['i18n_ids']}")
+
+        if failed_upload:
+            console.print()
+            print_error(f"Failed to upload {len(failed_upload)} blog post(s):")
+            for output_file, error in failed_upload:
+                console.print(f"  [red]✗[/red] {output_file.name}: {error}")
 
     except Exception as e:
-        print_error(f"Failed: {e}")
+        print_error(f"Workflow failed: {e}")
         logger.exception("Workflow error")
 
 

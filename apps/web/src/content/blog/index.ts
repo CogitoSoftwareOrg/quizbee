@@ -127,7 +127,7 @@ export const blogCollectionPb = defineCollection({
     meta: z.object({
       title: z.string(),
       description: z.string().optional(),
-      image: z.string().optional(),
+      image: z.string().optional().nullable(),
     }),
     article: z.object({
       coverUrl: z.string().nullable(),

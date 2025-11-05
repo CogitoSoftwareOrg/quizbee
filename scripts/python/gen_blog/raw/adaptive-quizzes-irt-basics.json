@@ -1,0 +1,39 @@
+{
+  "topic": "Adaptive Quizzes 101: Item Response Theory in Plain Language",
+  "target_audience": "assessment teams exploring CAT and adaptive practice",
+  "tone": "professional",
+  "length": "long",
+  "category": "quizMaking",
+  "languages": [
+    "en",
+    "es",
+    "fr",
+    "de",
+    "pt"
+  ],
+  "keywords": [
+    "computerized adaptive testing",
+    "IRT",
+    "item bank",
+    "theta estimation",
+    "quiz adaptivity"
+  ],
+  "refs": [
+    {
+      "url": "https://iacat.org/handbook",
+      "ref_string": "International Handbook of Computerized Adaptive Testing (2010)",
+      "content": "Open handbook covering item calibration, ability estimation (MLE/EAP), and item selection algorithms."
+    },
+    {
+      "url": "https://doi.org/10.4324/9781410605269",
+      "ref_string": "Embretson & Reise (2000) IRT",
+      "content": "Foundational text: 1PL/2PL/3PL models, item parameters (a, b, c) and information functions."
+    },
+    {
+      "url": "https://www.psychometricsociety.org/sites/default/files/2021-06/Weiss2011.pdf",
+      "ref_string": "Weiss (2011)",
+      "content": "CAT overview: efficiency, precision, content constraints; practical considerations for operational testing."
+    }
+  ],
+  "special_instructions": "Explain minimal pipeline: calibrate→bank→constraints→engine. Include small numeric example of item information and stopping rules."
+}

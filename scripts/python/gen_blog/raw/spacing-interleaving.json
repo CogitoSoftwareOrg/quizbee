@@ -1,0 +1,38 @@
+{
+  "topic": "Spacing and Interleaving: Scheduling Study for Durable Mastery",
+  "target_audience": "students and educators planning curricula and revision timetables",
+  "tone": "educational",
+  "length": "long",
+  "category": "education",
+  "languages": ["en", "es", "fr", "de", "pt"],
+  "keywords": [
+    "spacing effect",
+    "interleaving",
+    "study schedule",
+    "overlearning",
+    "long-term retention"
+  ],
+  "refs": [
+    {
+      "url": "https://www.nature.com/articles/nrn2475",
+      "ref_string": "Ebbinghaus/Forgetting curve overview",
+      "content": "Forgetting accelerates without review; repeated reviews shift the curve and extend retention intervals."
+    },
+    {
+      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5126970/",
+      "ref_string": "Cepeda et al. (2006) Meta-analysis",
+      "content": "317 experiments: spaced practice beats massed practice; optimal gap increases with desired retention interval."
+    },
+    {
+      "url": "https://bera-journals.onlinelibrary.wiley.com/doi/pdf/10.1002/rev3.3266",
+      "ref_string": "Firth et al. (2021) Systematic review (interleaving)",
+      "content": "Synthesizes evidence on interleaving as a concept-learning strategy; aligns with Brunmair & Richter (2019)."
+    },
+    {
+      "url": "https://d-nb.info/1342175344/34",
+      "ref_string": "Abel et al. (2024) Interleaving underuse",
+      "content": "Learners tend to underuse interleaving despite benefits; discusses metacognitive miscalibration."
+    }
+  ],
+  "special_instructions": "Contrast spacing vs. cramming; illustrate interleaving with worked math/skill examples and when blocked practice is preferable. Provide ready-to-use spaced plan templates."
+}

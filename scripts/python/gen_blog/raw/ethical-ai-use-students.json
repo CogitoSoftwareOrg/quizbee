@@ -1,0 +1,39 @@
+{
+  "topic": "Using AI Ethically as a Student: Policies, Credits, and Learning Well",
+  "target_audience": "students and instructors navigating AI in coursework",
+  "tone": "professional",
+  "length": "medium",
+  "category": "general",
+  "languages": [
+    "en",
+    "es",
+    "fr",
+    "de",
+    "pt"
+  ],
+  "keywords": [
+    "AI in education",
+    "academic integrity",
+    "citation",
+    "authorship",
+    "policy"
+  ],
+  "refs": [
+    {
+      "url": "https://nationalcentreforai.jiscinvolve.org/wp/files/2024/08/Embracing-Generative-AI-in-Assessments-Flowchart.pdf",
+      "ref_string": "Jisc (2024) AI in assessments",
+      "content": "Guidance for transparent, responsible AI use; emphasizes acknowledgement, allowed use, and outcome alignment."
+    },
+    {
+      "url": "https://www.teqsa.gov.au/latest-news/articles/generative-ai-and-assessment-integrity",
+      "ref_string": "TEQSA (2024–2025) Integrity guidance",
+      "content": "Regulatory advice on AI in higher education; promotes authentic tasks and clear policy communication."
+    },
+    {
+      "url": "https://publicationethics.org/ai-authorship-and-ai-tools",
+      "ref_string": "COPE (2023–2024) AI authorship guidance",
+      "content": "AI tools cannot be authors; require transparency and accountability for generated content and data use."
+    }
+  ],
+  "special_instructions": "Provide model policy statements for syllabi, examples of permissible use, and how to cite AI assistance credibly."
+}

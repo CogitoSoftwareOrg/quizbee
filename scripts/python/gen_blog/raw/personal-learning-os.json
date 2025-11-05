@@ -1,0 +1,39 @@
+{
+  "topic": "Build Your Personal Learning OS: PARA, Zettelkasten, and Atomic Notes",
+  "target_audience": "students and knowledge workers organizing notes and projects",
+  "tone": "professional",
+  "length": "long",
+  "category": "general",
+  "languages": [
+    "en",
+    "es",
+    "fr",
+    "de",
+    "pt"
+  ],
+  "keywords": [
+    "PARA",
+    "Zettelkasten",
+    "note-taking systems",
+    "knowledge management",
+    "second brain"
+  ],
+  "refs": [
+    {
+      "url": "https://fortelabs.com/blog/para/",
+      "ref_string": "Forte (PARA)",
+      "content": "Projects–Areas–Resources–Archives as a universal information architecture to reduce friction and resurface relevant notes."
+    },
+    {
+      "url": "https://www.sweekly.com/ahrens2017-how-to-take-smart-notes-pdf/",
+      "ref_string": "Ahrens (2017) How to Take Smart Notes",
+      "content": "Zettelkasten method: atomic, linked notes; focus on writing to learn and building a network of ideas."
+    },
+    {
+      "url": "https://andymatuschak.org/prompts/",
+      "ref_string": "Matuschak (evergreen notes & prompts)",
+      "content": "Evergreen notes as durable, concept-centered units; prompts for active elaboration and spaced repetition."
+    }
+  ],
+  "special_instructions": "Offer migration checklist from messy folders; map PARA↔Zettelkasten workflows; include a 30-minute weekly review script."
+}

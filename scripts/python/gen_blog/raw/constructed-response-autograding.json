@@ -1,0 +1,39 @@
+{
+  "topic": "Constructed‑Response Questions and Auto‑Grading: Rubrics, NLP and Guardrails",
+  "target_audience": "edtech authors and teachers piloting short‑answer/free‑text items",
+  "tone": "professional",
+  "length": "long",
+  "category": "quizMaking",
+  "languages": [
+    "en",
+    "es",
+    "fr",
+    "de",
+    "pt"
+  ],
+  "keywords": [
+    "constructed response",
+    "short answer scoring",
+    "rubrics",
+    "automated scoring",
+    "validity"
+  ],
+  "refs": [
+    {
+      "url": "https://www.ets.org/research/topics/asap.html",
+      "ref_string": "ETS ASAP (Automated Student Assessment Prize)",
+      "content": "Benchmarks for automated short‑answer scoring; highlights features, rubrics and validity/equity concerns."
+    },
+    {
+      "url": "https://www.psychometricsociety.org/sites/default/files/2021-06/WilliamsonZhangBurstein2010.pdf",
+      "ref_string": "Williamson, Zhang & Burstein (2010)",
+      "content": "Automated scoring of constructed responses: feature‑based and NLP methods; reliability and fairness considerations."
+    },
+    {
+      "url": "https://doi.org/10.3102/003465430298571",
+      "ref_string": "Shute (2008) Formative feedback",
+      "content": "Principles for effective feedback on open responses; specific, timely, and focused on process/strategy."
+    }
+  ],
+  "special_instructions": "Provide sample rubric, examples of acceptable variants, calibration workflow, and a fairness checklist (bias, sensitive content, transparency)."
+}

@@ -1,0 +1,39 @@
+{
+  "topic": "Time Blocking for Deep Work: A Practical Guide for Students",
+  "target_audience": "university and high school students juggling classes, work, and projects",
+  "tone": "friendly",
+  "length": "medium",
+  "category": "general",
+  "languages": [
+    "en",
+    "es",
+    "fr",
+    "de",
+    "pt"
+  ],
+  "keywords": [
+    "time blocking",
+    "deep work",
+    "distraction management",
+    "calendar planning",
+    "focus"
+  ],
+  "refs": [
+    {
+      "url": "https://calnewport.com/books/deep-work/",
+      "ref_string": "Newport (2016) Deep Work",
+      "content": "Argues for long, uninterrupted focus intervals; practical rituals and attention hygiene for cognitively demanding tasks."
+    },
+    {
+      "url": "https://www.jstor.org/stable/2786695",
+      "ref_string": "Csikszentmihalyi (1990) Flow",
+      "content": "Foundational concept of flow; conditions for deep engagement relevant to structuring time blocks."
+    },
+    {
+      "url": "https://journals.sagepub.com/doi/10.1177/0956797612453112",
+      "ref_string": "Ophir, Nass & Wagner (2009) Media multitasking",
+      "content": "Heavy media multitaskers show poorer task-switching performance; supports limiting context switches during blocks."
+    }
+  ],
+  "special_instructions": "Provide a 5-step setup with templates (daily/weekly); include contingency planning and a 'fail-safe' minimum block."
+}

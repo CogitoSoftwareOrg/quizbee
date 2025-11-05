@@ -1,0 +1,33 @@
+{
+  "topic": "Sleep, Memory, and Learning: How to Use the Night Shift of Your Brain",
+  "target_audience": "students, parents, and teachers shaping study/sleep routines",
+  "tone": "educational",
+  "length": "medium",
+  "category": "education",
+  "languages": ["en", "es", "fr", "de", "pt"],
+  "keywords": [
+    "sleep and memory",
+    "targeted memory reactivation",
+    "TMR",
+    "NREM sleep",
+    "study planning"
+  ],
+  "refs": [
+    {
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8893218/",
+      "ref_string": "Newbury et al. (2021) Meta-analyses",
+      "content": "Sleep deprivation before or after learning impairs memory; adequate sleep supports consolidation."
+    },
+    {
+      "url": "https://journals.physiology.org/doi/abs/10.1152/physrev.00032.2012",
+      "ref_string": "Rasch & Born (2013) Review",
+      "content": "Physiological mechanisms: slow-wave sleep and REM support systems/synaptic consolidation."
+    },
+    {
+      "url": "https://journals.apa.org/pubs/journals/releases/bul-bul0000223.pdf",
+      "ref_string": "Hu et al. (2020) Meta-analysis (TMR)",
+      "content": "Targeted memory reactivation during NREM produces small-to-moderate improvements in recall across domains."
+    }
+  ],
+  "special_instructions": "Give concrete pre‑sleep and post‑study routines; caution about overclaiming TMR and emphasize healthy habits."
+}

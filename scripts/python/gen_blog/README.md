@@ -124,16 +124,16 @@ Create JSON files in `raw/` directory:
 
 ### Fields
 
-| Field                  | Type   | Options                                                            |
-| ---------------------- | ------ | ------------------------------------------------------------------ |
-| `topic`                | string | Main topic of the blog post                                        |
-| `target_audience`      | string | Who is this post for?                                              |
-| `tone`                 | enum   | `professional`, `casual`, `educational`, `friendly`                |
-| `length`               | enum   | `short` (~500w), `medium` (~1000w), `long` (~1500+w)               |
-| `category`             | enum   | See [Categories](#categories) below                                |
-| `languages`            | array  | `["en"]` or `["en", "ru"]`                                         |
-| `keywords`             | array  | SEO keywords (optional)                                            |
-| `special_instructions` | string | Additional requirements (optional)                                 |
+| Field                  | Type   | Options                                              |
+| ---------------------- | ------ | ---------------------------------------------------- |
+| `topic`                | string | Main topic of the blog post                          |
+| `target_audience`      | string | Who is this post for?                                |
+| `tone`                 | enum   | `professional`, `casual`, `educational`, `friendly`  |
+| `length`               | enum   | `short` (~500w), `medium` (~1000w), `long` (~1500+w) |
+| `category`             | enum   | See [Categories](#categories) below                  |
+| `languages`            | array  | `["en"]` or `["en", "ru"]`                           |
+| `keywords`             | array  | SEO keywords (optional)                              |
+| `special_instructions` | string | Additional requirements (optional)                   |
 
 ### Categories
 
@@ -170,12 +170,14 @@ gen_blog/
 ### Key Improvements
 
 **Before** (monolithic `main.py`):
+
 - 350+ lines in single file
 - Manual menu system
 - Plain text output
 - Mixed concerns
 
 **After** (modular):
+
 - `cli.py` (100 lines) - Clean Typer interface
 - `commands.py` (250 lines) - Command logic
 - `utils.py` (90 lines) - Rich UI components

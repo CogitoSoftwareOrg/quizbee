@@ -1,0 +1,33 @@
+{
+  "topic": "AR/VR in the Classroom: What the 2025 Evidence Really Shows",
+  "target_audience": "edtech buyers, curriculum teams, STEM educators",
+  "tone": "professional",
+  "length": "medium",
+  "category": "edtechTrends",
+  "languages": ["en", "es", "fr", "de", "pt"],
+  "keywords": [
+    "virtual reality",
+    "augmented reality",
+    "learning outcomes",
+    "higher education",
+    "K-12"
+  ],
+  "refs": [
+    {
+      "url": "https://www.mdpi.com/2227-7102/15/6/678",
+      "ref_string": "Li et al. (2025) AR in Higher Ed meta-analysis",
+      "content": "Meta-analysis (2000–2023) estimating overall AR effect size and moderators (immersion, duration, domain)."
+    },
+    {
+      "url": "https://www.researchgate.net/publication/357907203_Effects_of_virtual_reality_on_learning_outcomes_in_K-6_education_A_meta-analysis",
+      "ref_string": "VR K–6 Meta-analysis (2022)",
+      "content": "Across 21 experimental studies VR shows ES≈0.64 on learning, larger for immersive VR (ES≈1.11)."
+    },
+    {
+      "url": "https://edscoop.com/educause-2025-horizon-report-reveals-the-complex-trends-altering-higher-education/",
+      "ref_string": "EdScoop (2025) Horizon highlights",
+      "content": "Notes growing adoption of VR and documentation of student success; contextualizes adoption trends."
+    }
+  ],
+  "special_instructions": "Give procurement checklist (hardware, hygiene, content licensing), equity/access notes, and when non-immersive options are sufficient."
+}

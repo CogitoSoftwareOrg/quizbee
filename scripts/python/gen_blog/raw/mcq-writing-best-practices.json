@@ -1,0 +1,40 @@
+{
+  "topic": "Writing High‑Quality Multiple‑Choice Questions (MCQs): From Pitfalls to Powerful Assessments",
+  "target_audience": "teachers, instructional designers, assessment authors in K–12 and higher education",
+  "tone": "professional",
+  "length": "long",
+  "category": "quizMaking",
+  "languages": [
+    "en",
+    "es",
+    "fr",
+    "de",
+    "pt"
+  ],
+  "keywords": [
+    "MCQ",
+    "item writing",
+    "distractors",
+    "stem clarity",
+    "assessment validity",
+    "quiz design"
+  ],
+  "refs": [
+    {
+      "url": "https://link.springer.com/article/10.1023/A:1020961903515",
+      "ref_string": "Haladyna, Downing & Rodriguez (2002)",
+      "content": "Comprehensive item-writing guidelines for MCQs: focus stems, plausible distractors, avoid negatives and 'all/none of the above'."
+    },
+    {
+      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2667257/",
+      "ref_string": "Tarrant, Ware & Mohammed (2009)",
+      "content": "Flawed items can inflate scores and undermine validity; common flaws catalogued with examples and corrections."
+    },
+    {
+      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3144533/",
+      "ref_string": "Rodriguez (2005)",
+      "content": "Three-option items often perform as well as four/five options due to low‑performing distractors; recommends fewer, better distractors."
+    }
+  ],
+  "special_instructions": "Provide a 20‑point checklist with positive/negative examples. Include a mini bank of rewritten items demonstrating improved stems and distractors."
+}

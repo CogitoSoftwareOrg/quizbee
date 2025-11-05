@@ -1,0 +1,39 @@
+{
+  "topic": "Accessible & Inclusive Quiz Design: WCAG 2.2, UDL, and Practical Patterns",
+  "target_audience": "edtech builders and educators ensuring access for all learners",
+  "tone": "professional",
+  "length": "medium",
+  "category": "quizMaking",
+  "languages": [
+    "en",
+    "es",
+    "fr",
+    "de",
+    "pt"
+  ],
+  "keywords": [
+    "accessibility",
+    "WCAG 2.2",
+    "UDL",
+    "assistive technology",
+    "inclusive assessment"
+  ],
+  "refs": [
+    {
+      "url": "https://www.w3.org/TR/WCAG22/",
+      "ref_string": "W3C WCAG 2.2 (2023)",
+      "content": "Success criteria relevant to quizzes: keyboard operability, contrast, focus order, error prevention and time limits."
+    },
+    {
+      "url": "https://udlguidelines.cast.org/",
+      "ref_string": "CAST UDL Guidelines",
+      "content": "Multiple means of engagement, representation, and action/expression applied to assessment tasks."
+    },
+    {
+      "url": "https://www.w3.org/TR/wai-aria-1.2/",
+      "ref_string": "WAI‑ARIA 1.2",
+      "content": "ARIA roles/states for interactive components (radio groups, sliders); guidance for screen reader compatibility."
+    }
+  ],
+  "special_instructions": "Provide component checklist (focus, labels, error text), alt‑text patterns for images, and timing accommodations."
+}

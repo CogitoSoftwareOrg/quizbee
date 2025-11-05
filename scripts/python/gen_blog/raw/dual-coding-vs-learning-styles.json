@@ -1,0 +1,33 @@
+{
+  "topic": "Dual Coding Works. ‘Learning Styles’ Don’t: What to Actually Do with Visuals",
+  "target_audience": "teachers, curriculum designers, and students creating study materials",
+  "tone": "educational",
+  "length": "medium",
+  "category": "education",
+  "languages": ["en", "es", "fr", "de", "pt"],
+  "keywords": [
+    "dual coding",
+    "learning styles myth",
+    "visuals",
+    "multimedia learning",
+    "education evidence"
+  ],
+  "refs": [
+    {
+      "url": "https://journals.sagepub.com/doi/abs/10.1111/j.1539-6053.2009.01038.x",
+      "ref_string": "Pashler et al. (2008) PSPI",
+      "content": "No credible evidence for the 'meshing hypothesis'; tailoring instruction to learning styles lacks support."
+    },
+    {
+      "url": "https://link.springer.com/article/10.1007/BF01320076",
+      "ref_string": "Clark & Paivio (1991) Dual Coding",
+      "content": "Dual Coding Theory: combining verbal + nonverbal representations supports learning when visuals map core ideas."
+    },
+    {
+      "url": "https://www.learningscientists.org/blog/2016/9/1-1",
+      "ref_string": "Learning Scientists (2016)",
+      "content": "Practical dual coding strategies (diagrams, timelines, graphic organizers) to pair with text."
+    }
+  ],
+  "special_instructions": "Debunk learning-styles neatly; then give actionable dual-coding templates and examples that avoid decorative images."
+}
