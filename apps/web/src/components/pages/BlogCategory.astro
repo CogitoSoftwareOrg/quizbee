@@ -4,8 +4,10 @@ import type { Page } from "astro";
 import Root from "@/layouts/Root.astro";
 import { useTranslatedPath } from "@/i18n/utils";
 import { defaultLang, type languages } from "@/i18n/ui";
+
 import CategoryCover from "@/components/blog/CategoryCover.astro";
 import PostCover from "@/components/blog/PostCover.astro";
+import Pagination from "@/components/blog/Pagination.astro";
 
 const { page } = Astro.props as {
   page: Page;
@@ -125,63 +127,5 @@ const pageHref = (n: number) => tp(`/blog/${category}/page/${n}`);
     }
   </section>
 
-  <!-- PAGINATION -->
-  {
-    page.lastPage > 1 && (
-      <nav
-        class="mt-10 flex items-center justify-center gap-2"
-        aria-label="Pagination"
-      >
-        {/* Prev */}
-        {page.url.prev ? (
-          <a
-            href={page.url.prev}
-            rel="prev"
-            class="rounded-md border px-3 py-2 text-sm hover:bg-muted/60"
-          >
-            ← Prev
-          </a>
-        ) : (
-          <span class="rounded-md border px-3 py-2 text-sm opacity-40 cursor-not-allowed">
-            ← Prev
-          </span>
-        )}
-
-        {/* Pages window */}
-        {Array.from({ length: page.lastPage }, (_, i) => i + 1).map((n) => {
-          const isActive = n === page.currentPage;
-          return isActive ? (
-            <span
-              class="rounded-md px-3 py-2 text-sm font-medium bg-foreground text-background border border-foreground"
-              aria-current="page"
-            >
-              {n}
-            </span>
-          ) : (
-            <a
-              href={pageHref(n)}
-              class="rounded-md border px-3 py-2 text-sm hover:bg-muted/60"
-            >
-              {n}
-            </a>
-          );
-        })}
-
-        {/* Next */}
-        {page.url.next ? (
-          <a
-            href={page.url.next}
-            rel="next"
-            class="rounded-md border px-3 py-2 text-sm hover:bg-muted/60"
-          >
-            Next →
-          </a>
-        ) : (
-          <span class="rounded-md border px-3 py-2 text-sm opacity-40 cursor-not-allowed">
-            Next →
-          </span>
-        )}
-      </nav>
-    )
-  }
+  <Pagination page={page} getPageHref={pageHref} />
 </Root>

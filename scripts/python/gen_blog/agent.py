@@ -129,6 +129,7 @@ def create_blog_agent() -> Agent[None, BlogGenerationOutput]:
         output_type=BlogGenerationOutput,
         system_prompt=SYSTEM_PROMPT,
         history_processors=[],
+        instrument=True,
     )
 
     return agent

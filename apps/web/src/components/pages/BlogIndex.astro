@@ -6,6 +6,7 @@ import { useTranslatedPath } from "@/i18n/utils";
 import { defaultLang, type languages } from "@/i18n/ui";
 import CategoryCover from "@/components/blog/CategoryCover.astro";
 import PostCover from "@/components/blog/PostCover.astro";
+import Pagination from "@/components/blog/Pagination.astro";
 
 type CatInfo = {
   name: string;
@@ -162,60 +163,6 @@ const pageHref = (n: number) => tp(`/blog/${n}`);
     </section>
 
     <!-- Пагинация -->
-    {
-      page.lastPage > 1 && (
-        <nav
-          class="flex items-center justify-center gap-2"
-          aria-label="Pagination"
-        >
-          {page.url.prev ? (
-            <a
-              href={page.url.prev}
-              rel="prev"
-              class="rounded-lg bg-card px-4 py-2 text-sm hover:shadow-md transition-shadow"
-            >
-              ← Prev
-            </a>
-          ) : (
-            <span class="rounded-lg bg-card px-4 py-2 text-sm opacity-40 cursor-not-allowed">
-              ← Prev
-            </span>
-          )}
-
-          {Array.from({ length: page.lastPage }, (_, i) => i + 1).map((n) => {
-            const isActive = n === page.currentPage;
-            return isActive ? (
-              <span
-                class="rounded-lg bg-primary text-primary-content px-4 py-2 text-sm font-semibold shadow-md"
-                aria-current="page"
-              >
-                {n}
-              </span>
-            ) : (
-              <a
-                href={pageHref(n)}
-                class="rounded-lg bg-card px-4 py-2 text-sm hover:shadow-md transition-shadow"
-              >
-                {n}
-              </a>
-            );
-          })}
-
-          {page.url.next ? (
-            <a
-              href={page.url.next}
-              rel="next"
-              class="rounded-lg bg-card px-4 py-2 text-sm hover:shadow-md transition-shadow"
-            >
-              Next →
-            </a>
-          ) : (
-            <span class="rounded-lg bg-card px-4 py-2 text-sm opacity-40 cursor-not-allowed">
-              Next →
-            </span>
-          )}
-        </nav>
-      )
-    }
+    <Pagination page={page} getPageHref={pageHref} />
   </div>
 </Root>
