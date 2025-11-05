@@ -1,12 +1,11 @@
 ---
 import type { Page } from "astro";
-import { Image } from "astro:assets";
 
 import Root from "@/layouts/Root.astro";
 import { useTranslatedPath } from "@/i18n/utils";
 import { defaultLang, type languages } from "@/i18n/ui";
-
-import CategoryCover from "@/assets/images/pchel.png";
+import CategoryCover from "@/components/blog/CategoryCover.astro";
+import PostCover from "@/components/blog/PostCover.astro";
 
 const { page } = Astro.props as {
   page: Page;
@@ -53,18 +52,7 @@ const pageHref = (n: number) => tp(`/blog/${category}/page/${n}`);
     <div
       class="relative w-full h-full aspect-video max-h-[calc(40vh)] mx-auto mt-6"
     >
-      <Image
-        src={CategoryCover}
-        alt={category}
-        width={1920}
-        height={1080}
-        widths={[480, 768, 1024, 1280, 1600, 1920]}
-        sizes="(min-width: 1024px) 800px, 100vw"
-        fit="cover"
-        class="h-full w-full object-cover rounded-2xl shadow-sm"
-        fetchpriority="high"
-        loading="eager"
-      />
+      <CategoryCover category={category} alt={category} priority="high" />
     </div>
   </section>
 
@@ -85,26 +73,13 @@ const pageHref = (n: number) => tp(`/blog/${category}/page/${n}`);
           >
             {/* preview image (надёжно для любых remote URL) */}
             <div class="relative aspect-video bg-muted overflow-hidden">
-              {cover ? (
-                <div class="relative w-full h-full aspect-video max-h-[calc(50vh)] mx-auto mt-6">
-                  <Image
-                    src={cover}
-                    alt={post.data.meta?.title}
-                    width={1920}
-                    height={1080}
-                    widths={[480, 768, 1024, 1280, 1600, 1920]}
-                    sizes="(min-width: 1024px) 800px, 100vw"
-                    fit="cover"
-                    class="h-full w-full object-cover rounded-2xl shadow-sm"
-                    fetchpriority="high"
-                    loading="eager"
-                  />
-                </div>
-              ) : (
-                <div class="absolute inset-0 grid place-items-center text-xs text-muted-foreground">
-                  no cover
-                </div>
-              )}
+              <div class="relative w-full h-full aspect-video max-h-[calc(50vh)] mx-auto mt-6">
+                <PostCover
+                  coverUrl={cover}
+                  alt={post.data.meta?.title || post.data.slug}
+                  priority="low"
+                />
+              </div>
             </div>
 
             <div class="p-4">

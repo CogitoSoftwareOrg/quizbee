@@ -1,0 +1,221 @@
+---
+import type { Page } from "astro";
+
+import Root from "@/layouts/Root.astro";
+import { useTranslatedPath } from "@/i18n/utils";
+import { defaultLang, type languages } from "@/i18n/ui";
+import CategoryCover from "@/components/blog/CategoryCover.astro";
+import PostCover from "@/components/blog/PostCover.astro";
+
+type CatInfo = {
+  name: string;
+  count: number;
+  cover?: string | null;
+  description?: string | null;
+};
+
+const { page, categories } = Astro.props as {
+  page: Page;
+  categories: CatInfo[];
+};
+
+const { locale = defaultLang } = Astro.params as {
+  locale?: keyof typeof languages;
+};
+
+const posts = page.data;
+const tp = useTranslatedPath(locale);
+
+// SEO
+const title = "Blog";
+const desc = `All articles (${page.currentPage} of ${page.lastPage})`;
+
+// ссылки для пагинации
+const pageHref = (n: number) => tp(`/blog/${n}`);
+---
+
+<Root title={title} description={desc} active="blog">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+    <!-- HERO -->
+    <header class="mb-12">
+      <div class="flex flex-col gap-2 mb-4">
+        <nav class="text-sm text-muted-foreground">
+          <a href={tp("/")} class="hover:underline">Home</a>
+          <span class="mx-1">/</span>
+          <span>Blog</span>
+        </nav>
+        <h1 class="text-4xl md:text-5xl font-bold tracking-tight">Blog</h1>
+        <p class="text-muted-foreground">{desc}</p>
+      </div>
+
+      <!-- Грид категорий -->
+      {
+        categories.length > 0 && (
+          <div class="mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {categories.slice(0, 8).map((c) => (
+              <a
+                href={tp(`/blog/${c.name}`)}
+                class="group rounded-2xl bg-card overflow-hidden hover:shadow-lg transition-shadow"
+              >
+                <div class="relative aspect-video bg-muted overflow-hidden">
+                  <CategoryCover
+                    category={c.name}
+                    alt={c.name}
+                    priority="high"
+                  />
+                </div>
+                <div class="p-4">
+                  <div class="flex items-center justify-between mb-1">
+                    <h3 class="capitalize font-semibold text-sm group-hover:text-primary transition-colors">
+                      {c.name}
+                    </h3>
+                    <span class="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                      {c.count}
+                    </span>
+                  </div>
+                  {c.description && (
+                    <p class="text-xs text-muted-foreground line-clamp-2">
+                      {c.description}
+                    </p>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+        )
+      }
+    </header>
+
+    <!-- Грид постов -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+      {
+        posts.map((post: any) => {
+          const href = tp(
+            `/blog/${post.data.category}/posts/${post.data.slug}`
+          );
+          const cover = post.data.article?.coverUrl ?? null;
+          const date = post.data.article?.datePublished
+            ? new Date(post.data.article.datePublished).toLocaleDateString(
+                locale
+              )
+            : "";
+
+          return (
+            <a
+              href={href}
+              class="group rounded-2xl bg-card overflow-hidden hover:shadow-lg transition-shadow"
+            >
+              <div class="relative aspect-video bg-muted overflow-hidden">
+                <PostCover
+                  coverUrl={cover}
+                  alt={post.data.meta?.title || post.data.slug}
+                  priority="high"
+                />
+              </div>
+
+              <div class="p-5">
+                <div class="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
+                  <span class="capitalize font-medium text-primary">
+                    {post.data.category}
+                  </span>
+                  {date && (
+                    <>
+                      <span>·</span>
+                      <time datetime={post.data.article?.datePublished}>
+                        {date}
+                      </time>
+                    </>
+                  )}
+                  {post.data.article?.readingTimeMin && (
+                    <>
+                      <span>·</span>
+                      <span>{post.data.article.readingTimeMin} min</span>
+                    </>
+                  )}
+                </div>
+
+                <h2 class="text-lg font-bold leading-snug group-hover:text-primary transition-colors line-clamp-2 mb-2">
+                  {post.data.meta?.title ?? post.data.slug}
+                </h2>
+
+                {post.data.meta?.description && (
+                  <p class="text-sm text-muted-foreground line-clamp-2 mb-3">
+                    {post.data.meta.description}
+                  </p>
+                )}
+
+                {Array.isArray(post.data.article?.tags) &&
+                  post.data.article.tags.length > 0 && (
+                    <div class="flex flex-wrap gap-2">
+                      {post.data.article.tags.slice(0, 3).map((t: string) => (
+                        <span class="text-[11px] text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                          #{t}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+              </div>
+            </a>
+          );
+        })
+      }
+    </section>
+
+    <!-- Пагинация -->
+    {
+      page.lastPage > 1 && (
+        <nav
+          class="flex items-center justify-center gap-2"
+          aria-label="Pagination"
+        >
+          {page.url.prev ? (
+            <a
+              href={page.url.prev}
+              rel="prev"
+              class="rounded-lg bg-card px-4 py-2 text-sm hover:shadow-md transition-shadow"
+            >
+              ← Prev
+            </a>
+          ) : (
+            <span class="rounded-lg bg-card px-4 py-2 text-sm opacity-40 cursor-not-allowed">
+              ← Prev
+            </span>
+          )}
+
+          {Array.from({ length: page.lastPage }, (_, i) => i + 1).map((n) => {
+            const isActive = n === page.currentPage;
+            return isActive ? (
+              <span
+                class="rounded-lg bg-primary text-primary-content px-4 py-2 text-sm font-semibold shadow-md"
+                aria-current="page"
+              >
+                {n}
+              </span>
+            ) : (
+              <a
+                href={pageHref(n)}
+                class="rounded-lg bg-card px-4 py-2 text-sm hover:shadow-md transition-shadow"
+              >
+                {n}
+              </a>
+            );
+          })}
+
+          {page.url.next ? (
+            <a
+              href={page.url.next}
+              rel="next"
+              class="rounded-lg bg-card px-4 py-2 text-sm hover:shadow-md transition-shadow"
+            >
+              Next →
+            </a>
+          ) : (
+            <span class="rounded-lg bg-card px-4 py-2 text-sm opacity-40 cursor-not-allowed">
+              Next →
+            </span>
+          )}
+        </nav>
+      )
+    }
+  </div>
+</Root>

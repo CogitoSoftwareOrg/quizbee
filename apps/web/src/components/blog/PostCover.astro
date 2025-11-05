@@ -1,0 +1,29 @@
+---
+import { Image } from "astro:assets";
+import PchelImage from "@/assets/images/pchel.png";
+
+type Props = {
+  coverUrl?: string | null;
+  alt: string;
+  class?: string;
+  priority?: "high" | "low" | "auto";
+};
+
+const { coverUrl, alt, class: className, priority = "high" } = Astro.props;
+
+// Используем coverUrl если есть, иначе fallback на pchel
+const imageSrc = coverUrl || PchelImage;
+---
+
+<Image
+  src={imageSrc}
+  alt={alt}
+  width={1920}
+  height={1080}
+  widths={[480, 768, 1024, 1280, 1600, 1920]}
+  sizes="(min-width: 1024px) 800px, 100vw"
+  fit="cover"
+  class={className || "h-full w-full object-cover rounded-2xl shadow-sm"}
+  fetchpriority={priority}
+  loading={priority === "high" ? "eager" : "lazy"}
+/>

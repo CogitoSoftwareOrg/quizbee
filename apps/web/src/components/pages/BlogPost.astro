@@ -1,9 +1,8 @@
 ---
-import { Image } from "astro:assets";
-
 import Root from "@/layouts/Root.astro";
 import { useTranslatedPath } from "@/i18n/utils";
 import { defaultLang, type languages } from "@/i18n/ui";
+import PostCover from "@/components/blog/PostCover.astro";
 
 const { meta, article, content, toc, previousPost, nextPost } = Astro.props as {
   meta: {
@@ -89,24 +88,15 @@ const jsonLd = {
         } min read
       </p>
 
-      {
-        article.coverUrl && (
-          <div class="relative w-full h-full aspect-video max-h-[calc(50vh)] mx-auto mt-6">
-            <Image
-              src={article.coverUrl}
-              alt={meta.title}
-              width={1920}
-              height={1080}
-              widths={[480, 768, 1024, 1280, 1600, 1920]}
-              sizes="(min-width: 1024px) 800px, 100vw"
-              fit="cover"
-              class="h-full w-full object-cover rounded-2xl shadow-sm"
-              fetchpriority="high"
-              loading="eager"
-            />
-          </div>
-        )
-      }
+      <div
+        class="relative w-full h-full aspect-video max-h-[calc(50vh)] mx-auto mt-6"
+      >
+        <PostCover
+          coverUrl={article.coverUrl}
+          alt={meta.title}
+          priority="high"
+        />
+      </div>
     </header>
 
     <!-- GRID -->
