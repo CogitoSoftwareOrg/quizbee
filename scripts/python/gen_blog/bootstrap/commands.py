@@ -11,10 +11,10 @@ from pocketbase import PocketBase
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from .models import RawBlogInput, BlogGenerationOutput
-from .agent import generate_blog_post
-from .storage import save_blog_output, load_blog_output, list_output_files
-from .uploader import BlogUploader
+from ..blogger.models import RawBlogInput, BlogGenerationOutput
+from ..blogger.agent import generate_blog_post
+from ..blogger.storage import save_blog_output, load_blog_output, list_output_files
+from ..blogger.uploader import BlogUploader
 from .utils import (
     display_blog_preview,
     select_file_interactive,

@@ -5,7 +5,7 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 
-from .models import BlogGenerationOutput
+from ..blogger.models import BlogGenerationOutput
 
 console = Console()
 

@@ -1,6 +1,6 @@
 """QuizBee Blog Generator - AI-powered blog post generation tool."""
 
-from .models import (
+from .blogger.models import (
     RawBlogInput,
     BlogGenerationOutput,
     BlogPostData,
@@ -9,9 +9,9 @@ from .models import (
     BlogCategory,
     Reference,
 )
-from .agent import generate_blog_post
-from .storage import save_blog_output, load_blog_output
-from .uploader import BlogUploader
+from .blogger.agent import generate_blog_post
+from .blogger.storage import save_blog_output, load_blog_output
+from .blogger.uploader import BlogUploader
 
 __all__ = [
     "RawBlogInput",
