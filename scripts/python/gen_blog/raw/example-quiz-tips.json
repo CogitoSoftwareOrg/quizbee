@@ -3,8 +3,8 @@
   "target_audience": "students and self-learners who want to improve their study efficiency",
   "tone": "friendly",
   "length": "medium",
-  "category": "tips",
-  "languages": ["en"],
+  "category": "quizMaking",
+  "languages": ["en", "es"],
   "keywords": [
     "study tips",
     "quiz creation",

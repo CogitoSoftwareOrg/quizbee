@@ -1,8 +1,20 @@
 """Data models for blog generation."""
 
 from datetime import datetime
+from enum import StrEnum
 from typing import Literal
 from pydantic import BaseModel, Field
+
+
+class BlogCategory(StrEnum):
+    """Blog categories matching PocketBase schema."""
+
+    PRODUCT = "product"
+    EDUCATION = "education"
+    EDTECH_TRENDS = "edtechTrends"
+    QUIZ_MAKING = "quizMaking"
+    USE_CASES = "useCases"
+    GENERAL = "general"
 
 
 class BlogMetadata(BaseModel):
@@ -24,7 +36,9 @@ class BlogMetadata(BaseModel):
 class BlogI18nData(BaseModel):
     """Blog post content in specific language."""
 
-    locale: Literal["en", "ru"] = Field(description="Language code (en or ru)")
+    locale: Literal["en", "es", "fr", "de", "pt", "ru"] = Field(
+        description="Language code (en, es, fr, de, pt, ru)",
+    )
     content: str = Field(
         description="Full HTML content of the blog post. Must include semantic HTML with h2/h3 headings for TOC."
     )
@@ -40,7 +54,7 @@ class BlogPostData(BaseModel):
     slug: str = Field(
         description="URL-friendly slug (lowercase, hyphens, no special chars)"
     )
-    category: str = Field(description="Blog category (e.g., tips, guides, news)")
+    category: BlogCategory = Field(description="Blog category")
     published: bool = Field(default=False, description="Whether post is published")
     tags: list[str] = Field(
         default_factory=list,
@@ -80,11 +94,12 @@ class RawBlogInput(BaseModel):
         default="medium",
         description="short: ~500 words, medium: ~1000 words, long: ~1500+ words",
     )
-    category: str = Field(
-        description="Category for the post (e.g., tips, guides, news, features)"
+    category: BlogCategory = Field(
+        description="Category for the post",
     )
-    languages: list[Literal["en", "ru"]] = Field(
-        default=["en"], description="Languages to generate content in"
+    languages: list[Literal["en", "es", "fr", "de", "pt", "ru"]] = Field(
+        default=["en"],
+        description="Languages to generate content in",
     )
     keywords: list[str] = Field(
         default_factory=list, description="SEO keywords to include naturally"

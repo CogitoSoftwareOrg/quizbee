@@ -6,6 +6,7 @@ from .models import (
     BlogPostData,
     BlogI18nData,
     BlogMetadata,
+    BlogCategory,
 )
 from .agent import generate_blog_post
 from .storage import save_blog_output, load_blog_output
@@ -17,6 +18,7 @@ __all__ = [
     "BlogPostData",
     "BlogI18nData",
     "BlogMetadata",
+    "BlogCategory",
     "generate_blog_post",
     "save_blog_output",
     "load_blog_output",

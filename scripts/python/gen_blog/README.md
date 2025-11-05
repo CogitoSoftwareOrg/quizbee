@@ -4,16 +4,22 @@ AI-powered CLI tool for generating high-quality, SEO-optimized blog posts for Qu
 
 ## Features
 
-- 🤖 **AI-Powered Generation**: Uses OpenAI GPT-4o-mini to generate complete blog posts
+- 🤖 **AI-Powered Generation**: Uses OpenAI GPT-5 to generate complete blog posts
 - 🌍 **Multi-Language Support**: Generate content in English and Russian
 - 📝 **SEO Optimized**: Automatic title, description, keywords, and structured content
 - 💾 **Local Storage**: Save generated posts before uploading
 - 🔄 **PocketBase Integration**: Direct upload to QuizBee's blog system
-- 🎯 **Template-Based**: Use JSON templates for consistent blog specifications
+- 🎨 **Beautiful CLI**: Modern interface with Typer and Rich
+- 📦 **Modular Architecture**: Clean separation of concerns
 
 ## Installation
 
-Dependencies are already included in the parent `pyproject.toml`:
+```bash
+cd scripts/python/gen_blog
+make install
+```
+
+Or manually:
 
 ```bash
 cd scripts/python
@@ -22,9 +28,86 @@ uv sync
 
 ## Quick Start
 
-### 1. Create Raw Input
+### Run CLI
 
-Create a JSON file in `raw/` directory with your blog specifications:
+```bash
+make run
+```
+
+Or directly:
+
+```bash
+cd scripts/python
+uv run python -m gen_blog --help
+```
+
+### Available Commands
+
+```
+🐝 QuizBee Blog Generator - AI-powered blog post generation
+
+Commands:
+  generate    Generate new blog post from raw input
+  upload      Upload generated blog post to PocketBase
+  update      Update existing blog post in PocketBase
+  full        Generate and upload in one go
+  list        List generated blog posts
+  clean       Remove all generated output files
+```
+
+## Usage Examples
+
+### Generate Blog Post
+
+```bash
+uv run python -m gen_blog generate
+```
+
+Interactively select raw input file, generate blog post, and save to `output/`.
+
+### Upload to PocketBase
+
+```bash
+uv run python -m gen_blog upload
+```
+
+Select generated file and upload to PocketBase.
+
+### Full Workflow
+
+```bash
+uv run python -m gen_blog full
+```
+
+Generate and upload in one command.
+
+### Update Existing Post
+
+```bash
+uv run python -m gen_blog update <blog-id>
+```
+
+Or without blog ID (will prompt):
+
+```bash
+uv run python -m gen_blog update
+```
+
+### List Generated Posts
+
+```bash
+uv run python -m gen_blog list
+```
+
+### Clean Output
+
+```bash
+uv run python -m gen_blog clean --force
+```
+
+## Input Specification
+
+Create JSON files in `raw/` directory:
 
 ```json
 {
@@ -32,165 +115,142 @@ Create a JSON file in `raw/` directory with your blog specifications:
   "target_audience": "students and self-learners",
   "tone": "friendly",
   "length": "medium",
-  "category": "tips",
+  "category": "quizMaking",
   "languages": ["en"],
-  "keywords": ["study tips", "quiz creation", "exam preparation"],
-  "special_instructions": "Focus on actionable tips with examples"
+  "keywords": ["study tips", "quiz creation"],
+  "special_instructions": "Focus on actionable tips"
 }
 ```
 
-See `raw/example-*.json` for more examples.
+### Fields
 
-### 2. Run CLI
+| Field                  | Type   | Options                                                            |
+| ---------------------- | ------ | ------------------------------------------------------------------ |
+| `topic`                | string | Main topic of the blog post                                        |
+| `target_audience`      | string | Who is this post for?                                              |
+| `tone`                 | enum   | `professional`, `casual`, `educational`, `friendly`                |
+| `length`               | enum   | `short` (~500w), `medium` (~1000w), `long` (~1500+w)               |
+| `category`             | enum   | See [Categories](#categories) below                                |
+| `languages`            | array  | `["en"]` or `["en", "ru"]`                                         |
+| `keywords`             | array  | SEO keywords (optional)                                            |
+| `special_instructions` | string | Additional requirements (optional)                                 |
 
-```bash
-cd scripts/python
-uv run python -m gen_blog.main
-```
+### Categories
 
-### 3. Select Action
+Available categories (matching PocketBase schema):
 
-The CLI provides several commands:
+- `product` - Product announcements, features, updates
+- `education` - Educational content, learning theory
+- `edtechTrends` - EdTech trends and industry insights
+- `quizMaking` - Quiz creation tips and best practices
+- `useCases` - Use cases, tutorials, how-tos
+- `general` - General blog posts
 
-- **generate** - Generate blog post from raw input
-- **upload** - Upload generated post to PocketBase
-- **update** - Update existing blog post
-- **full** - Generate and upload in one go
-- **list** - List generated blog posts
+## Architecture
 
-## Input Specification
-
-### RawBlogInput Fields
-
-| Field                  | Type   | Description                                             |
-| ---------------------- | ------ | ------------------------------------------------------- |
-| `topic`                | string | Main topic of the blog post                             |
-| `target_audience`      | string | Who is this post for?                                   |
-| `tone`                 | enum   | `professional`, `casual`, `educational`, `friendly`     |
-| `length`               | enum   | `short` (~500 words), `medium` (~1000), `long` (~1500+) |
-| `category`             | string | Blog category (e.g., tips, guides, news, features)      |
-| `languages`            | array  | List of languages: `["en"]` or `["en", "ru"]`           |
-| `keywords`             | array  | SEO keywords (optional)                                 |
-| `special_instructions` | string | Additional requirements (optional)                      |
-
-## Output Structure
-
-Generated blog posts consist of two parts:
-
-### 1. Blog Record (blog collection)
-
-```json
-{
-  "slug": "how-to-create-effective-quizzes",
-  "category": "tips",
-  "published": false,
-  "tags": ["study-tips", "quiz-creation", "education"],
-  "authors": ["QuizBee Team"],
-  "cover": null
-}
-```
-
-### 2. I18n Records (blogI18n collection)
-
-```json
-{
-  "locale": "en",
-  "status": "draft",
-  "content": "<p>Full HTML content...</p>",
-  "data": {
-    "title": "10 Tips for Creating Effective Study Quizzes",
-    "description": "Learn proven techniques...",
-    "image": null,
-    "ogTitle": null,
-    "ogDescription": null
-  }
-}
-```
-
-## Directory Structure
+### Module Structure
 
 ```
 gen_blog/
-├── main.py              # CLI entry point
-├── models.py            # Pydantic models
+├── __init__.py          # Package exports
+├── __main__.py          # Entry point for python -m
+├── cli.py               # Typer CLI interface (clean!)
+├── commands.py          # Command implementations
 ├── agent.py             # AI agent configuration
+├── models.py            # Pydantic models & enums
 ├── storage.py           # Local file storage
 ├── uploader.py          # PocketBase uploader
+├── utils.py             # UI utilities (Rich)
 ├── raw/                 # Input templates
-│   ├── example-quiz-tips.json
-│   ├── example-ai-education.json
-│   └── example-feature-announcement.json
-└── output/              # Generated blog posts (auto-created)
+│   └── *.json
+└── output/              # Generated posts (auto-created)
     └── *.json
 ```
 
-## Workflow Examples
+### Key Improvements
 
-### Generate Only
+**Before** (monolithic `main.py`):
+- 350+ lines in single file
+- Manual menu system
+- Plain text output
+- Mixed concerns
 
-```bash
-# Run CLI
-uv run python -m gen_blog.main
+**After** (modular):
+- `cli.py` (100 lines) - Clean Typer interface
+- `commands.py` (250 lines) - Command logic
+- `utils.py` (90 lines) - Rich UI components
+- Beautiful colored output
+- Type-safe enums
+- Separated concerns
 
-# Select: 1 (generate)
-# Choose raw input file
-# Review generated content
-# Output saved to output/
+## Output Structure
+
+Generated files contain:
+
+```json
+{
+  "blog": {
+    "slug": "effective-study-quizzes",
+    "category": "quizMaking",
+    "tags": ["study-tips", "education"],
+    "published": false,
+    "authors": ["QuizBee Team"]
+  },
+  "i18n_entries": [
+    {
+      "locale": "en",
+      "status": "draft",
+      "content": "<p>Full HTML...</p>",
+      "data": {
+        "title": "10 Tips for Effective Study Quizzes",
+        "description": "SEO description..."
+      }
+    }
+  ]
+}
 ```
 
-### Full Workflow (Generate + Upload)
+## Development
 
-```bash
-# Run CLI
-uv run python -m gen_blog.main
+### Project Structure
 
-# Select: 4 (full)
-# Choose raw input file
-# Review generated content
-# Confirm upload
-# Blog post live in PocketBase!
+- **CLI Layer** (`cli.py`): Typer commands, argument parsing
+- **Command Layer** (`commands.py`): Business logic for each command
+- **Agent Layer** (`agent.py`): AI generation with Pydantic-AI
+- **Storage Layer** (`storage.py`): File I/O operations
+- **Upload Layer** (`uploader.py`): PocketBase integration
+- **Utils Layer** (`utils.py`): Rich UI components
+
+### Adding New Commands
+
+1. Add command function in `commands.py`:
+
+```python
+async def cmd_my_command():
+    console.print("[bold]My Command[/bold]")
+    # Implementation
 ```
 
-### Update Existing Post
+2. Register in `cli.py`:
 
-```bash
-# Generate new version first
-# Then run CLI
-uv run python -m gen_blog.main
-
-# Select: 3 (update)
-# Enter blog post ID
-# Choose generated file
-# Confirm update
+```python
+@app.command("my-command", help="Description")
+def my_command():
+    asyncio.run(commands.cmd_my_command())
 ```
 
-## Content Guidelines
+### Adding New Categories
 
-The AI agent follows these guidelines:
+Update `BlogCategory` enum in `models.py`:
 
-### HTML Structure
+```python
+class BlogCategory(StrEnum):
+    MY_CATEGORY = "myCategory"
+```
 
-- Semantic HTML with `<h2>` and `<h3>` headings
-- All headings have unique `id` attributes for TOC
-- Use `<p>`, `<ul>`, `<ol>`, `<strong>`, `<em>`, `<blockquote>`
-- Code blocks with `<pre><code>`
+Ensure it matches PocketBase schema.
 
-### SEO Optimization
-
-- Title: 50-80 characters
-- Description: 120-160 characters
-- Natural keyword integration
-- Descriptive headings
-- Comprehensive content
-
-### QuizBee Context
-
-- Platform: AI-powered quiz generation
-- Features: Quiz from any material, adaptive learning, mobile apps
-- Target: Students, teachers, corporate trainers
-- USP: Generate quizzes in seconds from PDFs, videos, text
-
-## Environment Variables
+## Environment
 
 Required in `envs/.env`:
 
@@ -203,41 +263,37 @@ OPENAI_API_KEY=sk-...
 
 ## Troubleshooting
 
-### "Failed to load .env file"
+### Import Errors
 
-- Ensure `envs/.env` exists at repository root
-- Check file permissions
+```bash
+cd scripts/python
+uv sync
+```
 
-### "No raw input files found"
+### CLI Not Found
 
-- Create JSON files in `raw/` directory
-- Use examples as templates
+```bash
+uv run python -m gen_blog --help
+```
 
-### PocketBase Upload Errors
+### PocketBase Connection
 
-- Verify PB_URL, PB_EMAIL, PB_PASSWORD
-- Ensure PocketBase is running
-- Check blog/blogI18n collections exist
+Verify environment variables and PocketBase is running:
 
-### AI Generation Timeouts
-
-- Increase timeout for longer content
-- Check OpenAI API key and quota
-- Try shorter `length` setting
+```bash
+curl http://localhost:8090/api/health
+```
 
 ## Tips
 
 1. **Start with Examples**: Copy and modify example files
-2. **Test Locally First**: Always review generated content before uploading
-3. **Iterative Improvement**: Generate multiple versions, pick the best
+2. **Use `full` Command**: Faster iteration for new posts
+3. **Review Before Upload**: Always check generated content
 4. **Multi-Language**: Generate English first, then add Russian
-5. **Draft First**: Keep `published: false` until content is reviewed
+5. **Use Correct Categories**: Match PocketBase schema
 
-## Future Enhancements
+## See Also
 
-- [ ] Cover image upload support
-- [ ] Image generation for blog posts
-- [ ] Batch generation from multiple inputs
-- [ ] Content preview in terminal (HTML rendering)
-- [ ] Automated SEO scoring
-- [ ] Integration with CMS workflow
+- [USAGE.md](USAGE.md) - Detailed usage guide
+- [raw/](raw/) - Example input files
+- [../../README.md](../../README.md) - Parent scripts documentation
