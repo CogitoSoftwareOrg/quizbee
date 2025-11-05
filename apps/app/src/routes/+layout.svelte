@@ -49,9 +49,10 @@
 	/>
 </svelte:head>
 
-<UpdateApp />
+<ThemeLoad />
+
 <PortalHost />
 
-<ThemeLoad />
+<UpdateApp />
 
 {@render children?.()}

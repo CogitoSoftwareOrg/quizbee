@@ -173,7 +173,10 @@
 										console.log('Quiz settings updated:', result);
 									}
 
-									if (item.order + 1 === quizItems.length && !quizAttempt.feedback) {
+									if (
+										item.order + 1 === quizItems.length &&
+										!(quizAttempt?.feedback as any)?.overview
+									) {
 										await finalizeAttempt();
 									}
 
