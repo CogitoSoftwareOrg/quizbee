@@ -16,9 +16,9 @@
 	import { uiStore } from '$lib/apps/users/ui.svelte';
 
 	type Feedback = {
-		overview: string;
-		problemTopics: string[];
-		uncoveredTopics: string[];
+		overview?: string;
+		problemTopics?: string[];
+		uncoveredTopics?: string[];
 	};
 
 	const { data } = $props();
@@ -127,12 +127,12 @@
 				></div>
 			</button>
 		</section>
-	{:else if !feedback}
+	{:else if !feedback?.overview}
 		<section class="flex flex-1 flex-col items-center justify-center gap-4">
 			<p class="loading loading-spinner loading-xl"></p>
 			<p class="text-center font-semibold">We are giving your feedback...</p>
 		</section>
-	{:else if feedback}
+	{:else if feedback?.overview}
 		<section class="flex w-full flex-1 flex-col gap-6 px-3 sm:overflow-y-auto">
 			<div>
 				<Button color="neutral" style="ghost" href={`/home`} class="underline">
@@ -152,7 +152,7 @@
 					</p>
 				</div>
 
-				{#if feedback.problemTopics.length > 0}
+				{#if feedback?.problemTopics?.length}
 					<div class="mt-3">
 						<p class="opacity-70">Problem topics:</p>
 						<div class="flex flex-wrap gap-1">
@@ -163,7 +163,7 @@
 					</div>
 				{/if}
 
-				{#if feedback.uncoveredTopics.length > 0}
+				{#if feedback?.uncoveredTopics?.length}
 					<div class="mt-3">
 						<p class="opacity-70">Uncovered topics:</p>
 						<div class="flex flex-wrap gap-1">

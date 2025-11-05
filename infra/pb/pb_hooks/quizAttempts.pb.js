@@ -6,7 +6,9 @@ onRecordUpdate((e) => {
 
   const quiz = $app.findRecordById("quizes", quizId);
 
-  if (quiz.get("itemsLimit") === choices.length) e.record.set("feedback", {});
+  if (!e.record.get("feedback") && quiz.get("itemsLimit") === choices.length) {
+    e.record.set("feedback", {});
+  }
 
   e.next();
 }, "quizAttempts");
