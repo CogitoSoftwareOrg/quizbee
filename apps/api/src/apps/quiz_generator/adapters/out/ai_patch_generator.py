@@ -75,13 +75,17 @@ class AIPatchGenerator(PatchGenerator):
         self,
         lf: Langfuse,
         quiz_repository: QuizRepository,
-        ai: Agent[AIPatchGeneratorDeps, Any],
+        output_type: Any,
     ):
         self._lf = lf
         self._quiz_repository = quiz_repository
 
-        self._ai = ai
-        self._ai.history_processors += [self._inject_request_prompt]  # type: ignore
+        self._ai = Agent(
+            history_processors=[self._inject_request_prompt],
+            output_type=output_type,
+            deps_type=AIPatchGeneratorDeps,
+            model=PATCH_GENERATOR_LLM,
+        )
 
     async def generate(self, quiz: Quiz, cache_key: str) -> None:
         logging.info(
@@ -101,6 +105,7 @@ class AIPatchGenerator(PatchGenerator):
             with self._lf.start_as_current_span(name=f"quiz-patch") as span:
                 async with self._ai.run_stream(
                     IN_QUERY,
+                    model=PATCH_GENERATOR_LLM,
                     deps=AIPatchGeneratorDeps(quiz=quiz),
                     model_settings={
                         "extra_body": {

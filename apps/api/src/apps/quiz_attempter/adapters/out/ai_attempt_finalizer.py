@@ -69,12 +69,17 @@ class AIAttemptFinalizer(AttemptFinalizer):
         self,
         lf: Langfuse,
         attempt_repository: AttemptRepository,
-        ai: Agent[AttemptFinalizerDeps, Any],
+        output_type: Any,
     ):
         self._lf = lf
         self._attempt_repository = attempt_repository
-        self._ai = ai
-        self._ai.history_processors += [self._inject_request_prompt]  # type: ignore
+
+        self._ai = Agent(
+            history_processors=[self._inject_request_prompt],
+            output_type=output_type,
+            deps_type=AttemptFinalizerDeps,
+            model=ATTEMPT_FINALIZER_LLM,
+        )
 
     async def finalize(self, attempt: Attempt, cache_key: str) -> None:
         with self._lf.start_as_current_span(name="attempt-finalizer") as span:
@@ -88,6 +93,7 @@ class AIAttemptFinalizer(AttemptFinalizer):
                         "prompt_cache_key": cache_key,
                     }
                 },
+                model=ATTEMPT_FINALIZER_LLM,
             )
             await update_span_with_result(
                 self._lf,
