@@ -27,7 +27,6 @@ dependencies = [
     "pypdfium2>=4.30.0",
     "meilisearch-python-sdk>=4.10.1",
     "fastapi-limiter>=0.1.6",
-    "pytest>=8.4.2",
     "nanoid>=2.0.0",
     "arq>=0.26.3",
     # Workspace packages (resolved from PyPI in production, workspace in dev)
@@ -37,7 +36,9 @@ dependencies = [
 [dependency-groups]
 dev = [
   "watchfiles>=0.21",
-  "pytest>=8.4.2"
+  "pytest>=8.4.2",
+  "testcontainers>=4.9.0",
+  "testcontainers[redis]>=4.9.0",
 ]
 
 [tool.uv.sources]
@@ -50,3 +51,14 @@ packages = ["src"]
 
 [tool.hatch.build.targets.wheel.sources]
 "src" = ""
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-ra -q"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+markers = [
+  "unit: fast unit tests",
+  "integration: slow tests that need containers/real deps",
+]
+asyncio_mode = "auto"
