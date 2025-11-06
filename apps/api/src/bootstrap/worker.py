@@ -40,8 +40,8 @@ logger = logging.getLogger(__name__)
 
 async def worker_heartbeat_task(ctx):
     """Periodic task to update worker heartbeat in Redis."""
-    redis_client = ctx["redis_client"]
-    await update_worker_heartbeat(redis_client)
+    arq_pool = ctx["arq_pool"]
+    await update_worker_heartbeat(arq_pool)
 
 
 async def startup(ctx):
