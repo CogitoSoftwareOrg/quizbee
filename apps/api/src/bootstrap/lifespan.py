@@ -118,13 +118,15 @@ async def lifespan(app: FastAPI):
         material_search_app=material_search_app,
     )
 
-    app.state.admin_pb = admin_pb
-    app.state.edge_api_app = edge_api_app
-
     # ARQ Redis pool для отправки задач
     redis_settings = RedisSettings.from_dsn(settings.redis_dsn)
     arq_pool = await create_pool(redis_settings)
     app.state.arq_pool = arq_pool
+
+    app.state.edge_api_app = edge_api_app
+    app.state.http = http
+    app.state.admin_pb = admin_pb
+    app.state.meili_client = meili
 
     async with contextlib.AsyncExitStack() as stack:
         await stack.enter_async_context(mcp.session_manager.run())
@@ -132,7 +134,6 @@ async def lifespan(app: FastAPI):
 
     # CLEANUP LOGIC
     logger.info("Shutting down Quizbee API server")
-    # await app.state.meili_client.aclose()
     await arq_pool.close()
     await http.aclose()
     await meili.aclose()

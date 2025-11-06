@@ -13,6 +13,7 @@ from .deps import http_ensure_admin_pb
 from .lifespan import lifespan
 from .middleware import RequestContextMiddleware
 from .mcp import mcp
+from .health_routes import health_router
 
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger(__name__)
@@ -29,6 +30,7 @@ def create_app():
     app.add_middleware(RequestContextMiddleware)
     app.add_exception_handler(Exception, all_exceptions_handler)
 
+    app.include_router(health_router)
     app.include_router(edge_api_router)
     app.include_router(stripe_router)
 

@@ -1,3 +1,4 @@
+import logging
 from arq.connections import RedisSettings, create_pool
 
 from src.apps.edge_api.adapters.in_.events.subscribers import (
@@ -8,6 +9,9 @@ from src.apps.edge_api.adapters.in_.events.subscribers import (
     add_material_job,
     remove_material_job,
 )
+
+from src.lib.health import update_worker_heartbeat
+from arq.cron import cron
 
 from src.apps.llm_tools.di import init_llm_tools
 from src.apps.user_auth.di import init_auth_user_app
@@ -30,6 +34,14 @@ from .di import (
     init_quiz_generator_deps,
     init_quiz_attempter_deps,
 )
+
+logger = logging.getLogger(__name__)
+
+
+async def worker_heartbeat_task(ctx):
+    """Periodic task to update worker heartbeat in Redis."""
+    redis_client = ctx["redis_client"]
+    await update_worker_heartbeat(redis_client)
 
 
 async def startup(ctx):
@@ -114,6 +126,9 @@ async def startup(ctx):
     arq_pool = await create_pool(redis_settings)
     ctx["arq_pool"] = arq_pool
 
+    await update_worker_heartbeat(arq_pool)
+    logger.info("Worker heartbeat initialized")
+
     ctx["edge"] = edge_api_app
     ctx["pb"] = admin_pb
     ctx["meili"] = meili
@@ -137,6 +152,12 @@ class WorkerSettings:
         finalize_attempt_job,
         add_material_job,
         remove_material_job,
+    ]
+    cron_jobs = [
+        cron(
+            worker_heartbeat_task,
+            second={0, 10, 20, 30, 40, 50},
+        ),
     ]
     on_startup = startup
     on_shutdown = shutdown
