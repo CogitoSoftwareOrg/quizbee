@@ -37,6 +37,7 @@ dependencies = [
 dev = [
   "watchfiles>=0.21",
   "pytest>=8.4.2",
+  "pytest-asyncio>=0.25.2",
   "testcontainers>=4.9.0",
   "testcontainers[redis]>=4.9.0",
 ]
@@ -55,8 +56,9 @@ packages = ["src"]
 [tool.pytest.ini_options]
 minversion = "8.0"
 addopts = "-ra -q"
-testpaths = ["tests"]
+testpaths = ["src"]
 python_files = ["test_*.py", "*_test.py"]
+pythonpath = "."
 markers = [
   "unit: fast unit tests",
   "integration: slow tests that need containers/real deps",

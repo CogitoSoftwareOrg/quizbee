@@ -1,11 +1,10 @@
-from fastapi import FastAPI
 from langfuse import Langfuse
 from meilisearch_python_sdk import AsyncClient
 from pocketbase import PocketBase
 import httpx
 
 
-from src.lib.di import AgentEnvelope, init_global_deps
+from src.lib.di import AgentEnvelope
 
 from src.apps.material_search.app.contracts import MaterialSearchApp
 from src.apps.llm_tools.app.contracts import LLMToolsApp
