@@ -13,6 +13,9 @@
     "install:browsers": "npx playwright install --with-deps",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
     "report": "playwright show-report",
     "codegen": "playwright codegen",
     "trace:open": "playwright show-trace ./test-results/**/*.zip"

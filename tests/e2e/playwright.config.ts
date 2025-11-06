@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 import * as dotenv from "dotenv";
-dotenv.config();
+
+dotenv.config({ path: "../../envs/.env" });
 
 const baseURL =
   process.env.PREVIEW_URL?.replace(/\/$/, "") ||
@@ -21,7 +22,10 @@ export default defineConfig({
     video: "retain-on-failure",
     actionTimeout: 10_000,
     navigationTimeout: 20_000,
+    storageState: "storageState.json",
   },
+  globalSetup: "./globalSetup.ts",
+  globalTeardown: "./globalTeardown.ts",
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
     // Можно добавить мобильные профили, если нужно:

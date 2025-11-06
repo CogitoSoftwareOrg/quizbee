@@ -1,0 +1,57 @@
+{
+  "cookies": [
+    {
+      "name": "ph_phc_xGFjoxDPgcbGAbXJu32R1Q2hgTaSotRNcDATlwwiRYL_posthog",
+      "value": "%7B%22distinct_id%22%3A%22019a591b-3225-72a3-b21e-f89c5a90093c%22%7D",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1793967545,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "pb_token",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb2xsZWN0aW9uSWQiOiJfcGJfdXNlcnNfYXV0aF8iLCJleHAiOjE3NjMwMzYzNDYsImlkIjoib2lyMTBlanZhdmg2NTZxIiwicmVmcmVzaGFibGUiOnRydWUsInR5cGUiOiJhdXRoIn0.DG7a6SY1MzQfL4_F5j9W5r1SMXCDJoeGOPm7LLwSm2s",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1771071546.264519,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "pb_auth",
+      "value": "%7B%22token%22%3A%22eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb2xsZWN0aW9uSWQiOiJfcGJfdXNlcnNfYXV0aF8iLCJleHAiOjE3NjMwMzYzNDYsImlkIjoib2lyMTBlanZhdmg2NTZxIiwicmVmcmVzaGFibGUiOnRydWUsInR5cGUiOiJhdXRoIn0.DG7a6SY1MzQfL4_F5j9W5r1SMXCDJoeGOPm7LLwSm2s%22%2C%22record%22%3A%7B%22avatar%22%3A%22%22%2C%22collectionId%22%3A%22_pb_users_auth_%22%2C%22collectionName%22%3A%22users%22%2C%22created%22%3A%222025-11-06%2012%3A19%3A03.710Z%22%2C%22email%22%3A%22e2e%40quizbee.dev%22%2C%22emailVisibility%22%3Atrue%2C%22id%22%3A%22oir10ejvavh656q%22%2C%22metadata%22%3Anull%2C%22name%22%3A%22E2E%20Test%20User%22%2C%22updated%22%3A%222025-11-06%2012%3A19%3A03.726Z%22%2C%22verified%22%3Atrue%7D%7D",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1763036346,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "http://localhost:5173",
+      "localStorage": [
+        {
+          "name": "CapacitorStorage.pb_auth",
+          "value": "{\"token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb2xsZWN0aW9uSWQiOiJfcGJfdXNlcnNfYXV0aF8iLCJleHAiOjE3NjMwMzYzNDYsImlkIjoib2lyMTBlanZhdmg2NTZxIiwicmVmcmVzaGFibGUiOnRydWUsInR5cGUiOiJhdXRoIn0.DG7a6SY1MzQfL4_F5j9W5r1SMXCDJoeGOPm7LLwSm2s\",\"record\":{\"avatar\":\"\",\"collectionId\":\"_pb_users_auth_\",\"collectionName\":\"users\",\"created\":\"2025-11-06 12:19:03.710Z\",\"email\":\"e2e@quizbee.dev\",\"emailVisibility\":true,\"id\":\"oir10ejvavh656q\",\"metadata\":null,\"name\":\"E2E Test User\",\"updated\":\"2025-11-06 12:19:03.726Z\",\"verified\":true}}"
+        },
+        {
+          "name": "CapacitorStorage.uiState",
+          "value": "{\"paywallOpen\":false,\"globalSidebarOpen\":true,\"feedbackModalOpen\":false}"
+        },
+        {
+          "name": "CapacitorStorage.theme",
+          "value": "QUIZBEE_LIGHT"
+        },
+        {
+          "name": "ph_phc_xGFjoxDPgcbGAbXJu32R1Q2hgTaSotRNcDATlwwiRYL_posthog",
+          "value": "{\"$initialization_time\":\"2025-11-06T12:19:05.889Z\",\"$configured_session_timeout_ms\":1800000,\"distinct_id\":\"019a591b-3225-72a3-b21e-f89c5a90093c\",\"$device_id\":\"019a591b-3225-72a3-b21e-f89c5a90093c\",\"$user_state\":\"anonymous\"}"
+        }
+      ]
+    }
+  ]
+}

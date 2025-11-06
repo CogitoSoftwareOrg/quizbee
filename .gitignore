@@ -19,3 +19,6 @@
 
 **/logs
 **/.pids
+
+tests/**/test-results
+tests/**/playwright-report
