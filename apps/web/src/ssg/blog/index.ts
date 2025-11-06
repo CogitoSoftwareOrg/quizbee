@@ -90,7 +90,7 @@ export const getStaticBlogCategoryPaths: GetStaticPaths = async ({
 }) => {
   const byLocale = await filterByLocale(true);
 
-  const pageSize = 1;
+  const pageSize = 12;
   const paths: any[] = [];
 
   for (const [locale, posts] of byLocale.entries()) {
