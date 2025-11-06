@@ -12,9 +12,8 @@ def init_message_owner_deps(admin_pb: PocketBase):
     return message_repository
 
 
-def init_message_owner_app(message_repository: MessageRepository | None = None):
-    if message_repository is None:
-        admin_pb, _, _, _ = init_global_deps()
-        message_repository = init_message_owner_deps(admin_pb)
-
+def init_message_owner_app(
+    message_repository: MessageRepository,
+) -> MessageOwnerAppImpl:
+    """Factory for MessageOwnerApp - all dependencies explicit"""
     return MessageOwnerAppImpl(message_repository=message_repository)

@@ -6,20 +6,16 @@ from arq.connections import RedisSettings, create_pool
 
 from quizbee_example_lib import greet
 
-from src.apps.quiz_generator.di import init_quiz_generator_app
 from src.apps.edge_api.di import init_edge_api_app
-
-from src.apps.llm_tools.di import init_llm_tools_app
-
-from src.apps.user_auth.di import init_auth_user_app
-
+from src.apps.llm_tools.di import init_llm_tools_app, init_llm_tools_deps
+from src.apps.user_auth.di import init_auth_user_app, init_user_auth_deps
+from src.apps.message_owner.di import init_message_owner_app, init_message_owner_deps
 from src.apps.material_search.di import (
     init_material_search_app,
+    init_material_search_deps,
 )
-
-from src.apps.message_owner.di import init_message_owner_app
-
-from src.apps.quiz_attempter.di import init_quiz_attempter_app
+from src.apps.quiz_generator.di import init_quiz_generator_app, init_quiz_generator_deps
+from src.apps.quiz_attempter.di import init_quiz_attempter_app, init_quiz_attempter_deps
 
 from src.lib.di import init_global_deps
 from src.lib.settings import settings
@@ -37,30 +33,72 @@ async def lifespan(app: FastAPI):
     logger.info(greet("World"))
 
     # GLOBAL
-    admin_pb, _, meili, http = init_global_deps()
+    admin_pb, lf, meili, http = init_global_deps()
 
     # V2 LLM TOOLS
-    llm_tools = init_llm_tools_app()
+    text_tokenizer, image_tokenizer, chunker = init_llm_tools_deps()
+    llm_tools = init_llm_tools_app(
+        text_tokenizer=text_tokenizer,
+        image_tokenizer=image_tokenizer,
+        chunker=chunker,
+    )
 
     # V2 USER AUTH
-    auth_user_app = init_auth_user_app()
-
-    # V2 MATERIAL SEARCH
-    material_search_app = await init_material_search_app(llm_tools=llm_tools)
-
-    # V2 QUIZ GENERATOR
-    quiz_generator_app = await init_quiz_generator_app(
-        llm_tools=llm_tools,
-        material_search=material_search_app,
+    user_verifier, user_repository = init_user_auth_deps(admin_pb)
+    auth_user_app = init_auth_user_app(
+        user_verifier=user_verifier,
+        user_repository=user_repository,
     )
 
     # V2 MESSAGE OWNER
-    message_owner_app = init_message_owner_app()
+    message_repository = init_message_owner_deps(admin_pb)
+    message_owner_app = init_message_owner_app(message_repository=message_repository)
+
+    # V2 MATERIAL SEARCH
+    material_repository, pdf_parser, material_indexer = await init_material_search_deps(
+        lf=lf, admin_pb=admin_pb, meili=meili, llm_tools=llm_tools
+    )
+    material_search_app = init_material_search_app(
+        llm_tools=llm_tools,
+        pdf_parser=pdf_parser,
+        indexer=material_indexer,
+        material_repository=material_repository,
+    )
+
+    # V2 QUIZ GENERATOR
+    (
+        quiz_repository,
+        patch_generator,
+        quiz_finalizer,
+        quiz_indexer,
+    ) = await init_quiz_generator_deps(
+        meili=meili,
+        lf=lf,
+        admin_pb=admin_pb,
+        http=http,
+        llm_tools=llm_tools,
+    )
+    quiz_generator_app = init_quiz_generator_app(
+        llm_tools=llm_tools,
+        material_search=material_search_app,
+        quiz_repository=quiz_repository,
+        quiz_indexer=quiz_indexer,
+        patch_generator=patch_generator,
+        finalizer=quiz_finalizer,
+    )
 
     # V2 QUIZ ATTEMPTER
+    (
+        attempt_repository,
+        explainer,
+        attempt_finalizer,
+    ) = init_quiz_attempter_deps(lf=lf, admin_pb=admin_pb, http=http)
     quiz_attempter_app = init_quiz_attempter_app(
         message_owner=message_owner_app,
         llm_tools=llm_tools,
+        attempt_repository=attempt_repository,
+        explainer=explainer,
+        finalizer=attempt_finalizer,
     )
 
     # V2 EDGE API

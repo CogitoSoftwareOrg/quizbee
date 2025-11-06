@@ -34,19 +34,11 @@ def init_quiz_attempter_deps(
 def init_quiz_attempter_app(
     message_owner: MessageOwnerApp,
     llm_tools: LLMToolsApp,
-    attempt_repository: AttemptRepository | None = None,
-    explainer: Explainer | None = None,
-    finalizer: AttemptFinalizer | None = None,
-):
-    if attempt_repository is None or explainer is None or finalizer is None:
-        admin_pb, lf, _, http = init_global_deps()
-        default_attempt_repository, default_explainer, default_finalizer = (
-            init_quiz_attempter_deps(lf=lf, admin_pb=admin_pb, http=http)
-        )
-        attempt_repository = attempt_repository or default_attempt_repository
-        explainer = explainer or default_explainer
-        finalizer = finalizer or default_finalizer
-
+    attempt_repository: AttemptRepository,
+    explainer: Explainer,
+    finalizer: AttemptFinalizer,
+) -> QuizAttempterAppImpl:
+    """Factory for QuizAttempterApp - all dependencies explicit"""
     return QuizAttempterAppImpl(
         attempt_repository=attempt_repository,
         explainer=explainer,

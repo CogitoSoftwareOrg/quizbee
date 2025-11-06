@@ -31,31 +31,13 @@ async def init_material_search_deps(
     return material_repository, pdf_parser, material_indexer
 
 
-async def init_material_search_app(
+def init_material_search_app(
     llm_tools: LLMToolsApp,
-    pdf_parser: PdfParser | None = None,
-    indexer: MaterialIndexer | None = None,
-    material_repository: MaterialRepository | None = None,
-):
-    if (
-        llm_tools is None
-        or pdf_parser is None
-        or indexer is None
-        or material_repository is None
-    ):
-        admin_pb, lf, meili, _ = init_global_deps()
-        default_material_repository, default_pdf_parser, default_indexer = (
-            await init_material_search_deps(
-                lf=lf,
-                admin_pb=admin_pb,
-                meili=meili,
-                llm_tools=llm_tools,
-            )
-        )
-        material_repository = material_repository or default_material_repository
-        pdf_parser = pdf_parser or default_pdf_parser
-        indexer = indexer or default_indexer
-
+    pdf_parser: PdfParser,
+    indexer: MaterialIndexer,
+    material_repository: MaterialRepository,
+) -> MaterialSearchAppImpl:
+    """Factory for MaterialSearchApp - all dependencies explicit"""
     return MaterialSearchAppImpl(
         material_repository=material_repository,
         pdf_parser=pdf_parser,

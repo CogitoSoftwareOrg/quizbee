@@ -1,7 +1,5 @@
 from pocketbase import PocketBase
 
-from src.lib.di import init_global_deps
-
 from .domain.ports import UserVerifier, UserRepository
 
 from .app.usecases import AuthUserAppImpl
@@ -15,14 +13,8 @@ def init_user_auth_deps(admin_pb: PocketBase):
 
 
 def init_auth_user_app(
-    user_verifier: UserVerifier | None = None,
-    user_repository: UserRepository | None = None,
-):
-    if user_verifier is None or user_repository is None:
-        admin_pb, _, _, _ = init_global_deps()
-
-        user_verifier, user_repository = init_user_auth_deps(admin_pb)
-        user_verifier = user_verifier or default_user_verifier
-        user_repository = user_repository or default_user_repository
-
+    user_verifier: UserVerifier,
+    user_repository: UserRepository,
+) -> AuthUserAppImpl:
+    """Factory for AuthUserApp - all dependencies explicit"""
     return AuthUserAppImpl(user_verifier=user_verifier, user_repository=user_repository)
