@@ -1,0 +1,223 @@
+name: CI (Lint → Unit → Integration)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # -----------------------
+  # Lint + Unit: API (Python, uv)
+  # -----------------------
+  api-lint-unit:
+    name: API • Lint & Unit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        run: pipx install uv
+
+      - name: Sync deps (default + dev)
+        run: uv sync --all-groups
+
+      # Pyright (типизация Python; ставится как dev-зависимость узла в /apps/api)
+      - name: Setup Node for pyright
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+      - name: Install pyright
+        run: |
+          corepack enable
+          pnpm add -D pyright
+      - name: Pyright check
+        run: npx pyright
+
+      # Ruff/Black — если у вас есть, оставил «мягко»
+      - name: Ruff (optional)
+        run: |
+          uv run python - <<'PY'
+          import importlib, sys
+          sys.exit(0 if importlib.util.find_spec('ruff') else 1)
+          PY
+        continue-on-error: true
+      - name: Ruff run
+        if: ${{ success() }} # только если ruff действительно установлен
+        run: uv run ruff check .
+
+      # Юнит-тесты
+      - name: Pytest (unit)
+        run: uv run pytest -m "unit" -q
+
+  # -----------------------
+  # Lint + Unit: APP (SvelteKit, pnpm)
+  # -----------------------
+  app-lint-unit:
+    name: APP • Lint & Unit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/app
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node (pnpm)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Enable corepack & install
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+
+      - name: ESLint
+        run: |
+          if pnpm run | grep -q "^  lint"; then
+            pnpm run lint
+          else
+            echo "no lint script, skipping"
+          fi
+
+      - name: Svelte Check (optional)
+        run: |
+          if pnpm dlx --yes svelte-check --version >/dev/null 2>&1; then
+            pnpm dlx svelte-check --fail-on-warnings
+          else
+            echo "no svelte-check, skipping"
+          fi
+
+      - name: Vitest (unit)
+        run: |
+          if pnpm run | grep -q "test:unit"; then
+            pnpm run test:unit -- --run
+          else
+            echo "no test:unit script, skipping"
+          fi
+
+      # -----------------------
+      # -----------------------
+      - name: Setup Node (pnpm)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Enable corepack & install
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+
+      - name: ESLint (optional)
+        run: |
+          if pnpm run | grep -q "^  lint"; then
+            pnpm run lint
+          else
+            echo "no lint script, skipping"
+          fi
+
+      - name: Unit tests (optional)
+        run: |
+          if pnpm run | grep -q "test:unit"; then
+            pnpm run test:unit -- --run
+          else
+            echo "no test:unit script, skipping"
+          fi
+
+  # -----------------------
+  # Integration: API (pytest -m integration)
+  # -----------------------
+  api-integration:
+    name: API • Integration (testcontainers)
+    runs-on: ubuntu-latest
+    needs: [api-lint-unit, app-lint-unit]
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        run: pipx install uv
+
+      - name: Sync deps (default + dev)
+        run: uv sync --all-groups
+
+      - name: Docker info
+        run: docker info
+
+      - name: Pytest (integration)
+        env:
+          ENV: test
+          E2E_STUB: "1" # если нужно стабилизировать внешние вызовы
+        run: uv run pytest -m "integration" -vv --maxfail=1
+
+  # -----------------------
+  # Trigger Coolify deploy (условно, в конце)
+  # -----------------------
+  coolify-deploy:
+    name: Coolify • Trigger deploy
+    runs-on: ubuntu-latest
+    needs: [api-integration]
+    env:
+      COOLIFY_URL: ${{ vars.COOLIFY_URL }}
+      COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+      COOLIFY_TAG_PROD: ${{ vars.COOLIFY_TAG_PROD }}
+      COOLIFY_TAG_PREVIEW: ${{ vars.COOLIFY_TAG_PREVIEW }}
+    steps:
+      - name: Validate config
+        shell: bash
+        run: |
+          set -euo pipefail
+          : "${COOLIFY_URL:?Missing COOLIFY_URL}"
+          : "${COOLIFY_TOKEN:?Missing COOLIFY_TOKEN}"
+          echo "Coolify URL: $COOLIFY_URL"
+
+      # PR: можно дёрнуть отдельный тег превью (если используете его),
+      # либо вообще пропустить (если Coolify сам делает preview по PR).
+      - name: Trigger Coolify preview redeploy (PR)
+        if: github.event_name == 'pull_request' && env.COOLIFY_TAG_PREVIEW != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${COOLIFY_TAG_PREVIEW}"
+          echo "Triggering preview deploy for TAG=$TAG (PR #${{ github.event.number }})"
+          curl -fsS -H "Authorization: Bearer ${COOLIFY_TOKEN}" \
+            "${COOLIFY_URL}/deploy?tag=${TAG}&force=true" >/dev/null
+          echo "✅ Preview deploy triggered"
+
+      # PUSH main: полноценный деплой prod-тега (похож на ваш curl к /deploy?tag=)
+      - name: Trigger Coolify production deploy (push to main)
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${COOLIFY_TAG_PROD}"
+          if [[ -z "$TAG" ]]; then
+            echo "No COOLIFY_TAG_PROD set; skipping"
+            exit 0
+          fi
+          echo "Triggering production deploy for TAG=$TAG"
+          curl -fsS -H "Authorization: Bearer ${COOLIFY_TOKEN}" \
+            "${COOLIFY_URL}/deploy?tag=${TAG}&force=true" >/dev/null
+          echo "✅ Production deploy triggered"
