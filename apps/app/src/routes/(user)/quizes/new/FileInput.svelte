@@ -12,6 +12,7 @@
 	import { removeFile } from '../new/removeFile';
 	import { addExistingMaterial } from '../new/addExistingMaterial';
 	import PreviousQuizes from './PreviousQuizes.svelte';
+	import { postApi } from '$lib/api/call-api';
 
 	interface Props {
 		inputText: string;
@@ -53,17 +54,7 @@
 	let buttonElement = $state<HTMLButtonElement>();
 	let menuElement = $state<HTMLDivElement>();
 
-	const allowedExtensions = [
-		'pdf',
-		'pptx',
-		'docx',
-		'md',
-		'txt',
-		'html',
-		'xlsx',
-		'csv'
-		
-	];
+	const allowedExtensions = ['pdf', 'pptx', 'docx', 'md', 'txt', 'html', 'xlsx', 'csv'];
 	onMount(() => {
 		document.addEventListener('click', handleClickOutside);
 
@@ -78,7 +69,6 @@
 			});
 		};
 	});
-
 
 	// первая функция которая дергается когда в проводнике мы выбираем файлы
 	function processFiles(files: File[]) {
@@ -149,16 +139,16 @@
 	// Асинхронная загрузка файла (эта функция вызывается из processFiles)
 	async function uploadFileAsync(attachedFile: AttachedFile) {
 		try {
+			if ((attachedFile.file?.size || 0) > 1024 * 1024 * 200) {
+				console.warn('File is too big');
+				return;
+			}
+
 			const formData = new FormData();
 			formData.append('file', attachedFile.file!);
 			formData.append('title', attachedFile.name);
 			formData.append('material_id', attachedFile.materialId!);
 
-			// const response = await fetch(`${computeApiUrl()}materials/upload`, {
-			// 	method: 'POST',
-			// 	body: formData,
-			// 	credentials: 'include'
-			// });
 			const response = await fetch(`${computeApiUrl()}quizes/${quizTemplateId}/materials`, {
 				method: 'POST',
 				body: formData,
@@ -169,12 +159,8 @@
 				const errorText = await response.text();
 				throw new Error(`Failed to upload material: ${errorText}`);
 			}
-
-		
-			
 		} catch (error) {
 			console.error('Failed to upload file:', attachedFile.name, error);
-
 			// Находим индекс файла в массиве и удаляем его
 			const fileIndex = attachedFiles.indexOf(attachedFile);
 			if (fileIndex !== -1) {
@@ -284,8 +270,6 @@
 
 	export { addExistingMaterial };
 </script>
-
-
 
 <div
 	class={[
@@ -398,7 +382,7 @@
 										stroke-width="2"
 										stroke-linecap="round"
 										stroke-linejoin="round"
-										class="lucide lucide-check flex-shrink-0"
+										class="lucide lucide-check shrink-0"
 									>
 										<path d="M20 6 9 17l-5-5" />
 									</svg>
@@ -417,7 +401,7 @@
 			rows="1"
 			oninput={handleTextareaResize}
 		></textarea>
-		
+
 		<input
 			type="file"
 			bind:this={inputElement}
@@ -450,7 +434,7 @@
 		style="scrollbar-width: auto;">
 			{#each attachedFiles as attachedFile, index}
 				<div
-					class="bg-base-300 border-base-content/20 group relative aspect-square w-24 h-24 shrink-0 rounded-lg border-2 p-1.5 mb-0.5"
+					class="bg-base-300 border-base-content/20 group relative mb-0.5 aspect-square h-24 w-24 shrink-0 rounded-lg border-2 p-1.5"
 				>
 					{#if attachedFile.previewUrl}
 						<img
@@ -459,9 +443,7 @@
 							class="h-full w-full rounded object-cover"
 						/>
 					{:else}
-						<div
-							class="text-base-content/60 flex flex-col items-center gap-5 text-center"
-						>
+						<div class="text-base-content/60 flex flex-col items-center gap-5 text-center">
 							<img
 								src="/file-format-icons/{getFileIcon(attachedFile.name)}.svg"
 								alt="File icon"

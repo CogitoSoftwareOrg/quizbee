@@ -22,6 +22,7 @@ class AuthUserAppImpl(AuthUserApp):
             - user.subscription.quiz_items_usage,
             used=user.subscription.quiz_items_usage,
             limit=user.subscription.quiz_items_limit,
+            tariff=user.subscription.tariff,
         )
 
     async def charge(self, user_id: str, cost: int) -> None:

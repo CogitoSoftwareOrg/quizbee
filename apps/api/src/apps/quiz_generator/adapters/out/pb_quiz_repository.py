@@ -19,6 +19,8 @@ from ...domain.models import (
     QuizStatus,
 )
 
+logger = logging.getLogger(__name__)
+
 
 class PBQuizRepository(QuizRepository):
     def __init__(self, admin_pb: PocketBase, http: httpx.AsyncClient):
@@ -29,7 +31,7 @@ class PBQuizRepository(QuizRepository):
         rec = await self.admin_pb.collection("quizes").get_one(
             id, options={"params": {"expand": "quizItems_via_quiz,materials"}}
         )
-        return await self._to_quiz(rec)
+        return await self._rec_to_quiz(rec)
 
     async def get_user_quizzes(self, user_id: str) -> list[Quiz]:
         recs = await self.admin_pb.collection("quizes").get_full_list(
@@ -41,36 +43,44 @@ class PBQuizRepository(QuizRepository):
             }
         )
 
-        return [await self._to_quiz(rec) for rec in recs]
+        return [await self._rec_to_quiz(rec) for rec in recs]
 
-    async def save(self, quiz: Quiz):
-        await asyncio.gather(*[self.save_item(item) for item in quiz.items])
-
+    async def create(self, quiz: Quiz):
         try:
+            await asyncio.gather(*[self.save_item(item) for item in quiz.items])
+            await self.admin_pb.collection("quizes").create(await self._to_record(quiz))
+        except:
+            raise
+
+    async def update(self, quiz: Quiz):
+        try:
+            await asyncio.gather(*[self.save_item(item) for item in quiz.items])
             await self.admin_pb.collection("quizes").update(
                 quiz.id, await self._to_record(quiz)
             )
         except:
-            await self.admin_pb.collection("quizes").create(await self._to_record(quiz))
+            raise
 
     async def save_item(self, item: QuizItem):
         try:
             await self.admin_pb.collection("quizItems").create(
-                await self._to_record_item(item)
+                await self._item_to_rec(item)
             )
         except:
             await self.admin_pb.collection("quizItems").update(
-                item.id, await self._to_record_item(item)
+                item.id, await self._item_to_rec(item)
             )
 
-    async def _to_quiz(self, rec: Record) -> Quiz:
+    async def _rec_to_quiz(self, rec: Record) -> Quiz:
         materials_recs = rec.get("expand", {}).get("materials", [])
         items_recs = rec.get("expand", {}).get("quizItems_via_quiz", [])
         q_id = rec.get("id", "")
 
-        items = sorted([self._to_item(i) for i in items_recs], key=lambda x: x.order)
+        items = sorted(
+            [self._rec_to_item(i) for i in items_recs], key=lambda x: x.order
+        )
         materials = await asyncio.gather(
-            *[self._to_material(m) for m in materials_recs]
+            *[self._rec_to_material(m) for m in materials_recs]
         )
 
         fname = rec.get("materialsContext")
@@ -95,7 +105,7 @@ class PBQuizRepository(QuizRepository):
             status=rec.get("status", ""),
             visibility=rec.get("visibility", ""),
             avoid_repeat=rec.get("avoidRepeat", False),
-            gen_config=self._to_gen_config(rec),
+            gen_config=self._rec_to_config(rec),
             generation=rec.get("generation", 0),
         )
 
@@ -104,7 +114,7 @@ class PBQuizRepository(QuizRepository):
 
         return quiz
 
-    async def _to_material(self, material_rec: Record) -> MaterialRef:
+    async def _rec_to_material(self, material_rec: Record) -> MaterialRef:
         m_id = material_rec.get("id", "")
         kind = material_rec.get("kind", "")
         is_book = material_rec.get("isBook", False)
@@ -122,17 +132,17 @@ class PBQuizRepository(QuizRepository):
             filename=f,
         )
 
-    def _to_item(self, item_rec: Record) -> QuizItem:
+    def _rec_to_item(self, item_rec: Record) -> QuizItem:
         answers = item_rec.get("answers") or []
         return QuizItem(
             id=item_rec.get("id", ""),
             question=item_rec.get("question", ""),
-            variants=[self._to_variant(a) for a in answers],
+            variants=[self._rec_to_variant(a) for a in answers],
             order=item_rec.get("order", 0),
             status=item_rec.get("status", ""),
         )
 
-    def _to_variant(self, rec: dict[str, Any]) -> QuizItemVariant:
+    def _rec_to_variant(self, rec: dict[str, Any]) -> QuizItemVariant:
         return QuizItemVariant(
             content=rec.get("content", ""),
             explanation=rec.get("explanation", ""),
@@ -157,7 +167,7 @@ class PBQuizRepository(QuizRepository):
             "status": quiz.status,
             "visibility": quiz.visibility,
             "avoidRepeat": quiz.avoid_repeat,
-            "dynamicConfig": json.dumps(asdict(quiz.gen_config)),
+            "dynamicConfig": self._config_to_rec(quiz.gen_config),
             "materials": [m.id for m in quiz.materials],
             "slug": quiz.slug,
         }
@@ -178,7 +188,7 @@ class PBQuizRepository(QuizRepository):
 
         return dto
 
-    async def _to_record_item(self, item: QuizItem) -> dict[str, Any]:
+    async def _item_to_rec(self, item: QuizItem) -> dict[str, Any]:
         dto = {
             "id": item.id,
             "question": item.question,
@@ -198,15 +208,29 @@ class PBQuizRepository(QuizRepository):
 
         return dto
 
-    def _to_gen_config(self, rec: Record) -> QuizGenConfig:
+    def _rec_to_config(self, rec: Record) -> QuizGenConfig:
+        dynamic_config = rec.get("dynamicConfig", {})
+
         return QuizGenConfig(
-            negative_questions=rec.get("negativeQuestions", []),
-            additional_instructions=rec.get("adds", []),
-            more_on_topic=rec.get("moreOnTopic", []),
-            less_on_topic=rec.get("lessOnTopic", []),
-            extra_beginner=rec.get("extraBeginner", []),
-            extra_expert=rec.get("extraExpert", []),
+            negative_questions=dynamic_config.get("negativeQuestions", []),
+            additional_instructions=dynamic_config.get("adds", []),
+            more_on_topic=dynamic_config.get("moreOnTopic", []),
+            less_on_topic=dynamic_config.get("lessOnTopic", []),
+            extra_beginner=dynamic_config.get("extraBeginner", []),
+            extra_expert=dynamic_config.get("extraExpert", []),
         )
+
+    def _config_to_rec(self, config: QuizGenConfig):
+        dto = {
+            "negativeQuestions": config.negative_questions,
+            "adds": config.additional_instructions,
+            "moreOnTopic": config.more_on_topic,
+            "lessOnTopic": config.less_on_topic,
+            "extraBeginner": config.extra_beginner,
+            "extraExpert": config.extra_expert,
+        }
+        logger.debug(f"Config to rec: {asdict(config)} -> {dto}")
+        return json.dumps(dto)
 
     def _file_url(self, col: str, id: str, file: str) -> str:
         return f"{settings.pb_url}api/files/{col}/{id}/{file}"
@@ -215,3 +239,11 @@ class PBQuizRepository(QuizRepository):
         url = self._file_url(col, id, file)
         response = await self.http.get(url)
         return response.text
+
+    def _to_camel_case(self, snake_case: dict[str, Any]) -> dict[str, Any]:
+        camel_case = {}
+        for key, value in snake_case.items():
+            parts = key.split("_")
+            camel_key = parts[0] + "".join(word.capitalize() for word in parts[1:])
+            camel_case[camel_key] = value
+        return camel_case

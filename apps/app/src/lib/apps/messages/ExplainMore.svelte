@@ -41,7 +41,7 @@
 
 	const messages = $derived(
 		messagesStore.messages.filter(
-			(m) => m.quizAttempt === quizAttemptId && (m.metadata as any)?.itemId === itemId
+			(m) => m.quizAttempt === quizAttemptId && (m.metadata as any)?.item_id === itemId
 		)
 	);
 </script>

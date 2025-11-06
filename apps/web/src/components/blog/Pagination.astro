@@ -1,0 +1,63 @@
+---
+import type { Page } from "astro";
+
+interface Props {
+  page: Page;
+  getPageHref: (pageNumber: number) => string;
+}
+
+const { page, getPageHref } = Astro.props;
+---
+
+{
+  page.lastPage > 1 && (
+    <nav class="flex items-center justify-center gap-2" aria-label="Pagination">
+      {page.url.prev ? (
+        <a
+          href={page.url.prev}
+          rel="prev"
+          class="rounded-lg bg-card px-4 py-2 text-sm hover:shadow-md transition-shadow"
+        >
+          ← Prev
+        </a>
+      ) : (
+        <span class="rounded-lg bg-card px-4 py-2 text-sm opacity-40 cursor-not-allowed">
+          ← Prev
+        </span>
+      )}
+
+      {Array.from({ length: page.lastPage }, (_, i) => i + 1).map((n) => {
+        const isActive = n === page.currentPage;
+        return isActive ? (
+          <span
+            class="rounded-lg bg-primary text-primary-content px-4 py-2 text-sm font-semibold shadow-md"
+            aria-current="page"
+          >
+            {n}
+          </span>
+        ) : (
+          <a
+            href={getPageHref(n)}
+            class="rounded-lg bg-card px-4 py-2 text-sm hover:shadow-md transition-shadow"
+          >
+            {n}
+          </a>
+        );
+      })}
+
+      {page.url.next ? (
+        <a
+          href={page.url.next}
+          rel="next"
+          class="rounded-lg bg-card px-4 py-2 text-sm hover:shadow-md transition-shadow"
+        >
+          Next →
+        </a>
+      ) : (
+        <span class="rounded-lg bg-card px-4 py-2 text-sm opacity-40 cursor-not-allowed">
+          Next →
+        </span>
+      )}
+    </nav>
+  )
+}

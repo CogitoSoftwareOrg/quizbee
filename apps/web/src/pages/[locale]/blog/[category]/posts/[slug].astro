@@ -1,0 +1,17 @@
+---
+import BlogPost from "@/components/pages/BlogPost.astro";
+import { getStaticBlogPostLocalePaths } from "@/ssg/blog";
+
+export const getStaticPaths = getStaticBlogPostLocalePaths;
+
+const { meta, content, article, toc, previousPost, nextPost } = Astro.props;
+---
+
+<BlogPost
+  meta={meta}
+  article={article}
+  content={content}
+  toc={toc}
+  previousPost={previousPost}
+  nextPost={nextPost}
+/>

@@ -30,40 +30,49 @@
     {
       "type": "Hero",
       "props": {
-        "title": "Transformez Vos Supports d'Étude en Quiz Interactifs",
-        "description": "QuizBee transforme vos documents en quiz captivants alimentés par l'IA. Étudiez plus intelligemment, pas plus dur, avec un apprentissage personnalisé qui s'adapte à vos besoins.",
-        "buttonText": "Commencer Gratuitement",
-        "image": "/bee_v3.svg",
+        "title": "Transformez Vos Supports d'Étude en",
+        "titleHighlight": "Quiz Interactifs",
+        "description": "Téléchargez vos notes de cours, vos manuels ou vos guides d'étude. QuizBee utilise l'IA pour générer des quiz personnalisés qui vous aident à réussir vos examens.",
+        "buttonText": "Commencez à créer des quiz",
+        "footerText": "Gratuit pour commencer • Aucune carte de crédit requise",
+        "href": "{{APP_URL}}",
+        "image": "",
+        "titleAlign": "center",
+        "descriptionAlign": "center",
+        "footerAlign": "center",
         "position": "right",
-        "overlay": false,
-        "href": "{{APP_URL}}"
+        "center": true,
+        "textWidth": "max-w-5xl",
+        "titleSize": "text-7xl 2xl:text-8xl",
+        "descriptionSize": "text-xl 2xl:text-2xl py-6",
+        "buttonSize": "xl"
       }
     },
     {
       "type": "Pains",
       "props": {
-        "title": "Vous Avez du Mal à Rester Engagé Pendant vos Études?",
-        "theme": "gradient",
+        "title": "Vous en Avez Marre d'Étudier Sans Rien Retenir?",
+        "theme": "",
         "pains": [
           {
-            "title": "La Lecture Passive est Inefficace",
-            "description": "Lire simplement des supports ne vous aide pas à retenir l'information. Vous avez besoin d'un engagement actif pour vraiment apprendre.",
-            "icon": "bed"
+            "title": "Vous Lisez… et Oubliez",
+            "description": "Vous passez des heures à relire, mais quand vient l'examen, tout disparaît de votre mémoire.",
+            "icon": "book-open-text"
           },
           {
-            "title": "Les Tests Génériques Ne Correspondent Pas à Vos Supports",
-            "description": "Les quiz préfabriqués correspondent rarement à votre contenu d'étude spécifique, laissant des lacunes dans votre préparation.",
-            "icon": "book-open"
+            "title": "Supports Partout, Aucune Structure",
+            "description": "Des notes, des PDFs, des captures d'écran, mais aucun moyen de les transformer en quelque chose d'utile pour vraiment apprendre.",
+            "icon": "file-stack"
           },
           {
-            "title": "Pas de Retour Quand Vous Êtes Bloqué",
-            "description": "Les méthodes d'étude traditionnelles vous laissent seul quand vous avez besoin d'aide pour comprendre des concepts difficiles.",
-            "icon": "circle-help"
+            "title": "Fatigué des Chats IA Infinis",
+            "description": "Fatigué de télécharger et de réexpliquer le même contenu encore et encore à des chats IA?",
+            "icon": "message-circle-x"
           },
           {
-            "title": "Difficile de Suivre les Vrais Progrès",
-            "description": "Sans difficulté adaptative, vous ne pouvez pas savoir si vous maîtrisez vraiment le matériel ou si vous mémorisez simplement.",
-            "icon": "chart-no-axes-combined"
+            "title": "Travail Acharné, Résultats Incertains",
+            "description": "Vous travaillez dur, mais avant l'examen, vous ne savez pas quoi réviser ni ce que vous avez manqué.",
+            "icon": "frown"
           }
         ]
       }
@@ -77,33 +86,18 @@
         "features": [
           {
             "title": "Quiz Générés par l'IA",
-            "description": "Téléchargez vos supports d'étude et obtenez instantanément des quiz personnalisés adaptés à votre contenu. PDFs, documents, notes - nous gérons tout.",
-            "icon": "bot",
-            "impact": {
-              "metric": "Création de Quiz",
-              "value": "30",
-              "unit": "secondes"
-            }
-          },
-          {
-            "title": "Ajustement Dynamique de la Difficulté",
-            "description": "Contrôlez la difficulté en temps réel pendant que vous passez les quiz. Trop facile? Augmentez la difficulté. Trop difficile? Réduisez-la. Le quiz s'adapte à votre rythme d'apprentissage.",
-            "icon": "sliders-horizontal",
-            "impact": {
-              "metric": "Amélioration de la Rétention",
-              "value": "3x",
-              "unit": "meilleur"
-            }
+            "description": "Téléchargez vos supports d'étude et obtenez instantáneement des quiz personnalisés adaptés à votre contenu. PDFs, documents, notes - nous gérons tout.",
+            "icon": "bot"
           },
           {
             "title": "Conversations avec Tuteur IA",
             "description": "Après chaque question, discutez avec un tuteur IA qui connaît vos supports. Obtenez des explications, des clarifications et des insights plus profonds instantanément.",
-            "icon": "message-circle",
-            "impact": {
-              "metric": "Compréhension",
-              "value": "100%",
-              "unit": "clarté"
-            }
+            "icon": "message-circle"
+          },
+          {
+            "title": "Ajustement Dynamique de la Difficulté",
+            "description": "Contrôlez la difficulté en temps réel pendant que vous passez les quiz. Trop facile? Augmentez. Trop difficile? Réduisez. Le quiz s'adapte à votre rythme d'apprentissage.",
+            "icon": "sliders-horizontal"
           },
           {
             "title": "Affinement des Sujets",
@@ -114,12 +108,17 @@
             "title": "Suivi des Progrès",
             "description": "Surveillez vos performances au fil du temps. Voyez quels sujets vous avez maîtrisés et lesquels nécessitent plus d'attention.",
             "icon": "trending-up"
+          },
+          {
+            "title": "Partagez et Étudiez Ensemble",
+            "description": "Partagez vos quiz personnalisés avec vos amis et vos camarades. Étudiez ensemble, défiez-vous mutuellement et maîtrisez vos sujets en équipe.",
+            "icon": "users"
           }
         ],
         "stats": {
-          "total": "10,000+",
+          "total": "200+",
           "label": "Quiz Générés Quotidiennement",
-          "description": "Rejoignez des milliers d'étudiants et de professionnels utilisant QuizBee pour maîtriser leurs supports"
+          "description": "Rejoignez des centaines d'étudiants et de professionnels utilisant QuizBee pour maîtriser leurs supports"
         }
       }
     },
@@ -128,7 +127,7 @@
       "props": {
         "title": "Commencez en 4 Étapes Simples",
         "subtitle": "Comment Fonctionne QuizBee",
-        "theme": "gradient",
+        "theme": "",
         "steps": [
           {
             "number": 1,
@@ -158,39 +157,31 @@
       "props": {
         "title": "Questions Fréquemment Posées",
         "subtitle": "Avez-Vous des Questions?",
-        "theme": "gradient",
+        "theme": "",
         "questions": [
           {
-            "question": "En quoi QuizBee est-il différent de Quizlet ou d'autres applications de quiz?",
-            "answer": "Contrairement aux applications traditionnelles de cartes mémoire, QuizBee utilise l'IA pour générer des questions directement à partir de VOS supports - pas à partir de decks préfabriqués. De plus, vous obtenez un tuteur IA personnel qui peut expliquer n'importe quel concept de vos supports en temps réel. C'est comme avoir un partenaire d'étude qui a lu tout ce que vous avez."
+            "question": "Y a-t-il un niveau gratuit?",
+            "answer": "Oui. Nous offrons un niveau gratuit avec des fonctionnalités limitées pour vous aider à démarrer. Si vous souhaitez tester les niveaux Plus ou Pro, vous pouvez toujours obtenir un remboursement dans les 14 jours suivant l'achat."
+          },
+          {
+            "question": "Comment mes informations de paiement sont-elles traitées?",
+            "answer": "Vos informations de carte de crédit sont traitées entièrement par Stripe, une plateforme de paiement hautement fiable et sécurisée. Nous n'avons jamais accès aux détails de votre carte."
           },
           {
             "question": "Quels formats de fichier supportez-vous?",
-            "answer": "Nous supportons PDF, DOCX, TXT et plus. Vous pouvez télécharger des notes de cours, des manuels, des guides d'étude, des articles - pratiquement n'importe quel matériel d'étude basé sur du texte. Notre IA analyse le contenu et génère des questions pertinentes."
+            "answer": "Nous supportons PDF, DOCX, PPTX, Markdown, TXT et plus. Vous pouvez télécharger des notes de cours, des manuels, des guides d'étude, des articles - pratiquement n'importe quel matériel d'étude basé sur du texte."
           },
           {
             "question": "Comment fonctionne le tuteur IA?",
             "answer": "Après chaque question de quiz, vous pouvez commencer une conversation avec notre tuteur IA. Il a le contexte complet de vos supports d'étude et peut expliquer des concepts, fournir des exemples, clarifier des sujets confus et répondre à des questions de suivi - tout basé sur VOS supports spécifiques."
           },
           {
-            "question": "Puis-je utiliser QuizBee sur mon téléphone?",
-            "answer": "Oui! QuizBee fonctionne sur n'importe quel appareil avec un navigateur web - ordinateur de bureau, tablette ou téléphone mobile. Étudiez n'importe où, n'importe quand. Votre progression se synchronise automatiquement sur tous les appareils."
-          },
-          {
-            "question": "Comment fonctionne la difficulté adaptative?",
-            "answer": "Vous pouvez ajuster la difficulté au cours du quiz si les questions sont trop faciles ou trop difficiles. De plus, QuizBee apprend de vos erreurs au fil du temps, en se concentrant sur les sujets avec lesquels vous avez du mal. C'est un apprentissage personnalisé qui grandit avec vous."
-          },
-          {
             "question": "Mes données sont-elles sûres et privées?",
-            "answer": "Absolument. Vos supports d'étude et votre historique de quiz sont chiffrés et privés. Nous ne partageons jamais vos données avec des tiers. Vous possédez votre contenu et pouvez le supprimer à tout moment."
+            "answer": "Absolument. Vos supports d'étude et votre historique de quiz sont chiffrés avec AES-256 et stockés en toute sécurité. En tant qu'entreprise basée en Europe, nous respectons strictement la RGPD. Nous ne partageons jamais vos données pour des utilisations non autorisées - vous les posséder et pouvez les supprimer à tout moment."
           },
           {
             "question": "Puis-je annuler mon abonnement à tout moment?",
             "answer": "Oui! Pas de contrats à long terme ou d'engagements. Annulez en un clic depuis les paramètres de votre compte. Vous conservez l'accès jusqu'à la fin de votre période de facturation et nous offrons une garantie de remboursement de 14 jours."
-          },
-          {
-            "question": "Offrez-vous des réductions pour les étudiants?",
-            "answer": "Oui! Les étudiants avec une adresse e-mail .edu valide obtiennent 20% de réduction sur les plans Pro. Inscrivez-vous simplement avec votre e-mail étudiant pour obtenir automatiquement la réduction."
           }
         ]
       }
@@ -199,10 +190,10 @@
       "type": "CTA",
       "props": {
         "headline": "Prêt à Transformer Votre Apprentissage?",
-        "subheadline": "Rejoignez 50 000+ étudiants qui étudient plus intelligemment avec des quiz alimentés par l'IA. Téléchargez votre premier support et créez un quiz en secondes. Aucune carte de crédit requise.",
+        "subheadline": "Rejoignez des centaines d'étudiants qui étudient plus intelligemment avec des quiz alimentés par l'IA. Téléchargez votre premier support et créez un quiz en secondes. Aucune carte de crédit requise.",
         "buttonText": "Commencer Gratuitement - Aucune Carte de Crédit Requise",
         "buttonHref": "{{APP_URL}}",
-        "theme": "gradient"
+        "theme": ""
       }
     }
   ]

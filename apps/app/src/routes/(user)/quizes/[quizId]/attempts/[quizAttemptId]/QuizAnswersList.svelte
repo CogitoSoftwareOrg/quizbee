@@ -43,9 +43,8 @@
 	const readyItems = $derived(
 		quizItems.filter((item) => ['final', 'generated', 'generating'].includes(item.status))
 	);
-	const answeredItemIds = $derived(quizDecisions.map((decision) => decision.itemId));
 	const readyItemsWithoutAnswers = $derived(
-		readyItems.filter((item) => !answeredItemIds.includes(item.id))
+		readyItems.filter((item) => !quizDecisions.at(item.order))
 	);
 
 	function optionLabel(idx: number): string {
@@ -67,17 +66,17 @@
 	}
 
 	// Track stable keys to avoid unnecessary recalculations
-	let lastItemId = $state<string | null>(null);
+	let lastItemOrder = $state<number | null>(null);
 	let lastDecisionKey = $state<string | null>(null);
 
 	// Auto-expand answers when decision is made
-	// Only react to item.id and itemDecision changes, not to object reference changes
+	// Only react to item.order and itemDecision changes, not to object reference changes
 	$effect(() => {
-		const currentItemId = item?.id ?? null;
+		const currentItemOrder = item?.order ?? null;
 
-		// Reset when navigating to a new item (only by ID, not object reference)
-		if (currentItemId !== lastItemId) {
-			lastItemId = currentItemId;
+		// Reset when navigating to a new item (only by order, not object reference)
+		if (currentItemOrder !== lastItemOrder) {
+			lastItemOrder = currentItemOrder;
 			lastDecisionKey = null;
 			expandedAnswers = {};
 		}
@@ -86,7 +85,7 @@
 		if (!itemDecision) return;
 
 		// Create stable key from decision data
-		const decisionKey = `${itemDecision.itemId}:${itemDecision.answerIndex}:${itemDecision.correct}`;
+		const decisionKey = `${itemDecision.answerIndex}:${itemDecision.correct}`;
 
 		// Skip if already processed this exact decision
 		if (decisionKey === lastDecisionKey) return;
@@ -148,12 +147,14 @@
 								const toAnswer = readyItemsWithoutAnswers.length;
 								if (!itemDecision) {
 									itemDecision = {
-										itemId: item!.id,
 										answerIndex: index,
 										correct: answer.correct
 									};
 
-									const newDecisions = [...quizDecisions, itemDecision];
+									// Create new decisions array and place decision at the correct position (item.order)
+									const newDecisions = [...quizDecisions];
+									newDecisions[item.order] = itemDecision;
+
 									item.status = QuizItemsStatusOptions.final;
 									await Promise.all([
 										pb!.collection('quizAttempts').update(quizAttempt!.id, {
@@ -172,7 +173,10 @@
 										console.log('Quiz settings updated:', result);
 									}
 
-									if (item.order + 1 === quizItems.length && !quizAttempt.feedback) {
+									if (
+										item.order + 1 === quizItems.length &&
+										!(quizAttempt?.feedback as any)?.overview
+									) {
 										await finalizeAttempt();
 									}
 

@@ -1,0 +1,33 @@
+{
+  "topic": "Why AI Detectors Are Unreliable—and How Assessment Is Changing",
+  "target_audience": "assessment leads, academic integrity officers, faculty",
+  "tone": "professional",
+  "length": "long",
+  "category": "edtechTrends",
+  "languages": ["en", "es", "fr", "de", "pt"],
+  "keywords": [
+    "AI detection",
+    "assessment design",
+    "academic integrity",
+    "false positives",
+    "policy"
+  ],
+  "refs": [
+    {
+      "url": "https://nationalcentreforai.jiscinvolve.org/wp/2025/06/24/ai-detection-assessment-2025/",
+      "ref_string": "Jisc (2025) AI detection update",
+      "content": "Documents high false-positive burden even at 1%; recommends policy and assessment shifts rather than reliance on detectors."
+    },
+    {
+      "url": "https://citl.news.niu.edu/2024/12/12/ai-detectors-an-ethical-minefield/",
+      "ref_string": "NIU CITL (2024) Ethical minefield",
+      "content": "Summarizes harms from false accusations, equity concerns, and bias against certain student groups."
+    },
+    {
+      "url": "https://www.axios.com/2024/09/03/teachers-still-cant-trust-ai-text-checkers",
+      "ref_string": "Axios (2024) Teachers still can’t trust detectors",
+      "content": "Benchmarks show exaggerated accuracy claims; educators reconsider policies over detection tools."
+    }
+  ],
+  "special_instructions": "Offer an assessment redesign menu: authentic tasks, oral defenses, process evidence, in-class creation; include sample rubrics and communication templates."
+}

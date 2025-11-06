@@ -4,7 +4,10 @@
 	import { Check, Sparkles } from 'lucide-svelte';
 
 	import { Button } from '@quizbee/ui-svelte-daisy';
+
 	import { computeApiUrl } from '$lib/api/compute-url';
+
+	import { uiStore } from '../users/ui.svelte';
 
 	interface StripePrice {
 		lookup: string;
@@ -127,6 +130,7 @@
 			});
 
 			window.location.href = data.url;
+			uiStore.setPaywallOpen(false);
 		} finally {
 			loading = false;
 		}
@@ -209,7 +213,9 @@
 				<div class="border-base-200 mb-3 border-b pb-3 sm:mb-4 sm:pb-4">
 					{#if pricing.monthly > 0}
 						<div class="mb-0.5 flex items-baseline gap-1 sm:mb-1">
-							<span class="text-3xl font-bold sm:text-4xl">€{pricing.monthly.toFixed(2)}</span>
+							<span class="text-3xl font-bold sm:text-4xl">
+								€{Number(pricing.monthly).toFixed(2)}
+							</span>
 							<span class="text-base-content/60 text-base sm:text-lg">/mo</span>
 						</div>
 						{#if pricing.yearly !== null}

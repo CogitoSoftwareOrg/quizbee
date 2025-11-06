@@ -31,14 +31,21 @@ class PBMessageRepository(MessageRepository):
 
         return [self._to_message(rec) for rec in recs]
 
-    async def save(self, messages: list[Message]) -> None:
+    async def create(self, messages: list[Message]) -> None:
         for message in messages:
             try:
-                await self.pb.collection("messages").create(self._to_record(message))
+                dto = self._to_record(message)
+                await self.pb.collection("messages").create(dto)
             except Exception as e:
-                await self.pb.collection("messages").update(
-                    message.id, self._to_record(message)
-                )
+                raise
+
+    async def update(self, messages: list[Message]) -> None:
+        for message in messages:
+            try:
+                dto = self._to_record(message)
+                await self.pb.collection("messages").update(message.id, dto)
+            except Exception as e:
+                raise
 
     def _to_record(self, message: Message) -> dict[str, Any]:
         return {

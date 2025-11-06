@@ -1,0 +1,39 @@
+{
+  "topic": "Quiz Security & Academic Integrity: Design for Trust, Not Just Lockdown",
+  "target_audience": "program leads, instructors, and platform admins",
+  "tone": "professional",
+  "length": "medium",
+  "category": "quizMaking",
+  "languages": [
+    "en",
+    "es",
+    "fr",
+    "de",
+    "pt"
+  ],
+  "keywords": [
+    "academic integrity",
+    "quiz security",
+    "open‑book assessment",
+    "item banks",
+    "randomization"
+  ],
+  "refs": [
+    {
+      "url": "https://nationalcentreforai.jiscinvolve.org/wp/files/2024/08/Embracing-Generative-AI-in-Assessments-Flowchart.pdf",
+      "ref_string": "Jisc (2024) Assessment with GenAI",
+      "content": "Shift from detection to design; incorporate process evidence, authentic tasks, and clear AI‑use policies."
+    },
+    {
+      "url": "https://www.teqsa.gov.au/latest-news/articles/generative-ai-and-assessment-integrity",
+      "ref_string": "TEQSA (2024–2025)",
+      "content": "Regulatory guidance: diversify assessment modes, randomize items/parameters, assess higher‑order outcomes."
+    },
+    {
+      "url": "https://crlt.umich.edu/academic-integrity-students-and-assessment",
+      "ref_string": "CRLT Michigan (guide)",
+      "content": "Practical strategies: large item banks, randomized variants, time windows, collaboration policies, and reflection prompts."
+    }
+  ],
+  "special_instructions": "Provide security patterns (randomization, parameterization, large banks, IP/time windows) and open‑book designs with solution rationales."
+}

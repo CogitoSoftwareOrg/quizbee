@@ -8,6 +8,8 @@
 	import favicon from '$lib/assets/icons/bee_v3.svg';
 	import ThemeLoad from '$lib/features/ThemeLoad.svelte';
 
+	import UpdateApp from './UpdateApp.svelte';
+
 	let { children } = $props();
 
 	//@ts-ignore
@@ -37,9 +39,6 @@
 </script>
 
 <svelte:head>
-
-
-
 	{@html webManifestLink}
 	<link rel="icon" href={favicon} />
 	<link
@@ -50,8 +49,10 @@
 	/>
 </svelte:head>
 
+<ThemeLoad />
+
 <PortalHost />
 
-<ThemeLoad />
+<UpdateApp />
 
 {@render children?.()}

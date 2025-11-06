@@ -16,10 +16,9 @@
 	import { uiStore } from '$lib/apps/users/ui.svelte';
 
 	type Feedback = {
-		quiz_title: string;
-		overview: string;
-		problem_topics: string[];
-		uncovered_topics: string[];
+		overview?: string;
+		problemTopics?: string[];
+		uncoveredTopics?: string[];
 	};
 
 	const { data } = $props();
@@ -44,8 +43,8 @@
 
 	const feedback = $derived(quizAttempt?.feedback as Feedback | undefined);
 
-	function findDecision(itemId: string): Decision | undefined {
-		return quizDecisions.find((d) => d.itemId === itemId);
+	function findDecision(item: QuizItemsResponse): Decision | undefined {
+		return quizDecisions.at(item.order);
 	}
 
 	let searchQuery = $state('');
@@ -128,12 +127,12 @@
 				></div>
 			</button>
 		</section>
-	{:else if !feedback}
+	{:else if !feedback?.overview}
 		<section class="flex flex-1 flex-col items-center justify-center gap-4">
 			<p class="loading loading-spinner loading-xl"></p>
 			<p class="text-center font-semibold">We are giving your feedback...</p>
 		</section>
-	{:else if feedback}
+	{:else if feedback?.overview}
 		<section class="flex w-full flex-1 flex-col gap-6 px-3 sm:overflow-y-auto">
 			<div>
 				<Button color="neutral" style="ghost" href={`/home`} class="underline">
@@ -143,7 +142,6 @@
 				<p class="mt-1 text-center text-sm opacity-70">
 					Score: {correctCount} / {quizItems.length}
 				</p>
-				
 			</div>
 
 			<div>
@@ -154,22 +152,22 @@
 					</p>
 				</div>
 
-				{#if feedback.problem_topics.length > 0}
+				{#if feedback?.problemTopics?.length}
 					<div class="mt-3">
 						<p class="opacity-70">Problem topics:</p>
 						<div class="flex flex-wrap gap-1">
-							{#each feedback.problem_topics as topic}
+							{#each feedback.problemTopics as topic}
 								<span class="badge badge-soft badge-error">{topic}</span>
 							{/each}
 						</div>
 					</div>
 				{/if}
 
-				{#if feedback.uncovered_topics.length > 0}
+				{#if feedback?.uncoveredTopics?.length}
 					<div class="mt-3">
 						<p class="opacity-70">Uncovered topics:</p>
 						<div class="flex flex-wrap gap-1">
-							{#each feedback.uncovered_topics as topic}
+							{#each feedback.uncoveredTopics as topic}
 								<span class="badge badge-soft badge-info">{topic}</span>
 							{/each}
 						</div>
@@ -181,21 +179,30 @@
 
 	<section class="flex flex-1 flex-col gap-3 sm:min-h-0">
 		<div class="flex items-center justify-between gap-4">
-			
 			{#if quiz}
-				<h1 class="text-center text-2xl font-bold leading-tight flex-1">{quiz?.title || 'Quiz'}</h1>
+				<h1 class="flex-1 text-center text-2xl font-bold leading-tight">{quiz?.title || 'Quiz'}</h1>
 			{:else}
-				<h1 class="text-center text-2xl font-bold leading-tight flex-1">Loading...</h1>
+				<h1 class="flex-1 text-center text-2xl font-bold leading-tight">Loading...</h1>
 			{/if}
 			<Button
 				color="neutral"
 				style="ghost"
 				href={`/quizes/${quiz?.id}`}
-				class="hidden sm:flex h-10 w-10 p-0"
+				class="hidden h-10 w-10 p-0 sm:flex"
 			>
-				<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-					<path d="M18 6 6 18"/>
-					<path d="m6 6 12 12"/>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="20"
+					height="20"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				>
+					<path d="M18 6 6 18" />
+					<path d="m6 6 12 12" />
 				</svg>
 			</Button>
 		</div>
@@ -219,7 +226,7 @@
 		{:else if quiz && quizAttempt}
 			<ul class="flex flex-1 flex-col gap-2 pr-1 sm:min-h-0 sm:overflow-y-auto">
 				{#each filteredItems as item, index}
-					{@const d = findDecision(item.id)}
+					{@const d = findDecision(item)}
 					<li>
 						<a
 							class="hover:bg-base-200 border-base-300 group flex items-center justify-between gap-3 rounded-lg border p-3 no-underline shadow-sm transition hover:no-underline focus:no-underline"

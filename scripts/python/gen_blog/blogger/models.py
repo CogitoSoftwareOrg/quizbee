@@ -1,0 +1,125 @@
+"""Data models for blog generation."""
+
+from datetime import datetime
+from enum import StrEnum
+from typing import Literal
+from pydantic import BaseModel, Field
+
+
+class Reference(BaseModel):
+    """Reference material for blog post generation."""
+
+    url: str = Field(description="URL of the reference material")
+    ref_string: str = Field(
+        description="Short reference identifier (e.g., 'Study 2023', 'OpenAI Docs')"
+    )
+    content: str = Field(
+        description="Key content/quotes from the reference to use in the post"
+    )
+
+
+class BlogCategory(StrEnum):
+    """Blog categories matching PocketBase schema."""
+
+    PRODUCT = "product"
+    EDUCATION = "education"
+    EDTECH_TRENDS = "edtechTrends"
+    QUIZ_MAKING = "quizMaking"
+    USE_CASES = "useCases"
+    GENERAL = "general"
+
+
+class BlogMetadata(BaseModel):
+    """Blog post metadata (for blogI18n.data field)."""
+
+    title: str = Field(description="Blog post title (max 80 chars)")
+    description: str = Field(
+        description="Blog post description/excerpt (max 160 chars)"
+    )
+    image: str | None = Field(default=None, description="Optional OG image URL or path")
+    ogTitle: str | None = Field(
+        default=None, description="Optional OG title override (max 60 chars)"
+    )
+    ogDescription: str | None = Field(
+        default=None, description="Optional OG description override (max 160 chars)"
+    )
+
+
+class BlogI18nData(BaseModel):
+    """Blog post content in specific language."""
+
+    locale: Literal["en", "es", "fr", "de", "pt", "ru"] = Field(
+        description="Language code (en, es, fr, de, pt, ru)",
+    )
+    content: str = Field(
+        description="Full HTML content of the blog post. Must include semantic HTML with h2/h3 headings for TOC."
+    )
+    status: Literal["draft", "published"] = Field(
+        default="draft", description="Publication status"
+    )
+    data: BlogMetadata = Field(description="Metadata for SEO and OG tags")
+
+
+class BlogPostData(BaseModel):
+    """Main blog post data (for 'blog' collection)."""
+
+    slug: str = Field(
+        description="URL-friendly slug (lowercase, hyphens, no special chars)"
+    )
+    category: BlogCategory = Field(description="Blog category")
+    published: bool = Field(default=False, description="Whether post is published")
+    tags: list[str] = Field(
+        default_factory=list,
+        description="List of tags for the post (lowercase, max 5 tags)",
+    )
+    authors: list[str] = Field(
+        default_factory=lambda: ["QuizBee Team"],
+        description="List of author names",
+    )
+    cover: str | None = Field(
+        default=None,
+        description="Cover image filename (will be uploaded to PocketBase)",
+    )
+
+
+class BlogGenerationOutput(BaseModel):
+    """Complete output from AI agent - contains both blog and i18n data."""
+
+    blog: BlogPostData = Field(description="Main blog post data")
+    i18n_entries: list[BlogI18nData] = Field(
+        description="List of translations (at least one language required)",
+        min_length=1,
+    )
+
+
+class RawBlogInput(BaseModel):
+    """Input specification for blog generation."""
+
+    topic: str = Field(description="Main topic of the blog post")
+    target_audience: str = Field(
+        description="Who is this post for? (e.g., students, teachers, parents)"
+    )
+    tone: Literal["professional", "casual", "educational", "friendly"] = Field(
+        default="professional"
+    )
+    length: Literal["short", "medium", "long"] = Field(
+        default="medium",
+        description="short: ~500 words, medium: ~1000 words, long: ~1500+ words",
+    )
+    category: BlogCategory = Field(
+        description="Category for the post",
+    )
+    languages: list[Literal["en", "es", "fr", "de", "pt", "ru"]] = Field(
+        default=["en"],
+        description="Languages to generate content in",
+    )
+    keywords: list[str] = Field(
+        default_factory=list, description="SEO keywords to include naturally"
+    )
+    refs: list[Reference] = Field(
+        default_factory=list,
+        description="Reference materials to use and cite in the post",
+    )
+    special_instructions: str | None = Field(
+        default=None, description="Any specific requirements or focus areas"
+    )

@@ -101,10 +101,16 @@ async def create_stripe_checkout(
         )
         return JSONResponse(content={"url": portal.url})
 
+    logger.info(f"Looking up price: {dto.price}")
+    logger.info(f"Available prices: {list(PRICES_MAP.keys())}")
     price = PRICES_MAP.get(dto.price)
     if not price:
+        logger.error(
+            f"Price not found: {dto.price}. Available: {list(PRICES_MAP.keys())}"
+        )
         raise HTTPException(status_code=400, detail="Invalid price label")
 
+    logger.info(f"Found price: {price.id} for lookup {dto.price}")
     kwargs = dict(
         mode="subscription",
         line_items=[{"price": price.id, "quantity": 1}],

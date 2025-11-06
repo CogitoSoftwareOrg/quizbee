@@ -78,13 +78,17 @@ class AIQuizFinalizer(QuizFinalizer):
         self,
         lf: Langfuse,
         quiz_repository: QuizRepository,
-        ai: Agent[QuizFinalizerDeps, Any],
+        output_type: Any,
     ):
         self._lf = lf
         self._quiz_repository = quiz_repository
 
-        self._ai = ai
-        self._ai.history_processors += [self._inject_request_prompt]  # type: ignore
+        self._ai = Agent(
+            history_processors=[self._inject_request_prompt],
+            output_type=output_type,
+            deps_type=QuizFinalizerDeps,
+            model=QUIZ_FINALIZER_LLM,
+        )
 
     async def finalize(self, quiz: Quiz, cache_key: str) -> None:
         logging.info(f"Finalizing quiz {quiz.id}")
@@ -115,7 +119,7 @@ class AIQuizFinalizer(QuizFinalizer):
 
             payload: QuizFinalizerOutput = res.output.data
             payload._merge(quiz)
-            await self._quiz_repository.save(quiz)
+            await self._quiz_repository.update(quiz)
 
     async def _inject_request_prompt(
         self, ctx: RunContext[QuizFinalizerDeps], messages: list[ModelMessage]

@@ -1,0 +1,29 @@
+{
+  "topic": "Active Learning That Works: ICAP and the Evidence from STEM Classrooms",
+  "target_audience": "university instructors and HS teachers; curriculum leads",
+  "tone": "educational",
+  "length": "long",
+  "category": "education",
+  "languages": ["en", "es", "fr", "de", "pt"],
+  "keywords": [
+    "active learning",
+    "ICAP",
+    "interactive learning",
+    "constructive learning",
+    "STEM education",
+    "failure rates"
+  ],
+  "refs": [
+    {
+      "url": "https://dunkin.eeb.ucsc.edu/images/documents/The_ICAP_Framework_Linking_Cognitive_Engagement_to_Active_Learning_Outcomes.pdf",
+      "ref_string": "Chi & Wylie (2014) ICAP",
+      "content": "Engagement hierarchy (Passive < Active < Constructive < Interactive) predicts learning outcomes; concrete behaviors for each level."
+    },
+    {
+      "url": "https://www.pnas.org/doi/10.1073/pnas.1319030111",
+      "ref_string": "Freeman et al. (2014) Meta-analysis",
+      "content": "Across 225+ studies, active learning raises exam performance and reduces failure rates vs. traditional lecturing."
+    }
+  ],
+  "special_instructions": "Map common activities to ICAP levels; provide 10 ready-to-teach active tasks with assessment rubrics."
+}

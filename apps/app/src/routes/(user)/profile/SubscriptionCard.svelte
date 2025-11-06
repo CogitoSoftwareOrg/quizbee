@@ -23,7 +23,7 @@
 			{#if paid}
 				<div class="badge badge-success badge-sm gap-1">
 					<Crown class="h-3 w-3" />
-					Premium
+					{subscription?.tariff.charAt(0).toUpperCase() + subscription?.tariff.slice(1)}
 				</div>
 			{:else}
 				<div class="badge badge-ghost badge-sm">Free</div>
@@ -63,7 +63,7 @@
 			{#if paid}
 				<Button
 					onclick={async () => {
-						const response = await postApi('portal', {
+						const response = await postApi('stripe/portal', {
 							return_url: 'profile'
 						});
 						window.location.href = response.url;

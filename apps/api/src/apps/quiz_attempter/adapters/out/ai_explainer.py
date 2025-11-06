@@ -52,11 +52,18 @@ class ExplainerOutput(BaseModel):
     explanation: str
 
 
+logger = logging.getLogger(__name__)
+
+
 class AIExplainer(Explainer):
-    def __init__(self, lf: Langfuse, ai: Agent[ExplainerDeps, Any]):
+    def __init__(self, lf: Langfuse, output_type: Any):
         self._lf = lf
-        self._ai = ai
-        self._ai.history_processors += [self._inject_system_prompt]  # type: ignore
+        self._ai = Agent(
+            history_processors=[self._inject_system_prompt],
+            output_type=output_type,
+            deps_type=ExplainerDeps,
+            model=EXPLAINER_LLM,
+        )
 
     async def explain(
         self,
@@ -78,6 +85,7 @@ class AIExplainer(Explainer):
                         query,
                         message_history=self._ai_history(attempt.message_history),
                         deps=deps,
+                        model=EXPLAINER_LLM,
                         model_settings={
                             "extra_body": {
                                 "reasoning_effort": "low",
@@ -153,6 +161,9 @@ class AIExplainer(Explainer):
             user_contents.append(f"User query:\n{deps.quiz.query}")
 
         if deps.quiz.material_content:
+            logger.info(
+                f"Attaching quiz materials to prompt: {len(deps.quiz.material_content)}"
+            )
             user_contents.append("Quiz materials:")
             user_contents.append(deps.quiz.material_content)
 

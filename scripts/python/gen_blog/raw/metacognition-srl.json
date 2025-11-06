@@ -1,0 +1,33 @@
+{
+  "topic": "Metacognition & Self‑Regulated Learning: Studying Smarter by Monitoring Your Mind",
+  "target_audience": "students and educators teaching study skills",
+  "tone": "educational",
+  "length": "long",
+  "category": "education",
+  "languages": ["en", "es", "fr", "de", "pt"],
+  "keywords": [
+    "metacognition",
+    "self-regulated learning",
+    "judgments of learning",
+    "study strategies",
+    "education"
+  ],
+  "refs": [
+    {
+      "url": "https://www.annualreviews.org/doi/pdf/10.1146/annurev-psych-113011-143823",
+      "ref_string": "Bjork, Dunlosky & Kornell (2013)",
+      "content": "Learners often misjudge learning from fluency; recommends strategies like spacing, retrieval, interleaving, errorful learning."
+    },
+    {
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8734377/",
+      "ref_string": "Stanton et al. (2021) CBE–LSE",
+      "content": "Evidence-based teaching guide for fostering metacognition via planning/monitoring/evaluating and social metacognition."
+    },
+    {
+      "url": "https://bjorklab.psych.ucla.edu/wp-content/uploads/sites/13/2016/04/HabitsAndBeliefsMindset.pdf",
+      "ref_string": "Yan et al. (2014)",
+      "content": "Students' habits guided by deadlines rather than optimal strategies; need to teach cue-based scheduling and monitoring."
+    }
+  ],
+  "special_instructions": "Include self-diagnostic checklist; show how to convert passive review into metacognitively rich retrieval-based cycles."
+}

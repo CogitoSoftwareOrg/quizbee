@@ -24,7 +24,15 @@ class SearchCmd:
     limit_tokens: int
 
 
+@dataclass
+class RemoveMaterialCmd:
+    user: Principal
+    material_id: str
+
+
 class MaterialSearchApp(Protocol):
     async def add_material(self, cmd: AddMaterialCmd) -> Material: ...
 
     async def search(self, cmd: SearchCmd) -> list[MaterialChunk]: ...
+
+    async def remove_material(self, cmd: RemoveMaterialCmd) -> None: ...

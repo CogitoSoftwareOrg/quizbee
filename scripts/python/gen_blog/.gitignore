@@ -1,0 +1,16 @@
+# Generated blog posts
+output/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE
+.vscode/
+.idea/
+
+# Temp files
+*.tmp
+*.log
+

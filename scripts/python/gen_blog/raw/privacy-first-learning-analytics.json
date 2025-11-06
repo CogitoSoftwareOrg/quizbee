@@ -1,0 +1,33 @@
+{
+  "topic": "Privacy-First Learning Analytics: Governance Patterns Under GDPR",
+  "target_audience": "CIOs, DPOs, learning analytics teams",
+  "tone": "professional",
+  "length": "long",
+  "category": "edtechTrends",
+  "languages": ["en", "es", "fr", "de", "pt"],
+  "keywords": [
+    "learning analytics",
+    "GDPR",
+    "privacy by design",
+    "data governance",
+    "K-12"
+  ],
+  "refs": [
+    {
+      "url": "https://www.unicef.org/eca/media/35876/file/Data%20protection%20in%20schools%20.pdf",
+      "ref_string": "UNICEF (2024) Data protection in schools",
+      "content": "Updated guidance on risks and approaches to data privacy in digital education systems; actionable steps for schools."
+    },
+    {
+      "url": "https://ceur-ws.org/Vol-3927/paper12.pdf",
+      "ref_string": "Paludi et al. (2025) LA ethics & preparedness",
+      "content": "Proposes practical, school-level guidance for privacy- and safety-responsive learning analytics implementation."
+    },
+    {
+      "url": "https://read.oecd-ilibrary.org/content/dam/oecd/en/publications/reports/2025/03/policies-for-the-digital-transformation-of-school-education_aee58b2f/464dab4d-en.pdf",
+      "ref_string": "OECD (2025) Policies for digital transformation",
+      "content": "Comparative survey of digital education policies in 37 jurisdictions; governance and safeguards for data use in schools."
+    }
+  ],
+  "special_instructions": "Provide DPIA outline, data minimization patterns, retention schedules, consent vs. public task, and student-rights request workflows."
+}

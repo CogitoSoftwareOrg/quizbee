@@ -14,6 +14,7 @@ from src.lib.utils import cache_key, sse
 from src.apps.material_search.app.contracts import MaterialFile
 
 from ....app.contracts import (
+    PublicRemoveMaterialCmd,
     PublicStartQuizCmd,
     PublicGenerateQuizItemsCmd,
     PublicFinalizeQuizCmd,
@@ -33,7 +34,7 @@ from .deps import (
 from .schemas import StartQuizDto, PatchQuizDto, FinalizeQuizDto
 
 
-edge_api_router = APIRouter(prefix="", tags=["main logic"], dependencies=[])
+edge_api_router = APIRouter(prefix="", tags=["Edge Logic"], dependencies=[])
 
 
 # Quiz Generator
@@ -44,7 +45,6 @@ edge_api_router = APIRouter(prefix="", tags=["main logic"], dependencies=[])
 )
 async def start_quiz(
     dto: StartQuizDto,
-    edge_api_app: EdgeAPIAppDeps,
     quiz_id: str,
     arq_pool: ArqPoolDeps,
     token: UserTokenDeps,
@@ -71,7 +71,6 @@ async def start_quiz(
 async def generate_quiz_items(
     dto: PatchQuizDto,
     quiz_id: str,
-    edge_api_app: EdgeAPIAppDeps,
     arq_pool: ArqPoolDeps,
     token: UserTokenDeps,
 ):
@@ -96,7 +95,6 @@ async def generate_quiz_items(
 async def finalize_quiz(
     dto: FinalizeQuizDto,
     quiz_id: str,
-    edge_api_app: EdgeAPIAppDeps,
     token: UserTokenDeps,
     arq_pool: ArqPoolDeps,
 ):
@@ -120,7 +118,6 @@ async def finalize_quiz(
 )
 async def finalize_attempt(
     attempt_id: str,
-    edge_api_app: EdgeAPIAppDeps,
     quiz_id: str,
     token: UserTokenDeps,
     arq_pool: ArqPoolDeps,
@@ -193,5 +190,26 @@ async def add_material(
     )
     await arq_pool.enqueue_job(
         JobName.add_material, asdict(cmd), _queue_name=ARQ_QUEUE_NAME
+    )
+    return JSONResponse(content={"scheduled": True, "material_id": material_id})
+
+
+@edge_api_router.delete(
+    "/quizes/{quiz_id}/materials/{material_id}", status_code=status.HTTP_202_ACCEPTED
+)
+async def remove_material(
+    quiz_id: str,
+    material_id: str,
+    token: UserTokenDeps,
+    arq_pool: ArqPoolDeps,
+):
+    cmd = PublicRemoveMaterialCmd(
+        quiz_id=quiz_id,
+        material_id=material_id,
+        token=token,
+        cache_key=cache_key(material_id),
+    )
+    await arq_pool.enqueue_job(
+        JobName.remove_material, asdict(cmd), _queue_name=ARQ_QUEUE_NAME
     )
     return JSONResponse(content={"scheduled": True, "material_id": material_id})

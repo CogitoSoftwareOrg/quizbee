@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { env } from '$env/dynamic/public';
+
 	import { Shield, FileText } from 'lucide-svelte';
 	import { PUBLIC_WEB_URL } from '$env/static/public';
 </script>
@@ -9,9 +11,9 @@
 			<span class="text-sm font-semibold">Legal</span>
 		</div>
 
-		<div class="mt-3 -ml-4 flex flex-col gap-1">
+		<div class="-ml-4 mt-3 flex flex-col gap-1">
 			<a
-				href="{PUBLIC_WEB_URL}legal/privacy-policy"
+				href={`${env.PUBLIC_WEB_URL}legal/privacy-policy`}
 				target="_blank"
 				rel="noopener noreferrer"
 				class="btn btn-ghost btn-sm justify-start gap-2"
@@ -20,7 +22,7 @@
 				Privacy Policy
 			</a>
 			<a
-				href="{PUBLIC_WEB_URL}legal/terms-and-conditions"
+				href={`${env.PUBLIC_WEB_URL}legal/terms-and-conditions`}
 				target="_blank"
 				rel="noopener noreferrer"
 				class="btn btn-ghost btn-sm justify-start gap-2"

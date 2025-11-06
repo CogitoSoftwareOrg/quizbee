@@ -1,0 +1,39 @@
+{
+  "topic": "Designing Spaced Repetition Inside a Quiz System: Algorithms and UX",
+  "target_audience": "product designers and teachers building practice schedules",
+  "tone": "professional",
+  "length": "medium",
+  "category": "quizMaking",
+  "languages": [
+    "en",
+    "es",
+    "fr",
+    "de",
+    "pt"
+  ],
+  "keywords": [
+    "spaced repetition",
+    "SRS",
+    "SM‑2",
+    "retention scheduling",
+    "quiz UX"
+  ],
+  "refs": [
+    {
+      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5126970/",
+      "ref_string": "Cepeda et al. (2006) Meta‑analysis",
+      "content": "Spaced practice outperforms massed; optimal gap scales with desired retention interval."
+    },
+    {
+      "url": "https://www.supermemo.com/en/archives1990-2015/english/ol/sm2",
+      "ref_string": "Wozniak (1990) SM‑2 algorithm",
+      "content": "Classic SRS algorithm underpinning many systems; defines ease factor, interval growth, and quality responses."
+    },
+    {
+      "url": "https://www.gwern.net/Spaced-repetition",
+      "ref_string": "Gwern SRS essay (ongoing)",
+      "content": "Engineering/UX considerations: leeches, over‑review, tagging; practical advice for maintaining large decks."
+    }
+  ],
+  "special_instructions": "Compare fixed‑interval vs. SRS; give ergonomics (daily caps, lapses), tagging, and rematerialization of ‘leeches’ into targeted quizzes."
+}

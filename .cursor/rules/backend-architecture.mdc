@@ -1,0 +1,328 @@
+---
+globs: apps/api/src/apps/**/*.py
+alwaysApply: false
+---
+
+# Backend Hexagonal Architecture Rules
+
+## Structure
+
+Each module in `src/apps/` follows strict hexagonal architecture:
+
+```
+module_name/
+├── domain/         # Core domain logic (no external dependencies)
+│   ├── models.py   # Domain entities
+│   ├── ports.py    # Interfaces (Protocol) for adapters
+│   ├── errors.py   # Domain exceptions
+│   ├── constants.py
+│   └── refs.py     # (optional) External references
+├── app/            # Application layer (use cases)
+│   ├── contracts.py # App interface + Command DTOs
+│   └── usecases.py  # Business logic implementation
+│   └── errors.py # Usecases errors
+├── adapters/       # External integrations
+│   ├── in_/        # Inbound (HTTP, events, CLI)
+│   │   ├── http/
+│   │   └── events/
+│   └── out/        # Outbound (DB, APIs, AI)
+│       ├── pb_*_repository.py
+│       ├── ai_*.py
+│       └── meili_*.py
+├── di.py           # Dependency injection setup
+└── tests/          # All test types
+```
+
+## Domain Layer (`domain/`)
+
+### `models.py` - Domain Entities
+
+```python
+from dataclasses import dataclass, field
+from enum import StrEnum
+
+# ALWAYS use dataclass with these params
+@dataclass(slots=True, kw_only=True)
+class EntityName:
+    # Required fields first
+    user_id: str
+    title: str
+
+    # Optional with defaults
+    status: Status = Status.INITIAL
+
+    # Auto-generated ID at the end
+    id: str = field(default_factory=genID)
+
+    # Factory method for creation
+    @classmethod
+    def create(cls, **kwargs) -> "EntityName":
+        return cls(**kwargs)
+
+    # Domain methods modify state
+    def mark_as_completed(self):
+        self.status = Status.COMPLETED
+```
+
+**Rules:**
+
+- Use `@dataclass(slots=True, kw_only=True)` ALWAYS
+- Enums: `StrEnum` for serializable states
+- No external dependencies (no FastAPI, PocketBase, etc.)
+- Domain logic in methods, not in use cases
+
+### `ports.py` - Adapter Interfaces
+
+```python
+from typing import Protocol
+from .models import Entity
+
+# ALWAYS use Protocol for ports
+class EntityRepository(Protocol):
+    async def get(self, id: str) -> Entity | None: ...
+    async def create(self, entity: Entity) -> None: ...
+    async def update(self, entity: Entity) -> None: ...
+
+# DTOs for complex port data
+@dataclass
+class ServiceResult:
+    data: str
+    metadata: dict
+
+class ExternalService(Protocol):
+    async def process(self, input: str) -> ServiceResult: ...
+```
+
+**Rules:**
+
+- Use `Protocol` from typing (NOT ABC)
+- Methods MUST have `...` body (ellipsis)
+- Async by default for I/O operations
+- Return domain models, not DB records
+
+### `errors.py` - Domain Exceptions
+
+```python
+class DomainSpecificError(Exception):
+    def __init__(self, context_value: str):
+        self.message = f"Clear error message with {context_value}"
+        super().__init__(self.message)
+```
+
+**Rules:**
+
+- Inherit from `Exception`
+- Store context in `self.message`
+- Descriptive names: `TooLargeFileError`, not `FileError`
+
+## Application Layer (`app/`)
+
+### `contracts.py` - Commands & App Interface
+
+```python
+from dataclasses import dataclass
+from typing import Protocol
+from ..domain.models import Entity
+
+# Commands - immutable DTOs
+@dataclass
+class DoSomethingCmd:
+    user: Principal  # From user_auth module
+    entity_id: str
+    params: dict
+
+# App interface
+class ModuleApp(Protocol):
+    async def do_something(self, cmd: DoSomethingCmd) -> Entity: ...
+```
+
+**Rules:**
+
+- Commands: dataclasses without defaults (immutable)
+- App interface: Protocol with async methods
+- Method signature: `async def method(self, cmd: XxxCmd) -> Result`
+
+### `usecases.py` - Business Logic
+
+```python
+import logging
+from .contracts import ModuleApp, DoSomethingCmd
+from ..domain.ports import EntityRepository, ExternalService
+from ..domain.models import Entity
+
+logger = logging.getLogger(__name__)
+
+class ModuleAppImpl(ModuleApp):
+    def __init__(
+        self,
+        entity_repository: EntityRepository,
+        external_service: ExternalService,
+    ):
+        self.entity_repository = entity_repository
+        self.external_service = external_service
+
+    async def do_something(self, cmd: DoSomethingCmd) -> Entity:
+        logger.info(f"ModuleAppImpl.do_something: {cmd.entity_id}")
+
+        # 1. Load from repository
+        entity = await self.entity_repository.get(cmd.entity_id)
+        if entity is None:
+            raise ValueError("Entity not found")
+
+        # 2. Business logic via domain methods
+        entity.mark_as_completed()
+
+        # 3. External services via ports
+        result = await self.external_service.process(entity.title)
+
+        # 4. Persist changes
+        await self.entity_repository.update(entity)
+
+        return entity
+```
+
+**Rules:**
+
+- Constructor: inject ALL ports (dependency inversion)
+- Store ports as `self.port_name`
+- Logging: `logger.info(f"ClassName.method_name: key_context")`
+- NO business logic in constructor
+- Return domain models, not ports/adapters
+
+## Adapters Layer (`adapters/`)
+
+### Inbound - `in_/http/` (FastAPI routers)
+
+```python
+from fastapi import APIRouter, Depends
+from .deps import get_app, get_token
+from .schemas import RequestDto
+from ....app.contracts import DoSomethingCmd
+
+router = APIRouter(prefix="/entities", tags=["entities"])
+
+@router.post("/{entity_id}")
+async def do_something(
+    entity_id: str,
+    dto: RequestDto,
+    token: str = Depends(get_token),
+    app: ModuleApp = Depends(get_app),
+):
+    cmd = DoSomethingCmd(
+        user=token,
+        entity_id=entity_id,
+        params=dto.params,
+    )
+    result = await app.do_something(cmd)
+    return {"id": result.id}
+```
+
+**Rules:**
+
+- DTOs in `schemas.py` (Pydantic models)
+- Dependencies in `deps.py`
+- Convert HTTP → Command → App → Response
+- NO business logic in routers
+
+### Outbound - `out/` (Repository implementations)
+
+```python
+from pocketbase import PocketBase
+from ...domain.models import Entity
+from ...domain.ports import EntityRepository
+
+class PBEntityRepository(EntityRepository):
+    def __init__(self, pb: PocketBase):
+        self.pb = pb
+
+    async def get(self, id: str) -> Entity | None:
+        try:
+            rec = await self.pb.collection("entities").get_one(id)
+            return self._to_entity(rec)
+        except Exception:
+            return None
+
+    async def create(self, entity: Entity):
+        dto = self._to_record(entity)
+        await self.pb.collection("entities").create(dto)
+
+    def _to_entity(self, rec) -> Entity:
+        """Map DB record → domain model"""
+        return Entity(...)
+
+    def _to_record(self, entity: Entity) -> dict:
+        """Map domain model → DB record"""
+        return {...}
+```
+
+**Rules:**
+
+- Implement port Protocol interface
+- Constructor: inject external clients (PocketBase, Redis, etc.)
+- Private mappers: `_to_entity()`, `_to_record()`
+- Handle exceptions, return domain types
+
+## Dependency Injection (`di.py`)
+
+```python
+from .domain.ports import EntityRepository, ExternalService
+from .app.usecases import ModuleAppImpl
+
+def init_module_app(
+    entity_repository: EntityRepository,
+    external_service: ExternalService,
+) -> ModuleAppImpl:
+    return ModuleAppImpl(
+        entity_repository=entity_repository,
+        external_service=external_service,
+    )
+```
+
+**Rules:**
+
+- Factory function: `init_module_app()`
+- Accept ports as parameters
+- Return concrete implementation
+- Called from bootstrap DI container
+
+## Cross-Module Dependencies
+
+**ALLOWED:**
+
+- `app/contracts.py` → import other module's `app/contracts` (e.g., `Principal` from `user_auth`)
+- Use cases → inject other module's app interface via ports
+
+**FORBIDDEN:**
+
+- Direct imports of `usecases.py` from other modules
+- Circular dependencies between modules
+- Adapter → adapter communication (go through app layer)
+
+## Testing Structure
+
+```python
+# tests/test_domain_models.py - Pure domain logic
+# tests/test_port_contracts.py - Port interface contracts
+# tests/test_usecases.py - Use cases with mocked ports
+# tests/test_adapter_unit.py - Adapter logic with mocks
+# tests/test_integration_real.py - Real external services
+# tests/test_e2e_http.py - Full HTTP flow
+```
+
+## Key Principles
+
+1. **Dependency Rule**: Domain ← App ← Adapters (arrows point inward)
+2. **Ports not implementations**: Use cases depend on Protocol, not concrete classes
+3. **No framework in domain**: FastAPI, PocketBase only in adapters
+4. **Commands are immutable**: Dataclasses without mutation
+5. **Domain methods for logic**: `entity.do_action()` not `use_case._do_action(entity)`
+
+## Anti-Patterns to AVOID
+
+❌ Business logic in HTTP handlers
+❌ Direct DB access in use cases (use ports)
+❌ Import `usecases.py` outside `di.py`
+❌ Mutable commands with default values
+❌ Domain models with `async` methods
+❌ Exceptions in constructors
+❌ Port implementations in `domain/`

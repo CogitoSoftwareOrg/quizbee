@@ -39,9 +39,7 @@
 		return order;
 	});
 	const currentItem = $derived(quizItems.find((qi) => qi.order === order));
-	const itemToAnswer = $derived(
-		quizItems.find((qi) => !quizDecisions.some((d) => d.itemId === qi.id))
-	);
+	const itemToAnswer = $derived(quizItems.find((qi) => !quizDecisions.at(qi.order)));
 
 	function getTitle() {
 		const t = page.url.pathname.split('/').at(1);
@@ -82,7 +80,7 @@
 			<!-- Mobile dots navigation -->
 			<ul class="flex flex-1 flex-wrap items-center gap-1.5 sm:hidden">
 				{#each quizItems as quizItem}
-					{@const decision = quizDecisions.find((d) => d.itemId === quizItem.id)}
+					{@const decision = quizDecisions.at(quizItem.order)}
 					{@const isDisabled = !decision && quizItem.order > (itemToAnswer?.order || 0)}
 					{@const isCurrent = currentItem?.id === quizItem.id}
 

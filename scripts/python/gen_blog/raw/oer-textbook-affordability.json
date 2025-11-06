@@ -1,0 +1,33 @@
+{
+  "topic": "OER Momentum 2025: Affordability, Policy, and the AI Era",
+  "target_audience": "academic librarians, provosts, OER champions",
+  "tone": "professional",
+  "length": "medium",
+  "category": "edtechTrends",
+  "languages": ["en", "es", "fr", "de", "pt"],
+  "keywords": [
+    "OER",
+    "open textbooks",
+    "affordability",
+    "UNESCO OER Recommendation",
+    "OpenStax"
+  ],
+  "refs": [
+    {
+      "url": "https://www.unesco.org/en/open-educational-resources",
+      "ref_string": "UNESCO (2019→) OER Recommendation",
+      "content": "International normative instrument; Dubai Declaration (2024) adds guidance for AI-era OER creation and dissemination."
+    },
+    {
+      "url": "https://news.rice.edu/news/2025/openstax-surpasses-3b-student-savings-grows-beyond-textbooks",
+      "ref_string": "OpenStax (2025) $3B savings milestone",
+      "content": "Cumulative student savings since 2012 surpassed $3B; indicates demand for adaptable, high-quality open materials."
+    },
+    {
+      "url": "https://icde.org/publication/dubai-declaration-on-open-educational-resources-oer/",
+      "ref_string": "ICDE (2025) Dubai Declaration on OER",
+      "content": "Adopted Nov 2024; calls to integrate AI and open solutions to scale access; complements the 2019 Recommendation."
+    }
+  ],
+  "special_instructions": "Provide institutional playbook (funding, incentives, QA), metrics (DFW rates, savings), and AI-aligned OER workflows."
+}

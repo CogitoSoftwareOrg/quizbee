@@ -1,0 +1,34 @@
+{
+  "topic": "Retrieval Practice: The Most Reliable Way to Boost Long‑Term Learning",
+  "target_audience": "high school and university students, teachers designing evidence-based study routines",
+  "tone": "educational",
+  "length": "long",
+  "category": "education",
+  "languages": ["en", "es", "fr", "de", "pt"],
+  "keywords": [
+    "retrieval practice",
+    "testing effect",
+    "practice tests",
+    "long-term retention",
+    "learning science",
+    "education"
+  ],
+  "refs": [
+    {
+      "url": "https://link.springer.com/article/10.3758/s13423-014-0564-3",
+      "ref_string": "Rowland (2014) Meta-analysis",
+      "content": "Meta-analysis shows robust 'testing effect': practice tests improve final retention vs. restudy; benefits persist over delays and across formats."
+    },
+    {
+      "url": "https://www.sciencedirect.com/science/article/pii/S0022537118300372",
+      "ref_string": "Adesope et al. (2017) Meta-analysis",
+      "content": "Retrieval practice yields medium-to-large benefits across educational contexts; effects stronger with delayed tests and feedback."
+    },
+    {
+      "url": "https://pdf.retrievalpractice.org/spacing/InterleavedRetrievalPracticePromotesScienceLearning_SanaYan_2022.pdf",
+      "ref_string": "Sana & Yan (2022) HS science study",
+      "content": "Interleaving retrieval practice in high school science increased conceptual learning; both interleaving and retrieval practice are robust classroom strategies."
+    }
+  ],
+  "special_instructions": "Explain mechanisms (effortful retrieval, reconsolidation, feedback). Provide classroom and self-study checklists; include schedules (daily, weekly, exam-term). Cite all refs inline."
+}

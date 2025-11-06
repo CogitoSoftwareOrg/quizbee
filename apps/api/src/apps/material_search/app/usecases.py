@@ -20,7 +20,7 @@ from ..domain.ports import (
 from ..domain.errors import TooLargeFileError
 from ..domain.constants import MAX_SIZE_MB, COMPLEX_EXTENSIONS
 
-from .contracts import MaterialSearchApp, AddMaterialCmd, SearchCmd
+from .contracts import MaterialSearchApp, AddMaterialCmd, RemoveMaterialCmd, SearchCmd
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ class MaterialSearchAppImpl(MaterialSearchApp):
                 ),
             )
             material.to_big()
-            await self.material_repository.save(material)
+            await self.material_repository.create(material)
             raise TooLargeFileError(file_size_mb)
 
         # material = await self._deduplicate_material(cmd)
@@ -123,60 +123,15 @@ class MaterialSearchAppImpl(MaterialSearchApp):
                     
                     for marker, url in marker_to_url.items():
                         text = text.replace(marker, f"\n{{quizbee_unique_image_url:{url}}}\n")
-
-            except ValueError as e:
-                # Неподдерживаемый формат файла
-                logger.warning(f"Unsupported file format: {cmd.file.file_name} - {e}")
-                material.status = MaterialStatus.UPLOADED
-                await self.material_repository.save(material)
-                raise
-
             except Exception as e:
-                # Ошибка при парсинге
-                logger.warning(f"Error parsing document {cmd.file.file_name}: {e}")
-                material.status = MaterialStatus.UPLOADED
-                await self.material_repository.save(material)
-                raise
-
-
-
-        else:                 # Простые текстовые файлы (TXT, MD и т.д.)
+                logger.warning(f"Error parsing PDF: {e}")
+        else:
             try:
-                # Декодируем содержимое файла как текст
                 text = cmd.file.file_bytes.decode("utf-8")
-                
-                # Устанавливаем тип материала
-                material.kind = MaterialKind.SIMPLE
-                
-                # Считаем токены для текста
-                text_tokens = self.llm_tools.count_text(text)
-                material.tokens = text_tokens
-                
-                # Сохраняем текст как файл
-                material.text_file = MaterialFile(
-                    file_name=f"{cmd.material_id}_text.txt",
-                    file_bytes=cmd.file.file_bytes,
-                )
-                
-            
-                
+                material.tokens = self.llm_tools.count_text(text)
             except UnicodeDecodeError as e:
-                # Ошибка декодирования текста
-                logger.warning(f"Error decoding text file {cmd.file.file_name}: {e}")
-                material.status = MaterialStatus.UPLOADED
-                await self.material_repository.save(material)
-                raise
-            
-            except Exception as e:
-                # Общая ошибка при обработке
-                logger.warning(f"Error processing simple material {cmd.file.file_name}: {e}")
-                material.status = MaterialStatus.UPLOADED
-                await self.material_repository.save(material)
-                raise
-            
+                logger.warning(f"Error decoding text: {e}")
 
-        # FOR ALL MATERIALS:
-        await self.material_repository.save(material)
         material.status = MaterialStatus.INDEXING
         await self.material_repository.save(material)
 
@@ -184,7 +139,7 @@ class MaterialSearchAppImpl(MaterialSearchApp):
         await self.indexer.index(material)
         material.status = MaterialStatus.INDEXED
         await self.material_repository.attach_to_quiz(material, cmd.quiz_id)
-        await self.material_repository.save(material)
+        await self.material_repository.update(material)
 
         return material
         
@@ -207,6 +162,19 @@ class MaterialSearchAppImpl(MaterialSearchApp):
         )
 
         return chunks
+
+    async def remove_material(self, cmd: RemoveMaterialCmd) -> None:
+        material = await self.material_repository.get(cmd.material_id)
+        if material is None:
+            raise ValueError("Material not found")
+
+        if material.user_id != cmd.user.id:
+            raise ValueError("User does not have permission to remove material")
+
+        if material.status == MaterialStatus.INDEXED:
+            await self.indexer.delete([cmd.material_id])
+
+        await self.material_repository.delete(cmd.material_id)
 
     async def _deduplicate_material(self, cmd: AddMaterialCmd) -> Material | None:
         material = await self.material_repository.get(cmd.material_id)
