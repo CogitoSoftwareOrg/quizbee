@@ -32,7 +32,7 @@ const title = "Blog";
 const desc = `All articles (${page.currentPage} of ${page.lastPage})`;
 
 // ссылки для пагинации
-const pageHref = (n: number) => tp(`/blog/${n}`);
+const pageHref = (n: number) => (n === 1 ? tp("/blog") : tp(`/blog/${n}`));
 ---
 
 <Root title={title} description={desc} active="blog">
@@ -86,6 +86,13 @@ const pageHref = (n: number) => tp(`/blog/${n}`);
         )
       }
     </header>
+
+    <!-- Разделитель между категориями и постами -->
+    {
+      categories.length > 0 && posts.length > 0 && (
+        <div class="my-12 border-t border-border" />
+      )
+    }
 
     <!-- Грид постов -->
     <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
