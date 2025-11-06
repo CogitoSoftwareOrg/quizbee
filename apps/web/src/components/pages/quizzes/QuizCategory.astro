@@ -1,0 +1,131 @@
+---
+import type { Page } from "astro";
+
+import Root from "@/layouts/Root.astro";
+import { useTranslatedPath } from "@/i18n/utils";
+import { defaultLang, type languages } from "@/i18n/ui";
+import QuizCategoryCover from "@/components/quizes/QuizCategoryCover.astro";
+import Pagination from "@/components/blog/Pagination.astro";
+
+const { page } = Astro.props as {
+  page: Page;
+};
+
+const { locale = defaultLang, category } = Astro.params as {
+  locale?: keyof typeof languages;
+  category: string;
+};
+
+const tp = useTranslatedPath(locale);
+
+const quizes = page.data;
+const title = `Quizes · ${category}`;
+const desc = `Quizes in "${category}" (${page.currentPage} of ${page.lastPage})`;
+
+// Вспом. форматтер ссылки (если нужен canonical/индексация первой страницы — добавь index.astro)
+const pageHref = (n: number) => tp(`/quizes/${category}/page/${n}`);
+---
+
+<Root title={title} description={desc} active="quizes">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+    <!-- HERO категории -->
+    <section
+      class="mb-8 rounded-2xl bg-linear-to-r from-primary-70 to-secondary-70 border p-6 md:p-8 border-base-300"
+    >
+      <div
+        class="flex flex-col md:flex-row md:items-center md:justify-between gap-3"
+      >
+        <div>
+          <h1 class="text-3xl md:text-4xl font-bold tracking-tight capitalize">
+            {category}
+          </h1>
+          <p class="mt-2 text-sm text-muted-foreground">
+            {desc}
+          </p>
+        </div>
+        <nav class="text-sm text-muted-foreground">
+          <a href={tp("/quizes")} class="hover:underline">Quizes</a>
+          <span class="mx-1">/</span>
+          <span class="capitalize">{category}</span>
+        </nav>
+      </div>
+
+      <div
+        class="relative w-full h-full aspect-video max-h-[calc(40vh)] mx-auto mt-6"
+      >
+        <QuizCategoryCover category={category} alt={category} priority="high" />
+      </div>
+    </section>
+
+    <!-- GRID карточек -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      {
+        quizes.map((quiz: any) => {
+          const href = tp(`/quizes/${quiz.category}/${quiz.slug || quiz.id}`);
+          const difficulty = quiz.difficulty ?? "beginner";
+          const itemsCount = quiz.itemsLimit ?? 0;
+
+          return (
+            <a
+              href={href}
+              class="group rounded-2xl bg-card overflow-hidden hover:shadow-lg transition-shadow border border-base-300"
+            >
+              <div class="p-5">
+                <div class="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
+                  <span class="capitalize font-medium text-primary">
+                    {difficulty}
+                  </span>
+                  {itemsCount > 0 && (
+                    <>
+                      <span>·</span>
+                      <span>{itemsCount} questions</span>
+                    </>
+                  )}
+                  {quiz.generation && (
+                    <>
+                      <span>·</span>
+                      <span class="capitalize">v{quiz.generation}</span>
+                    </>
+                  )}
+                </div>
+
+                <h2 class="text-lg font-bold leading-snug group-hover:text-primary transition-colors line-clamp-2 mb-2">
+                  {quiz.title ?? quiz.slug}
+                </h2>
+
+                {quiz.summary && (
+                  <p class="text-sm text-muted-foreground line-clamp-2 mb-3">
+                    {quiz.summary}
+                  </p>
+                )}
+
+                {Array.isArray(quiz.tags) && quiz.tags.length > 0 && (
+                  <div class="flex flex-wrap gap-2">
+                    {quiz.tags.slice(0, 3).map((t: string) => (
+                      <span class="text-[11px] text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                        #{t}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </a>
+          );
+        })
+      }
+    </section>
+
+    <!-- Empty state -->
+    {
+      quizes.length === 0 && (
+        <div class="text-center py-12">
+          <p class="text-muted-foreground">
+            No quizes found in this category yet.
+          </p>
+        </div>
+      )
+    }
+
+    <Pagination page={page} getPageHref={pageHref} />
+  </div>
+</Root>
