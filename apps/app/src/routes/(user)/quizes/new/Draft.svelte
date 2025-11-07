@@ -179,7 +179,7 @@
 		onclick={() => (showModal = true)}
 	>
 		<FilePlus class="h-5 w-5" />
-		<span>Use previous quiz</span>
+		<span class ="text-2xl" > Use previous quiz </span>
 	</button>
 {/if}
 

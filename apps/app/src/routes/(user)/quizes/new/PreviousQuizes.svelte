@@ -93,7 +93,7 @@
 					{#if quiz.query}
 						<p class="text-primary mb-1 text-left text-xs">
 							<span class="font-medium">Query:</span>
-							{quiz.query}
+							{quiz.query.length > 160 ? quiz.query.substring(0, 160) + '...' : quiz.query}
 						</p>
 					{/if}
 					{#if quiz.materials && quiz.materials.length > 0}
