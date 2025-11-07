@@ -111,6 +111,8 @@ class MaterialSearchAppImpl(MaterialSearchApp):
                     file_name=f"{cmd.material_id}_text.txt",
                     file_bytes=text_bytes,
                 )
+
+
                 # ✅ Замена маркеров на URL (остаётся без изменений)
                 if material.kind == MaterialKind.COMPLEX and len(text) > 0 and len(material.images) > 0:
                     marker_to_url = {}
@@ -132,8 +134,21 @@ class MaterialSearchAppImpl(MaterialSearchApp):
             except UnicodeDecodeError as e:
                 logger.warning(f"Error decoding text: {e}")
 
+
+
+        await self.material_repository.create(material)
+        
+
+        print("material.tokens =", material.tokens)
+        # Проверяем количество токенов
+        if material.tokens < 40:
+            material.status = MaterialStatus.NO_TEXT
+            await self.material_repository.attach_to_quiz(material, cmd.quiz_id)
+            await self.material_repository.update(material)
+            return material
+        
         material.status = MaterialStatus.INDEXING
-        await self.material_repository.save(material)
+        await self.material_repository.update(material)
 
         # Индексируем материал
         await self.indexer.index(material)

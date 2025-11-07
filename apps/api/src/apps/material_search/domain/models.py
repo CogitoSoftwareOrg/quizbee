@@ -38,6 +38,7 @@ class MaterialStatus(StrEnum):
     INDEXED = "indexed"
     DELETING = "deleting"
     TOO_BIG = "too big"
+    NO_TEXT = "no text"
 
 
 @dataclass(slots=True, kw_only=True)

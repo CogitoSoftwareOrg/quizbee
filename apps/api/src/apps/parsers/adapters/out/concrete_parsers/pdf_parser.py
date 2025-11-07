@@ -90,45 +90,49 @@ class FitzPDFParser(DocumentParser):
                 page = doc.load_page(page_num)
                 page_text: str = page.get_text()  # type: ignore
 
-                # Добавляем маркер номера страницы в начало
-                page_marker = f"{{quizbee_page_number_{page_num + 1}}}\n\n"
-                page_text = page_marker + page_text
+                # Добавляем маркер номера страницы в начало (ПОКА ЧТО ВЫКЛЮЧЕНО)
+                # page_marker = f"{{quizbee_page_number_{page_num + 1}}}\n\n"
 
-                # Если на странице есть изображения, вставляем маркеры
-                if page_num in image_positions:
-                    # Разбиваем текст на параграфы/блоки
-                    paragraphs = re.split(r"\n\n+", page_text)
+                page_text = page_text
 
-                    # Определяем количество параграфов и изображений
-                    num_paragraphs = len(paragraphs)
-                    num_images = len(image_positions[page_num])
 
-                    # Вставляем маркеры изображений между параграфами
-                    # Распределяем их равномерно
-                    result_parts = []
-                    images_inserted = 0
 
-                    for i, para in enumerate(paragraphs):
-                        result_parts.append(para)
+                if process_images:
+                    # Если на странице есть изображения, вставляем маркеры
+                    if page_num in image_positions:
+                        # Разбиваем текст на параграфы/блоки
+                        paragraphs = re.split(r"\n\n+", page_text)
 
-                        # Вставляем изображение после каждого N-го параграфа
-                        if images_inserted < num_images and num_paragraphs > 0:
-                            # Простая эвристика: вставляем изображения пропорционально
-                            insert_threshold = (i + 1) / num_paragraphs
-                            image_threshold = (images_inserted + 1) / num_images
+                        # Определяем количество параграфов и изображений
+                        num_paragraphs = len(paragraphs)
+                        num_images = len(image_positions[page_num])
 
-                            if insert_threshold >= image_threshold:
-                                _, marker = image_positions[page_num][images_inserted]
-                                result_parts.append(f"\n{marker}\n")
-                                images_inserted += 1
+                        # Вставляем маркеры изображений между параграфами
+                        # Распределяем их равномерно
+                        result_parts = []
+                        images_inserted = 0
 
-                    # Вставляем оставшиеся изображения в конец
-                    while images_inserted < num_images:
-                        _, marker = image_positions[page_num][images_inserted]
-                        result_parts.append(f"\n{marker}\n")
-                        images_inserted += 1
+                        for i, para in enumerate(paragraphs):
+                            result_parts.append(para)
 
-                    page_text = "\n\n".join(result_parts)
+                            # Вставляем изображение после каждого N-го параграфа
+                            if images_inserted < num_images and num_paragraphs > 0:
+                                # Простая эвристика: вставляем изображения пропорционально
+                                insert_threshold = (i + 1) / num_paragraphs
+                                image_threshold = (images_inserted + 1) / num_images
+
+                                if insert_threshold >= image_threshold:
+                                    _, marker = image_positions[page_num][images_inserted]
+                                    result_parts.append(f"\n{marker}\n")
+                                    images_inserted += 1
+
+                        # Вставляем оставшиеся изображения в конец
+                        while images_inserted < num_images:
+                            _, marker = image_positions[page_num][images_inserted]
+                            result_parts.append(f"\n{marker}\n")
+                            images_inserted += 1
+
+                        page_text = "\n\n".join(result_parts)
 
                 md_text_parts.append(page_text)
 

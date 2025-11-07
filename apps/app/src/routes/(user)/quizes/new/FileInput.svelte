@@ -44,6 +44,7 @@
 	let warningTooBigQuery = $state(false);
 	let warningTooBigFile = $state<string | null>(null);
 	let warningUnsupportedFile = $state<string | null>(null);
+	let warningNoText = $state<string | null>(null);
 	let warningMaxTokensExceeded = $derived(
 		attachedFiles.length >= 2 &&
 			(hasBook
@@ -82,6 +83,15 @@
 				continue;
 			}
 
+			// Check file size (100MB limit)
+			if (file.size > 1024 * 1024 * 100) {
+				warningTooBigFile = file.name;
+				setTimeout(() => {
+					warningTooBigFile = null;
+				}, 5000);
+				continue;
+			}
+
 			const attachedFile: AttachedFile = {
 				file,
 				previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
@@ -114,6 +124,14 @@
 						// Clear warning after 5 seconds
 						setTimeout(() => {
 							warningTooBigFile = null;
+						}, 5000);
+					} else if (foundMaterial.status === 'no text') {
+						warningNoText = attachedFile.name;
+						// Remove the file from attachedFiles
+						removeFile(i, attachedFiles, quizTemplateId);
+						// Clear warning after 5 seconds
+						setTimeout(() => {
+							warningNoText = null;
 						}, 5000);
 					} else if (foundMaterial.status === 'indexed') {
 						attachedFile.tokens = foundMaterial.tokens;
@@ -416,6 +434,11 @@
 	{#if warningTooBigFile}
 		<div class="text-md mt-2 text-red-500">
 			File "{warningTooBigFile}" is too big and cannot be uploaded.
+		</div>
+	{/if}
+	{#if warningNoText}
+		<div class="text-md mt-2 text-red-500">
+			We can't process material "{warningNoText}" as it has no or very little text.
 		</div>
 	{/if}
 	{#if warningUnsupportedFile}

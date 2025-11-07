@@ -72,8 +72,7 @@ class DocxDocumentParser(DocumentParser):
             
             logger.info(f"DOCX открыт. Количество параграфов: {len(doc.paragraphs)}")
             
-            # Извлекаем оглавление (заголовки)
-            contents = self.extract_table_of_contents(doc)
+            
             
             # Извлекаем текст из документа
             text_parts = self.extract_text_from_document(doc)
@@ -88,16 +87,12 @@ class DocxDocumentParser(DocumentParser):
                 )
                 # TODO: Реализовать извлечение изображений
                 # Можно использовать doc.inline_shapes и doc.part.rels для доступа к изображениям
-            
-            logger.info(
-                f"✅ DOCX парсинг завершён: {len(final_text)} символов, "
-                f"{len(contents)} элементов оглавления"
-            )
+           
             
             return ParsedDocument(
                 text=final_text,
                 images=images,
-                contents=contents,
+                contents=[],
                 is_book=False,  # DOCX обычно не являются книгами
             )
             
@@ -105,54 +100,6 @@ class DocxDocumentParser(DocumentParser):
             logger.error(f"❌ Ошибка при парсинге DOCX файла {file_name}: {str(e)}")
             raise Exception(f"Ошибка при парсинге DOCX файла: {str(e)}")
     
-    def extract_table_of_contents(self, doc: Document) -> list[dict[str, Any]]:
-        """
-        Извлекает оглавление из документа DOCX.
-        
-        Ищет параграфы со стилями заголовков (Heading 1, Heading 2, и т.д.)
-        
-        Args:
-            doc: Объект Document из python-docx
-            
-        Returns:
-            Список элементов оглавления с полями level, title, page
-        """
-        toc_items = []
-        
-        for para in doc.paragraphs:
-            if para.style and para.style.name:
-                style_name = para.style.name.lower()
-                
-                # Проверяем стили заголовков (Heading 1, Heading 2, и т.д.)
-                if 'heading' in style_name:
-                    # Извлекаем уровень из названия стиля (Heading 1 -> 1)
-                    level = 1
-                    try:
-                        level_str = style_name.replace("heading", "").strip()
-                        if level_str.isdigit():
-                            level = int(level_str)
-                    except:
-                        level = 1
-                    
-                    # Извлекаем текст заголовка
-                    title = para.text.strip()
-                    
-                    if title:
-                        toc_items.append({
-                            "level": level,
-                            "title": title,
-                            "page": 1,  # DOCX не имеет номеров страниц в простом виде
-                        })
-        
-        if toc_items:
-            logger.info(f"✓ Найдено оглавление из {len(toc_items)} элементов")
-            for item in toc_items:
-                level = item["level"]
-                title = item["title"]
-                indent = "  " * (level - 1)
-                logger.info(f"{indent}- {title}")
-        
-        return toc_items
     
     def extract_text_from_document(self, doc: Document) -> list[str]:
         """
