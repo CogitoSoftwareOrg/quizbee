@@ -1,12 +1,14 @@
 """
 Domain models для parsers гексагона.
 """
+
 from dataclasses import dataclass
 
 
 @dataclass
 class DocumentImage:
     """Изображение, извлечённое из документа."""
+
     bytes: bytes
     ext: str  # png, jpg, jpeg и т.д.
     width: int
@@ -20,6 +22,7 @@ class DocumentImage:
 @dataclass
 class ParsedDocument:
     """Результат парсинга документа любого типа."""
+
     text: str  # Извлечённый текст с маркерами изображений
     images: list[DocumentImage]  # Список извлечённых изображений
     contents: list[dict]  # Оглавление/структура документа

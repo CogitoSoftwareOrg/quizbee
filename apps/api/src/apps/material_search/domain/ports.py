@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Any, Protocol
 
 from src.lib.config.llms import LLMS
+from src.apps.document_parser.domain import DocumentParseCmd
 
 from .models import Material, MaterialFile, MaterialChunk, ParsedDocument
 
@@ -43,28 +44,26 @@ class MaterialRepository(Protocol):
 
 
 # Document Parsing (Port для работы с parsers Shared Kernel)
-class DocumentParsing(Protocol):
+class DocumentParser(Protocol):
     """
     Port для парсинга документов разных форматов.
-    
+
     Зависит от parsers Shared Kernel.
     Реализация: DocumentParsingAdapter
     """
-    
+
     def parse(
         self,
-        file_bytes: bytes,
-        file_name: str,
-        process_images: bool = False,
+        cmd: DocumentParseCmd,
     ) -> ParsedDocument:
         """
         Парсит документ.
-        
+
         Args:
             file_bytes: Содержимое файла в виде байтов
             file_name: Имя файла (для выбора формата)
             process_images: Нужно ли извлекать изображения
-            
+
         Returns:
             ParsedDocument с текстом, изображениями и структурой
         """

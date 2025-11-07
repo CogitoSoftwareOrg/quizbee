@@ -4,6 +4,8 @@ import logging
 
 from src.lib.settings import settings
 
+from src.apps.document_parser.domain import DocumentParseCmd
+
 from ..domain.models import (
     Material,
     MaterialFile,
@@ -15,11 +17,10 @@ from ..domain.ports import (
     LLMTools,
     MaterialIndexer,
     MaterialRepository,
-    DocumentParsing,
+    DocumentParser,
 )
 from ..domain.errors import TooLargeFileError
 from ..domain.constants import MAX_SIZE_MB, COMPLEX_EXTENSIONS
-
 from .contracts import MaterialSearchApp, AddMaterialCmd, RemoveMaterialCmd, SearchCmd
 
 logger = logging.getLogger(__name__)
@@ -29,18 +30,18 @@ class MaterialSearchAppImpl(MaterialSearchApp):
     def __init__(
         self,
         material_repository: MaterialRepository,
-        document_parsing: DocumentParsing,
+        document_parser: DocumentParser,
         llm_tools: LLMTools,
         indexer: MaterialIndexer,
     ):
+        self._document_parser = document_parser
         self.material_repository = material_repository
-        self.document_parsing = document_parsing
         self.llm_tools = llm_tools
         self.indexer = indexer
 
     async def add_material(self, cmd: AddMaterialCmd) -> Material:
 
-        ### я убрал возможность добавлять простые картинки поэтому кода для их обработки нет 
+        ### я убрал возможность добавлять простые картинки поэтому кода для их обработки нет
 
         logger.info("MaterialSearchAppImpl.add_material")
         # Validate file size
@@ -72,13 +73,15 @@ class MaterialSearchAppImpl(MaterialSearchApp):
             file=cmd.file,
         )
 
-
-        if material.file.file_name.lower().endswith(COMPLEX_EXTENSIONS): # Просто парсим комплексные файлы через document_parsing. Парсер сам определит формат по расширению файла      
+        if material.file.file_name.lower().endswith(
+            COMPLEX_EXTENSIONS
+        ):  # Просто парсим комплексные файлы через document_parsing. Парсер сам определит формат по расширению файла
             try:
-                doc_data = self.document_parsing.parse(
-                    file_bytes=cmd.file.file_bytes,
-                    file_name=cmd.file.file_name,
-                    process_images=False,
+                doc_data = self._document_parser.parse(
+                    cmd=DocumentParseCmd(
+                        file_bytes=cmd.file.file_bytes,
+                        file_name=cmd.file.file_name,
+                    ),
                 )
 
                 # Все документы — это сложные материалы
@@ -112,9 +115,12 @@ class MaterialSearchAppImpl(MaterialSearchApp):
                     file_bytes=text_bytes,
                 )
 
-
                 # ✅ Замена маркеров на URL (остаётся без изменений)
-                if material.kind == MaterialKind.COMPLEX and len(text) > 0 and len(material.images) > 0:
+                if (
+                    material.kind == MaterialKind.COMPLEX
+                    and len(text) > 0
+                    and len(material.images) > 0
+                ):
                     marker_to_url = {}
                     for i, image in enumerate(doc_data.images):
                         marker = image.marker
@@ -122,9 +128,11 @@ class MaterialSearchAppImpl(MaterialSearchApp):
                             image_file_name = material.images[i].file_name
                             image_url = f"{settings.pb_url}api/files/materials/{material.id}/{image_file_name}"
                             marker_to_url[marker] = image_url
-                    
+
                     for marker, url in marker_to_url.items():
-                        text = text.replace(marker, f"\n{{quizbee_unique_image_url:{url}}}\n")
+                        text = text.replace(
+                            marker, f"\n{{quizbee_unique_image_url:{url}}}\n"
+                        )
             except Exception as e:
                 logger.warning(f"Error parsing PDF: {e}")
         else:
@@ -134,10 +142,7 @@ class MaterialSearchAppImpl(MaterialSearchApp):
             except UnicodeDecodeError as e:
                 logger.warning(f"Error decoding text: {e}")
 
-
-
         await self.material_repository.create(material)
-        
 
         print("material.tokens =", material.tokens)
         # Проверяем количество токенов
@@ -146,7 +151,7 @@ class MaterialSearchAppImpl(MaterialSearchApp):
             await self.material_repository.attach_to_quiz(material, cmd.quiz_id)
             await self.material_repository.update(material)
             return material
-        
+
         material.status = MaterialStatus.INDEXING
         await self.material_repository.update(material)
 
@@ -157,8 +162,6 @@ class MaterialSearchAppImpl(MaterialSearchApp):
         await self.material_repository.update(material)
 
         return material
-        
-       
 
     async def search(self, cmd: SearchCmd) -> list[MaterialChunk]:
         logger.info("MaterialSearchAppImpl.search")

@@ -16,7 +16,10 @@ from src.apps.quiz_generator.di import init_quiz_generator_app
 from src.apps.message_owner.di import init_message_owner_app
 from src.apps.quiz_attempter.di import init_quiz_attempter_app
 from src.apps.edge_api.di import init_edge_api_app
-
+from src.apps.document_parser.di import (
+    init_document_parser_app,
+    init_document_parser_deps,
+)
 from src.lib.settings import settings
 
 from src.apps.edge_api.domain.constants import ARQ_QUEUE_NAME
@@ -36,6 +39,9 @@ async def startup(ctx):
     # GLOBAL
     admin_pb, lf, meili, http = init_global_deps()
 
+    parser_provider = init_document_parser_deps()
+    document_parser_app = init_document_parser_app(parser_provider=parser_provider)
+
     # V2 LLM TOOLS
     text_tokenizer, image_tokenizer, chunker = init_llm_tools_deps()
     llm_tools = init_llm_tools(
@@ -51,15 +57,18 @@ async def startup(ctx):
     )
 
     # V2 MATERIAL SEARCH
-    material_repository, document_parsing, material_indexer = await init_material_search_deps(
-        lf=lf,
-        admin_pb=admin_pb,
-        meili=meili,
-        llm_tools=llm_tools,
+    material_repository, document_parser_adapter, material_indexer = (
+        await init_material_search_deps(
+            document_parser_app=document_parser_app,
+            lf=lf,
+            admin_pb=admin_pb,
+            meili=meili,
+            llm_tools=llm_tools,
+        )
     )
     material_search_app = init_material_search_app(
         llm_tools_app=llm_tools,
-        document_parsing=document_parsing,
+        document_parser=document_parser_adapter,
         indexer=material_indexer,
         material_repository=material_repository,
     )

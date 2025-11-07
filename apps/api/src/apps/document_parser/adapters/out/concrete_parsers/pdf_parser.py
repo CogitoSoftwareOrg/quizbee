@@ -1,10 +1,10 @@
-import fitz  # PyMuPDF 
+import fitz  # PyMuPDF
 from io import BytesIO
 from typing import Any
 import logging
 import re
 
-from ....domain.ports import DocumentParser
+from ....domain.out import DocumentParser
 from ....domain.models import ParsedDocument, DocumentImage
 
 
@@ -19,7 +19,9 @@ class FitzPDFParser(DocumentParser):
         self.min_height = min_height
         self.min_file_size = min_file_size
 
-    def parse(self, file_bytes: bytes, file_name: str, process_images: bool = False) -> ParsedDocument:
+    def parse(
+        self, file_bytes: bytes, file_name: str, process_images: bool = False
+    ) -> ParsedDocument:
         """
         Извлекает текст и изображения из PDF-файла, фильтруя слишком маленькие изображения.
 
@@ -76,12 +78,10 @@ class FitzPDFParser(DocumentParser):
                         # Добавляем отступы в зависимости от уровня вложенности
                         indent = "  " * (level - 1)
                         logging.info(f"{indent}- {title} (стр. {page_num})")
-            
+
             if process_images:
                 # Вынесенная логика обработки изображений
                 self.extract_pictures(doc, page_count, images, image_positions, stats)
-
-
 
             # TEXT EXTRACTION
             md_text_parts = []
@@ -94,8 +94,6 @@ class FitzPDFParser(DocumentParser):
                 # page_marker = f"{{quizbee_page_number_{page_num + 1}}}\n\n"
 
                 page_text = page_text
-
-
 
                 if process_images:
                     # Если на странице есть изображения, вставляем маркеры
@@ -122,7 +120,9 @@ class FitzPDFParser(DocumentParser):
                                 image_threshold = (images_inserted + 1) / num_images
 
                                 if insert_threshold >= image_threshold:
-                                    _, marker = image_positions[page_num][images_inserted]
+                                    _, marker = image_positions[page_num][
+                                        images_inserted
+                                    ]
                                     result_parts.append(f"\n{marker}\n")
                                     images_inserted += 1
 
@@ -138,8 +138,6 @@ class FitzPDFParser(DocumentParser):
 
             md_text = "\n\n-----\n\n".join(md_text_parts)
 
-            
-
             doc.close()
 
             logging.info(f"Текст извлечен с маркерами, длина: {len(md_text)} символов")
@@ -152,7 +150,9 @@ class FitzPDFParser(DocumentParser):
                 f"скриншотов_страниц={stats['full_page_screenshots']}"
             )
 
-            logging.info(f"✅ PDF парсинг завершён: {len(md_text)} символов, {len(images)} изображений")
+            logging.info(
+                f"✅ PDF парсинг завершён: {len(md_text)} символов, {len(images)} изображений"
+            )
 
             return ParsedDocument(
                 text=md_text,
