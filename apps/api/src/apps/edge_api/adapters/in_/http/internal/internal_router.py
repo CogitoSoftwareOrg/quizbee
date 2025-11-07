@@ -2,7 +2,7 @@ from fastapi import APIRouter
 
 from src.lib.settings import settings
 
-from .schemas import SheduleJobsDto
+from ..schemas import SheduleJobsDto
 
 internal_router = APIRouter(prefix="/internal", tags=["internal"])
 

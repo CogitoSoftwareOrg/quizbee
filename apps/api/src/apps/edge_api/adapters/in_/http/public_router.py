@@ -13,7 +13,7 @@ from src.lib.utils import cache_key, sse
 
 from src.apps.material_search.app.contracts import MaterialFile
 
-from ....app.contracts import (
+from ....domain._in import (
     PublicRemoveMaterialCmd,
     PublicStartQuizCmd,
     PublicGenerateQuizItemsCmd,
@@ -21,10 +21,10 @@ from ....app.contracts import (
     PublicFinalizeAttemptCmd,
     PublicAskExplainerCmd,
     PublicAddMaterialCmd,
+    JobName,
 )
 
 from ....domain.constants import ARQ_QUEUE_NAME
-from ....app.contracts import JobName
 
 from .deps import (
     EdgeAPIAppDeps,

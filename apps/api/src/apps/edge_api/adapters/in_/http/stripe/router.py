@@ -5,8 +5,9 @@ from fastapi.responses import JSONResponse
 from src.lib.stripe import stripe_client
 from src.lib.settings import settings
 
-from .deps import AdminPBDeps, UserTokenDeps
-from .schemas import CreateStripeCheckoutDto, CreateBillingPortalSessionDto
+from ..deps import AdminPBDeps, UserTokenDeps
+from ..schemas import CreateStripeCheckoutDto, CreateBillingPortalSessionDto
+
 from .stripe_legacy import stripe_subscription_to_pb, verify, PRICES_MAP
 
 logger = logging.getLogger(__name__)

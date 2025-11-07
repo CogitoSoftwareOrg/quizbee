@@ -2,7 +2,7 @@ import logging
 
 from arq import func
 
-from src.apps.edge_api.app.contracts import (
+from src.apps.edge_api.domain._in import (
     JobName,
     EdgeAPIApp,
     PublicStartQuizCmd,

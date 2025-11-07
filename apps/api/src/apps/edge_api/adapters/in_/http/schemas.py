@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 
 from src.apps.quiz_generator.app.contracts import GenMode
 
-from ....app.contracts import (
+from ....domain._in import (
     JobName,
     PublicAddMaterialCmd,
     PublicFinalizeAttemptCmd,
