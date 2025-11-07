@@ -4,6 +4,8 @@
 
 import logging
 
+import os 
+
 from ...domain.out import DocumentParser, DocumentParserProvider
 
 logger = logging.getLogger(__name__)
@@ -33,9 +35,10 @@ class ParserProviderV1(DocumentParserProvider):
         Raises:
             ValueError: Если формат файла не поддерживается
         """
-        file_ext = file_name.lower().strip(".")
+        file_ext = os.path.splitext(file_name)[1].lstrip(".").lower()
 
-        if file_ext not in self._parsers:
+
+        if file_ext not in self._parsers.keys():
             supported = ", ".join(self._parsers.keys())
             logger.error(
                 f"Неподдерживаемый формат файла: {file_ext}. "
