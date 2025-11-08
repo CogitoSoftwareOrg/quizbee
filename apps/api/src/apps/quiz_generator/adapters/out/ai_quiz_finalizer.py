@@ -118,6 +118,7 @@ class AIQuizFinalizer(QuizFinalizer):
                 raise ValueError(f"Unexpected output type: {type(res.output)}")
 
             payload: QuizFinalizerOutput = res.output.data
+
             payload._merge(quiz)
             await self._quiz_repository.update(quiz)
 

@@ -123,7 +123,7 @@ class AIQuizInstantGenerator(PatchGenerator):
                     raise ValueError(f"Unexpected output type: {run.output.data.mode}")
                 payload: AIQuizInstantGeneratorOutput = run.output.data
                 payload.merge(quiz)
-                await self._quiz_repository.update(quiz)
+                await self._quiz_repository.update(quiz, fresh_generated=True)
 
                 await update_span_with_result(
                     self._lf,

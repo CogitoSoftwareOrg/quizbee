@@ -71,6 +71,8 @@ class QuizItem:
     order: int
     status: QuizItemStatus
 
+    fresh_generated: bool = False
+
     def to_generating(self) -> None:
         if self.status not in {QuizItemStatus.BLANK}:
             raise ValueError("Item is not in blank status for generating")
@@ -79,6 +81,7 @@ class QuizItem:
     def regenerate(self) -> None:
         if self.status not in {QuizItemStatus.FINAL}:
             self.status = QuizItemStatus.BLANK
+            self.fresh_generated = False
 
     def to_failed(self) -> None:
         if self.status not in {QuizItemStatus.GENERATING}:
@@ -89,6 +92,7 @@ class QuizItem:
         if self.status not in {QuizItemStatus.GENERATING}:
             raise ValueError("Item is not in generating status for generating")
 
+        self.fresh_generated = True
         self.status = QuizItemStatus.GENERATED
         self.question = question
         self.variants = variants
@@ -200,6 +204,9 @@ class Quiz:
         return [
             item for item in self.items if item.status in {QuizItemStatus.GENERATING}
         ]
+
+    def fresh_generated_items(self) -> list[QuizItem]:
+        return [item for item in self.items if item.fresh_generated]
 
     def prev_items(self) -> list[QuizItem]:
         return [
