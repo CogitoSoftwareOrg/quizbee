@@ -20,6 +20,7 @@
 	import ManageQuiz from './ManageQuiz.svelte';
 	import SwipeableContent from './SwipeableContent.svelte';
 	import MobileAIChat from './MobileAIChat.svelte';
+	import { X } from 'lucide-svelte';
 
 	const { data } = $props();
 
@@ -160,7 +161,7 @@
 </script>
 
 <div class="flex h-full flex-col">
-	<header class="px-4 py-2 sm:block">
+	<header class="flex items-center justify-between px-4 py-2">
 		<ul class="hidden flex-1 flex-wrap items-center gap-1 sm:flex">
 			{#each quizItems as quizItem, index}
 				{@const decision = quizDecisions.at(quizItem.order)}
@@ -183,9 +184,39 @@
 				</li>
 			{/each}
 		</ul>
+
+		<ul class="flex flex-1 flex-wrap items-center gap-1.5 sm:hidden">
+			{#each quizItems as quizItem}
+				{@const decision = quizDecisions.at(quizItem.order)}
+				{@const isDisabled = !decision && quizItem.order > (itemToAnswer?.order || 0)}
+				{@const isCurrent = currentItem?.id === quizItem.id}
+
+				<li>
+					<div
+						class={[
+							'block rounded-full transition-all',
+							isCurrent ? 'size-2.5' : 'size-1.5',
+							decision?.correct
+								? 'bg-success'
+								: decision && !decision?.correct
+									? 'bg-error'
+									: 'bg-neutral/30',
+							isDisabled ? 'opacity-40' : ''
+						].join(' ')}
+						aria-label={`Question ${quizItem.order + 1}`}
+					></div>
+				</li>
+			{/each}
+		</ul>
+
+		<div class="flex items-center gap-1 sm:hidden">
+			<Button href="/home" color="neutral" style="ghost" size="xs" circle>
+				<X size={24} />
+			</Button>
+		</div>
 	</header>
 
-	<div class="flex mt-3 flex-1 overflow-hidden">
+	<div class="mt-3 flex flex-1 overflow-hidden">
 		<div class="relative flex h-full min-w-0 flex-1">
 			<!-- Main column -->
 			<main
