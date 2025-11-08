@@ -63,11 +63,12 @@
 
 		// пофиксить эту хуйню потом
 		const updatePlaceholder = () => {
-			placeholderText = window.innerWidth >= 768 
-				? "Attach relevant files and/or describe what you'd like the questions to be about"
-				: 'Attach files • Add text';
+			placeholderText =
+				window.innerWidth >= 768
+					? "Attach relevant files and/or describe what you'd like the questions to be about"
+					: 'Attach files • Add text';
 		};
-		
+
 		updatePlaceholder();
 		window.addEventListener('resize', updatePlaceholder);
 
@@ -264,8 +265,6 @@
 		const maxHeight = 7.5 * 16;
 		target.style.height = Math.min(scrollHeight, maxHeight) + 'px';
 
-
-
 		if (target.value.length > 100000) {
 			target.value = target.value.slice(0, 100000);
 			inputText = target.value;
@@ -427,7 +426,7 @@
 		<textarea
 			placeholder={placeholderText}
 			bind:value={inputText}
-			class="flex-grow resize-none border-none bg-transparent py-0 pl-4 text-lg leading-6 outline-none focus:shadow-none focus:outline-none focus:ring-0 max-h-[4.5rem] overflow-y-auto"
+			class="max-h-[4.5rem] flex-grow resize-none overflow-y-auto border-none bg-transparent py-0 pl-4 text-lg leading-6 outline-none focus:shadow-none focus:outline-none focus:ring-0"
 			onpaste={handlePaste}
 			rows="1"
 			oninput={handleTextareaResize}
@@ -466,8 +465,7 @@
 		</div>
 	{/if}
 	{#if attachedFiles.length > 0}
-		<div class="flex gap-3 overflow-x-auto pb-0 px-1"
-		style="scrollbar-width: auto;">
+		<div class="flex gap-3 overflow-x-auto px-1 pb-2" style="scrollbar-width: auto;">
 			{#each attachedFiles as attachedFile, index}
 				<div
 					class="bg-base-300 border-base-content/20 group relative mb-0.5 aspect-square h-24 w-24 shrink-0 rounded-lg border-2 p-1.5"
@@ -505,7 +503,7 @@
 						onclick={async () => {
 							attachedFiles = await removeFile(index, attachedFiles, quizTemplateId);
 						}}
-						class="text-base-content absolute right-1 top-1 flex h-5 w-5 cursor-pointer items-center justify-center border-none text-xl ы"
+						class="text-base-content ы absolute right-1 top-1 flex h-5 w-5 cursor-pointer items-center justify-center border-none text-xl"
 						aria-label="Remove file">&times;</button
 					>
 				</div>

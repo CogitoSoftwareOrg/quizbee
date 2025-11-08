@@ -33,8 +33,9 @@
 	const isFreePlan = $derived(sub?.tariff === 'free');
 </script>
 
-<div class="mt-6 flex gap-2">
+<div class="mt-4 flex gap-2">
 	<Button
+		size="lg"
 		onclick={() => {
 			if (isFreePlan) {
 				uiStore.setPaywallOpen(true);

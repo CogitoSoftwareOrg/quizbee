@@ -17,6 +17,7 @@
 	import { QuizesVisibilityOptions } from '$lib/pb';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
 	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
+	import { QuizesStatusOptions } from '@quizbee/pb-types';
 
 	const { data } = $props();
 	const quiz = $derived(
@@ -37,9 +38,7 @@
 
 	// Filter quiz attempts for this specific quiz
 	const quizAttempts = $derived(
-		quizAttemptsStore.quizAttempts.filter(
-			(attempt) => attempt.quiz === quiz?.id && attempt.feedback
-		)
+		quizAttemptsStore.quizAttempts.filter((attempt) => attempt.quiz === quiz?.id)
 	);
 
 	// Check if there's at least one completed attempt
@@ -118,8 +117,6 @@
 	<section class="flex flex-1 flex-col gap-4 sm:min-h-0">
 		{#if quiz}
 			<div class="bg-base-200 space-y-4 rounded-2xl p-4">
-
-				
 				<div class="flex flex-wrap items-start justify-between gap-3">
 					<h1 class="text-3xl font-bold leading-tight">{quiz.title || 'Quiz'}</h1>
 
@@ -131,8 +128,6 @@
 						<ShareQuizButton block quizId={quiz.id} quizTitle={quiz.title || 'Quiz'} />
 					{/if}
 				</div>
-
-				
 
 				{#if user?.id === quiz.author}
 					<ToggleQuizVisibility
@@ -164,12 +159,16 @@
 			<div class="bg-base-200 flex flex-1 flex-col gap-3 rounded-2xl p-4 sm:min-h-0">
 				<div class="sm:shrink-0">
 					<h2 class="text-2xl font-semibold">Attempts History</h2>
-					<div class="py-2 sm:shrink-0">
-						<Button block color="primary" onclick={() => startQuiz(false)}>
-							<Play size={18} />
-							Start New Attempt
-						</Button>
-					</div>
+
+					{#if quiz.status === QuizesStatusOptions.final}
+						<div class="py-2 sm:shrink-0">
+							<Button block color="primary" onclick={() => startQuiz(false)}>
+								<Play size={18} />
+								Start New Attempt
+							</Button>
+						</div>
+					{/if}
+
 					<p class="text-base-content/70 mt-1 text-sm">
 						{quizAttempts.length}
 						{quizAttempts.length === 1 ? 'attempt' : 'attempts'}
@@ -198,7 +197,7 @@
 									class="border-base-200 hover:bg-base-200/60 bg-base-100 group flex flex-col gap-3 rounded-xl border p-4 no-underline shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
 									href={hasCompleted
 										? `/quizes/${quiz?.id}/attempts/${attempt.id}/feedback`
-										: `/quizes/${quiz?.id}/attempts/${attempt.id}`}
+										: `/quizes/${quiz?.id}/attempts/${attempt.id}?order=${(attempt.choices as Decision[])?.length || 0}`}
 								>
 									<div class="flex items-start justify-between gap-3">
 										<div class="flex-1">
@@ -242,7 +241,7 @@
 
 	<!-- Right column: Quiz attempts history -->
 	<section class="bg-base-200 flex flex-1 flex-col gap-4 rounded-2xl p-4 sm:min-h-0">
-		<h2 class="text-xl text-center font-semibold">Questions</h2>
+		<h2 class="text-center text-xl font-semibold">Questions</h2>
 
 		<Input
 			class="w-full sm:shrink-0"

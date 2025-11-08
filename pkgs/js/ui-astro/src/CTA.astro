@@ -8,6 +8,7 @@ interface Props {
   buttonHref?: string;
   modalId?: string;
   theme?: "default" | "dark" | "gradient";
+  target?: "_blank" | "_self" | "_parent" | "_top";
 }
 
 const {
@@ -17,6 +18,7 @@ const {
   buttonHref,
   modalId,
   theme = "default",
+  target,
 } = Astro.props;
 
 const themeClasses = {
@@ -50,7 +52,7 @@ const themeClasses = {
       <!-- CTA Button -->
       <div class="pt-8 px-4 sm:px-12">
         <Button
-          target="_blank"
+          target={target}
           style="solid"
           href={buttonHref}
           size="xl"

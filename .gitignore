@@ -1,6 +1,5 @@
 **/.venv
 **/__pycache__
-**/.vscode
 
 **/.env
 **/.env.production
@@ -19,3 +18,5 @@
 
 **/logs
 **/.pids
+
+**/.pytest_cache

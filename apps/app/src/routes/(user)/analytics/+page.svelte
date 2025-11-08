@@ -32,7 +32,9 @@
 	const weeklyProgress = $derived(calculateWeeklyProgress(weeklyQuestionCount, weeklyGoal));
 </script>
 
-<div class="mx-auto w-full max-w-7xl min-h-full flex flex-col space-y-4 p-4 sm:space-y-6 sm:p-6 lg:p-8">
+<div
+	class="mx-auto flex min-h-full w-full max-w-7xl flex-col space-y-4 px-1 sm:space-y-6 sm:p-6 lg:p-8"
+>
 	<!-- Header -->
 	<div class="flex items-center gap-3">
 		<BarChart class="h-8 w-8" />
@@ -44,7 +46,7 @@
 
 	<!-- Statistics Overview -->
 	<section class="space-y-4">
-		<h2 class="text-2xl mt-8 font-semibold">Overview</h2>
+		<h2 class="mt-8 text-2xl font-semibold">Overview</h2>
 		<div class="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-4">
 			<StreakCard {streak} />
 			<WeeklyQuestionsCard {weeklyQuestionCount} />
@@ -56,11 +58,11 @@
 	<!-- Weekly Progress Card -->
 	<section class="space-y-4">
 		<!-- <h2 class="text-2xl mt-8 font-semibold">Weekly Progress</h2> -->
-		<div class="card bg-base-100 -ml-5 ">
+		<div class="card bg-base-100 -ml-5">
 			<div class="card-body">
 				<div class="flex items-center gap-2">
 					<TrendingUp class="h-5 w-5" />
-					<h3 class="card-title font-semibold text-2xl">This Week's Goal</h3>
+					<h3 class="card-title text-2xl font-semibold">This Week's Goal</h3>
 				</div>
 				<div class="mt-4 space-y-3">
 					<div class="flex items-baseline justify-between">

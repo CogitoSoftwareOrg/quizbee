@@ -47,8 +47,6 @@
 		tick().then(() => {
 			updateInputWidth();
 		});
-		console.log('Mounted New Quiz Page');
-
 		// Пересчитываем при изменении размера окна
 		const handleResize = () => updateInputWidth();
 		window.addEventListener('resize', handleResize);
@@ -91,7 +89,7 @@
 							bind:this={inputElement}
 							type="text"
 							placeholder=""
-							class="hover:text-warning min-w-0 max-w-full cursor-pointer border-none bg-transparent px-0 text-center text-4xl font-bold leading-tight transition-colors focus:outline-none focus:ring-0 md:text-5xl -mt-2"
+							class="hover:text-warning -mt-2 min-w-0 max-w-full cursor-pointer border-none bg-transparent px-0 text-center text-4xl font-bold leading-tight transition-colors focus:outline-none focus:ring-0 md:text-5xl"
 							style="width: auto;"
 							oninput={(e) => {
 								const target = e.target as HTMLInputElement;
@@ -123,10 +121,10 @@
 				<div
 					class="card bg-base-100 border-base-300 overflow-x-hidden border-2 shadow-xl backdrop-blur-sm"
 				>
-					<div class="card-body px-5 py-3.5 overflow-x-hidden">
+					<div class="card-body overflow-x-hidden px-5 py-3.5">
 						<!-- Description Section -->
-						<div class="{previousQuizes.length === 0 ? 'mb-2' : 'mb-2'}">
-							<div class="w-full flex items-start justify-between gap-3">
+						<div class={previousQuizes.length === 0 ? 'mb-2' : 'mb-2'}>
+							<div class="flex w-full items-start justify-between gap-3">
 								<h3 class="mb-3 block text-base font-semibold">Describe your quiz</h3>
 								<!-- Mobile Draft Button - Shows on mobile only, next to title -->
 								<div class="lg:hidden">
@@ -143,21 +141,26 @@
 								</div>
 							</div>
 							<div class="w-full">
-								<FileInput bind:attachedFiles bind:inputText bind:quizTemplateId previousQuizes.length/>
+								<FileInput
+									bind:attachedFiles
+									bind:inputText
+									bind:quizTemplateId
+									previousQuizes.length
+								/>
 							</div>
 						</div>
 
 						<!-- Difficulty and Questions Grid -->
-						<div class="{previousQuizes.length === 0 ? 'mb-3' : 'mb-3'}  grid gap-6 md:grid-cols-2 md:gap-8">
+						<div class="mb-2 grid gap-3 md:grid-cols-2 md:gap-8">
 							<!-- Difficulty -->
 							<div>
-								<h3 class="mb-4 block text-base font-semibold">Choose difficulty level</h3>
+								<h3 class="mb-2 block text-base font-semibold">Choose difficulty level</h3>
 								<DifficultySelector bind:selectedDifficulty />
 							</div>
 
 							<!-- Question Count -->
 							<div>
-								<h3 class="mb-4 block text-base font-semibold">Number of questions</h3>
+								<h3 class="mb-2 block text-base font-semibold">Number of questions</h3>
 								<QuestionNumberSelector bind:value={questionCount} />
 							</div>
 						</div>

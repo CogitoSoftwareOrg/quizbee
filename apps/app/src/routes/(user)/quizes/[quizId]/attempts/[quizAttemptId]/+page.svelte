@@ -20,6 +20,7 @@
 	import ManageQuiz from './ManageQuiz.svelte';
 	import SwipeableContent from './SwipeableContent.svelte';
 	import MobileAIChat from './MobileAIChat.svelte';
+	import { X } from 'lucide-svelte';
 
 	const { data } = $props();
 
@@ -160,7 +161,7 @@
 </script>
 
 <div class="flex h-full flex-col">
-	<header class="px-4 py-2 sm:block">
+	<header class="flex items-center justify-between px-2 py-1">
 		<ul class="hidden flex-1 flex-wrap items-center gap-1 sm:flex">
 			{#each quizItems as quizItem, index}
 				{@const decision = quizDecisions.at(quizItem.order)}
@@ -183,9 +184,39 @@
 				</li>
 			{/each}
 		</ul>
+
+		<ul class="flex flex-1 flex-wrap items-center gap-1.5 sm:hidden">
+			{#each quizItems as quizItem}
+				{@const decision = quizDecisions.at(quizItem.order)}
+				{@const isDisabled = !decision && quizItem.order > (itemToAnswer?.order || 0)}
+				{@const isCurrent = currentItem?.id === quizItem.id}
+
+				<li>
+					<div
+						class={[
+							'block rounded-full transition-all',
+							isCurrent ? 'size-2.5' : 'size-1.5',
+							decision?.correct
+								? 'bg-success'
+								: decision && !decision?.correct
+									? 'bg-error'
+									: 'bg-neutral/30',
+							isDisabled ? 'opacity-40' : ''
+						].join(' ')}
+						aria-label={`Question ${quizItem.order + 1}`}
+					></div>
+				</li>
+			{/each}
+		</ul>
+
+		<div class="flex items-center gap-1 sm:hidden">
+			<Button href="/quizes" color="neutral" style="ghost" circle>
+				<X size={24} />
+			</Button>
+		</div>
 	</header>
 
-	<div class="flex mt-3 flex-1 overflow-hidden">
+	<div class="flex flex-1 overflow-hidden">
 		<div class="relative flex h-full min-w-0 flex-1">
 			<!-- Main column -->
 			<main
@@ -197,7 +228,7 @@
 					{canSwipeRight}
 					onSwipeLeft={handleSwipeLeft}
 					onSwipeRight={handleSwipeRight}
-					class="relative h-full overflow-x-hidden"
+					class="relative h-full overflow-x-hidden pb-2"
 				>
 					<div class="mx-auto flex h-full min-w-0 max-w-3xl flex-col py-2">
 						<div class="flex min-w-0 items-start justify-between gap-4 px-3">
@@ -221,6 +252,10 @@
 							/>
 						{/if}
 
+						{#if quiz?.status !== 'final' && user?.id === quiz?.author && lastFinalItem?.id === item?.id && item && !item?.managed && itemDecision && quiz && quizAttempt}
+							<ManageQuiz {item} {quiz} {quizAttempt} />
+						{/if}
+
 						{#if item && quiz && quizAttempt}
 							<QuizItemsNavigation
 								{quizAttempt}
@@ -234,15 +269,6 @@
 								onPrevious={handleSwipeLeft}
 								onNext={handleSwipeRight}
 							/>
-						{/if}
-
-						{#if quiz?.status !== 'final' && user?.id === quiz?.author && lastFinalItem?.id === item?.id && item && !item?.managed && itemDecision && quiz && quizAttempt}
-							<ManageQuiz {item} {quiz} {quizAttempt} />
-						{:else if item && quiz && quizAttempt}
-							<!-- invisible placeholder to maintain layout -->
-							<div class="mt-6 flex gap-2" aria-hidden="true">
-								<Button class="pointer-events-none invisible" style="soft">Adjust Quiz</Button>
-							</div>
 						{/if}
 					</div>
 				</SwipeableContent>
