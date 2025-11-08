@@ -19,3 +19,5 @@
 
 **/logs
 **/.pids
+
+**/.pytest_cache
