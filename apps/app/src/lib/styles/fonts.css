@@ -19,13 +19,13 @@
 @media screen and (min-width: 70rem) {
 	:root {
 		/* Для больших экранов можно немного уменьшить базовый размер */
-		font-size: clamp(14px, 0.5vw + 0.46rem, 28px);
+		font-size: clamp(14px, 0.5vw + 0.51rem, 28px);
 	}
 }
 
 @media screen and (min-width: 193rem) {
-    :root {
-        /* Более агрессивное масштабирование для wide screens */
-        font-size: clamp(20px, 1vw + 0.46rem, 36px);
-    }
+	:root {
+		/* Более агрессивное масштабирование для wide screens */
+		font-size: clamp(20px, 1vw + 0.5rem, 36px);
+	}
 }
