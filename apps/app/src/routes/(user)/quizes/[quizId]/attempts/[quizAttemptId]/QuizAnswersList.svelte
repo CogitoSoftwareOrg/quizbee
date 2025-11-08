@@ -125,7 +125,7 @@
 
 <div class={[className, 'min-w-0']}>
 	{#if item.status === 'final' || item.status === 'generated'}
-		<ul class={['mb-1 mt-1 flex flex-col gap-6 px-3 sm:px-12']}>
+		<ul class={['mb-1 mt-1 flex flex-col gap-3 px-3 sm:px-12']}>
 			{#each answers as answer, index}
 				<li class="min-w-0">
 					<article

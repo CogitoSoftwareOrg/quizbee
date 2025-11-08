@@ -228,7 +228,7 @@
 					{canSwipeRight}
 					onSwipeLeft={handleSwipeLeft}
 					onSwipeRight={handleSwipeRight}
-					class="relative h-full overflow-x-hidden"
+					class="relative h-full overflow-x-hidden pb-2"
 				>
 					<div class="mx-auto flex h-full min-w-0 max-w-3xl flex-col py-2">
 						<div class="flex min-w-0 items-start justify-between gap-4 px-3">
@@ -252,6 +252,10 @@
 							/>
 						{/if}
 
+						{#if quiz?.status !== 'final' && user?.id === quiz?.author && lastFinalItem?.id === item?.id && item && !item?.managed && itemDecision && quiz && quizAttempt}
+							<ManageQuiz {item} {quiz} {quizAttempt} />
+						{/if}
+
 						{#if item && quiz && quizAttempt}
 							<QuizItemsNavigation
 								{quizAttempt}
@@ -265,15 +269,6 @@
 								onPrevious={handleSwipeLeft}
 								onNext={handleSwipeRight}
 							/>
-						{/if}
-
-						{#if quiz?.status !== 'final' && user?.id === quiz?.author && lastFinalItem?.id === item?.id && item && !item?.managed && itemDecision && quiz && quizAttempt}
-							<ManageQuiz {item} {quiz} {quizAttempt} />
-						{:else if item && quiz && quizAttempt}
-							<!-- invisible placeholder to maintain layout -->
-							<div class="mt-6 flex gap-2" aria-hidden="true">
-								<Button class="pointer-events-none invisible" style="soft">Adjust Quiz</Button>
-							</div>
 						{/if}
 					</div>
 				</SwipeableContent>

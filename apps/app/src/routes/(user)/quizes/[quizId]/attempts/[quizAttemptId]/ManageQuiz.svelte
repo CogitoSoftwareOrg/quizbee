@@ -35,6 +35,7 @@
 
 <div class="mt-4 flex gap-2">
 	<Button
+		size="lg"
 		onclick={() => {
 			if (isFreePlan) {
 				uiStore.setPaywallOpen(true);
