@@ -112,12 +112,21 @@ if [[ -z "$LATEST_TAG" ]]; then
   LATEST_TAG="v0.0.0"  # стартовая точка, если тегов нет
 fi
 
-if [[ "$BUMP" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-  NEW_TAG="$BUMP"
+# Проверяем, является ли BUMP конкретным тегом версии (vX.Y.Z)
+if [[ "$BUMP" =~ ^v[0-9]+\. ]]; then
+  # Проверяем полный формат vX.Y.Z
+  if [[ "$BUMP" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    NEW_TAG="$BUMP"
+    echo "ℹ️  Используется явно указанный тег: ${NEW_TAG}"
+  else
+    echo "❌ Неверный формат версии: ${BUMP}. Ожидается vX.Y.Z (например, v0.5.1)"
+    exit 1
+  fi
 else
+  # Обрабатываем bump типы (major|minor|patch)
   case "$BUMP" in
     major|minor|patch) NEW_TAG="$(bump_version "$LATEST_TAG" "$BUMP")" ;;
-    *) echo "❌ Укажите major|minor|patch или явный vX.Y.Z"; exit 1 ;;
+    *) echo "❌ Укажите major|minor|patch или явный vX.Y.Z (например, v0.5.1)"; exit 1 ;;
   esac
 fi
 
