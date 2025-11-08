@@ -35,7 +35,7 @@
 
 	interface Props {
 		class?: ClassValue;
-		quizAttempts: QuizAttemptsResponse<unknown, unknown, QuizAttemptExpand>[];
+		quizAttempts: QuizAttemptsResponse[];
 		materials: MaterialsResponse[];
 		userId: string;
 	}
@@ -59,17 +59,14 @@
 
 		// Filter only completed attempts (with feedback) and valid quiz statuses
 		const completedAttempts = quizAttempts.filter((attempt) => {
-			const quiz = attempt.expand?.quiz;
+			const quiz = (attempt.expand as QuizAttemptExpand)?.quiz;
 			const hasFeedback = Boolean(attempt.feedback);
 			const hasValidStatus = quiz?.status === 'final' || quiz?.status === 'answered';
 			return hasFeedback && hasValidStatus;
 		});
 
 		// Group completed attempts by quiz ID
-		const quizAttemptsMap = new Map<
-			string,
-			QuizAttemptsResponse<unknown, unknown, QuizAttemptExpand>[]
-		>();
+		const quizAttemptsMap = new Map<string, QuizAttemptsResponse[]>();
 
 		for (const attempt of completedAttempts) {
 			const quizId = attempt.quiz;
@@ -86,7 +83,7 @@
 		const userQuizzesMap = new Map(quizesStore.quizes.map((quiz) => [quiz.id, quiz]));
 
 		for (const attempt of completedAttempts) {
-			const quiz = attempt.expand?.quiz;
+			const quiz = (attempt.expand as QuizAttemptExpand)?.quiz;
 			if (quiz && !uniqueQuizzes.has(quiz.id)) {
 				// Use reactive quiz from store if it's user's quiz, otherwise use expanded quiz
 				const quizToUse = quiz.author === userId ? userQuizzesMap.get(quiz.id) || quiz : quiz;
@@ -314,7 +311,7 @@
 		{/if}
 	</header>
 
-	<section class="flex flex-col gap-4 md:min-h-0 md:flex-1 -ml-5">
+	<section class="-ml-5 flex flex-col gap-4 md:min-h-0 md:flex-1">
 		{#if filteredQuizes.length === 0}
 			<div
 				class="border-base-200 bg-base-100 flex flex-col items-center gap-3 rounded-xl border p-8 text-center shadow-sm"
