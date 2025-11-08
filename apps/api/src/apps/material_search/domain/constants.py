@@ -1,6 +1,6 @@
 MAX_SIZE_MB = 100
 
-MAX_TEXT_INDEX_TOKENS = 800_000
+MAX_TEXT_INDEX_TOKENS = 2_000_000
 
 IMAGE_EXTENSIONS = (
     ".png",
@@ -13,7 +13,4 @@ IMAGE_EXTENSIONS = (
     ".ico",
 )
 
-COMPLEX_EXTENSIONS = (
-    ".pdf",
-    ".docx",
-    ".pptx")
+COMPLEX_EXTENSIONS = (".pdf", ".docx", ".pptx")

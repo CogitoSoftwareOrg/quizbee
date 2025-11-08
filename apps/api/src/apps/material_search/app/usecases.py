@@ -14,15 +14,15 @@ from ..domain.models import (
     MaterialKind,
     MaterialStatus,
     MaterialChunk,
-    SearchType
+    SearchType,
 )
 from ..domain.ports import (
     MaterialIndexer,
     MaterialRepository,
     DocumentParser,
-    SearcherProvider
+    SearcherProvider,
 )
-from ..domain.errors import TooLargeFileError
+from ..domain.errors import TooLargeFileError, TooManyTextTokensError
 from ..domain.constants import MAX_SIZE_MB, COMPLEX_EXTENSIONS
 from .contracts import MaterialApp, AddMaterialCmd, RemoveMaterialCmd, SearchCmd
 
@@ -161,7 +161,13 @@ class MaterialAppImpl(MaterialApp):
         await self._material_repository.update(material)
 
         # Индексируем материал
-        await self._indexer.index(material)
+        try:
+            await self._indexer.index(material)
+        except TooManyTextTokensError as e:
+            material.status = MaterialStatus.TOO_BIG
+            await self._material_repository.update(material)
+            raise e
+
         material.status = MaterialStatus.INDEXED
         await self._material_repository.attach_to_quiz(material, cmd.quiz_id)
         await self._material_repository.update(material)
@@ -173,8 +179,6 @@ class MaterialAppImpl(MaterialApp):
 
         limit_chunks = int(cmd.limit_tokens / self._llm_tools.chunk_size)
 
-
-
         if cmd.query.strip() == "":
             search_type = SearchType.DISTRIBUTION
             ratio = 0.0
@@ -182,14 +186,11 @@ class MaterialAppImpl(MaterialApp):
             search_type = SearchType.QUERY
             ratio = 0.5 if len(cmd.query.strip().split()) > 3 else 0
 
-
         searcher = self._searcher_provider.get(search_type=search_type)
-
 
         logger.info(
             f"Searching for material chunks for query: {cmd.query} (limit: {limit_chunks}, ratio: {ratio})"
         )
-
 
         chunks = await searcher.search(
             user_id=cmd.user.id,
@@ -201,7 +202,6 @@ class MaterialAppImpl(MaterialApp):
 
         return chunks
 
-    
     async def remove_material(self, cmd: RemoveMaterialCmd) -> None:
         material = await self._material_repository.get(cmd.material_id)
         if material is None:
