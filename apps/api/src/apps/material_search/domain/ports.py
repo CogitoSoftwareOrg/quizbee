@@ -4,32 +4,11 @@ from typing import Any, Protocol
 from src.lib.config.llms import LLMS
 from src.apps.document_parser.domain import DocumentParseCmd
 
-from .models import Material, MaterialFile, MaterialChunk, ParsedDocument
+from .models import Material, MaterialFile, MaterialChunk, ParsedDocument, SearchType
 
 
 # ======ADAPTERS INTERFACES======
 
-
-# LLM Tools
-class LLMTools(Protocol):
-    """Интерфейс для работы с LLM инструментами (токенизация, chunking)."""
-
-    @property
-    def chunk_size(self) -> int:
-        """Размер чанка в токенах."""
-        ...
-
-    def count_text(self, text: str, llm: LLMS = LLMS.GPT_5_MINI) -> int:
-        """Подсчитать количество токенов в тексте."""
-        ...
-
-    def count_image(self, width: int, height: int) -> int:
-        """Подсчитать количество токенов для изображения."""
-        ...
-
-    def chunk(self, text: str) -> list[str]:
-        """Разбить текст на чанки."""
-        ...
 
 
 # Material Repository
@@ -70,9 +49,41 @@ class DocumentParser(Protocol):
         ...
 
 
+# LLM Tools (Port для работы с LLM инструментами)
+class LLMTools(Protocol):
+    """
+    Port для работы с LLM инструментами (подсчет токенов, chunking).
+    
+    Реализация: LLMToolsAdapter
+    """
+
+    @property
+    def chunk_size(self) -> int:
+        """Размер chunk'а в токенах."""
+        ...
+
+    def count_text(self, text: str, llm: LLMS = LLMS.GPT_5_MINI) -> int:
+        """Подсчитывает токены в тексте для указанной модели."""
+        ...
+
+    def count_image(self, width: int, height: int) -> int:
+        """Подсчитывает токены для изображения по его размерам."""
+        ...
+
+    def chunk(self, text: str) -> list[str]:
+        """Разбивает текст на chunks."""
+        ...
+
+
 # Indexer
 class MaterialIndexer(Protocol):
     async def index(self, material: Material) -> None: ...
+    async def delete(self, material_ids: list[str]) -> None: ...
+
+
+
+# Searcher
+class Searcher(Protocol):
     async def search(
         self,
         user_id: str,
@@ -81,4 +92,13 @@ class MaterialIndexer(Protocol):
         limit: int,
         ratio: float,
     ) -> list[MaterialChunk]: ...
-    async def delete(self, material_ids: list[str]) -> None: ...
+
+
+
+
+# Indexer
+class SearcherProvider(Protocol):
+    def get(
+        self,
+        search_type: SearchType,
+    ) -> Searcher : ...

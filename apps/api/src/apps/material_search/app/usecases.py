@@ -6,44 +6,49 @@ from src.lib.settings import settings
 
 from src.apps.document_parser.domain import DocumentParseCmd
 
+from src.apps.llm_tools.app.contracts import LLMToolsApp
+
 from ..domain.models import (
     Material,
     MaterialFile,
     MaterialKind,
     MaterialStatus,
     MaterialChunk,
+    SearchType,
 )
 from ..domain.ports import (
-    LLMTools,
     MaterialIndexer,
     MaterialRepository,
     DocumentParser,
+    SearcherProvider,
 )
-from ..domain.errors import TooLargeFileError
+from ..domain.errors import TooLargeFileError, TooManyTextTokensError
 from ..domain.constants import MAX_SIZE_MB, COMPLEX_EXTENSIONS
-from .contracts import MaterialSearchApp, AddMaterialCmd, RemoveMaterialCmd, SearchCmd
+from .contracts import MaterialApp, AddMaterialCmd, RemoveMaterialCmd, SearchCmd
 
 logger = logging.getLogger(__name__)
 
 
-class MaterialSearchAppImpl(MaterialSearchApp):
+class MaterialAppImpl(MaterialApp):
     def __init__(
         self,
         material_repository: MaterialRepository,
         document_parser: DocumentParser,
-        llm_tools: LLMTools,
+        llm_tools: LLMToolsApp,
         indexer: MaterialIndexer,
+        searcher_provider: SearcherProvider,
     ):
         self._document_parser = document_parser
-        self.material_repository = material_repository
-        self.llm_tools = llm_tools
-        self.indexer = indexer
+        self._material_repository = material_repository
+        self._llm_tools = llm_tools
+        self._indexer = indexer
+        self._searcher_provider = searcher_provider
 
     async def add_material(self, cmd: AddMaterialCmd) -> Material:
 
         ### я убрал возможность добавлять простые картинки поэтому кода для их обработки нет
 
-        logger.info("MaterialSearchAppImpl.add_material")
+        logger.info("MaterialAppImpl.add_material")
         # Validate file size
 
         file_size_mb = len(cmd.file.file_bytes) / (1024 * 1024)
@@ -58,7 +63,7 @@ class MaterialSearchAppImpl(MaterialSearchApp):
                 ),
             )
             material.to_big()
-            await self.material_repository.create(material)
+            await self._material_repository.create(material)
             raise TooLargeFileError(file_size_mb)
 
         # material = await self._deduplicate_material(cmd)
@@ -89,12 +94,12 @@ class MaterialSearchAppImpl(MaterialSearchApp):
                 text = doc_data.text
 
                 # Считаем токены для текста
-                text_tokens = self.llm_tools.count_text(text)
+                text_tokens = self._llm_tools.count_text(text)
 
                 # Считаем токены для изображений и сохраняем их
                 image_tokens = 0
                 for image in doc_data.images:
-                    image_tokens += self.llm_tools.count_image(
+                    image_tokens += self._llm_tools.count_image(
                         image.width, image.height
                     )
                     image_file = MaterialFile(
@@ -138,40 +143,56 @@ class MaterialSearchAppImpl(MaterialSearchApp):
         else:
             try:
                 text = cmd.file.file_bytes.decode("utf-8")
-                material.tokens = self.llm_tools.count_text(text)
+                material.tokens = self._llm_tools.count_text(text)
             except UnicodeDecodeError as e:
                 logger.warning(f"Error decoding text: {e}")
 
-        await self.material_repository.create(material)
+        await self._material_repository.create(material)
 
         print("material.tokens =", material.tokens)
         # Проверяем количество токенов
         if material.tokens < 40:
             material.status = MaterialStatus.NO_TEXT
-            await self.material_repository.attach_to_quiz(material, cmd.quiz_id)
-            await self.material_repository.update(material)
+            await self._material_repository.attach_to_quiz(material, cmd.quiz_id)
+            await self._material_repository.update(material)
             return material
 
         material.status = MaterialStatus.INDEXING
-        await self.material_repository.update(material)
+        await self._material_repository.update(material)
 
         # Индексируем материал
-        await self.indexer.index(material)
+        try:
+            await self._indexer.index(material)
+        except TooManyTextTokensError as e:
+            material.status = MaterialStatus.TOO_BIG
+            await self._material_repository.update(material)
+            raise e
+
         material.status = MaterialStatus.INDEXED
-        await self.material_repository.attach_to_quiz(material, cmd.quiz_id)
-        await self.material_repository.update(material)
+        await self._material_repository.attach_to_quiz(material, cmd.quiz_id)
+        await self._material_repository.update(material)
 
         return material
 
     async def search(self, cmd: SearchCmd) -> list[MaterialChunk]:
-        logger.info("MaterialSearchAppImpl.search")
-        limit_chunks = int(cmd.limit_tokens / self.llm_tools.chunk_size)
-        ratio = 0.5 if len(cmd.query.strip().split()) > 3 else 0
+        logger.info("MaterialAppImpl.query_search")
+
+        limit_chunks = int(cmd.limit_tokens / self._llm_tools.chunk_size)
+
+        if cmd.query.strip() == "":
+            search_type = SearchType.DISTRIBUTION
+            ratio = 0.0
+        else:
+            search_type = SearchType.QUERY
+            ratio = 0.5 if len(cmd.query.strip().split()) > 3 else 0
+
+        searcher = self._searcher_provider.get(search_type=search_type)
 
         logger.info(
             f"Searching for material chunks for query: {cmd.query} (limit: {limit_chunks}, ratio: {ratio})"
         )
-        chunks = await self.indexer.search(
+
+        chunks = await searcher.search(
             user_id=cmd.user.id,
             query=cmd.query,
             material_ids=cmd.material_ids,
@@ -182,7 +203,7 @@ class MaterialSearchAppImpl(MaterialSearchApp):
         return chunks
 
     async def remove_material(self, cmd: RemoveMaterialCmd) -> None:
-        material = await self.material_repository.get(cmd.material_id)
+        material = await self._material_repository.get(cmd.material_id)
         if material is None:
             raise ValueError("Material not found")
 
@@ -190,12 +211,12 @@ class MaterialSearchAppImpl(MaterialSearchApp):
             raise ValueError("User does not have permission to remove material")
 
         if material.status == MaterialStatus.INDEXED:
-            await self.indexer.delete([cmd.material_id])
+            await self._indexer.delete([cmd.material_id])
 
-        await self.material_repository.delete(cmd.material_id)
+        await self._material_repository.delete(cmd.material_id)
 
     async def _deduplicate_material(self, cmd: AddMaterialCmd) -> Material | None:
-        material = await self.material_repository.get(cmd.material_id)
+        material = await self._material_repository.get(cmd.material_id)
         if material is not None:
             return material
         return material

@@ -70,20 +70,24 @@ async def lifespan(app: FastAPI):
     )
 
     # V2 MATERIAL SEARCH
-    material_repository, document_parser_adapter, material_indexer = (
-        await init_material_search_deps(
-            lf=lf,
-            admin_pb=admin_pb,
-            meili=meili,
-            llm_tools=llm_tools,
-            document_parser_app=document_parser_app,
-        )
+    (
+        material_repository,
+        document_parser_adapter,
+        material_indexer,
+        searcher_provider,
+    ) = await init_material_search_deps(
+        lf=lf,
+        admin_pb=admin_pb,
+        meili=meili,
+        llm_tools=llm_tools,
+        document_parser_app=document_parser_app,
     )
     material_search_app = init_material_search_app(
         document_parser=document_parser_adapter,
         llm_tools_app=llm_tools,
         indexer=material_indexer,
         material_repository=material_repository,
+        searcher_provider=searcher_provider,
     )
 
     # V2 QUIZ GENERATOR

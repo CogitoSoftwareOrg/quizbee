@@ -41,6 +41,11 @@ class MaterialStatus(StrEnum):
     NO_TEXT = "no text"
 
 
+class SearchType(StrEnum):
+    QUERY = "query"
+    DISTRIBUTION = "ditribution"
+
+
 @dataclass(slots=True, kw_only=True)
 class MaterialFile:
     file_name: str
@@ -87,3 +92,4 @@ class Material:
 
     def to_big(self):
         self.status = MaterialStatus.TOO_BIG
+
