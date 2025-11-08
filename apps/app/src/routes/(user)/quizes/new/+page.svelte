@@ -17,6 +17,7 @@
 	let questionCount = $state(10);
 	let inputText = $state('');
 	let avoidRepeat = $state(false);
+	let isUploading = $state(false);
 
 	let inputElement: HTMLInputElement;
 	let showWarningLength = $state(false);
@@ -145,6 +146,7 @@
 									bind:attachedFiles
 									bind:inputText
 									bind:quizTemplateId
+									bind:isUploading
 									previousQuizes.length
 								/>
 							</div>
@@ -198,7 +200,13 @@
 						{/if}
 
 						<!-- Start Button -->
-						<StartQuizButton {quizTemplateId} {attachedFiles} {inputText} {questionCount} />
+						<StartQuizButton
+							{quizTemplateId}
+							{attachedFiles}
+							{inputText}
+							{questionCount}
+							{isUploading}
+						/>
 					</div>
 				</div>
 			</div>

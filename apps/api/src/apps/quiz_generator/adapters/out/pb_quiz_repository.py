@@ -52,9 +52,14 @@ class PBQuizRepository(QuizRepository):
         except:
             raise
 
-    async def update(self, quiz: Quiz):
+    async def update(self, quiz: Quiz, fresh_generated: bool = False):
         try:
-            await asyncio.gather(*[self.save_item(item) for item in quiz.items])
+            if fresh_generated:
+                await asyncio.gather(
+                    *[self.save_item(item) for item in quiz.fresh_generated_items()]
+                )
+            else:
+                await asyncio.gather(*[self.save_item(item) for item in quiz.items])
             await self.admin_pb.collection("quizes").update(
                 quiz.id, await self._to_record(quiz)
             )
