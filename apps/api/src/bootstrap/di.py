@@ -42,6 +42,10 @@ from src.apps.quiz_generator.adapters.out import (
     QuizFinalizerOutput,
     AIPatchGeneratorOutput,
     MeiliQuizIndexer,
+    AIQuizInstantGenerator,
+    AIQuizInstantGeneratorDeps,
+    AIQuizInstantGeneratorOutput,
+    QUIZ_INSTANT_GENERATOR_LLM,
 )
 
 from src.apps.quiz_attempter.adapters.out import (
@@ -142,9 +146,9 @@ async def init_quiz_generator_deps(
     admin_pb: PocketBase,
     http: httpx.AsyncClient,
     llm_tools: LLMToolsApp,
-) -> tuple[PBQuizRepository, AIPatchGenerator, AIQuizFinalizer, MeiliQuizIndexer]:
+) -> tuple[PBQuizRepository, AIQuizInstantGenerator, AIQuizFinalizer, MeiliQuizIndexer]:
     quiz_repository = PBQuizRepository(admin_pb, http=http)
-    patch_generator = AIPatchGenerator(
+    instant_generator = AIQuizInstantGenerator(
         lf=lf,
         quiz_repository=quiz_repository,
         output_type=AgentEnvelope,
@@ -160,4 +164,4 @@ async def init_quiz_generator_deps(
         meili=meili,
         quiz_repository=quiz_repository,
     )
-    return quiz_repository, patch_generator, finalizer, quiz_indexer
+    return quiz_repository, instant_generator, finalizer, quiz_indexer

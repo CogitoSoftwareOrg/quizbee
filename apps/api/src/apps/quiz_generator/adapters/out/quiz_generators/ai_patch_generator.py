@@ -19,8 +19,8 @@ from src.lib.utils import update_span_with_result
 from src.lib.config import LLMS
 from src.lib.settings import settings
 
-from ...domain.ports import PatchGenerator, QuizRepository
-from ...domain.models import Quiz, QuizItem, QuizItemStatus, QuizItemVariant
+from ....domain.ports import PatchGenerator, QuizRepository
+from ....domain.models import Quiz, QuizItem, QuizItemStatus, QuizItemVariant
 
 
 PATCH_GENERATOR_LLM = LLMS.GPT_5_MINI
