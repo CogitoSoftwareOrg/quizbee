@@ -67,6 +67,20 @@ class AIQuizInstantGeneratorOutput(BaseModel):
         ),
     ]
 
+    def merge(self, quiz: Quiz) -> None:
+        for schema in self.quiz_items:
+            quiz.generation_step(
+                question=schema.question,
+                variants=[
+                    QuizItemVariant(
+                        content=a.answer,
+                        is_correct=a.correct,
+                        explanation=a.explanation,
+                    )
+                    for a in schema.answers
+                ],
+            )
+
 
 class AIQuizInstantGenerator(PatchGenerator):
     def __init__(
@@ -108,24 +122,7 @@ class AIQuizInstantGenerator(PatchGenerator):
                 if run.output.data.mode != "quiz":
                     raise ValueError(f"Unexpected output type: {run.output.data.mode}")
                 payload: AIQuizInstantGeneratorOutput = run.output.data
-
-                for itm, schema in zip(quiz.generating_items(), payload.quiz_items):
-                    upd = QuizItem(
-                        id=itm.id,
-                        question=schema.question,
-                        variants=[
-                            QuizItemVariant(
-                                content=a.answer,
-                                is_correct=a.correct,
-                                explanation=a.explanation,
-                            )
-                            for a in schema.answers
-                        ],
-                        order=itm.order,
-                        status=QuizItemStatus.GENERATED,
-                    )
-                    quiz.update_item(upd)
-
+                payload.merge(quiz)
                 await self._quiz_repository.update(quiz)
 
                 await update_span_with_result(

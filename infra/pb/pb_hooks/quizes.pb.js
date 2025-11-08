@@ -24,22 +24,33 @@ onRecordCreate((e) => {
   });
 
   e.next();
-
-  $app.runInTransaction((txApp) => {
-    const col = txApp.findCollectionByNameOrId("quizItems");
-    for (let i = 0; i < e.record.get("itemsLimit"); i++) {
-      const item = new Record(col);
-      item.set("quiz", e.record.id);
-      item.set("order", i);
-      txApp.save(item);
-    }
-  });
-
-  $app.runInTransaction((txApp) => {});
 }, "quizes");
 
 onRecordUpdate((e) => {
   e.next();
+
+  const status = e.record.get("status");
+  const quizId = e.record.id;
+
+  if (status === "preparing") {
+    const existingItems = $app.findRecordsByFilter(
+      "quizItems",
+      `quiz = "${quizId}"`
+    );
+
+    if (existingItems.length === 0) {
+      $app.runInTransaction((txApp) => {
+        const quizItemsCol = txApp.findCollectionByNameOrId("quizItems");
+        const itemsLimit = e.record.get("itemsLimit") || 10;
+        for (let i = 0; i < itemsLimit; i++) {
+          const item = new Record(quizItemsCol);
+          item.set("quiz", quizId);
+          item.set("order", i);
+          txApp.save(item);
+        }
+      });
+    }
+  }
 }, "quizes");
 
 onRecordDelete((e) => {

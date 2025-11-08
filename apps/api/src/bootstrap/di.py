@@ -62,7 +62,7 @@ from src.apps.quiz_attempter.adapters.out import (
 
 AgentPayload = Annotated[
     Union[
-        AIPatchGeneratorOutput,
+        AIQuizInstantGeneratorOutput,
         QuizFinalizerOutput,
         ExplainerOutput,
         AttemptFinalizerOutput,
@@ -127,15 +127,15 @@ async def init_material_search_deps(
 
     material_repository = PBMaterialRepository(admin_pb)
     document_parser_adapter = DocumentParserAdapter(document_parser_app)
-    
+
     # Создаем адаптер для LLM Tools
     llm_tools_adapter = LLMToolsAdapter(llm_tools)
-    
+
     # Инициализируем материал индексер
     material_indexer = await MeiliMaterialIndexer.ainit(
         lf=lf, llm_tools=llm_tools_adapter, meili=meili
     )
-    
+
     # Создаем searcher'ы
     query_searcher = MeiliMaterialQuerySearcher(
         lf=lf, llm_tools=llm_tools_adapter, meili=meili
@@ -143,13 +143,13 @@ async def init_material_search_deps(
     distribution_searcher = MeiliMaterialDistributionSearcher(
         lf=lf, llm_tools=llm_tools_adapter, meili=meili
     )
-    
+
     # Создаем provider
     searcher_provider = MaterialSearcherProvider(
         query_searcher=query_searcher,
         distribution_searcher=distribution_searcher,
     )
-    
+
     return (
         material_repository,
         document_parser_adapter,
