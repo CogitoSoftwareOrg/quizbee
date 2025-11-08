@@ -404,10 +404,7 @@
 							<div class="flex flex-wrap items-center gap-2">
 								<!-- In Progress badge -->
 								{#if item.isInProgress}
-									<span class="badge badge-primary">
-										<Loader2 size={12} class="animate-spin" />
-										In Progress
-									</span>
+									<span class="badge badge-primary"> In Progress </span>
 								{/if}
 
 								<!-- Author badge -->
