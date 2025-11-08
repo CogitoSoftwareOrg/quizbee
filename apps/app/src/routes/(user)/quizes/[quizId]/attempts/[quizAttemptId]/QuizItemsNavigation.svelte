@@ -33,6 +33,7 @@
 	}: Props = $props();
 </script>
 
+<!-- Desktop: Explain on left, Previous and Next on right -->
 <div class="-mb-2 hidden justify-between gap-4 px-3 pt-6 sm:px-12 md:flex">
 	<div class="flex-1">
 		{#if itemDecision}
@@ -77,6 +78,61 @@
 			</Button>
 		{:else}
 			<Button size="lg" class="pointer-events-none invisible">Next</Button>
+		{/if}
+	</div>
+</div>
+
+<!-- Mobile: Previous on left, Explain and Next stacked on right -->
+<div class="-mb-2 flex flex-col gap-3 px-3 pt-6 md:hidden">
+	<!-- Explain button - full width on top -->
+	<div class = "flex flex-1">
+		{#if itemDecision}
+			<ExplainMore
+				{quiz}
+				sender={userSender}
+				quizAttemptId={quizAttempt.id}
+				{itemId}
+				bind:chatOpen
+				class="flex-1"
+			/>
+		{/if}
+	</div>
+
+	<!-- Previous and Next buttons - side by side below Explain -->
+	<div class="flex gap-3">
+		<!-- Previous button -->
+		{#if order > 0}
+			<Button
+				color="neutral"
+				style="outline"
+				size="lg"
+				class="flex-1 dark:text-base-content/90"
+				onclick={(e) => {
+					e.preventDefault();
+					onPrevious();
+				}}
+			>
+				Previous
+			</Button>
+		{:else}
+			<Button size="lg" class="pointer-events-none invisible flex-1">Previous</Button>
+		{/if}
+
+		<!-- Next button -->
+		{#if itemDecision}
+			<Button
+				color="primary"
+				size="lg"
+				class="flex-1"
+				onclick={(e) => {
+					e.preventDefault();
+					onNext();
+				}}
+			>
+				Next
+			</Button>
+		{:else}
+			<Button size="lg" class="pointer-events-none invisible flex-1">Next</Button>
 		{/if}
 	</div>
 </div>

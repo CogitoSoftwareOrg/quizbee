@@ -1,26 +1,29 @@
-from fastapi import FastAPI
-
 from src.apps.llm_tools.app.contracts import LLMToolsApp
 
 from .domain.ports import (
+    LLMTools,
     MaterialRepository,
-    PdfParser,
+    DocumentParser,
     MaterialIndexer,
 )
 
+from .adapters.out.llm_tools_adapter import LLMToolsAdapter
 from .app.usecases import MaterialSearchAppImpl
 
 
 # APP
 def init_material_search_app(
-    llm_tools: LLMToolsApp,
-    pdf_parser: PdfParser,
+    document_parser: DocumentParser,
+    llm_tools_app: LLMToolsApp,
     indexer: MaterialIndexer,
     material_repository: MaterialRepository,
 ):
+    # Оборачиваем LLMToolsApp в адаптер для соблюдения гексагональной архитектуры
+    llm_tools: LLMTools = LLMToolsAdapter(llm_tools_app)
+
     return MaterialSearchAppImpl(
+        document_parser=document_parser,
         material_repository=material_repository,
-        pdf_parser=pdf_parser,
         llm_tools=llm_tools,
         indexer=indexer,
     )

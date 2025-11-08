@@ -99,7 +99,7 @@
 	}
 </script>
 
-<div class="card bg-base-100 shadow-lg">
+<div class="card bg-base-100 shadow-sm">
 	<div class="card-body">
 		<!-- Avatar Section -->
 		<div class="mb-4 flex flex-col items-center gap-3">

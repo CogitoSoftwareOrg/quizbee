@@ -43,8 +43,8 @@
         "position": "right",
         "center": true,
         "textWidth": "max-w-5xl",
-        "titleSize": "text-7xl 2xl:text-8xl",
-        "descriptionSize": "text-xl 2xl:text-2xl py-6",
+        "titleSize": "text-5xl lg:text-7xl 2xl:text-8xl",
+        "descriptionSize": "text-md lg:text-xl 2xl:text-2xl py-6",
         "buttonSize": "xl"
       }
     },

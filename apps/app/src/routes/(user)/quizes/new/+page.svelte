@@ -64,9 +64,8 @@
 </svelte:head>
 
 <main class="relative flex h-full flex-row overflow-x-hidden">
-	<!-- Use Previous Quiz Settings Button - Fixed in top right corner -->
-
-	<div class="fixed right-4 top-4 z-50">
+	<!-- Use Previous Quiz Settings Button - Fixed in top right corner on desktop -->
+	<div class="fixed right-4 top-2 z-50 hidden lg:block">
 		<Draft
 			bind:title
 			bind:quizTemplateId
@@ -83,16 +82,16 @@
 		<div class="flex items-start justify-center overflow-x-hidden">
 			<div class="quiz-container w-full max-w-3xl px-4">
 				<!-- Header with Title -->
-				<div class="mb-4 text-center">
+				<div class="{previousQuizes.length === 0 ? 'mb-4' : 'mb-4'} text-center">
 					<div
-						class="group relative mx-auto -mt-3 inline-flex items-center justify-center gap-1 pt-2"
+						class="group relative mx-auto -mt-2 inline-flex items-center justify-center gap-1 pt-2"
 					>
 						<input
 							bind:value={title}
 							bind:this={inputElement}
 							type="text"
 							placeholder=""
-							class="hover:text-warning min-w-0 max-w-full cursor-pointer border-none bg-transparent px-0 text-center text-4xl font-bold leading-tight transition-colors focus:outline-none focus:ring-0 md:text-5xl"
+							class="hover:text-warning min-w-0 max-w-full cursor-pointer border-none bg-transparent px-0 text-center text-4xl font-bold leading-tight transition-colors focus:outline-none focus:ring-0 md:text-5xl -mt-2"
 							style="width: auto;"
 							oninput={(e) => {
 								const target = e.target as HTMLInputElement;
@@ -124,17 +123,32 @@
 				<div
 					class="card bg-base-100 border-base-300 overflow-x-hidden border-2 shadow-xl backdrop-blur-sm"
 				>
-					<div class="card-body p-6.5 overflow-x-hidden">
+					<div class="card-body px-5 py-3.5 overflow-x-hidden">
 						<!-- Description Section -->
-						<div class="mb-2">
-							<div class="w-full">
+						<div class="{previousQuizes.length === 0 ? 'mb-2' : 'mb-2'}">
+							<div class="w-full flex items-start justify-between gap-3">
 								<h3 class="mb-3 block text-base font-semibold">Describe your quiz</h3>
-								<FileInput bind:attachedFiles bind:inputText bind:quizTemplateId />
+								<!-- Mobile Draft Button - Shows on mobile only, next to title -->
+								<div class="lg:hidden">
+									<Draft
+										bind:title
+										bind:quizTemplateId
+										bind:inputText
+										bind:attachedFiles
+										bind:selectedDifficulty
+										bind:questionCount
+										bind:previousQuizes
+										bind:avoidRepeat
+									/>
+								</div>
+							</div>
+							<div class="w-full">
+								<FileInput bind:attachedFiles bind:inputText bind:quizTemplateId previousQuizes.length/>
 							</div>
 						</div>
 
 						<!-- Difficulty and Questions Grid -->
-						<div class="mb-3 grid gap-6 md:grid-cols-2 md:gap-8">
+						<div class="{previousQuizes.length === 0 ? 'mb-3' : 'mb-3'}  grid gap-6 md:grid-cols-2 md:gap-8">
 							<!-- Difficulty -->
 							<div>
 								<h3 class="mb-4 block text-base font-semibold">Choose difficulty level</h3>
@@ -150,9 +164,9 @@
 
 						<!-- Avoid Repeat Questions Section -->
 						{#if previousQuizes.length > 0}
-							<div class="bg-base-200/50 border-base-300 mb-3 rounded-lg border p-5">
+							<div class="bg-base-200/50 border-base-300 mb-2 rounded-lg border p-2.5 md:p-3.5">
 								<div
-									class="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between"
+									class="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between md:gap-4"
 								>
 									<div class="min-w-0 flex-1">
 										<h3 class="mb-1 text-base font-semibold">Avoid repeating questions</h3>
@@ -161,17 +175,17 @@
 											appearing again
 										</p>
 									</div>
-									<label class="flex shrink-0 cursor-pointer items-center gap-3">
+									<label class="flex shrink-0 cursor-pointer items-center gap-2 md:gap-3">
 										<span
-											class="label-text font-medium {avoidRepeat
+											class="label-text text-base font-medium {avoidRepeat
 												? 'text-base-content/50'
 												: 'text-base-content'}">No</span
 										>
-										<div class="toggle toggle-lg bg-transparent! [&:before]:bg-current">
+										<div class="toggle md:toggle-lg bg-transparent! [&:before]:bg-current">
 											<input type="checkbox" bind:checked={avoidRepeat} class="sr-only" />
 										</div>
 										<span
-											class="label-text font-medium {avoidRepeat
+											class="label-text text-base font-medium {avoidRepeat
 												? 'text-base-content'
 												: 'text-base-content/50'}">Yes</span
 										>

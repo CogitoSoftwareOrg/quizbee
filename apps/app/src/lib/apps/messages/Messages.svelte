@@ -55,7 +55,7 @@
 		{#if messages.length === 0}
 			<div class="flex h-full flex-col items-center justify-center text-center">
 				<div class="mb-4 text-6xl">💬</div>
-				<p class="text-base-content/70 text-lg font-medium">No messages yet, waiting...</p>
+				<p class="mb-3 text-base-content/70 text-lg font-medium">No messages yet, waiting...</p>
 				<ExplainMore sender={userSender} {quizAttemptId} {itemId} {quiz} />
 			</div>
 		{:else}

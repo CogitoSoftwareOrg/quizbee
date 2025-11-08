@@ -185,7 +185,7 @@
 		</ul>
 	</header>
 
-	<div class="flex flex-1 overflow-hidden">
+	<div class="flex mt-3 flex-1 overflow-hidden">
 		<div class="relative flex h-full min-w-0 flex-1">
 			<!-- Main column -->
 			<main

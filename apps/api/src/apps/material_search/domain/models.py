@@ -4,6 +4,28 @@ from enum import StrEnum
 from src.lib.utils import genID
 
 
+@dataclass
+class ParsedDocumentImage:
+    """Изображение, извлечённое из документа."""
+    bytes: bytes
+    ext: str  # png, jpg, jpeg и т.д.
+    width: int
+    height: int
+    page: int  # номер страницы (для PDF) или слайда (для PPTX)
+    index: int  # индекс изображения на странице
+    marker: str | None = None  # маркер для вставки в текст
+    file_name: str = ""
+
+
+@dataclass
+class ParsedDocument:
+    """Результат парсинга документа в material_search контексте."""
+    text: str  # Извлечённый текст с маркерами изображений
+    images: list[ParsedDocumentImage]  # Список извлечённых изображений
+    contents: list[dict]  # Оглавление/структура документа
+    is_book: bool  # Является ли документ книгой
+
+
 class MaterialKind(StrEnum):
     SIMPLE = "simple"
     COMPLEX = "complex"
@@ -16,6 +38,7 @@ class MaterialStatus(StrEnum):
     INDEXED = "indexed"
     DELETING = "deleting"
     TOO_BIG = "too big"
+    NO_TEXT = "no text"
 
 
 @dataclass(slots=True, kw_only=True)

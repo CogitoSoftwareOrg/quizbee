@@ -6,7 +6,12 @@ from pocketbase import PocketBase
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 
+from src.apps.document_parser.domain import DocumentParserApp
 from src.apps.llm_tools.app.contracts import LLMToolsApp
+from src.apps.material_search.adapters.out.document_parsing_adapter import (
+    DocumentParserAdapter,
+)
+from src.apps.material_search.domain.ports import DocumentParser
 from src.lib.settings import settings
 
 from src.apps.llm_tools.adapters.out import (
@@ -20,7 +25,6 @@ from src.apps.user_auth.adapters.out import PBUserVerifier, PBUserRepository
 
 
 from src.apps.material_search.adapters.out import (
-    FitzPDFParser,
     MeiliMaterialIndexer,
     PBMaterialRepository,
 )
@@ -101,14 +105,18 @@ def init_user_auth_deps(admin_pb: PocketBase):
 
 
 async def init_material_search_deps(
-    lf: Langfuse, admin_pb: PocketBase, meili: AsyncClient, llm_tools: LLMToolsApp
-) -> tuple[PBMaterialRepository, FitzPDFParser, MeiliMaterialIndexer]:
+    lf: Langfuse,
+    admin_pb: PocketBase,
+    meili: AsyncClient,
+    llm_tools: LLMToolsApp,
+    document_parser_app: DocumentParserApp,
+) -> tuple[PBMaterialRepository, DocumentParserAdapter, MeiliMaterialIndexer]:
     material_repository = PBMaterialRepository(admin_pb)
-    pdf_parser = FitzPDFParser()
+    document_parser_adapter = DocumentParserAdapter(document_parser_app)
     material_indexer = await MeiliMaterialIndexer.ainit(
         lf=lf, llm_tools=llm_tools, meili=meili
     )
-    return material_repository, pdf_parser, material_indexer
+    return material_repository, document_parser_adapter, material_indexer
 
 
 # Factory functions for dependency initialization

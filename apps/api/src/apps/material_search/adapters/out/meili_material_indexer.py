@@ -9,11 +9,9 @@ from meilisearch_python_sdk.models.settings import Embedders, OpenAiEmbedder
 from src.lib.config import LLMS
 from src.lib.settings import settings
 
-from src.apps.llm_tools.app.contracts import LLMToolsApp
-
 from ...domain.models import Material, MaterialChunk, MaterialKind
 from ...domain.constants import MAX_TEXT_INDEX_TOKENS
-from ...domain.ports import MaterialIndexer
+from ...domain.ports import MaterialIndexer, LLMTools
 from ...domain.errors import TooManyTextTokensError
 
 EMBEDDER_NAME = "materialChunks"
@@ -39,7 +37,7 @@ class Doc:
 
 
 class MeiliMaterialIndexer(MaterialIndexer):
-    def __init__(self, lf: Langfuse, llm_tools: LLMToolsApp, meili: AsyncClient):
+    def __init__(self, lf: Langfuse, llm_tools: LLMTools, meili: AsyncClient):
         self._lf = lf
         self.llm_tools = llm_tools
         self.meili = meili
@@ -47,7 +45,7 @@ class MeiliMaterialIndexer(MaterialIndexer):
 
     @classmethod
     async def ainit(
-        cls, lf: Langfuse, llm_tools: LLMToolsApp, meili: AsyncClient
+        cls, lf: Langfuse, llm_tools: LLMTools, meili: AsyncClient
     ) -> "MeiliMaterialIndexer":
         instance = cls(lf, llm_tools, meili)
 

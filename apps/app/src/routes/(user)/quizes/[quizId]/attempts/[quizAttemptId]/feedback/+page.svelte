@@ -67,7 +67,7 @@
 	class="relative mx-auto flex max-w-7xl flex-1 flex-col gap-6 p-1 pb-20 sm:h-full sm:flex-row sm:pb-1"
 >
 	{#if subscription?.tariff === 'free'}
-		<section class="flex flex-1 flex-col items-center justify-center gap-4 p-0 sm:p-4">
+		<section class="flex mt-3 sm:mt-0 flex-1 flex-col items-center justify-center gap-4 p-0 sm:p-4">
 			<button
 				onclick={() => {
 					uiStore.setPaywallOpen(true);

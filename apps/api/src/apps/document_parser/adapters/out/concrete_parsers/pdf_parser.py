@@ -1,12 +1,14 @@
-import fitz  # PyMuPDF для извлечения изображений
+import fitz  # PyMuPDF
 from io import BytesIO
 from typing import Any
 import logging
 import re
 
-from ...domain.ports import PdfParser, PdfParseResult, PdfImage
+from ....domain.out import DocumentParser
+from ....domain.models import ParsedDocument, DocumentImage
 
-class FitzPDFParser(PdfParser):
+
+class FitzPDFParser(DocumentParser):
     def __init__(
         self,
         min_width: int = 50,
@@ -17,43 +19,36 @@ class FitzPDFParser(PdfParser):
         self.min_height = min_height
         self.min_file_size = min_file_size
 
-    def parse(self, file_bytes: bytes, process_images: bool = False) -> PdfParseResult:
+    def parse(
+        self, file_bytes: bytes, file_name: str, process_images: bool = False
+    ) -> ParsedDocument:
         """
         Извлекает текст и изображения из PDF-файла, фильтруя слишком маленькие изображения.
 
         Использует PyMuPDF для извлечения текста и изображений.
 
-        В текст вставляются маркеры вида {quizbee_unique_image_1}, {quizbee_unique_image_2} и т.д. на места,
-        где находятся изображения, для последующего восстановления их позиций.
-
-        Фильтрация изображений по нескольким критериям:
-        - Размер (ширина/высота) - отсеивает слишком маленькие
-        - Размер файла - отсеивает черные экраны и другой "мусор" с низкой энтропией
-
         Args:
             file_bytes: Байты PDF файла
+            file_name: Имя файла (для логирования)
+            process_images: Обрабатывать ли изображения
 
         Returns:
-            Словарь с извлеченным текстом и списком отфильтрованных изображений:
-            {
-                "text": str,  # Текст с маркерами {quizbee_unique_image_N}
-                "images": list[dict[str, any]]  # каждое изображение содержит bytes, ext, width, height, marker, size
-                "contents": list[dict[str, any]]  # оглавление документа
-                "isBook": bool  # является ли документ книгой
-            }
+            ParsedDocument с извлечённым текстом и списком отфильтрованных изображений
 
         Raises:
             Exception: Если не удается обработать PDF файл
         """
         try:
+            logging.info(f"📄 Парсинг PDF: {file_name}")
             pdf_stream = BytesIO(file_bytes)
             doc = fitz.open(stream=pdf_stream, filetype="pdf")
             page_count = len(doc)
             logging.info(f"PDF открыт. Количество страниц: {page_count}")
 
-            images: list[PdfImage] = []
+            images: list[DocumentImage] = []
             image_positions = {}
             is_book_doc = self.is_book(doc)
+            toc_items = []  # Инициализируем пустым списком
 
             # Статистика фильтрации
             stats = {
@@ -83,12 +78,10 @@ class FitzPDFParser(PdfParser):
                         # Добавляем отступы в зависимости от уровня вложенности
                         indent = "  " * (level - 1)
                         logging.info(f"{indent}- {title} (стр. {page_num})")
-            
+
             if process_images:
                 # Вынесенная логика обработки изображений
                 self.extract_pictures(doc, page_count, images, image_positions, stats)
-
-
 
             # TEXT EXTRACTION
             md_text_parts = []
@@ -97,51 +90,53 @@ class FitzPDFParser(PdfParser):
                 page = doc.load_page(page_num)
                 page_text: str = page.get_text()  # type: ignore
 
-                # Добавляем маркер номера страницы в начало
-                page_marker = f"{{quizbee_page_number_{page_num + 1}}}\n\n"
-                page_text = page_marker + page_text
+                # Добавляем маркер номера страницы в начало (ПОКА ЧТО ВЫКЛЮЧЕНО)
+                # page_marker = f"{{quizbee_page_number_{page_num + 1}}}\n\n"
 
-                # Если на странице есть изображения, вставляем маркеры
-                if page_num in image_positions:
-                    # Разбиваем текст на параграфы/блоки
-                    paragraphs = re.split(r"\n\n+", page_text)
+                page_text = page_text
 
-                    # Определяем количество параграфов и изображений
-                    num_paragraphs = len(paragraphs)
-                    num_images = len(image_positions[page_num])
+                if process_images:
+                    # Если на странице есть изображения, вставляем маркеры
+                    if page_num in image_positions:
+                        # Разбиваем текст на параграфы/блоки
+                        paragraphs = re.split(r"\n\n+", page_text)
 
-                    # Вставляем маркеры изображений между параграфами
-                    # Распределяем их равномерно
-                    result_parts = []
-                    images_inserted = 0
+                        # Определяем количество параграфов и изображений
+                        num_paragraphs = len(paragraphs)
+                        num_images = len(image_positions[page_num])
 
-                    for i, para in enumerate(paragraphs):
-                        result_parts.append(para)
+                        # Вставляем маркеры изображений между параграфами
+                        # Распределяем их равномерно
+                        result_parts = []
+                        images_inserted = 0
 
-                        # Вставляем изображение после каждого N-го параграфа
-                        if images_inserted < num_images and num_paragraphs > 0:
-                            # Простая эвристика: вставляем изображения пропорционально
-                            insert_threshold = (i + 1) / num_paragraphs
-                            image_threshold = (images_inserted + 1) / num_images
+                        for i, para in enumerate(paragraphs):
+                            result_parts.append(para)
 
-                            if insert_threshold >= image_threshold:
-                                _, marker = image_positions[page_num][images_inserted]
-                                result_parts.append(f"\n{marker}\n")
-                                images_inserted += 1
+                            # Вставляем изображение после каждого N-го параграфа
+                            if images_inserted < num_images and num_paragraphs > 0:
+                                # Простая эвристика: вставляем изображения пропорционально
+                                insert_threshold = (i + 1) / num_paragraphs
+                                image_threshold = (images_inserted + 1) / num_images
 
-                    # Вставляем оставшиеся изображения в конец
-                    while images_inserted < num_images:
-                        _, marker = image_positions[page_num][images_inserted]
-                        result_parts.append(f"\n{marker}\n")
-                        images_inserted += 1
+                                if insert_threshold >= image_threshold:
+                                    _, marker = image_positions[page_num][
+                                        images_inserted
+                                    ]
+                                    result_parts.append(f"\n{marker}\n")
+                                    images_inserted += 1
 
-                    page_text = "\n\n".join(result_parts)
+                        # Вставляем оставшиеся изображения в конец
+                        while images_inserted < num_images:
+                            _, marker = image_positions[page_num][images_inserted]
+                            result_parts.append(f"\n{marker}\n")
+                            images_inserted += 1
+
+                        page_text = "\n\n".join(result_parts)
 
                 md_text_parts.append(page_text)
 
             md_text = "\n\n-----\n\n".join(md_text_parts)
-
-            
 
             doc.close()
 
@@ -155,7 +150,11 @@ class FitzPDFParser(PdfParser):
                 f"скриншотов_страниц={stats['full_page_screenshots']}"
             )
 
-            return PdfParseResult(
+            logging.info(
+                f"✅ PDF парсинг завершён: {len(md_text)} символов, {len(images)} изображений"
+            )
+
+            return ParsedDocument(
                 text=md_text,
                 images=images,
                 contents=toc_items,
@@ -163,6 +162,7 @@ class FitzPDFParser(PdfParser):
             )
 
         except Exception as e:
+            logging.error(f"❌ Ошибка при парсинге PDF файла {file_name}: {str(e)}")
             raise Exception(f"Ошибка при парсинге PDF файла: {str(e)}")
 
     def extract_table_of_contents(self, doc: fitz.Document) -> list[dict[str, Any]]:
@@ -225,7 +225,7 @@ class FitzPDFParser(PdfParser):
         self,
         doc: fitz.Document,
         page_count: int,
-        images: list[PdfImage],
+        images: list[DocumentImage],
         image_positions: dict,
         stats: dict,
     ) -> None:
@@ -256,7 +256,7 @@ class FitzPDFParser(PdfParser):
                 marker = f"{{quizbee_unique_image_{global_image_counter}}}"
 
                 images.append(
-                    PdfImage(
+                    DocumentImage(
                         bytes=img_bytes,
                         ext="png",
                         width=pix.width,  # type: ignore
@@ -397,7 +397,7 @@ class FitzPDFParser(PdfParser):
                     marker = f"{{quizbee_unique_image_{global_image_counter}}}"
 
                     images.append(
-                        PdfImage(
+                        DocumentImage(
                             bytes=img_bytes,
                             ext="png",
                             width=pix.width,  # type: ignore
@@ -448,7 +448,7 @@ class FitzPDFParser(PdfParser):
                     marker = f"{{quizbee_unique_image_{global_image_counter}}}"
 
                     images.append(
-                        PdfImage(
+                        DocumentImage(
                             bytes=img_bytes,
                             ext="png",
                             width=pix.width,  # type: ignore

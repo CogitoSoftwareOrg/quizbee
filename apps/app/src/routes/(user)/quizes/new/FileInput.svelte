@@ -11,18 +11,21 @@
 	import { generateId } from '$lib/utils/generate-id';
 	import { removeFile } from '../new/removeFile';
 	import { addExistingMaterial } from '../new/addExistingMaterial';
+	import PreviousQuizes from './PreviousQuizes.svelte';
 	import { postApi } from '$lib/api/call-api';
 
 	interface Props {
 		inputText: string;
 		attachedFiles: AttachedFile[];
 		quizTemplateId?: string;
+		previousQuizesLength: number;
 	}
 
 	let {
 		inputText = $bindable(''),
 		attachedFiles = $bindable([]),
-		quizTemplateId = $bindable('')
+		quizTemplateId = $bindable(''),
+		previousQuizesLength = 0
 	}: Props = $props();
 
 	const maxTokensWithABook = 450000;
@@ -41,12 +44,15 @@
 	let warningTooBigQuery = $state(false);
 	let warningTooBigFile = $state<string | null>(null);
 	let warningUnsupportedFile = $state<string | null>(null);
+	let warningNoText = $state<string | null>(null);
 	let warningMaxTokensExceeded = $derived(
 		attachedFiles.length >= 2 &&
 			(hasBook
 				? totalTokensAttached > maxTokensWithABook
 				: totalTokensAttached > maxTokensWithoutABook)
 	);
+
+	let placeholderText = $state('Attach files • Add text');
 
 	let buttonElement = $state<HTMLButtonElement>();
 	let menuElement = $state<HTMLDivElement>();
@@ -55,8 +61,19 @@
 	onMount(() => {
 		document.addEventListener('click', handleClickOutside);
 
+		// пофиксить эту хуйню потом
+		const updatePlaceholder = () => {
+			placeholderText = window.innerWidth >= 768 
+				? "Attach relevant files and/or describe what you'd like the questions to be about"
+				: 'Attach files • Add text';
+		};
+		
+		updatePlaceholder();
+		window.addEventListener('resize', updatePlaceholder);
+
 		return () => {
 			document.removeEventListener('click', handleClickOutside);
+			window.removeEventListener('resize', updatePlaceholder);
 
 			// Освобождаем все URL превью
 			attachedFiles.forEach((attachedFile) => {
@@ -75,6 +92,15 @@
 				warningUnsupportedFile = file.name;
 				setTimeout(() => {
 					warningUnsupportedFile = null;
+				}, 5000);
+				continue;
+			}
+
+			// Check file size (100MB limit)
+			if (file.size > 1024 * 1024 * 100) {
+				warningTooBigFile = file.name;
+				setTimeout(() => {
+					warningTooBigFile = null;
 				}, 5000);
 				continue;
 			}
@@ -111,6 +137,14 @@
 						// Clear warning after 5 seconds
 						setTimeout(() => {
 							warningTooBigFile = null;
+						}, 5000);
+					} else if (foundMaterial.status === 'no text') {
+						warningNoText = attachedFile.name;
+						// Remove the file from attachedFiles
+						removeFile(i, attachedFiles, quizTemplateId);
+						// Clear warning after 5 seconds
+						setTimeout(() => {
+							warningNoText = null;
 						}, 5000);
 					} else if (foundMaterial.status === 'indexed') {
 						attachedFile.tokens = foundMaterial.tokens;
@@ -230,6 +264,8 @@
 		const maxHeight = 7.5 * 16;
 		target.style.height = Math.min(scrollHeight, maxHeight) + 'px';
 
+
+
 		if (target.value.length > 100000) {
 			target.value = target.value.slice(0, 100000);
 			inputText = target.value;
@@ -268,7 +304,7 @@
 
 <div
 	class={[
-		'flex w-full flex-col gap-2.5 rounded-lg font-sans transition-colors duration-200',
+		'flex w-full flex-col gap-2 rounded-lg font-sans transition-colors duration-200',
 		isDragging && 'border-primary bg-primary/10 border-2 border-dashed'
 	]}
 	ondragover={handleDragOver}
@@ -389,9 +425,9 @@
 			</div>
 		{/if}
 		<textarea
-			placeholder="Attach relevant files and/or describe what you'd like the questions to be about"
+			placeholder={placeholderText}
 			bind:value={inputText}
-			class="3xl:max-h-[100px] max-h-[55px] grow resize-none overflow-y-auto border-none bg-transparent py-0 pl-4 text-lg leading-6 outline-none focus:shadow-none focus:outline-none focus:ring-0"
+			class="flex-grow resize-none border-none bg-transparent py-0 pl-4 text-lg leading-6 outline-none focus:shadow-none focus:outline-none focus:ring-0 max-h-[4.5rem] overflow-y-auto"
 			onpaste={handlePaste}
 			rows="1"
 			oninput={handleTextareaResize}
@@ -413,6 +449,11 @@
 			File "{warningTooBigFile}" is too big and cannot be uploaded.
 		</div>
 	{/if}
+	{#if warningNoText}
+		<div class="text-md mt-2 text-red-500">
+			We can't process material "{warningNoText}" as it has no or very little text.
+		</div>
+	{/if}
 	{#if warningUnsupportedFile}
 		<div class="text-md mt-2 text-red-500">
 			File "{warningUnsupportedFile}" has an unsupported format and cannot be uploaded.
@@ -425,7 +466,8 @@
 		</div>
 	{/if}
 	{#if attachedFiles.length > 0}
-		<div class="flex gap-3 overflow-x-auto px-1 pb-2" style="scrollbar-width: auto;">
+		<div class="flex gap-3 overflow-x-auto pb-0 px-1"
+		style="scrollbar-width: auto;">
 			{#each attachedFiles as attachedFile, index}
 				<div
 					class="bg-base-300 border-base-content/20 group relative mb-0.5 aspect-square h-24 w-24 shrink-0 rounded-lg border-2 p-1.5"
@@ -444,7 +486,7 @@
 								class="file-icon h-8 w-8"
 							/>
 							<span
-								class="-mt-2 line-clamp-3 break-all text-[12px] leading-tight"
+								class="-mt-2 line-clamp-3 break-all text-[0.7rem] leading-tight"
 								title={attachedFile.name}>{attachedFile.name}</span
 							>
 						</div>
@@ -463,7 +505,7 @@
 						onclick={async () => {
 							attachedFiles = await removeFile(index, attachedFiles, quizTemplateId);
 						}}
-						class="bg-base-content/50 text-base-100 absolute right-1 top-1 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full border-none text-sm leading-none opacity-0 transition-opacity group-hover:opacity-100"
+						class="text-base-content absolute right-1 top-1 flex h-5 w-5 cursor-pointer items-center justify-center border-none text-xl ы"
 						aria-label="Remove file">&times;</button
 					>
 				</div>

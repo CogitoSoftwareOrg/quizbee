@@ -79,7 +79,7 @@
 
 <Button
 	class={[
-		'h-14 w-full text-lg font-semibold shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl'
+		'h-12 w-full text-lg font-semibold shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl'
 	]}
 	disabled={quizRemained >= questionCount && (isSubmitDisabled || isLoading)}
 	onclick={sendQuizCreation}
