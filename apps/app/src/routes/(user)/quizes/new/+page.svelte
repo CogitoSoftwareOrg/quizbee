@@ -47,8 +47,6 @@
 		tick().then(() => {
 			updateInputWidth();
 		});
-		console.log('Mounted New Quiz Page');
-
 		// Пересчитываем при изменении размера окна
 		const handleResize = () => updateInputWidth();
 		window.addEventListener('resize', handleResize);
