@@ -28,6 +28,7 @@ interface Props {
   footerText?: string;
   verticalAlign?: "start" | "center" | "end";
   buttonTextSize?: string;
+  target?: "_blank" | "_self" | "_parent" | "_top";
 }
 
 const {
@@ -55,6 +56,7 @@ const {
   footerText,
   verticalAlign = "center",
   buttonTextSize = "text-base",
+  target,
 } = Astro.props;
 
 const positionClasses = {
@@ -142,7 +144,7 @@ const alignToClass = (align: "left" | "center" | "right") => {
       <div class={`flex gap-4 pt-4 ${center ? "justify-center" : ""}`}>
         <Button
           href={href}
-          target="_blank"
+          target={target}
           size="lg"
           class={`hero-button ${buttonTextSize}`}
         >
@@ -153,7 +155,7 @@ const alignToClass = (align: "left" | "center" | "right") => {
           secondaryButtonText && (
             <Button
               href={secondaryButtonHref}
-              target="_blank"
+              target={target}
               size="lg"
               variant="outline"
               class={`hero-button-secondary ${buttonTextSize}`}
