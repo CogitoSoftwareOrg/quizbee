@@ -86,7 +86,11 @@
 	});
 
 	// первая функция которая дергается когда в проводнике мы выбираем файлы
-	function processFiles(files: File[]) {
+	async function processFiles(files: File[]) {
+		const MAX_CONCURRENT_UPLOADS = 10; // Ограничиваем параллелизм, чтобы избежать проблем с PocketBase POST trigger
+		const validFiles: File[] = [];
+
+		// Сначала валидируем все файлы
 		for (const file of files) {
 			const extension = file.name.split('.').pop()?.toLowerCase();
 			if (!extension || !allowedExtensions.includes(extension)) {
@@ -106,16 +110,24 @@
 				continue;
 			}
 
-			const attachedFile: AttachedFile = {
+			validFiles.push(file);
+		}
+
+		// Загружаем файлы с ограниченным параллелизмом
+		for (let i = 0; i < validFiles.length; i += MAX_CONCURRENT_UPLOADS) {
+			const batch = validFiles.slice(i, i + MAX_CONCURRENT_UPLOADS);
+			const attachedFilesBatch: AttachedFile[] = batch.map((file) => ({
 				file,
 				previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
 				name: file.name,
 				isUploading: true,
 				materialId: generateId()
-			};
+			}));
 
-			attachedFiles = [...attachedFiles, attachedFile];
-			uploadFileAsync(attachedFile);
+			attachedFiles = [...attachedFiles, ...attachedFilesBatch];
+
+			// Загружаем батч параллельно, но следующий батч ждем завершения текущего
+			await Promise.all(attachedFilesBatch.map((attachedFile) => uploadFileAsync(attachedFile)));
 		}
 	}
 
@@ -139,7 +151,7 @@
 						setTimeout(() => {
 							warningTooBigFile = null;
 						}, 5000);
-					} else if (foundMaterial.status === 'no text') {
+					} else if ((foundMaterial.status as string) === 'no text') {
 						warningNoText = attachedFile.name;
 						// Remove the file from attachedFiles
 						removeFile(i, attachedFiles, quizTemplateId);
@@ -164,7 +176,7 @@
 	async function handleFileChange(event: Event) {
 		const target = event.target as HTMLInputElement;
 		if (target.files) {
-			processFiles(Array.from(target.files));
+			await processFiles(Array.from(target.files));
 		}
 	}
 
@@ -234,7 +246,7 @@
 			const files = imageItems
 				.map((item) => item.getAsFile())
 				.filter((file) => file !== null) as File[];
-			processFiles(files);
+			await processFiles(files);
 		}
 	}
 
@@ -254,7 +266,7 @@
 
 		const files = event.dataTransfer?.files;
 		if (files) {
-			processFiles(Array.from(files));
+			await processFiles(Array.from(files));
 		}
 	}
 
