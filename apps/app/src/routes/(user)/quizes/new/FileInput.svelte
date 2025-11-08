@@ -19,13 +19,15 @@
 		attachedFiles: AttachedFile[];
 		quizTemplateId?: string;
 		previousQuizesLength: number;
+		isUploading?: boolean;
 	}
 
 	let {
 		inputText = $bindable(''),
 		attachedFiles = $bindable([]),
 		quizTemplateId = $bindable(''),
-		previousQuizesLength = 0
+		previousQuizesLength = 0,
+		isUploading = $bindable(false)
 	}: Props = $props();
 
 	const maxTokensWithABook = 450000;
@@ -58,6 +60,12 @@
 	let menuElement = $state<HTMLDivElement>();
 
 	const allowedExtensions = ['pdf', 'pptx', 'docx', 'md', 'txt', 'html', 'xlsx', 'csv'];
+
+	// Track if any files are currently uploading
+	$effect(() => {
+		isUploading = attachedFiles.some((file) => file.isUploading);
+	});
+
 	onMount(() => {
 		document.addEventListener('click', handleClickOutside);
 
