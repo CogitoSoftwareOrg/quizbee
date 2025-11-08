@@ -83,9 +83,9 @@
 </div>
 
 <!-- Mobile: Previous on left, Explain and Next stacked on right -->
-<div class="-mb-2 flex flex-col gap-3 px-3 pt-6 md:hidden">
+<div class="-mb-2 flex flex-col gap-2 px-1 pt-2 md:hidden">
 	<!-- Explain button - full width on top -->
-	<div class = "flex flex-1">
+	<div class="flex flex-1">
 		{#if itemDecision}
 			<ExplainMore
 				{quiz}
@@ -99,14 +99,14 @@
 	</div>
 
 	<!-- Previous and Next buttons - side by side below Explain -->
-	<div class="flex gap-3">
+	<div class="flex gap-2">
 		<!-- Previous button -->
 		{#if order > 0}
 			<Button
 				color="neutral"
 				style="outline"
 				size="lg"
-				class="flex-1 dark:text-base-content/90"
+				class="dark:text-base-content/90 flex-1"
 				onclick={(e) => {
 					e.preventDefault();
 					onPrevious();

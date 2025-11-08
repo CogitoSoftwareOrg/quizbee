@@ -161,7 +161,7 @@
 </script>
 
 <div class="flex h-full flex-col">
-	<header class="flex items-center justify-between px-4 py-2">
+	<header class="flex items-center justify-between px-2 py-1">
 		<ul class="hidden flex-1 flex-wrap items-center gap-1 sm:flex">
 			{#each quizItems as quizItem, index}
 				{@const decision = quizDecisions.at(quizItem.order)}
@@ -210,13 +210,13 @@
 		</ul>
 
 		<div class="flex items-center gap-1 sm:hidden">
-			<Button href="/home" color="neutral" style="ghost" size="xs" circle>
+			<Button href="/quizes" color="neutral" style="ghost" circle>
 				<X size={24} />
 			</Button>
 		</div>
 	</header>
 
-	<div class="mt-3 flex flex-1 overflow-hidden">
+	<div class="flex flex-1 overflow-hidden">
 		<div class="relative flex h-full min-w-0 flex-1">
 			<!-- Main column -->
 			<main
