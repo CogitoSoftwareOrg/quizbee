@@ -75,7 +75,7 @@
 			onclick={() => {
 				uiStore.setPaywallOpen(true);
 			}}
-			class="border-warning/30 hover:border-warning/50 group relative mt-5 cursor-pointer overflow-hidden rounded-2xl border p-4 shadow-lg transition-all hover:shadow-xl sm:mt-0 sm:rounded-3xl sm:p-5 md:p-6"
+			class="border-warning/30 hover:border-warning/50 group relative cursor-pointer overflow-hidden rounded-2xl border p-4 shadow-lg transition-all hover:shadow-xl sm:rounded-3xl sm:p-5 md:p-6"
 		>
 			<div class="relative z-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 				<div class="flex items-start gap-3 sm:items-center sm:gap-4">

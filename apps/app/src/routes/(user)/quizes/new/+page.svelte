@@ -151,20 +151,16 @@
 						</div>
 
 						<!-- Difficulty and Questions Grid -->
-						<div
-							class="{previousQuizes.length === 0
-								? 'mb-3'
-								: 'mb-3'}  grid gap-6 md:grid-cols-2 md:gap-8"
-						>
+						<div class="mb-2 grid gap-3 md:grid-cols-2 md:gap-8">
 							<!-- Difficulty -->
 							<div>
-								<h3 class="mb-4 block text-base font-semibold">Choose difficulty level</h3>
+								<h3 class="mb-2 block text-base font-semibold">Choose difficulty level</h3>
 								<DifficultySelector bind:selectedDifficulty />
 							</div>
 
 							<!-- Question Count -->
 							<div>
-								<h3 class="mb-4 block text-base font-semibold">Number of questions</h3>
+								<h3 class="mb-2 block text-base font-semibold">Number of questions</h3>
 								<QuestionNumberSelector bind:value={questionCount} />
 							</div>
 						</div>

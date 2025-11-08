@@ -11,6 +11,6 @@
 
 <div class="mx-auto flex h-full max-w-6xl flex-col items-center justify-center gap-4">
 	{#if user}
-		<MyQuizes class="w-full flex-1" {quizAttempts} {materials} userId={user.id} />
+		<MyQuizes class=" w-full flex-1 px-5" {quizAttempts} {materials} userId={user.id} />
 	{/if}
 </div>

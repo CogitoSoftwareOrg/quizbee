@@ -175,12 +175,12 @@
 
 {#if previousQuizes.length > 0}
 	<button
-		class="btn btn-outline btn-xs sm:btn-lg gap-1 whitespace-nowrap rounded-lg sm:mr-2 sm:mt-1 sm:gap-3"
+		class="btn btn-outline btn-xs lg:btn-lg gap-1 whitespace-nowrap rounded-lg sm:mt-1 lg:mr-2 lg:gap-3"
 		onclick={() => (showModal = true)}
 	>
-		<FilePlus class="h-4 w-4 sm:h-6 sm:w-6" />
-		<span class="hidden text-sm sm:inline sm:text-2xl"> Use previous quiz </span>
-		<span class="mt-0.5 inline text-sm sm:hidden"> Use previous quiz </span>
+		<FilePlus class="h-4 w-4 lg:h-6 lg:w-6" />
+		<span class="hidden text-sm lg:inline lg:text-2xl"> Use previous quiz </span>
+		<span class="mt-0.5 inline text-sm lg:hidden"> Use previous quiz </span>
 	</button>
 {/if}
 
