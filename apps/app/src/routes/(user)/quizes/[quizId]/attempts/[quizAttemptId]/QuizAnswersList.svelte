@@ -156,14 +156,20 @@
 									newDecisions[item.order] = itemDecision;
 
 									item.status = QuizItemsStatusOptions.final;
-									await Promise.all([
-										pb!.collection('quizAttempts').update(quizAttempt!.id, {
+									try {
+										const batch = pb!.createBatch();
+										batch.collection('quizAttempts').update(quizAttempt!.id, {
 											choices: newDecisions
-										}),
-										pb!.collection('quizItems').update(item!.id, {
+										});
+										batch.collection('quizItems').update(item!.id, {
 											status: 'final'
-										})
-									]);
+										});
+										await batch.send();
+									} catch (error) {
+										console.error(error);
+										itemDecision = null;
+										item.status = QuizItemsStatusOptions.generated;
+									}
 
 									if (toAnswer <= 3 && quizItems.some((qi) => ['blank'].includes(qi.status))) {
 										const result = await patchApi(`quizes/${quiz?.id}`, {
