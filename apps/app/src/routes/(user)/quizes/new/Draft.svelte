@@ -175,71 +175,67 @@
 
 {#if previousQuizes.length > 0}
 	<button
-		class="btn btn-outline btn-xs sm:btn-lg gap-1 sm:gap-3 sm:mr-2 sm:mt-1 whitespace-nowrap rounded-lg "
+		class="btn btn-outline btn-xs sm:btn-lg gap-1 whitespace-nowrap rounded-lg sm:mr-2 sm:mt-1 sm:gap-3"
 		onclick={() => (showModal = true)}
 	>
 		<FilePlus class="h-4 w-4 sm:h-6 sm:w-6" />
 		<span class="hidden text-sm sm:inline sm:text-2xl"> Use previous quiz </span>
-		<span class="inline text-sm mt-0.5 sm:hidden"> Use previous quiz </span>
+		<span class="mt-0.5 inline text-sm sm:hidden"> Use previous quiz </span>
 	</button>
 {/if}
 
-{#if showModal}
-	<Modal
-		backdrop
-		open={showModal}
-		onclose={() => (showModal = false)}
-		class="max-h-screen max-w-sm items-start"
-	>
-		<h3 class="text-center text-2xl font-bold">Choose a quiz to copy configuration from</h3>
-		<div class="relative mb-4 mt-4">
-			<input
-				bind:value={searchQuery}
-				placeholder="Search previous quizes.."
-				class="border-base-300 focus:border-primary w-full rounded border py-1 pl-8 pr-2 text-sm focus:outline-none"
-			/>
-			<svg
-				xmlns="http://www.w3.org/2000/svg"
-				width="16"
-				height="16"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-				class="lucide lucide-search text-base-content/60 absolute left-2 top-1/2 -translate-y-1/2 transform"
-				><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg
-			>
-		</div>
-		<div class="max-h-135 flex justify-start overflow-y-auto">
-			<PreviousQuizes
-				bind:quizTemplateId
-				bind:title
-				bind:inputText
-				bind:attachedFiles
-				bind:selectedDifficulty
-				bind:draftSwitch
-				bind:questionCount
-				{searchQuery}
-				onQuizSelected={() => (showModal = false)}
-			/>
-		</div>
-	</Modal>
-{/if}
+<Modal
+	backdrop
+	open={showModal}
+	onclose={() => (showModal = false)}
+	class="max-h-screen max-w-sm items-start"
+>
+	<h3 class="text-center text-2xl font-bold">Choose a quiz to copy configuration from</h3>
+	<div class="relative mb-4 mt-4">
+		<input
+			bind:value={searchQuery}
+			placeholder="Search previous quizes.."
+			class="border-base-300 focus:border-primary w-full rounded border py-1 pl-8 pr-2 text-sm focus:outline-none"
+		/>
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			width="16"
+			height="16"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			class="lucide lucide-search text-base-content/60 absolute left-2 top-1/2 -translate-y-1/2 transform"
+			><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg
+		>
+	</div>
+	<div class="max-h-135 flex justify-start overflow-y-auto">
+		<PreviousQuizes
+			bind:quizTemplateId
+			bind:title
+			bind:inputText
+			bind:attachedFiles
+			bind:selectedDifficulty
+			bind:draftSwitch
+			bind:questionCount
+			{searchQuery}
+			onQuizSelected={() => (showModal = false)}
+		/>
+	</div>
+</Modal>
 
-{#if showDeleteModal}
-	<Modal open={showDeleteModal} onclose={() => (showDeleteModal = false)}>
-		<p>Are you sure you want to delete this draft?</p>
-		<div class="mt-4 flex justify-end gap-2">
-			<button class="btn btn-ghost" onclick={() => (showDeleteModal = false)}>No</button>
-			<button
-				class="btn btn-error"
-				onclick={() => {
-					confirmDelete(draftToDelete);
-					showDeleteModal = false;
-				}}>Yes</button
-			>
-		</div>
-	</Modal>
-{/if}
+<Modal open={showDeleteModal} onclose={() => (showDeleteModal = false)}>
+	<p>Are you sure you want to delete this draft?</p>
+	<div class="mt-4 flex justify-end gap-2">
+		<button class="btn btn-ghost" onclick={() => (showDeleteModal = false)}>No</button>
+		<button
+			class="btn btn-error"
+			onclick={() => {
+				confirmDelete(draftToDelete);
+				showDeleteModal = false;
+			}}>Yes</button
+		>
+	</div>
+</Modal>
