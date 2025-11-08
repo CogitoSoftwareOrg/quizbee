@@ -52,6 +52,8 @@
 				: totalTokensAttached > maxTokensWithoutABook)
 	);
 
+	let placeholderText = $state('Attach files • Add text');
+
 	let buttonElement = $state<HTMLButtonElement>();
 	let menuElement = $state<HTMLDivElement>();
 
@@ -59,8 +61,19 @@
 	onMount(() => {
 		document.addEventListener('click', handleClickOutside);
 
+		// пофиксить эту хуйню потом
+		const updatePlaceholder = () => {
+			placeholderText = window.innerWidth >= 768 
+				? "Attach relevant files and/or describe what you'd like the questions to be about"
+				: 'Attach files • Add text';
+		};
+		
+		updatePlaceholder();
+		window.addEventListener('resize', updatePlaceholder);
+
 		return () => {
 			document.removeEventListener('click', handleClickOutside);
+			window.removeEventListener('resize', updatePlaceholder);
 
 			// Освобождаем все URL превью
 			attachedFiles.forEach((attachedFile) => {
@@ -412,7 +425,7 @@
 			</div>
 		{/if}
 		<textarea
-			placeholder="Attach relevant files and/or describe what you'd like the questions to be about"
+			placeholder={placeholderText}
 			bind:value={inputText}
 			class="flex-grow resize-none border-none bg-transparent py-0 pl-4 text-lg leading-6 outline-none focus:shadow-none focus:outline-none focus:ring-0 max-h-[4.5rem] overflow-y-auto"
 			onpaste={handlePaste}
@@ -492,7 +505,7 @@
 						onclick={async () => {
 							attachedFiles = await removeFile(index, attachedFiles, quizTemplateId);
 						}}
-						class="bg-base-content/50 text-base-100 absolute right-1 top-1 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full border-none text-sm leading-none opacity-0 transition-opacity group-hover:opacity-100"
+						class="text-base-content absolute right-1 top-1 flex h-5 w-5 cursor-pointer items-center justify-center border-none text-xl ы"
 						aria-label="Remove file">&times;</button
 					>
 				</div>

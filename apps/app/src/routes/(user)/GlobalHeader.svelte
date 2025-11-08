@@ -49,7 +49,7 @@
 
 <header
 	class={[
-		'flex items-center justify-between px-2 py-2',
+		'flex px-2 py-2 absolute left-0 top-0 z-40 ',
 		//!isNewQuizPage &&
 		'border-base-200 border-b'
 	]}

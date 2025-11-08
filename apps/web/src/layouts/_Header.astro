@@ -89,7 +89,7 @@ const ENV = import.meta.env.PUBLIC_ENV;
     <!-- Right side actions -->
     <div class="hidden md:flex items-center gap-2">
       <ThemeController client:only />
-      <a
+      <!-- <a
         class={"aspect-square rounded-2xl p-2 border " +
           (active === "search"
             ? "border-primary text-primary"
@@ -97,7 +97,7 @@ const ENV = import.meta.env.PUBLIC_ENV;
         href={tp("/search")}
       >
         <Search />
-      </a>
+      </a> -->
       <SwitchLang />
       <!-- CTA Button -->
       <slot name="CTA">
@@ -125,8 +125,32 @@ const ENV = import.meta.env.PUBLIC_ENV;
       </slot>
     </div>
 
-    <!-- Mobile menu toggle -->
-    <div class="md:hidden">
+    <!-- Mobile menu toggle and CTA -->
+    <div class="md:hidden flex items-center gap-2">
+      <!-- CTA Button for mobile -->
+      <slot name="CTA-mobile">
+        {
+          ctaModal && (
+            <button
+              onclick={`${ctaModal}.showModal()`}
+              class="btn btn-primary btn-sm rounded-xl px-3"
+            >
+              {ctaText}
+            </button>
+          )
+        }
+        {
+          ctaHref && (
+            <a
+              href={ctaHref}
+              target="_blank"
+              class="btn btn-primary btn-sm rounded-xl px-3"
+            >
+              {ctaText}
+            </a>
+          )
+        }
+      </slot>
       <label for="modal_burger" class="btn btn-circle swap swap-rotate">
         <Menu size={24} />
       </label>
@@ -172,31 +196,4 @@ const ENV = import.meta.env.PUBLIC_ENV;
   <label class="modal-backdrop" for="modal_burger">
     <X size={24} />
   </label>
-</div>
-
-<div class="fixed bottom-4 right-1/2 translate-x-1/2 sm:hidden z-50">
-  {
-    ctaModal && (
-      <button
-        onclick={`${ctaModal}.showModal()`}
-        class="btn btn-primary rounded-xl px-4 btn-wide btn-lg btn-outline shadow-lg"
-      >
-        {ctaText}
-      </button>
-    )
-  }
-  {
-    ctaHref && (
-      <Button
-        wide
-        size="md"
-        color="primary"
-        target="_blank"
-        href={ctaHref}
-        class="rounded-xl px-4 shadow-lg"
-      >
-        {ctaText}
-      </Button>
-    )
-  }
 </div>

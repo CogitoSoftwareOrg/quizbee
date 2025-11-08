@@ -75,12 +75,12 @@
 			onclick={() => {
 				uiStore.setPaywallOpen(true);
 			}}
-			class="border-warning/30 hover:border-warning/50 group relative cursor-pointer overflow-hidden rounded-2xl border p-4 shadow-lg transition-all hover:shadow-xl sm:rounded-3xl sm:p-5 md:p-6"
+			class="mt-5 sm:mt-0 border-warning/30 hover:border-warning/50 group relative cursor-pointer overflow-hidden rounded-2xl border p-4 shadow-lg transition-all hover:shadow-xl sm:rounded-3xl sm:p-5 md:p-6"
 		>
 			<div class="relative z-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 				<div class="flex items-start gap-3 sm:items-center sm:gap-4">
 					<div
-						class="bg-warning/20 text-warning rounded-xl p-2.5 transition-transform group-hover:scale-110 sm:p-3"
+						class="bg-warning/20 text-warning hidden rounded-xl p-2.5 transition-transform group-hover:scale-110 sm:block sm:p-3"
 					>
 						<Crown size={24} class="sm:size-7" />
 					</div>
@@ -95,7 +95,7 @@
 					</div>
 				</div>
 				<div
-					class="bg-primary text-warning-content group-hover:bg-warning/90 ml-auto inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold shadow-md transition-all group-hover:shadow-lg sm:ml-0 sm:px-5 sm:py-3 sm:text-base"
+					class="bg-primary text-warning-content group-hover:bg-warning/90 mx-auto sm:mx-0 inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold shadow-md transition-all group-hover:shadow-lg sm:ml-0 sm:mt-0 sm:px-5 sm:py-3 sm:text-base"
 				>
 					View Plans
 					<Sparkles size={16} class="sm:size-5" />

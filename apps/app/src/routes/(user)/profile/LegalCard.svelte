@@ -5,7 +5,7 @@
 	import { PUBLIC_WEB_URL } from '$env/static/public';
 </script>
 
-<div class="card bg-base-100 shadow-lg">
+<div class="card bg-base-100 shadow-sm">
 	<div class="card-body">
 		<div class="flex items-center justify-between">
 			<span class="text-sm font-semibold">Legal</span>
