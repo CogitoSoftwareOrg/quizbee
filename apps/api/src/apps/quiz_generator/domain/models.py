@@ -85,11 +85,13 @@ class QuizItem:
             raise ValueError("Item is not in generating status for failing")
         self.status = QuizItemStatus.FAILED
 
-    def update(self, item: "QuizItem") -> None:
-        self.question = item.question
-        self.variants = item.variants
-        self.order = item.order
-        self.status = item.status
+    def to_generated(self, question: str, variants: list[QuizItemVariant]) -> None:
+        if self.status not in {QuizItemStatus.GENERATING}:
+            raise ValueError("Item is not in generating status for generating")
+
+        self.status = QuizItemStatus.GENERATED
+        self.question = question
+        self.variants = variants
 
 
 @dataclass(slots=True, kw_only=True)
@@ -210,10 +212,8 @@ class Quiz:
         for item in self.items:
             item.to_failed()
 
-    def update_item(self, item: QuizItem):
-        for itm in self.items:
-            if itm.id == item.id:
-                itm.update(item)
-                return
-
-        raise ValueError(f"Item {item.id} not found")
+    def generation_step(self, question: str, variants: list[QuizItemVariant]) -> None:
+        items = self.generating_items()
+        if len(items) == 0:
+            raise ValueError("No items to generate")
+        items[0].to_generated(question, variants)
