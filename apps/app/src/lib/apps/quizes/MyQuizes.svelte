@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Search, Filter, BookOpen, Clock, FileText, Crown } from 'lucide-svelte';
+	import { Search, Filter, BookOpen, Clock, FileText, Crown, Loader2 } from 'lucide-svelte';
 
 	import { Input, Button } from '@quizbee/ui-svelte-daisy';
 
@@ -31,6 +31,7 @@
 		attemptsCount: number;
 		lastAttemptDate: string;
 		isAuthor: boolean;
+		isInProgress: boolean;
 	}
 
 	interface Props {
@@ -57,18 +58,10 @@
 	const quizList: QuizItem[] = $derived.by(() => {
 		const materialMap = new Map(materials.map((material) => [material.id, material.title]));
 
-		// Filter only completed attempts (with feedback) and valid quiz statuses
-		const completedAttempts = quizAttempts.filter((attempt) => {
-			const quiz = (attempt.expand as QuizAttemptExpand)?.quiz;
-			const hasFeedback = Boolean(attempt.feedback);
-			const hasValidStatus = quiz?.status === 'final' || quiz?.status === 'answered';
-			return hasFeedback && hasValidStatus;
-		});
-
-		// Group completed attempts by quiz ID
+		// Group all attempts by quiz ID
 		const quizAttemptsMap = new Map<string, QuizAttemptsResponse[]>();
 
-		for (const attempt of completedAttempts) {
+		for (const attempt of quizAttempts) {
 			const quizId = attempt.quiz;
 			if (!quizAttemptsMap.has(quizId)) {
 				quizAttemptsMap.set(quizId, []);
@@ -76,13 +69,13 @@
 			quizAttemptsMap.get(quizId)!.push(attempt);
 		}
 
-		// Extract unique quizzes from completed attempts
+		// Extract unique quizzes from all attempts
 		const uniqueQuizzes = new Map<string, QuizesResponse<QuizExpand>>();
 
 		// Create a map of user's quizzes from store for quick lookup
 		const userQuizzesMap = new Map(quizesStore.quizes.map((quiz) => [quiz.id, quiz]));
 
-		for (const attempt of completedAttempts) {
+		for (const attempt of quizAttempts) {
 			const quiz = (attempt.expand as QuizAttemptExpand)?.quiz;
 			if (quiz && !uniqueQuizzes.has(quiz.id)) {
 				// Use reactive quiz from store if it's user's quiz, otherwise use expanded quiz
@@ -100,6 +93,11 @@
 
 			const attempts = quizAttemptsMap.get(quiz.id) || [];
 			const isAuthor = quiz.author === userId;
+
+			// Check if this quiz is in progress:
+			// - Quiz status is 'creating', OR
+			// - Has at least one attempt without feedback
+			const isInProgress = quiz.status === 'creating' || attempts.some((a) => !a.feedback);
 
 			// Materials only for author's quizzes
 			const materialTitles = isAuthor
@@ -128,7 +126,8 @@
 				questionsCount: quizItems.length,
 				attemptsCount: attempts.length,
 				lastAttemptDate,
-				isAuthor
+				isAuthor,
+				isInProgress
 			} satisfies QuizItem;
 		});
 
@@ -140,11 +139,17 @@
 	let searchQuery = $state('');
 	let selectedDifficulties = $state<string[]>([]);
 	let selectedOwnership = $state<'all' | 'mine' | 'others'>('all');
+	let showInProgress = $state(true);
 	let showFilters = $state(false);
 
 	const filteredQuizes = $derived.by(() => {
 		const search = searchQuery.trim().toLowerCase();
 		let result = quizList;
+
+		// In-progress filter
+		if (!showInProgress) {
+			result = result.filter((item) => !item.isInProgress);
+		}
 
 		// Search filter
 		if (search) {
@@ -182,6 +187,7 @@
 		searchQuery = '';
 		selectedDifficulties = [];
 		selectedOwnership = 'all';
+		showInProgress = true;
 	}
 
 	function toggleDifficulty(difficulty: string) {
@@ -193,7 +199,7 @@
 	}
 
 	const hasActiveFilters = $derived(
-		searchQuery || selectedDifficulties.length > 0 || selectedOwnership !== 'all'
+		searchQuery || selectedDifficulties.length > 0 || selectedOwnership !== 'all' || !showInProgress
 	);
 </script>
 
@@ -239,6 +245,30 @@
 
 		{#if showFilters}
 			<div class="bg-base-200/50 border-base-300 flex flex-col gap-5 rounded-xl border p-5">
+				<!-- In Progress Filter -->
+				<div class="flex flex-col gap-2">
+					<span class="label-text font-medium">Show in progress</span>
+					<div class="flex flex-wrap gap-2">
+						<Button
+							size="sm"
+							color={showInProgress ? 'primary' : 'neutral'}
+							style={showInProgress ? 'solid' : 'outline'}
+							onclick={() => (showInProgress = true)}
+						>
+							<Loader2 size={14} />
+							Show In Progress
+						</Button>
+						<Button
+							size="sm"
+							color={!showInProgress ? 'primary' : 'neutral'}
+							style={!showInProgress ? 'solid' : 'outline'}
+							onclick={() => (showInProgress = false)}
+						>
+							Hide In Progress
+						</Button>
+					</div>
+				</div>
+
 				<!-- Ownership Filter -->
 				<div class="flex flex-col gap-2">
 					<span class="label-text font-medium">Quiz ownership</span>
@@ -339,13 +369,23 @@
 				{#each filteredQuizes as item}
 					<li>
 						<a
-							class="border-base-200 hover:bg-base-200/60 bg-base-100 group flex flex-col gap-4 rounded-xl border p-5 no-underline shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+							class={[
+								'group flex flex-col gap-4 rounded-xl border p-5 no-underline shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
+								item.isInProgress
+									? 'border-primary/50 bg-primary/5 hover:bg-primary/10'
+									: 'border-base-200 hover:bg-base-200/60 bg-base-100'
+							]}
 							href={`/quizes/${item.quizId}`}
 						>
 							<div class="flex flex-wrap items-start justify-between gap-3">
 								<div class="flex-1">
 									<p
-										class="group-hover:text-primary text-lg font-semibold leading-tight transition"
+										class={[
+											'text-lg font-semibold leading-tight transition',
+											item.isInProgress
+												? 'group-hover:text-primary text-primary'
+												: 'group-hover:text-primary'
+										]}
 									>
 										{item.title}
 									</p>
@@ -362,6 +402,14 @@
 							</div>
 
 							<div class="flex flex-wrap items-center gap-2">
+								<!-- In Progress badge -->
+								{#if item.isInProgress}
+									<span class="badge badge-primary">
+										<Loader2 size={12} class="animate-spin" />
+										In Progress
+									</span>
+								{/if}
+
 								<!-- Author badge -->
 								{#if item.isAuthor}
 									<span class="badge badge-accent">
