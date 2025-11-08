@@ -110,13 +110,48 @@ async def init_material_search_deps(
     meili: AsyncClient,
     llm_tools: LLMToolsApp,
     document_parser_app: DocumentParserApp,
-) -> tuple[PBMaterialRepository, DocumentParserAdapter, MeiliMaterialIndexer]:
+):
+    from src.apps.material_search.adapters.out import (
+        PBMaterialRepository,
+        DocumentParserAdapter,
+        MeiliMaterialIndexer,
+        MaterialSearcherProvider,
+        MeiliMaterialQuerySearcher,
+        MeiliMaterialDistributionSearcher,
+    )
+    from src.apps.material_search.adapters.out.llm_tools_adapter import LLMToolsAdapter
+
     material_repository = PBMaterialRepository(admin_pb)
     document_parser_adapter = DocumentParserAdapter(document_parser_app)
+    
+    # Создаем адаптер для LLM Tools
+    llm_tools_adapter = LLMToolsAdapter(llm_tools)
+    
+    # Инициализируем материал индексер
     material_indexer = await MeiliMaterialIndexer.ainit(
-        lf=lf, llm_tools=llm_tools, meili=meili
+        lf=lf, llm_tools=llm_tools_adapter, meili=meili
     )
-    return material_repository, document_parser_adapter, material_indexer
+    
+    # Создаем searcher'ы
+    query_searcher = MeiliMaterialQuerySearcher(
+        lf=lf, llm_tools=llm_tools_adapter, meili=meili
+    )
+    distribution_searcher = MeiliMaterialDistributionSearcher(
+        lf=lf, llm_tools=llm_tools_adapter, meili=meili
+    )
+    
+    # Создаем provider
+    searcher_provider = MaterialSearcherProvider(
+        query_searcher=query_searcher,
+        distribution_searcher=distribution_searcher,
+    )
+    
+    return (
+        material_repository,
+        document_parser_adapter,
+        material_indexer,
+        searcher_provider,
+    )
 
 
 # Factory functions for dependency initialization

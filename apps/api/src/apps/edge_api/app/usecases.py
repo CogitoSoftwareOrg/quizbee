@@ -11,7 +11,7 @@ from src.apps.quiz_attempter.app.contracts import (
 )
 from src.apps.material_search.app.contracts import (
     AddMaterialCmd,
-    MaterialSearchApp,
+    MaterialApp,
     Material,
     RemoveMaterialCmd,
 )
@@ -39,7 +39,7 @@ class EdgeAPIAppImpl(EdgeAPIApp):
         user_auth: AuthUserApp,
         quiz_generator: QuizGeneratorApp,
         quiz_attempter: QuizAttempterApp,
-        material_search: MaterialSearchApp,
+        material_search: MaterialApp,
     ):
         self.user_auth = user_auth
         self.quiz_generator = quiz_generator

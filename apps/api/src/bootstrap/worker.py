@@ -57,20 +57,24 @@ async def startup(ctx):
     )
 
     # V2 MATERIAL SEARCH
-    material_repository, document_parser_adapter, material_indexer = (
-        await init_material_search_deps(
-            document_parser_app=document_parser_app,
-            lf=lf,
-            admin_pb=admin_pb,
-            meili=meili,
-            llm_tools=llm_tools,
-        )
+    (
+        material_repository,
+        document_parser_adapter,
+        material_indexer,
+        searcher_provider,
+    ) = await init_material_search_deps(
+        document_parser_app=document_parser_app,
+        lf=lf,
+        admin_pb=admin_pb,
+        meili=meili,
+        llm_tools=llm_tools,
     )
     material_search_app = init_material_search_app(
         llm_tools_app=llm_tools,
         document_parser=document_parser_adapter,
         indexer=material_indexer,
         material_repository=material_repository,
+        searcher_provider=searcher_provider,
     )
 
     # V2 QUIZ GENERATOR
