@@ -250,7 +250,7 @@
 												<p class="text-xs font-semibold uppercase tracking-wide opacity-60">
 													Explanation
 												</p>
-												<p class="wrap-break-words text-sm leading-relaxed opacity-80">
+												<p class="wrap-break-words leading-relaxed opacity-80 md:text-base">
 													{@html answer.explanation}
 												</p>
 											</div>

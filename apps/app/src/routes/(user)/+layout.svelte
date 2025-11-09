@@ -184,7 +184,7 @@
 </Modal>
 
 <Modal
-	class="max-h-[95vh] max-w-[90vw]"
+	class="max-h-[90vh] max-w-[90vw] sm:max-h-[95vh]"
 	backdrop
 	open={uiStore.paywallOpen}
 	onclose={() => uiStore.setPaywallOpen(false)}
