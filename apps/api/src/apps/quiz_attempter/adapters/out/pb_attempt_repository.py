@@ -10,7 +10,7 @@ from src.lib.settings import settings
 
 from ...domain.models import Attempt, Feedback
 from ...domain.refs import Choice, QuizItemRef, QuizRef
-from ...domain.ports import AttemptRepository
+from ...domain.out import AttemptRepository
 
 
 class PBAttemptRepository(AttemptRepository):

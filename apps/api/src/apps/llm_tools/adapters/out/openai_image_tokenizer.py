@@ -1,4 +1,4 @@
-from ...domain.ports import ImageTokenizer
+from ...domain.out import ImageTokenizer
 
 
 class OpenAIImageTokenizer(ImageTokenizer):

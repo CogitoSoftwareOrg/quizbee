@@ -147,7 +147,7 @@ class ModuleApp(Protocol):
 ```python
 import logging
 from ..domain._in import ModuleApp, DoSomethingCmd
-from ..domain.ports import EntityRepository, ExternalService
+from ..domain.out import EntityRepository, ExternalService
 from ..domain.models import Entity
 
 logger = logging.getLogger(__name__)
@@ -229,7 +229,7 @@ async def do_something(
 ```python
 from pocketbase import PocketBase
 from ...domain.models import Entity
-from ...domain.ports import EntityRepository
+from ...domain.out import EntityRepository
 
 class PBEntityRepository(EntityRepository):
     def __init__(self, pb: PocketBase):
@@ -265,7 +265,7 @@ class PBEntityRepository(EntityRepository):
 ## Dependency Injection (`di.py`)
 
 ```python
-from .domain.ports import EntityRepository, ExternalService
+from .domain.out import EntityRepository, ExternalService
 from .app.usecases import ModuleAppImpl
 
 def init_module_app(

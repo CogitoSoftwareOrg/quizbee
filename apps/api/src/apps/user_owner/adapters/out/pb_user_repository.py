@@ -3,7 +3,7 @@ from pocketbase.models.dtos import Record
 
 
 from ...domain.models import Subscription, User, Tariff
-from ...domain.ports import UserRepository
+from ...domain.out import UserRepository
 
 
 class PBUserRepository(UserRepository):

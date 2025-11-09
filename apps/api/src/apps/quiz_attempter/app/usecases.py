@@ -24,7 +24,7 @@ from ..domain.refs import (
     MessageStatusRef,
     MessageMetadataRef,
 )
-from ..domain.ports import AttemptRepository, Explainer, AttemptFinalizer
+from ..domain.out import AttemptRepository, Explainer, AttemptFinalizer
 from ..domain.errors import NotAttemptOwnerError, AttemptAlreadyFinalizedError
 
 from ..domain._in import (

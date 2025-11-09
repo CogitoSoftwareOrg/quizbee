@@ -12,7 +12,7 @@ from src.apps.document_parser.domain import (
     DocumentParseCmd,
 )
 
-from ...domain.ports import DocumentParser
+from ...domain.out import DocumentParser
 from ...domain.models import ParsedDocument, ParsedDocumentImage
 
 logger = logging.getLogger(__name__)

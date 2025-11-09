@@ -19,7 +19,7 @@ from src.lib.settings import settings
 from src.lib.utils import update_span_with_result
 
 from ...domain.models import QuizCategory, Quiz
-from ...domain.ports import QuizFinalizer, QuizRepository
+from ...domain.out import QuizFinalizer, QuizRepository
 
 
 QUIZ_FINALIZER_LLM = LLMS.GPT_5_MINI

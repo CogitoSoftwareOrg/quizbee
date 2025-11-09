@@ -1,4 +1,4 @@
-from ....domain.ports import SearcherProvider, Searcher
+from ....domain.out import SearcherProvider, Searcher
 from ....domain.models import SearchType
 
 from .meili_material_query_searcher import MeiliMaterialQuerySearcher

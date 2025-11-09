@@ -1,6 +1,6 @@
 import logging
 from ..domain.models import Message, MessageRole
-from ..domain.ports import MessageRepository
+from ..domain.out import MessageRepository
 
 from ..domain._in import (
     GetAttemptHistoryCmd,

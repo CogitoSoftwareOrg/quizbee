@@ -2,7 +2,7 @@ from pocketbase import PocketBase
 
 from src.lib.settings import settings
 
-from ...domain.ports import UserVerifier, UserRepository
+from ...domain.out import UserVerifier, UserRepository
 from ...domain.errors import NoTokenError, ForbiddenError
 from ...domain.models import User
 

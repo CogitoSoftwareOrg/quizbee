@@ -2,7 +2,7 @@ from pocketbase import PocketBase
 
 from src.lib.di import init_global_deps
 
-from .domain.ports import MessageRepository
+from .domain.out import MessageRepository
 from .app.usecases import MessageOwnerAppImpl
 from .adapters.out import PBMessageRepository
 

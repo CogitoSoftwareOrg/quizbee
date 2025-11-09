@@ -1,7 +1,7 @@
 """
 MeiliMaterialDistributionSearcher - равномерное распределение чанков по материалам.
 
-Используется когда нет конкретного запроса, для равномерного выбора чанков 
+Используется когда нет конкретного запроса, для равномерного выбора чанков
 из разных материалов (например, при пустом запросе).
 """
 
@@ -10,7 +10,7 @@ from langfuse import Langfuse
 from meilisearch_python_sdk import AsyncClient
 
 from ....domain.models import MaterialChunk
-from ....domain.ports import Searcher, LLMTools
+from ....domain.out import Searcher, LLMTools
 
 from ..meili_material_indexer import EMBEDDER_NAME, Doc
 
@@ -18,7 +18,7 @@ from ..meili_material_indexer import EMBEDDER_NAME, Doc
 class MeiliMaterialDistributionSearcher(Searcher):
     """
     Searcher для равномерного распределения чанков по материалам.
-    
+
     Используется когда нет конкретного запроса. Получает чанки из всех указанных
     материалов и распределяет их равномерно, чтобы каждый материал был представлен.
     """
@@ -39,17 +39,17 @@ class MeiliMaterialDistributionSearcher(Searcher):
     ) -> list[MaterialChunk]:
         """
         Получает чанки, равномерно распределенные по материалам.
-        
+
         Для каждого материала получает N чанков, где N = limit / количество материалов.
         Это обеспечивает равномерное представление всех материалов в результатах.
-        
+
         Args:
             user_id: ID пользователя
             query: Запрос (игнорируется для distribution поиска)
             material_ids: Список ID материалов для поиска
             limit: Максимальное количество результатов
             ratio: Игнорируется (всегда используется 0.0 - только keyword поиск)
-            
+
         Returns:
             Список равномерно распределенных чанков
         """
@@ -57,7 +57,9 @@ class MeiliMaterialDistributionSearcher(Searcher):
             logging.warning("No material_ids provided for distribution search")
             return []
 
-        logging.info(f"Meili Distribution Search for {len(material_ids)} materials, limit={limit}")
+        logging.info(
+            f"Meili Distribution Search for {len(material_ids)} materials, limit={limit}"
+        )
 
         # Вычисляем количество чанков на материал
         num_materials = len(material_ids)
@@ -67,7 +69,7 @@ class MeiliMaterialDistributionSearcher(Searcher):
 
         # Для каждого материала делаем отдельный запрос на получение N чанков
         all_chunks: list[MaterialChunk] = []
-        
+
         for material_id in material_ids:
             # Формируем фильтр для конкретного материала
             f = f"userId = {user_id} AND materialId = {material_id}"
@@ -84,9 +86,9 @@ class MeiliMaterialDistributionSearcher(Searcher):
             # Преобразуем результаты в MaterialChunk
             docs: list[Doc] = [Doc(**hit) for hit in res.hits]
             chunks = [self._doc_to_chunk(doc) for doc in docs]
-            
+
             all_chunks.extend(chunks)
-            
+
             logging.debug(f"Material {material_id}: fetched {len(chunks)} chunks")
 
         # Сортируем финальный результат по material_id и idx для упорядоченности
@@ -95,7 +97,7 @@ class MeiliMaterialDistributionSearcher(Searcher):
         logging.info(
             f"Distributed {len(all_chunks)} chunks from {num_materials} materials"
         )
-        
+
         return all_chunks[:limit]
 
     def _doc_to_chunk(self, doc: Doc) -> MaterialChunk:

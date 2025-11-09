@@ -11,7 +11,7 @@ from src.lib.settings import settings
 
 from ...domain.models import Material, MaterialChunk, MaterialKind
 from ...domain.constants import MAX_TEXT_INDEX_TOKENS
-from ...domain.ports import MaterialIndexer, LLMTools
+from ...domain.out import MaterialIndexer, LLMTools
 from ...domain.errors import TooManyTextTokensError
 
 EMBEDDER_NAME = "materialChunks"

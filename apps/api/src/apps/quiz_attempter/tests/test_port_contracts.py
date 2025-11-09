@@ -11,7 +11,7 @@ from typing import AsyncIterable
 from unittest.mock import AsyncMock
 
 from ..domain.models import Attempt
-from ..domain.ports import AttemptRepository, Explainer
+from ..domain.out import AttemptRepository, Explainer
 from ..domain.refs import (
     MessageMetadata,
     QuizRef,

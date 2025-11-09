@@ -5,7 +5,7 @@ from pocketbase import FileUpload, PocketBase
 from pocketbase.models.dtos import Record
 
 from ...domain.models import Material, MaterialFile, MaterialKind, MaterialStatus
-from ...domain.ports import MaterialRepository
+from ...domain.out import MaterialRepository
 
 
 class PBMaterialRepository(MaterialRepository):

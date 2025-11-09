@@ -8,7 +8,7 @@ from src.apps.quiz_owner.domain.models import (
     QuizItemStatus,
     QuizDifficulty,
 )
-from src.apps.quiz_owner.domain.ports import QuizRepository
+from src.apps.quiz_owner.domain.out import QuizRepository
 from src.apps.quiz_owner.adapters.out import PBQuizRepository
 
 

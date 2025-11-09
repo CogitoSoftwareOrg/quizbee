@@ -36,7 +36,7 @@ from ...domain.refs import (
     MessageStatusRef,
     MessageMetadataRef,
 )
-from ...domain.ports import Explainer
+from ...domain.out import Explainer
 
 EXPLAINER_LLM = LLMS.GPT_5_MINI
 

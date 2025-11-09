@@ -2,7 +2,7 @@ import logging
 
 from src.lib.config import LLMS
 
-from ..domain.ports import TextTokenizer, ImageTokenizer, Chunker
+from ..domain.out import TextTokenizer, ImageTokenizer, Chunker
 
 from ..domain._in import LLMToolsApp
 

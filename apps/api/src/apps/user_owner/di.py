@@ -1,6 +1,6 @@
 from pocketbase import PocketBase
 
-from .domain.ports import UserVerifier, UserRepository
+from .domain.out import UserVerifier, UserRepository
 
 from .app.usecases import AuthUserAppImpl
 from .adapters.out import PBUserRepository, PBUserVerifier

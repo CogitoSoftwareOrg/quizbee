@@ -15,7 +15,7 @@ from .adapters.out import (
     AIQuizFinalizer,
     MeiliQuizIndexer,
 )
-from .domain.ports import (
+from .domain.out import (
     QuizFinalizer,
     QuizRepository,
     QuizIndexer,

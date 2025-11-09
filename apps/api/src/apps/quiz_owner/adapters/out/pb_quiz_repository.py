@@ -9,7 +9,7 @@ from pocketbase.models.dtos import Record
 
 from src.lib.settings import settings
 
-from ...domain.ports import QuizRepository
+from ...domain.out import QuizRepository
 from ...domain.models import (
     MaterialRef,
     Quiz,

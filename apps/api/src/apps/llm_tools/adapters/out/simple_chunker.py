@@ -1,6 +1,6 @@
 import re
 
-from ...domain.ports import Chunker, TextTokenizer
+from ...domain.out import Chunker, TextTokenizer
 
 
 class SimpleChunker(Chunker):

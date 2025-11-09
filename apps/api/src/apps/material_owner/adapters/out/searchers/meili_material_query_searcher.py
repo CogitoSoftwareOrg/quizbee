@@ -12,7 +12,7 @@ from meilisearch_python_sdk.models.search import Hybrid
 from src.lib.config import LLMS
 
 from ....domain.models import MaterialChunk
-from ....domain.ports import Searcher, LLMTools
+from ....domain.out import Searcher, LLMTools
 
 from ..meili_material_indexer import EMBEDDER_NAME, Doc
 
@@ -20,8 +20,8 @@ from ..meili_material_indexer import EMBEDDER_NAME, Doc
 class MeiliMaterialQuerySearcher(Searcher):
     """
     Searcher для поиска материалов по запросу пользователя.
-    
-    Использует гибридный поиск MeiliSearch с комбинацией семантического 
+
+    Использует гибридный поиск MeiliSearch с комбинацией семантического
     и keyword поиска для более точных результатов.
     """
 
@@ -41,14 +41,14 @@ class MeiliMaterialQuerySearcher(Searcher):
     ) -> list[MaterialChunk]:
         """
         Ищет материалы по запросу пользователя.
-        
+
         Args:
             user_id: ID пользователя
             query: Поисковый запрос
             material_ids: Список ID материалов для поиска
             limit: Максимальное количество результатов
             ratio: Соотношение semantic/keyword поиска (0.0 - только keyword, 1.0 - только semantic)
-            
+
         Returns:
             Список найденных чанков материалов
         """

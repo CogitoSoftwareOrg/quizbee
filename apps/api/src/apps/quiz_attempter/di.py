@@ -11,7 +11,7 @@ from .adapters.out import (
     AIExplainer,
     AIAttemptFinalizer,
 )
-from .domain.ports import AttemptRepository, Explainer, AttemptFinalizer
+from .domain.out import AttemptRepository, Explainer, AttemptFinalizer
 from .app.usecases import QuizAttempterAppImpl
 
 

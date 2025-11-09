@@ -1,7 +1,7 @@
 import logging
 
 from ..domain.models import User, Subscription
-from ..domain.ports import UserVerifier, UserRepository
+from ..domain.out import UserVerifier, UserRepository
 
 from ..domain._in import AuthUserApp, Principal
 

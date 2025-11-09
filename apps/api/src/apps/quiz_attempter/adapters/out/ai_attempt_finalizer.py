@@ -16,7 +16,7 @@ from src.lib.utils import update_span_with_result
 from src.lib.config import LLMS
 from src.lib.settings import settings
 
-from ...domain.ports import AttemptFinalizer, AttemptRepository
+from ...domain.out import AttemptFinalizer, AttemptRepository
 from ...domain.models import Attempt, Feedback
 
 ATTEMPT_FINALIZER_LLM = LLMS.GPT_5_MINI

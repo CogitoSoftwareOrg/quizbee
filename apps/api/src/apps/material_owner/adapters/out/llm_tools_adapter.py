@@ -6,7 +6,7 @@
 from src.lib.config import LLMS
 from src.apps.llm_tools.domain._in import LLMToolsApp
 
-from ...domain.ports import LLMTools
+from ...domain.out import LLMTools
 
 
 class LLMToolsAdapter(LLMTools):

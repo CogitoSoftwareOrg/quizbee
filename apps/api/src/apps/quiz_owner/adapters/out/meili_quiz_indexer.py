@@ -14,7 +14,7 @@ from src.apps.llm_tools.domain._in import LLMToolsApp
 
 from ...domain.errors import InvalidQuiz
 from ...domain.models import Quiz, QuizCategory, QuizDifficulty, QuizVisibility
-from ...domain.ports import QuizIndexer, QuizRepository
+from ...domain.out import QuizIndexer, QuizRepository
 
 FILTERABLE_ATTRIBUTES = [
     "userId",

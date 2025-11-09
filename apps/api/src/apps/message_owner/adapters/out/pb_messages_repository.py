@@ -5,7 +5,7 @@ import asyncio
 from pocketbase import PocketBase
 from pocketbase.models.dtos import Record
 
-from ...domain.ports import MessageRepository
+from ...domain.out import MessageRepository
 from ...domain.models import Message, MessageMetadata
 
 
