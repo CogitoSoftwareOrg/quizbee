@@ -5,8 +5,8 @@ from meilisearch_python_sdk import AsyncClient
 from pocketbase import PocketBase
 
 from src.apps.document_parser.domain._in import DocumentParserApp
-from src.apps.llm_tools.app.contracts import LLMToolsApp
-from src.apps.material_owner.app.contracts import MaterialApp
+from src.apps.llm_tools.domain._in import LLMToolsApp
+from src.apps.material_owner.domain._in import MaterialApp
 
 from .domain.ports import (
     LLMTools,

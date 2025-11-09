@@ -6,8 +6,8 @@ import httpx
 
 from src.lib.di import AgentEnvelope
 
-from src.apps.material_owner.app.contracts import MaterialApp
-from src.apps.llm_tools.app.contracts import LLMToolsApp
+from src.apps.material_owner.domain._in import MaterialApp
+from src.apps.llm_tools.domain._in import LLMToolsApp
 
 from .adapters.out import (
     PBQuizRepository,

@@ -1,9 +1,9 @@
-from typing import Any, AsyncGenerator, AsyncIterable, Literal, Protocol
+from typing import AsyncIterable, Literal, Protocol
 from dataclasses import dataclass
 
-from src.apps.user_owner.app.contracts import Principal
+from src.apps.user_owner.domain._in import Principal
 
-from ..domain.models import Attempt
+from .models import Attempt
 
 
 @dataclass(frozen=True, slots=True)

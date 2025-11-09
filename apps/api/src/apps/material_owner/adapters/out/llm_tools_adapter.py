@@ -4,7 +4,7 @@
 """
 
 from src.lib.config import LLMS
-from src.apps.llm_tools.app.contracts import LLMToolsApp
+from src.apps.llm_tools.domain._in import LLMToolsApp
 
 from ...domain.ports import LLMTools
 

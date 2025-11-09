@@ -1,27 +1,27 @@
-from src.apps.quiz_owner.app.contracts import (
+from src.apps.quiz_owner.domain._in import (
     QuizGeneratorApp,
     GenerateCmd,
     FinalizeQuizCmd,
     GenMode,
 )
-from src.apps.quiz_attempter.app.contracts import (
+from src.apps.quiz_attempter.domain._in import (
     QuizAttempterApp,
     FinalizeAttemptCmd,
     AskExplainerCmd,
 )
-from src.apps.material_owner.app.contracts import (
+from src.apps.material_owner.domain._in import (
     AddMaterialCmd,
     MaterialApp,
     Material,
     RemoveMaterialCmd,
 )
-from src.apps.user_owner.app.contracts import AuthUserApp
+from src.apps.user_owner.domain._in import AuthUserApp
 from src.apps.user_owner.domain.models import Tariff
 
 from ..domain.errors import NotEnoughQuizItemsError
 from ..domain.constants import PATCH_LIMIT
 
-from .contracts import (
+from ..domain._in import (
     EdgeAPIApp,
     PublicRemoveMaterialCmd,
     PublicStartQuizCmd,

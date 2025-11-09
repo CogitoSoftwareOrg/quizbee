@@ -1,11 +1,10 @@
 # APP
 from dataclasses import dataclass
 from typing import Protocol
-from enum import StrEnum
 
-from src.apps.user_owner.app.contracts import Principal
+from src.apps.user_owner.domain._in import Principal
 
-from ..domain.models import Material, MaterialFile, MaterialChunk
+from .models import Material, MaterialFile, MaterialChunk
 
 
 @dataclass

@@ -24,7 +24,7 @@ from ..domain.ports import (
 from ..domain.errors import TooLargeFileError, TooManyTextTokensError
 from ..domain.constants import MAX_SIZE_MB, COMPLEX_EXTENSIONS
 from ..domain.ports import LLMTools
-from .contracts import MaterialApp, AddMaterialCmd, RemoveMaterialCmd, SearchCmd
+from ..domain._in import MaterialApp, AddMaterialCmd, RemoveMaterialCmd, SearchCmd
 
 logger = logging.getLogger(__name__)
 

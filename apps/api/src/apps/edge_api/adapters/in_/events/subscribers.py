@@ -2,7 +2,7 @@ import logging
 
 from arq import func
 
-from src.apps.edge_api.app.contracts import (
+from src.apps.edge_api.domain._in import (
     JobName,
     EdgeAPIApp,
     PublicStartQuizCmd,
@@ -13,7 +13,7 @@ from src.apps.edge_api.app.contracts import (
     PublicAddMaterialCmd,
     PublicRemoveMaterialCmd,
 )
-from src.apps.material_owner.app.contracts import MaterialFile
+from src.apps.material_owner.domain._in import MaterialFile
 
 from .deps import ensure_admin_pb
 

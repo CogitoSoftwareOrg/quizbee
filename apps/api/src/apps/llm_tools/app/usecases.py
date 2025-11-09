@@ -4,7 +4,7 @@ from src.lib.config import LLMS
 
 from ..domain.ports import TextTokenizer, ImageTokenizer, Chunker
 
-from .contracts import LLMToolsApp
+from ..domain._in import LLMToolsApp
 
 logger = logging.getLogger(__name__)
 

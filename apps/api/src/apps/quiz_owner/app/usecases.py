@@ -1,8 +1,8 @@
 import logging
 
-from src.apps.llm_tools.app.contracts import LLMToolsApp
-from src.apps.material_owner.app.contracts import MaterialApp, SearchCmd
-from src.apps.user_owner.app.contracts import Principal
+from src.apps.llm_tools.domain._in import LLMToolsApp
+from src.apps.material_owner.domain._in import MaterialApp, SearchCmd
+from src.apps.user_owner.domain._in import Principal
 
 from ..domain.ports import (
     QuizFinalizer,
@@ -18,7 +18,7 @@ from ..domain.errors import (
     QuizNotAnsweredError,
 )
 
-from .contracts import (
+from ..domain._in import (
     GenerateCmd,
     FinalizeQuizCmd,
     GenMode,

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Protocol
 
-from src.apps.user_owner.app.contracts import Principal
+from src.apps.user_owner.domain._in import Principal
 
 
 class GenMode(StrEnum):

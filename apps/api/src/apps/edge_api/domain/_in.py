@@ -2,10 +2,9 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import AsyncIterable, Protocol
 
-from src.apps.quiz_owner.app.contracts import GenMode
-from src.apps.material_owner.app.contracts import MaterialFile, Material
-
-from src.apps.quiz_attempter.app.contracts import AskExplainerResult
+from src.apps.quiz_owner.domain._in import GenMode
+from src.apps.material_owner.domain._in import MaterialFile, Material
+from src.apps.quiz_attempter.domain._in import AskExplainerResult
 
 
 class JobName(StrEnum):

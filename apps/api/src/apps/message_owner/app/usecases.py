@@ -2,7 +2,7 @@ import logging
 from ..domain.models import Message, MessageRole
 from ..domain.ports import MessageRepository
 
-from .contracts import (
+from ..domain._in import (
     GetAttemptHistoryCmd,
     MessageOwnerApp,
     StartMessageCmd,

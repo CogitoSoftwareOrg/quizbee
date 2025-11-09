@@ -146,7 +146,7 @@ class ModuleApp(Protocol):
 
 ```python
 import logging
-from .contracts import ModuleApp, DoSomethingCmd
+from ..domain._in import ModuleApp, DoSomethingCmd
 from ..domain.ports import EntityRepository, ExternalService
 from ..domain.models import Entity
 
@@ -197,7 +197,7 @@ class ModuleAppImpl(ModuleApp):
 from fastapi import APIRouter, Depends
 from .deps import get_app, get_token
 from .schemas import RequestDto
-from ....app.contracts import DoSomethingCmd
+from ....domain._in import DoSomethingCmd
 
 router = APIRouter(prefix="/entities", tags=["entities"])
 

@@ -2,8 +2,8 @@ from langfuse import Langfuse
 from pocketbase import PocketBase
 import httpx
 
-from src.apps.message_owner.app.contracts import MessageOwnerApp
-from src.apps.llm_tools.app.contracts import LLMToolsApp
+from src.apps.message_owner.domain._in import MessageOwnerApp
+from src.apps.llm_tools.domain._in import LLMToolsApp
 from src.lib.di import AgentEnvelope, init_global_deps
 
 from .adapters.out import (

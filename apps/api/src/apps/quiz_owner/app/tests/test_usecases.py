@@ -8,7 +8,7 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock
 
 from src.apps.quiz_owner.app.usecases import QuizGeneratorAppImpl
-from src.apps.quiz_owner.app.contracts import GenerateCmd, FinalizeQuizCmd, GenMode
+from src.apps.quiz_owner.domain._in import GenerateCmd, FinalizeQuizCmd, GenMode
 from src.apps.quiz_owner.domain.models import (
     Quiz,
     QuizStatus,
@@ -18,7 +18,7 @@ from src.apps.quiz_owner.domain.models import (
     QuizItemVariant,
 )
 from src.apps.quiz_owner.domain.errors import NotQuizOwnerError
-from src.apps.user_owner.app.contracts import Principal
+from src.apps.user_owner.domain._in import Principal
 
 
 @pytest.fixture

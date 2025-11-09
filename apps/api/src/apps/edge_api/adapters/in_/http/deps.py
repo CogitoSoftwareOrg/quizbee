@@ -7,7 +7,7 @@ from fastapi import Depends, HTTPException, Request
 
 from src.lib.settings import settings
 
-from ....app.contracts import EdgeAPIApp
+from ....domain._in import EdgeAPIApp
 from ....domain.constants import ARQ_QUEUE_NAME
 
 

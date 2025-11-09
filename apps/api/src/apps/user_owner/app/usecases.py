@@ -3,7 +3,7 @@ import logging
 from ..domain.models import User, Subscription
 from ..domain.ports import UserVerifier, UserRepository
 
-from .contracts import AuthUserApp, Principal
+from ..domain._in import AuthUserApp, Principal
 
 logger = logging.getLogger(__name__)
 

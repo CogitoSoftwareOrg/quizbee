@@ -1,8 +1,8 @@
 import logging
 from typing import AsyncGenerator
 
-from src.apps.user_owner.app.contracts import AuthUserApp, Principal
-from src.apps.message_owner.app.contracts import (
+from src.apps.user_owner.domain._in import AuthUserApp, Principal
+from src.apps.message_owner.domain._in import (
     MessageOwnerApp,
     StartMessageCmd,
     GetAttemptHistoryCmd,
@@ -14,7 +14,7 @@ from src.apps.message_owner.domain.models import (
     MessageRole,
     MessageStatus,
 )
-from src.apps.llm_tools.app.contracts import LLMToolsApp
+from src.apps.llm_tools.domain._in import LLMToolsApp
 from src.apps.user_owner.domain.models import Tariff
 
 from ..domain.models import Attempt
@@ -27,7 +27,7 @@ from ..domain.refs import (
 from ..domain.ports import AttemptRepository, Explainer, AttemptFinalizer
 from ..domain.errors import NotAttemptOwnerError, AttemptAlreadyFinalizedError
 
-from .contracts import (
+from ..domain._in import (
     AskExplainerCmd,
     AskExplainerResult,
     QuizAttempterApp,

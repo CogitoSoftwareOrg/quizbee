@@ -10,7 +10,7 @@ from meilisearch_python_sdk.models.settings import Embedders, OpenAiEmbedder
 from src.lib.config import LLMS
 from src.lib.settings import settings
 
-from src.apps.llm_tools.app.contracts import LLMToolsApp
+from src.apps.llm_tools.domain._in import LLMToolsApp
 
 from ...domain.errors import InvalidQuiz
 from ...domain.models import Quiz, QuizCategory, QuizDifficulty, QuizVisibility
