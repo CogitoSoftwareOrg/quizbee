@@ -1,42 +1,42 @@
 name: quizbee-local
 
 services:
-  # APPS
+  # SRVS
   api:
     build:
       context: .
-      dockerfile: ../apps/api/Dockerfile.local
+      dockerfile: ../srvs/api/Dockerfile.local
     env_file:
       - ../envs/.env
     volumes:
       - uv-cache:/root/.cache/uv
       - ../:/repo
-      - /repo/apps/api/.venv
+      - /repo/srvs/api/.venv
     ports:
       - "8000:8000"
 
   worker:
     build:
       context: .
-      dockerfile: ../apps/api/Dockerfile.local
+      dockerfile: ../srvs/api/Dockerfile.local
     env_file:
       - ../envs/.env
     volumes:
       - uv-cache:/root/.cache/uv
       - ../:/repo
-      - /repo/apps/api/.venv
-    working_dir: /repo/apps/api
+      - /repo/srvs/api/.venv
+    working_dir: /repo/srvs/api
     command:
       - sh
       - -lc
       - |
         uv sync --group dev &&
-        uv run python -m watchfiles --filter python --ignore-path /repo/apps/api/.venv --ignore-path /repo/node_modules "uv run arq src.bootstrap.worker.WorkerSettings" /repo/apps/api/src
+        uv run python -m watchfiles --filter python --ignore-path /repo/srvs/api/.venv --ignore-path /repo/node_modules "uv run arq src.bootstrap.worker.WorkerSettings" /repo/srvs/api/src
 
   web:
     build:
       context: .
-      dockerfile: ../apps/web/Dockerfile.local
+      dockerfile: ../srvs/web/Dockerfile.local
     env_file:
       - ../envs/.env
     environment:
@@ -46,7 +46,7 @@ services:
       - ../:/repo
       - pnpm-store:/pnpm
       - /repo/node_modules
-      - /repo/apps/web/node_modules
+      - /repo/srvs/web/node_modules
     working_dir: /repo
     ports:
       - "4321:4321"
@@ -54,7 +54,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: ../apps/app/Dockerfile.local
+      dockerfile: ../srvs/app/Dockerfile.local
       args:
         - STRIPE_API_KEY=${STRIPE_API_KEY}
     environment:
@@ -66,7 +66,7 @@ services:
       - ../:/repo
       - pnpm-store:/pnpm
       - /repo/node_modules
-      - /repo/apps/app/node_modules
+      - /repo/srvs/app/node_modules
     working_dir: /repo
     ports:
       - "5173:5173"

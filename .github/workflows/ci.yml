@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: apps/api
+        working-directory: srvs/api
     steps:
       - uses: actions/checkout@v4
 
@@ -71,7 +71,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: apps/app
+        working-directory: srvs/app
     steps:
       - uses: actions/checkout@v4
 
@@ -148,7 +148,7 @@ jobs:
     needs: [api-lint-unit, app-lint-unit]
     defaults:
       run:
-        working-directory: apps/api
+        working-directory: srvs/api
     steps:
       - uses: actions/checkout@v4
 

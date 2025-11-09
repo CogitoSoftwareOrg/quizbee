@@ -21,7 +21,168 @@ importers:
         specifier: 0.7.1
         version: 0.7.1(prettier-plugin-svelte@3.4.0(prettier@3.6.2)(svelte@5.43.2))(prettier@3.6.2)
 
-  apps/app:
+  pkgs/js/pb-types:
+    devDependencies:
+      tsx:
+        specifier: ^4.16.0
+        version: 4.20.6
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+
+  pkgs/js/tokens:
+    dependencies:
+      tailwindcss:
+        specifier: ^3.4.0
+        version: 3.4.18(tsx@4.20.6)(yaml@2.8.1)
+
+  pkgs/js/ui-astro:
+    dependencies:
+      '@quizbee/ui-svelte-daisy':
+        specifier: workspace:*
+        version: link:../ui-svelte-daisy
+    devDependencies:
+      '@astrojs/check':
+        specifier: ^0.9.4
+        version: 0.9.5(prettier@3.6.2)(typescript@5.9.3)
+      '@astrojs/svelte':
+        specifier: ^7.0.0
+        version: 7.2.1(@types/node@22.18.13)(astro@5.15.3(@capacitor/preferences@7.0.2(@capacitor/core@7.4.4))(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(rollup@4.52.5)(terser@5.44.0)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1))(jiti@2.6.1)(lightningcss@1.30.2)(svelte@5.43.2)(terser@5.44.0)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
+      '@lucide/astro':
+        specifier: ^0.545.0
+        version: 0.545.0(astro@5.15.3(@capacitor/preferences@7.0.2(@capacitor/core@7.4.4))(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(rollup@4.52.5)(terser@5.44.0)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1))
+      astro:
+        specifier: ^5.0.0
+        version: 5.15.3(@capacitor/preferences@7.0.2(@capacitor/core@7.4.4))(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(rollup@4.52.5)(terser@5.44.0)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
+      typescript:
+        specifier: ^5.9.0
+        version: 5.9.3
+
+  pkgs/js/ui-svelte-daisy:
+    dependencies:
+      lucide-svelte:
+        specifier: ^0.545.0
+        version: 0.545.0(svelte@5.43.2)
+    devDependencies:
+      '@chromatic-com/storybook':
+        specifier: ^4.1.1
+        version: 4.1.2(storybook@9.1.16(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))
+      '@eslint/compat':
+        specifier: ^1.4.0
+        version: 1.4.1(eslint@9.38.0(jiti@2.6.1))
+      '@eslint/js':
+        specifier: ^9.36.0
+        version: 9.38.0
+      '@playwright/test':
+        specifier: ^1.55.1
+        version: 1.56.1
+      '@storybook/addon-a11y':
+        specifier: ^9.1.10
+        version: 9.1.16(storybook@9.1.16(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))
+      '@storybook/addon-docs':
+        specifier: ^9.1.10
+        version: 9.1.16(@types/react@19.2.2)(storybook@9.1.16(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))
+      '@storybook/addon-svelte-csf':
+        specifier: ^5.0.10
+        version: 5.0.10(@storybook/svelte@9.1.16(storybook@9.1.16(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))(svelte@5.43.2))(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.43.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))(storybook@9.1.16(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))(svelte@5.43.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))
+      '@storybook/addon-vitest':
+        specifier: ^9.1.10
+        version: 9.1.16(@vitest/browser@3.2.4)(@vitest/runner@3.2.4)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(storybook@9.1.16(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))(vitest@3.2.4)
+      '@storybook/sveltekit':
+        specifier: ^9.1.10
+        version: 9.1.16(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.43.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))(storybook@9.1.16(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))(svelte@5.43.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))
+      '@sveltejs/adapter-auto':
+        specifier: ^6.1.0
+        version: 6.1.1(@sveltejs/kit@2.48.4(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.43.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))(svelte@5.43.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))
+      '@sveltejs/kit':
+        specifier: ^2.43.2
+        version: 2.48.4(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.43.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))(svelte@5.43.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))
+      '@sveltejs/package':
+        specifier: ^2.5.4
+        version: 2.5.4(svelte@5.43.2)(typescript@5.9.3)
+      '@sveltejs/vite-plugin-svelte':
+        specifier: ^6.2.0
+        version: 6.2.1(svelte@5.43.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))
+      '@tailwindcss/vite':
+        specifier: ^4.1.13
+        version: 4.1.16(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))
+      '@types/node':
+        specifier: ^22
+        version: 22.18.13
+      '@vitest/browser':
+        specifier: ^3.2.4
+        version: 3.2.4(playwright@1.56.1)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))(vitest@3.2.4)
+      daisyui:
+        specifier: ^5.2.0
+        version: 5.3.10
+      eslint:
+        specifier: ^9.36.0
+        version: 9.38.0(jiti@2.6.1)
+      eslint-config-prettier:
+        specifier: ^10.1.8
+        version: 10.1.8(eslint@9.38.0(jiti@2.6.1))
+      eslint-plugin-storybook:
+        specifier: ^9.1.10
+        version: 9.1.16(eslint@9.38.0(jiti@2.6.1))(storybook@9.1.16(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))(typescript@5.9.3)
+      eslint-plugin-svelte:
+        specifier: ^3.12.4
+        version: 3.13.0(eslint@9.38.0(jiti@2.6.1))(svelte@5.43.2)
+      globals:
+        specifier: ^16.4.0
+        version: 16.4.0
+      playwright:
+        specifier: ^1.55.1
+        version: 1.56.1
+      prettier:
+        specifier: ^3.6.2
+        version: 3.6.2
+      prettier-plugin-svelte:
+        specifier: ^3.4.0
+        version: 3.4.0(prettier@3.6.2)(svelte@5.43.2)
+      prettier-plugin-tailwindcss:
+        specifier: ^0.6.14
+        version: 0.6.14(prettier-plugin-svelte@3.4.0(prettier@3.6.2)(svelte@5.43.2))(prettier@3.6.2)
+      publint:
+        specifier: ^0.3.13
+        version: 0.3.15
+      storybook:
+        specifier: ^9.1.10
+        version: 9.1.16(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))
+      svelte:
+        specifier: ^5.39.5
+        version: 5.43.2
+      svelte-check:
+        specifier: ^4.3.2
+        version: 4.3.3(picomatch@4.0.3)(svelte@5.43.2)(typescript@5.9.3)
+      tailwindcss:
+        specifier: ^4.1.13
+        version: 4.1.16
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+      typescript-eslint:
+        specifier: ^8.44.1
+        version: 8.46.2(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3)
+      vite:
+        specifier: ^7.1.7
+        version: 7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.18.13)(@vitest/browser@3.2.4)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)
+      vitest-browser-svelte:
+        specifier: ^1.1.0
+        version: 1.1.0(@vitest/browser@3.2.4)(svelte@5.43.2)(vitest@3.2.4)
+
+  scripts/js:
+    dependencies:
+      dotenv:
+        specifier: ^16.4.7
+        version: 16.6.1
+      pocketbase:
+        specifier: ^0.26.3
+        version: 0.26.3
+
+  srvs/app:
     dependencies:
       '@capacitor/android':
         specifier: ^7.4.4
@@ -187,7 +348,7 @@ importers:
         specifier: ^7.3.0
         version: 7.3.0
 
-  apps/web:
+  srvs/web:
     dependencies:
       '@astrojs/node':
         specifier: ^9.5.0
@@ -248,182 +409,6 @@ importers:
         version: 2.5.0
       typescript:
         specifier: ^5.9.3
-        version: 5.9.3
-
-  pkgs/js/pb-types:
-    devDependencies:
-      tsx:
-        specifier: ^4.16.0
-        version: 4.20.6
-      typescript:
-        specifier: ^5.6.3
-        version: 5.9.3
-
-  pkgs/js/tokens:
-    dependencies:
-      tailwindcss:
-        specifier: ^3.4.0
-        version: 3.4.18(tsx@4.20.6)(yaml@2.8.1)
-
-  pkgs/js/ui-astro:
-    dependencies:
-      '@quizbee/ui-svelte-daisy':
-        specifier: workspace:*
-        version: link:../ui-svelte-daisy
-    devDependencies:
-      '@astrojs/check':
-        specifier: ^0.9.4
-        version: 0.9.5(prettier@3.6.2)(typescript@5.9.3)
-      '@astrojs/svelte':
-        specifier: ^7.0.0
-        version: 7.2.1(@types/node@22.18.13)(astro@5.15.3(@capacitor/preferences@7.0.2(@capacitor/core@7.4.4))(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(rollup@4.52.5)(terser@5.44.0)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1))(jiti@2.6.1)(lightningcss@1.30.2)(svelte@5.43.2)(terser@5.44.0)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
-      '@lucide/astro':
-        specifier: ^0.545.0
-        version: 0.545.0(astro@5.15.3(@capacitor/preferences@7.0.2(@capacitor/core@7.4.4))(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(rollup@4.52.5)(terser@5.44.0)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1))
-      astro:
-        specifier: ^5.0.0
-        version: 5.15.3(@capacitor/preferences@7.0.2(@capacitor/core@7.4.4))(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(rollup@4.52.5)(terser@5.44.0)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
-      typescript:
-        specifier: ^5.9.0
-        version: 5.9.3
-
-  pkgs/js/ui-svelte-daisy:
-    dependencies:
-      lucide-svelte:
-        specifier: ^0.545.0
-        version: 0.545.0(svelte@5.43.2)
-    devDependencies:
-      '@chromatic-com/storybook':
-        specifier: ^4.1.1
-        version: 4.1.2(storybook@9.1.16(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))
-      '@eslint/compat':
-        specifier: ^1.4.0
-        version: 1.4.1(eslint@9.38.0(jiti@2.6.1))
-      '@eslint/js':
-        specifier: ^9.36.0
-        version: 9.38.0
-      '@playwright/test':
-        specifier: ^1.55.1
-        version: 1.56.1
-      '@storybook/addon-a11y':
-        specifier: ^9.1.10
-        version: 9.1.16(storybook@9.1.16(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))
-      '@storybook/addon-docs':
-        specifier: ^9.1.10
-        version: 9.1.16(@types/react@19.2.2)(storybook@9.1.16(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))
-      '@storybook/addon-svelte-csf':
-        specifier: ^5.0.10
-        version: 5.0.10(@storybook/svelte@9.1.16(storybook@9.1.16(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))(svelte@5.43.2))(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.43.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))(storybook@9.1.16(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))(svelte@5.43.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))
-      '@storybook/addon-vitest':
-        specifier: ^9.1.10
-        version: 9.1.16(@vitest/browser@3.2.4)(@vitest/runner@3.2.4)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(storybook@9.1.16(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))(vitest@3.2.4)
-      '@storybook/sveltekit':
-        specifier: ^9.1.10
-        version: 9.1.16(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.43.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))(storybook@9.1.16(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))(svelte@5.43.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))
-      '@sveltejs/adapter-auto':
-        specifier: ^6.1.0
-        version: 6.1.1(@sveltejs/kit@2.48.4(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.43.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))(svelte@5.43.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))
-      '@sveltejs/kit':
-        specifier: ^2.43.2
-        version: 2.48.4(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.43.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))(svelte@5.43.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))
-      '@sveltejs/package':
-        specifier: ^2.5.4
-        version: 2.5.4(svelte@5.43.2)(typescript@5.9.3)
-      '@sveltejs/vite-plugin-svelte':
-        specifier: ^6.2.0
-        version: 6.2.1(svelte@5.43.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))
-      '@tailwindcss/vite':
-        specifier: ^4.1.13
-        version: 4.1.16(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))
-      '@types/node':
-        specifier: ^22
-        version: 22.18.13
-      '@vitest/browser':
-        specifier: ^3.2.4
-        version: 3.2.4(playwright@1.56.1)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))(vitest@3.2.4)
-      daisyui:
-        specifier: ^5.2.0
-        version: 5.3.10
-      eslint:
-        specifier: ^9.36.0
-        version: 9.38.0(jiti@2.6.1)
-      eslint-config-prettier:
-        specifier: ^10.1.8
-        version: 10.1.8(eslint@9.38.0(jiti@2.6.1))
-      eslint-plugin-storybook:
-        specifier: ^9.1.10
-        version: 9.1.16(eslint@9.38.0(jiti@2.6.1))(storybook@9.1.16(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))(typescript@5.9.3)
-      eslint-plugin-svelte:
-        specifier: ^3.12.4
-        version: 3.13.0(eslint@9.38.0(jiti@2.6.1))(svelte@5.43.2)
-      globals:
-        specifier: ^16.4.0
-        version: 16.4.0
-      playwright:
-        specifier: ^1.55.1
-        version: 1.56.1
-      prettier:
-        specifier: ^3.6.2
-        version: 3.6.2
-      prettier-plugin-svelte:
-        specifier: ^3.4.0
-        version: 3.4.0(prettier@3.6.2)(svelte@5.43.2)
-      prettier-plugin-tailwindcss:
-        specifier: ^0.6.14
-        version: 0.6.14(prettier-plugin-svelte@3.4.0(prettier@3.6.2)(svelte@5.43.2))(prettier@3.6.2)
-      publint:
-        specifier: ^0.3.13
-        version: 0.3.15
-      storybook:
-        specifier: ^9.1.10
-        version: 9.1.16(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))
-      svelte:
-        specifier: ^5.39.5
-        version: 5.43.2
-      svelte-check:
-        specifier: ^4.3.2
-        version: 4.3.3(picomatch@4.0.3)(svelte@5.43.2)(typescript@5.9.3)
-      tailwindcss:
-        specifier: ^4.1.13
-        version: 4.1.16
-      typescript:
-        specifier: ^5.9.2
-        version: 5.9.3
-      typescript-eslint:
-        specifier: ^8.44.1
-        version: 8.46.2(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3)
-      vite:
-        specifier: ^7.1.7
-        version: 7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)
-      vitest:
-        specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.18.13)(@vitest/browser@3.2.4)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)
-      vitest-browser-svelte:
-        specifier: ^1.1.0
-        version: 1.1.0(@vitest/browser@3.2.4)(svelte@5.43.2)(vitest@3.2.4)
-
-  scripts/js:
-    dependencies:
-      dotenv:
-        specifier: ^16.4.7
-        version: 16.6.1
-      pocketbase:
-        specifier: ^0.26.3
-        version: 0.26.3
-
-  tests/e2e:
-    devDependencies:
-      '@playwright/test':
-        specifier: ^1.49.0
-        version: 1.56.1
-      dotenv:
-        specifier: ^16.4.5
-        version: 16.6.1
-      pocketbase:
-        specifier: ^0.26.3
-        version: 0.26.3
-      typescript:
-        specifier: ^5.6.3
         version: 5.9.3
 
 packages:
@@ -5991,7 +5976,7 @@ snapshots:
 
   '@astrojs/svelte@7.2.1(@types/node@22.18.13)(astro@5.15.3(@capacitor/preferences@7.0.2(@capacitor/core@7.4.4))(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(rollup@4.52.5)(terser@5.44.0)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1))(jiti@2.6.1)(lightningcss@1.30.2)(svelte@5.43.2)(terser@5.44.0)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)':
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 5.1.1(svelte@5.43.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))
+      '@sveltejs/vite-plugin-svelte': 5.1.1(svelte@5.43.2)(vite@6.4.1(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))
       astro: 5.15.3(@capacitor/preferences@7.0.2(@capacitor/core@7.4.4))(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(rollup@4.52.5)(terser@5.44.0)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       svelte: 5.43.2
       svelte2tsx: 0.7.45(svelte@5.43.2)(typescript@5.9.3)
@@ -7667,12 +7652,12 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@sveltejs/vite-plugin-svelte-inspector@4.0.1(@sveltejs/vite-plugin-svelte@5.1.1(svelte@5.43.2)(vite@6.4.1(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))(svelte@5.43.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))':
+  '@sveltejs/vite-plugin-svelte-inspector@4.0.1(@sveltejs/vite-plugin-svelte@5.1.1(svelte@5.43.2)(vite@6.4.1(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))(svelte@5.43.2)(vite@6.4.1(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))':
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 5.1.1(svelte@5.43.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))
+      '@sveltejs/vite-plugin-svelte': 5.1.1(svelte@5.43.2)(vite@6.4.1(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))
       debug: 4.4.3
       svelte: 5.43.2
-      vite: 7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)
+      vite: 6.4.1(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -7685,16 +7670,16 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@sveltejs/vite-plugin-svelte@5.1.1(svelte@5.43.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))':
+  '@sveltejs/vite-plugin-svelte@5.1.1(svelte@5.43.2)(vite@6.4.1(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))':
     dependencies:
-      '@sveltejs/vite-plugin-svelte-inspector': 4.0.1(@sveltejs/vite-plugin-svelte@5.1.1(svelte@5.43.2)(vite@6.4.1(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))(svelte@5.43.2)(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))
+      '@sveltejs/vite-plugin-svelte-inspector': 4.0.1(@sveltejs/vite-plugin-svelte@5.1.1(svelte@5.43.2)(vite@6.4.1(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))(svelte@5.43.2)(vite@6.4.1(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))
       debug: 4.4.3
       deepmerge: 4.3.1
       kleur: 4.1.5
       magic-string: 0.30.21
       svelte: 5.43.2
-      vite: 7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)
-      vitefu: 1.1.1(vite@7.1.12(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))
+      vite: 6.4.1(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)
+      vitefu: 1.1.1(vite@6.4.1(@types/node@22.18.13)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))
     transitivePeerDependencies:
       - supports-color
 

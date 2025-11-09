@@ -21,12 +21,12 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm \
     pnpm install --frozen-lockfile --filter "@quizbee/ui-astro" --filter "@quizbee/ui-svelte-daisy" --include-workspace-root=false
 
 # Now install app dependencies with workspace packages available
-COPY apps/web/package.json apps/web/
+COPY srvs/web/package.json srvs/web/
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm \
     PNPM_STORE_DIR=/pnpm \
-    pnpm install --frozen-lockfile --filter ./apps/web...
+    pnpm install --frozen-lockfile --filter ./srvs/web...
 
-COPY apps/web apps/web
+COPY srvs/web srvs/web
 
 ARG COOLIFY_URL
 ARG PUBLIC_APP_URL
@@ -36,11 +36,11 @@ ARG PB_EMAIL
 ARG PB_PASSWORD
 ENV PUBLIC_APP_URL=$PUBLIC_APP_URL PUBLIC_PB_URL=$PUBLIC_PB_URL PB_URL=$PB_URL PB_EMAIL=$PB_EMAIL PB_PASSWORD=$PB_PASSWORD COOLIFY_URL=$COOLIFY_URL
 
-RUN pnpm -C apps/web build
+RUN pnpm -C srvs/web build
 
 RUN mkdir -p /out && \
-    pnpm --filter ./apps/web deploy --prod --legacy /out && \
-    cp -r apps/web/dist /out/dist
+    pnpm --filter ./srvs/web deploy --prod --legacy /out && \
+    cp -r srvs/web/dist /out/dist
 
 ### 2) Runtime
 FROM node:20-alpine AS runner

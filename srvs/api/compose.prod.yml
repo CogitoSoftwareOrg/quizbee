@@ -1,17 +1,16 @@
-name: quizbee-worker-prod
+name: quizbee-api-prod
 
 services:
-  worker:
+  api:
     build:
       context: ../..
-      dockerfile: ./apps/api/Dockerfile
+      dockerfile: ./srvs/api/Dockerfile
     environment:
       - ENV=${ENV:-production}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - LOG_FORMAT=${LOG_FORMAT:-json}
 
       - PUBLIC_APP_URL=${PUBLIC_APP_URL}
-      - PUBLIC_PB_URL=${PUBLIC_PB_URL}
 
       - PB_URL=${PB_URL}
       - PB_EMAIL=${PB_EMAIL}
@@ -33,12 +32,3 @@ services:
       - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
       - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
       - LANGFUSE_HOST=${LANGFUSE_HOST}
-    command:
-      [
-        "uv",
-        "run",
-        "--directory",
-        "/repo/apps/api",
-        "arq",
-        "src.bootstrap.worker.WorkerSettings",
-      ]

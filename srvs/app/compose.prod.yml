@@ -4,7 +4,7 @@ services:
   app:
     build:
       context: ../..
-      dockerfile: ./apps/app/Dockerfile
+      dockerfile: ./srvs/app/Dockerfile
       args:
         - PUBLIC_PB_URL=${PUBLIC_PB_URL}
         - STRIPE_API_KEY=${STRIPE_API_KEY}

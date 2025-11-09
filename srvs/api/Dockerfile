@@ -7,12 +7,12 @@ RUN pip install -U uv
 
 COPY pyproject.toml uv.lock ./
 COPY pkgs/python pkgs/python
-COPY apps/api/pyproject.toml apps/api/
+COPY srvs/api/pyproject.toml srvs/api/
 
-ENV UV_PROJECT_ENVIRONMENT=/repo/apps/api/.venv
+ENV UV_PROJECT_ENVIRONMENT=/repo/srvs/api/.venv
 RUN uv sync --package quizbee --frozen --no-dev
 
-COPY apps/api apps/api
+COPY srvs/api srvs/api
 
 EXPOSE 8000
-CMD ["uv", "run", "--directory", "/repo/apps/api", "--", "gunicorn", "-c", "gunicorn.conf.py", "src.bootstrap:app"]
+CMD ["uv", "run", "--directory", "/repo/srvs/api", "--", "gunicorn", "-c", "gunicorn.conf.py", "src.bootstrap:app"]

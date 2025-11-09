@@ -18,6 +18,6 @@ node-linker=isolated\n\
 virtual-store-dir=.pnpm\n" > /etc/pnpmrc
 
 CMD ["sh", "-lc", "\
-  pnpm -C apps/web install && \
-  pnpm -C apps/web dev --host 0.0.0.0 --port 4321 \
+  pnpm -C srvs/web install && \
+  pnpm -C srvs/web dev --host 0.0.0.0 --port 4321 \
 "]

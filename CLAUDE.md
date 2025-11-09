@@ -49,7 +49,7 @@ make pr              # Create draft PR to main
 ### API Development
 
 ```bash
-cd apps/api
+cd srvs/api
 
 # Run API server
 make dev             # Start with auto-reload on 0.0.0.0:8000
@@ -66,7 +66,7 @@ uv run pytest        # Run tests
 ### Web Development
 
 ```bash
-cd apps/web
+cd srvs/web
 
 pnpm astro dev       # Start dev server
 pnpm build           # Build for production
@@ -79,7 +79,7 @@ pnpm build:gen-types
 ### App Development
 
 ```bash
-cd apps/app
+cd srvs/app
 
 pnpm dev             # Start dev server
 pnpm build           # Build for production
@@ -104,7 +104,7 @@ pnpm build:gen-types
 
 ### Backend (API)
 
-**Location:** `apps/api/src/`
+**Location:** `srvs/api/src/`
 
 **Structure:**
 
@@ -115,7 +115,7 @@ pnpm build:gen-types
   - `ai/` - AI/LLM integration utilities
   - `models/` - Pydantic models and schemas
   - `utils/` - Utility functions
-- `apps/` - Domain-driven feature modules (v2 architecture)
+- `srvs/` - Domain-driven feature modules (v2 architecture)
   - `edge_api/` - Public API endpoints for frontend (v2 refactored API)
   - `v2/` - New architecture modules (llm_tools, material_search, user_auth)
   - `quiz_generator/`, `quiz_attempter/`, `quiz_attempts/` - Quiz business logic
@@ -135,7 +135,7 @@ pnpm build:gen-types
 
 ### Frontend (App)
 
-**Location:** `apps/app/src/`
+**Location:** `srvs/app/src/`
 
 **Structure:**
 
@@ -165,7 +165,7 @@ pnpm build:gen-types
 
 ### Frontend (Web)
 
-**Location:** `apps/web/src/`
+**Location:** `srvs/web/src/`
 
 **Structure:**
 
@@ -208,8 +208,8 @@ pnpm build:gen-types
 
 **Global styles:**
 
-- App: `apps/app/src/app.css`
-- Web: `apps/web/src/styles/global.css`
+- App: `srvs/app/src/app.css`
+- Web: `srvs/web/src/styles/global.css`
 
 ### Astro Pages
 

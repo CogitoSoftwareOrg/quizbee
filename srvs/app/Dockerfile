@@ -21,12 +21,12 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm \
     pnpm install --frozen-lockfile --filter "@quizbee/ui-svelte-daisy" --include-workspace-root=false
 
 # Now install app dependencies with workspace packages available
-COPY apps/app/package.json apps/app/
+COPY srvs/app/package.json srvs/app/
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm \
     PNPM_STORE_DIR=/pnpm \
-    pnpm install --frozen-lockfile --filter ./apps/app...
+    pnpm install --frozen-lockfile --filter ./srvs/app...
 
-COPY apps/app apps/app
+COPY srvs/app srvs/app
 
 # Build args for SvelteKit env vars (PUBLIC_ prefix required by SvelteKit)
 ARG STRIPE_API_KEY
@@ -34,11 +34,11 @@ ARG PUBLIC_PB_URL
 ENV STRIPE_API_KEY=$STRIPE_API_KEY PUBLIC_PB_URL=$PUBLIC_PB_URL
 
 
-RUN pnpm -C apps/app build
+RUN pnpm -C srvs/app build
 
 RUN mkdir -p /out && \
-    pnpm --filter ./apps/app deploy --prod --legacy /out && \
-    cp -r apps/app/build /out/build
+    pnpm --filter ./srvs/app deploy --prod --legacy /out && \
+    cp -r srvs/app/build /out/build
 
 ### 2) Runtime
 FROM node:20-alpine AS runner

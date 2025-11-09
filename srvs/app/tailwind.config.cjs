@@ -1,6 +1,3 @@
-/**
- * apps/app Tailwind config: add xxl breakpoint for >1920px
- */
 module.exports = {
 	content: [
 		'./src/**/*.{html,svelte,js,ts}',

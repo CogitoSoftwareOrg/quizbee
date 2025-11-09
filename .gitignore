@@ -19,6 +19,8 @@
 **/logs
 **/.pids
 
-tests/**/test-results
-tests/**/playwright-report
+e2e/**/test-results
+e2e/**/playwright-report
 **/.pytest_cache
+
+**/.DS_Store

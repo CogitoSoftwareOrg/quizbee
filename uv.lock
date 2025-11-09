@@ -1399,7 +1399,7 @@ wheels = [
 [[package]]
 name = "quizbee"
 version = "0.1.0"
-source = { virtual = "apps/api" }
+source = { virtual = "srvs/api" }
 dependencies = [
     { name = "arq" },
     { name = "fastapi" },

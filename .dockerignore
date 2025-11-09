@@ -6,9 +6,9 @@
 !pyproject.toml
 !uv.lock
 
-!apps/web/**
-!apps/api/**
-!apps/app/**
+!srvs/web/**
+!srvs/api/**
+!srvs/app/**
 
 !infra/pb/**
 
