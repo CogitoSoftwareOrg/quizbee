@@ -7,9 +7,9 @@ Unit-тесты для usecase QuizGeneratorAppImpl.
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from src.apps.quiz_generator.app.usecases import QuizGeneratorAppImpl
-from src.apps.quiz_generator.app.contracts import GenerateCmd, FinalizeQuizCmd, GenMode
-from src.apps.quiz_generator.domain.models import (
+from src.apps.quiz_owner.app.usecases import QuizGeneratorAppImpl
+from src.apps.quiz_owner.app.contracts import GenerateCmd, FinalizeQuizCmd, GenMode
+from src.apps.quiz_owner.domain.models import (
     Quiz,
     QuizStatus,
     QuizDifficulty,
@@ -17,8 +17,8 @@ from src.apps.quiz_generator.domain.models import (
     QuizItem,
     QuizItemVariant,
 )
-from src.apps.quiz_generator.domain.errors import NotQuizOwnerError
-from src.apps.user_auth.app.contracts import Principal
+from src.apps.quiz_owner.domain.errors import NotQuizOwnerError
+from src.apps.user_owner.app.contracts import Principal
 
 
 @pytest.fixture

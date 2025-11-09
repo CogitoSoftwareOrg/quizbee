@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
-from src.apps.quiz_generator.app.contracts import GenMode
+from src.apps.quiz_owner.app.contracts import GenMode
 
 from ....app.contracts import (
     JobName,

@@ -6,7 +6,7 @@ Unittesty для domain модели Quiz.
 
 import pytest
 
-from src.apps.quiz_generator.domain.models import (
+from src.apps.quiz_owner.domain.models import (
     Quiz,
     QuizItem,
     QuizItemVariant,

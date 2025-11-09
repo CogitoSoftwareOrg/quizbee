@@ -2,15 +2,15 @@ import logging
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
-from src.apps.material.domain.errors import (
+from src.apps.material_owner.domain.errors import (
     TooLargeFileError,
     TooManyTextTokensError,
 )
-from src.apps.quiz_generator.domain.errors import (
+from src.apps.quiz_owner.domain.errors import (
     NotQuizOwnerError,
     NotEnoughQuizItemsError,
 )
-from src.apps.user_auth.domain.errors import ForbiddenError, NoTokenError
+from src.apps.user_owner.domain.errors import ForbiddenError, NoTokenError
 
 ERROR_MAP = {
     NotQuizOwnerError: (403, "NOT_QUIZ_OWNER"),

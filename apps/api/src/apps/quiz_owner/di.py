@@ -6,7 +6,7 @@ import httpx
 
 from src.lib.di import AgentEnvelope
 
-from src.apps.material.app.contracts import MaterialApp
+from src.apps.material_owner.app.contracts import MaterialApp
 from src.apps.llm_tools.app.contracts import LLMToolsApp
 
 from .adapters.out import (

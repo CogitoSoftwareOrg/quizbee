@@ -1,4 +1,4 @@
-from src.apps.quiz_generator.app.contracts import (
+from src.apps.quiz_owner.app.contracts import (
     QuizGeneratorApp,
     GenerateCmd,
     FinalizeQuizCmd,
@@ -9,14 +9,14 @@ from src.apps.quiz_attempter.app.contracts import (
     FinalizeAttemptCmd,
     AskExplainerCmd,
 )
-from src.apps.material.app.contracts import (
+from src.apps.material_owner.app.contracts import (
     AddMaterialCmd,
     MaterialApp,
     Material,
     RemoveMaterialCmd,
 )
-from src.apps.user_auth.app.contracts import AuthUserApp
-from src.apps.user_auth.domain.models import Tariff
+from src.apps.user_owner.app.contracts import AuthUserApp
+from src.apps.user_owner.domain.models import Tariff
 
 from ..domain.errors import NotEnoughQuizItemsError
 from ..domain.constants import PATCH_LIMIT

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Protocol
 from enum import StrEnum
 
-from src.apps.user_auth.app.contracts import Principal
+from src.apps.user_owner.app.contracts import Principal
 
 from ..domain.models import Material, MaterialFile, MaterialChunk
 
@@ -17,14 +17,12 @@ class AddMaterialCmd:
     quiz_id: str
 
 
-
 @dataclass
 class SearchCmd:
     user: Principal
     query: str
     material_ids: list[str]
     limit_tokens: int
-
 
 
 @dataclass

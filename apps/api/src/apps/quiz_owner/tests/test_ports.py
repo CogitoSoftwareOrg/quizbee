@@ -1,15 +1,15 @@
 import pytest
 import pytest_asyncio
 
-from src.apps.quiz_generator.domain.models import (
+from src.apps.quiz_owner.domain.models import (
     Quiz,
     QuizItem,
     QuizItemVariant,
     QuizItemStatus,
     QuizDifficulty,
 )
-from src.apps.quiz_generator.domain.ports import QuizRepository
-from src.apps.quiz_generator.adapters.out import PBQuizRepository
+from src.apps.quiz_owner.domain.ports import QuizRepository
+from src.apps.quiz_owner.adapters.out import PBQuizRepository
 
 
 class QuizRepositoryContract:

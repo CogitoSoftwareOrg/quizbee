@@ -15,12 +15,12 @@ from src.lib.health import update_worker_heartbeat
 from arq.cron import cron
 
 from src.apps.llm_tools.di import init_llm_tools_app, init_llm_tools_deps
-from src.apps.user_auth.di import init_auth_user_app, init_user_auth_deps
-from src.apps.material.di import (
+from src.apps.user_owner.di import init_auth_user_app, init_user_auth_deps
+from src.apps.material_owner.di import (
     init_material_app,
     init_material_deps,
 )
-from src.apps.quiz_generator.di import init_quiz_generator_app, init_quiz_generator_deps
+from src.apps.quiz_owner.di import init_quiz_generator_app, init_quiz_generator_deps
 from src.apps.message_owner.di import init_message_owner_app, init_message_owner_deps
 from src.apps.quiz_attempter.di import init_quiz_attempter_app, init_quiz_attempter_deps
 from src.apps.edge_api.di import init_edge_api_app

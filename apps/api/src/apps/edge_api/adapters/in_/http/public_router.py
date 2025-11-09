@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 
 from src.lib.utils import cache_key, sse
 
-from src.apps.material.app.contracts import MaterialFile
+from src.apps.material_owner.app.contracts import MaterialFile
 
 from ....app.contracts import (
     PublicRemoveMaterialCmd,

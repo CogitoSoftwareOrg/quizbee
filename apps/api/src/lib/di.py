@@ -9,7 +9,7 @@ from src.apps.quiz_attempter.adapters.out import (
     AttemptFinalizerOutput,
     ExplainerOutput,
 )
-from src.apps.quiz_generator.adapters.out import (
+from src.apps.quiz_owner.adapters.out import (
     AIPatchGeneratorOutput,
     QuizFinalizerOutput,
 )

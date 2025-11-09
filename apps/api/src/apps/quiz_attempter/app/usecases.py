@@ -1,7 +1,7 @@
 import logging
 from typing import AsyncGenerator
 
-from src.apps.user_auth.app.contracts import AuthUserApp, Principal
+from src.apps.user_owner.app.contracts import AuthUserApp, Principal
 from src.apps.message_owner.app.contracts import (
     MessageOwnerApp,
     StartMessageCmd,
@@ -15,7 +15,7 @@ from src.apps.message_owner.domain.models import (
     MessageStatus,
 )
 from src.apps.llm_tools.app.contracts import LLMToolsApp
-from src.apps.user_auth.domain.models import Tariff
+from src.apps.user_owner.domain.models import Tariff
 
 from ..domain.models import Attempt
 from ..domain.refs import (
