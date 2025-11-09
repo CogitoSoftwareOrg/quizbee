@@ -42,7 +42,7 @@ class QuizCategory(StrEnum):
     LANGUAGE = "language"
     ART = "art"
     PSYCHOLOGY = "psychology"
-    POP_CULTURE = "pop_culture"
+    POP_CULTURE = "popCulture"
     STEM = "stem"
 
 
