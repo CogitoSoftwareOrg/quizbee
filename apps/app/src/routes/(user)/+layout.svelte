@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { MediaQuery } from 'svelte/reactivity';
-	import { House, Plus, Settings } from 'lucide-svelte';
+	import { House, Plus, Settings, History, ChartBar } from 'lucide-svelte';
 	import { goto, onNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 
@@ -121,7 +121,7 @@
 		<main
 			class={['flex h-full min-w-0 flex-1 flex-col sm:pt-4', !attemptingQuiz && 'pb-12 sm:pb-0']}
 		>
-			<header class="mobile-header sm:hidden">
+			<header class="mobile-header hidden">
 				<GlobalHeader />
 			</header>
 
@@ -136,6 +136,9 @@
 					<a href="/home" data-sveltekit-preload-data="tap" class="dock-item">
 						<House class={page.url.pathname === '/home' ? 'text-primary' : 'text-neutral'} />
 					</a>
+					<a href="/quizes" data-sveltekit-preload-data="tap" class="dock-item">
+						<History class={page.url.pathname === '/quizes' ? 'text-primary' : 'text-neutral'} />
+					</a>
 					<div>
 						<Button
 							style={page.url.pathname === '/quizes/new' ? 'ghost' : 'solid'}
@@ -147,6 +150,11 @@
 							<Plus size={32} />
 						</Button>
 					</div>
+					<a href="/analytics" data-sveltekit-preload-data="tap" class="dock-item">
+						<ChartBar
+							class={page.url.pathname === '/analytics' ? 'text-primary' : 'text-neutral'}
+						/>
+					</a>
 					<a href="/profile" data-sveltekit-preload-data="tap" class="dock-item">
 						<Settings class={page.url.pathname === '/profile' ? 'text-primary' : 'text-neutral'} />
 					</a>
@@ -176,7 +184,7 @@
 </Modal>
 
 <Modal
-	class="max-h-[95vh] max-w-[90vw]"
+	class="max-h-[90vh] max-w-[90vw] sm:max-h-[95vh]"
 	backdrop
 	open={uiStore.paywallOpen}
 	onclose={() => uiStore.setPaywallOpen(false)}

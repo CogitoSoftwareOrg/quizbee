@@ -24,7 +24,10 @@ from src.apps.quiz_generator.di import init_quiz_generator_app, init_quiz_genera
 from src.apps.message_owner.di import init_message_owner_app, init_message_owner_deps
 from src.apps.quiz_attempter.di import init_quiz_attempter_app, init_quiz_attempter_deps
 from src.apps.edge_api.di import init_edge_api_app
-
+from src.apps.document_parser.di import (
+    init_document_parser_app,
+    init_document_parser_deps,
+)
 from src.lib.settings import settings
 
 from src.apps.edge_api.domain.constants import ARQ_QUEUE_NAME
@@ -42,6 +45,9 @@ async def worker_heartbeat_task(ctx):
 async def startup(ctx):
     # GLOBAL
     admin_pb, lf, meili, http = init_global_deps()
+
+    parser_provider = init_document_parser_deps()
+    document_parser_app = init_document_parser_app(parser_provider=parser_provider)
 
     # V2 LLM TOOLS
     text_tokenizer, image_tokenizer, chunker = init_llm_tools_deps()
@@ -63,10 +69,11 @@ async def startup(ctx):
         lf=lf, admin_pb=admin_pb, meili=meili, llm_tools=llm_tools
     )
     material_search_app = init_material_search_app(
-        llm_tools=llm_tools,
-        pdf_parser=pdf_parser,
+        llm_tools_app=llm_tools,
+        document_parser=document_parser_adapter,
         indexer=material_indexer,
         material_repository=material_repository,
+        searcher_provider=searcher_provider,
     )
 
     # V2 QUIZ GENERATOR

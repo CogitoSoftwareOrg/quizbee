@@ -125,7 +125,7 @@
 
 <div class={[className, 'min-w-0']}>
 	{#if item.status === 'final' || item.status === 'generated'}
-		<ul class={['mb-1 mt-1 flex flex-col gap-6 px-3 sm:px-12']}>
+		<ul class={['mb-1 mt-1 flex flex-col gap-3 px-3 sm:px-12']}>
 			{#each answers as answer, index}
 				<li class="min-w-0">
 					<article
@@ -156,14 +156,20 @@
 									newDecisions[item.order] = itemDecision;
 
 									item.status = QuizItemsStatusOptions.final;
-									await Promise.all([
-										pb!.collection('quizAttempts').update(quizAttempt!.id, {
+									try {
+										const batch = pb!.createBatch();
+										batch.collection('quizAttempts').update(quizAttempt!.id, {
 											choices: newDecisions
-										}),
-										pb!.collection('quizItems').update(item!.id, {
+										});
+										batch.collection('quizItems').update(item!.id, {
 											status: 'final'
-										})
-									]);
+										});
+										await batch.send();
+									} catch (error) {
+										console.error(error);
+										itemDecision = null;
+										item.status = QuizItemsStatusOptions.generated;
+									}
 
 									if (toAnswer <= 3 && quizItems.some((qi) => ['blank'].includes(qi.status))) {
 										const result = await patchApi(`quizes/${quiz?.id}`, {
@@ -244,7 +250,7 @@
 												<p class="text-xs font-semibold uppercase tracking-wide opacity-60">
 													Explanation
 												</p>
-												<p class="wrap-break-words text-sm leading-relaxed opacity-80">
+												<p class="wrap-break-words leading-relaxed opacity-80 md:text-base">
 													{@html answer.explanation}
 												</p>
 											</div>

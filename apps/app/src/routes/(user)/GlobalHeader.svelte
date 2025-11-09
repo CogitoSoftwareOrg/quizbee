@@ -76,31 +76,6 @@
 			{#if quiz?.title}
 				<div class="hidden text-sm font-semibold">{quiz.title}</div>
 			{/if}
-
-			<!-- Mobile dots navigation -->
-			<ul class="flex flex-1 flex-wrap items-center gap-1.5 sm:hidden">
-				{#each quizItems as quizItem}
-					{@const decision = quizDecisions.at(quizItem.order)}
-					{@const isDisabled = !decision && quizItem.order > (itemToAnswer?.order || 0)}
-					{@const isCurrent = currentItem?.id === quizItem.id}
-
-					<li>
-						<div
-							class={[
-								'block rounded-full transition-all',
-								isCurrent ? 'size-2.5' : 'size-1.5',
-								decision?.correct
-									? 'bg-success'
-									: decision && !decision?.correct
-										? 'bg-error'
-										: 'bg-neutral/30',
-								isDisabled ? 'opacity-40' : ''
-							].join(' ')}
-							aria-label={`Question ${quizItem.order + 1}`}
-						></div>
-					</li>
-				{/each}
-			</ul>
 		{/if}
 	</div>
 

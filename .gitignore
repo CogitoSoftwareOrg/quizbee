@@ -1,6 +1,5 @@
 **/.venv
 **/__pycache__
-**/.vscode
 
 **/.env
 **/.env.production
@@ -22,3 +21,4 @@
 
 tests/**/test-results
 tests/**/playwright-report
+**/.pytest_cache

@@ -71,6 +71,8 @@ class QuizItem:
     order: int
     status: QuizItemStatus
 
+    fresh_generated: bool = False
+
     def to_generating(self) -> None:
         if self.status not in {QuizItemStatus.BLANK}:
             raise ValueError("Item is not in blank status for generating")
@@ -79,17 +81,21 @@ class QuizItem:
     def regenerate(self) -> None:
         if self.status not in {QuizItemStatus.FINAL}:
             self.status = QuizItemStatus.BLANK
+            self.fresh_generated = False
 
     def to_failed(self) -> None:
         if self.status not in {QuizItemStatus.GENERATING}:
             raise ValueError("Item is not in generating status for failing")
         self.status = QuizItemStatus.FAILED
 
-    def update(self, item: "QuizItem") -> None:
-        self.question = item.question
-        self.variants = item.variants
-        self.order = item.order
-        self.status = item.status
+    def to_generated(self, question: str, variants: list[QuizItemVariant]) -> None:
+        if self.status not in {QuizItemStatus.GENERATING}:
+            raise ValueError("Item is not in generating status for generating")
+
+        self.fresh_generated = True
+        self.status = QuizItemStatus.GENERATED
+        self.question = question
+        self.variants = variants
 
 
 @dataclass(slots=True, kw_only=True)
@@ -199,6 +205,9 @@ class Quiz:
             item for item in self.items if item.status in {QuizItemStatus.GENERATING}
         ]
 
+    def fresh_generated_items(self) -> list[QuizItem]:
+        return [item for item in self.items if item.fresh_generated]
+
     def prev_items(self) -> list[QuizItem]:
         return [
             item
@@ -210,10 +219,8 @@ class Quiz:
         for item in self.items:
             item.to_failed()
 
-    def update_item(self, item: QuizItem):
-        for itm in self.items:
-            if itm.id == item.id:
-                itm.update(item)
-                return
-
-        raise ValueError(f"Item {item.id} not found")
+    def generation_step(self, question: str, variants: list[QuizItemVariant]) -> None:
+        items = self.generating_items()
+        if len(items) == 0:
+            raise ValueError("No items to generate")
+        items[0].to_generated(question, variants)

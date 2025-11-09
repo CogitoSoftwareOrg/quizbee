@@ -14,13 +14,26 @@ function mount(node: HTMLElement, key: string) {
 	host.appendChild(node);
 	return () => host.contains(node) && host.removeChild(node);
 }
+
+async function waitForPortal(key: string, maxAttempts = 10): Promise<void> {
+	for (let i = 0; i < maxAttempts; i++) {
+		if (portalMap.has(key)) return;
+		await tick();
+	}
+	throw `portal ${key} not found after ${maxAttempts} attempts`;
+}
+
 export function portal(node: HTMLElement, id = 'default') {
 	let destroy: (() => void) | undefined;
 	const key = `$$portal.${id}`;
 	if (!portalMap.has(key)) {
-		tick().then(() => {
-			destroy = mount(node, key);
-		});
+		waitForPortal(key)
+			.then(() => {
+				destroy = mount(node, key);
+			})
+			.catch((err) => {
+				console.error('Portal mount error:', err);
+			});
 	} else {
 		destroy = mount(node, key);
 	}

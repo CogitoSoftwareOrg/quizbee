@@ -1,7 +1,7 @@
 import logging
 
 from src.apps.llm_tools.app.contracts import LLMToolsApp
-from src.apps.material_search.app.contracts import MaterialSearchApp, SearchCmd
+from src.apps.material_search.app.contracts import MaterialApp, SearchCmd
 from src.apps.user_auth.app.contracts import Principal
 
 from ..domain.ports import (
@@ -32,7 +32,7 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
         quiz_repository: QuizRepository,
         quiz_indexer: QuizIndexer,
         llm_tools: LLMToolsApp,
-        material_search: MaterialSearchApp,
+        material_search: MaterialApp,
         patch_generator: PatchGenerator,
         finalizer: QuizFinalizer,
     ):

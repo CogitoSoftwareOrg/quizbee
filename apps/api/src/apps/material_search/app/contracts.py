@@ -1,6 +1,7 @@
 # APP
 from dataclasses import dataclass
 from typing import Protocol
+from enum import StrEnum
 
 from src.apps.user_auth.app.contracts import Principal
 
@@ -16,6 +17,7 @@ class AddMaterialCmd:
     quiz_id: str
 
 
+
 @dataclass
 class SearchCmd:
     user: Principal
@@ -24,13 +26,14 @@ class SearchCmd:
     limit_tokens: int
 
 
+
 @dataclass
 class RemoveMaterialCmd:
     user: Principal
     material_id: str
 
 
-class MaterialSearchApp(Protocol):
+class MaterialApp(Protocol):
     async def add_material(self, cmd: AddMaterialCmd) -> Material: ...
 
     async def search(self, cmd: SearchCmd) -> list[MaterialChunk]: ...

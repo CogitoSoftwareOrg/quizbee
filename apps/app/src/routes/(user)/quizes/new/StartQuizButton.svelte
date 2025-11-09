@@ -15,15 +15,16 @@
 		attachedFiles: AttachedFile[];
 		inputText: string;
 		questionCount: number;
+		isUploading: boolean;
 	}
 
-	let { quizTemplateId, attachedFiles, inputText, questionCount }: Props = $props();
+	let { quizTemplateId, attachedFiles, inputText, questionCount, isUploading }: Props = $props();
 
 	const user = $derived(userStore.user);
 
 	const hasFiles = $derived(attachedFiles.length > 0);
 	const hasText = $derived(inputText.trim().length > 0);
-	const isSubmitDisabled = $derived(!hasFiles && !hasText);
+	const isSubmitDisabled = $derived((!hasFiles && !hasText) || isUploading);
 
 	const subscription = $derived(subscriptionStore.subscription);
 	const quizUsage = $derived(subscription?.quizItemsUsage || 0);
@@ -79,7 +80,7 @@
 
 <Button
 	class={[
-		'h-14 w-full text-lg font-semibold shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl'
+		'h-12 w-full text-lg font-semibold shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl'
 	]}
 	disabled={quizRemained >= questionCount && (isSubmitDisabled || isLoading)}
 	onclick={sendQuizCreation}
@@ -88,6 +89,9 @@
 	{#if isLoading}
 		<span class="loading loading-md loading-spinner mr-2"></span>
 		Creating quiz...
+	{:else if isUploading}
+		<span class="loading loading-md loading-spinner mr-2"></span>
+		Uploading files...
 	{:else if quizRemained < questionCount}
 		You have {quizRemained} questions left
 	{:else}

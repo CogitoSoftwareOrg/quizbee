@@ -129,7 +129,9 @@ export function calculateAverageScore(
 	const recent = validAttempts.slice(0, limit);
 	const scores = recent.map((attempt) => {
 		const choices = ensureChoicesArray(attempt.choices);
-		const correct = choices.filter((c: unknown) => (c as { correct: boolean }).correct).length;
+		const correct = choices.filter(
+			(c: unknown) => c != null && (c as { correct?: boolean }).correct === true
+		).length;
 		return choices.length > 0 ? (correct / choices.length) * 100 : 0;
 	});
 

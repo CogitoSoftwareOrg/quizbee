@@ -76,11 +76,11 @@
 	{#if agreed}
 		<p class="text-neutral mt-2 text-sm">
 			By signing in with, you agree to the <a
-				href={`${env.PUBLIC_WEB_URL}legal/terms-and-privacy`}
+				href={`${env.PUBLIC_WEB_URL}legal/terms-and-conditions`}
 				class="link link-primary">terms and conditions</a
 			>
 			and
-			<a href="${env.PUBLIC_WEB_URL}legal/privacy-policy" class="link link-primary"
+			<a href={`${env.PUBLIC_WEB_URL}legal/privacy-policy`} class="link link-primary"
 				>privacy policy</a
 			>.
 		</p>

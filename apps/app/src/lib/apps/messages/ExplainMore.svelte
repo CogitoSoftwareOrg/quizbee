@@ -54,7 +54,7 @@
 		messagesStore.sendMessage(sender, 'Explain this question', quizAttemptId, quiz.id, itemId);
 	}}
 	size="lg"
-	class={`dark:text-base-content/90 min-w-40 ${className || ''}`}
+	class={`dark:text-base-content/90 ${className || ''}`}
 	{color}
 	{style}
 >

@@ -5,22 +5,27 @@
 	font-style: normal;
 	font-display: swap;
 }
+
 :root {
-	font-size: 18px;
+	/* Адаптивный размер шрифта без множества брейкпоинтов
+	 * Формула: минимум 14px, масштабируется с viewport, максимум 26px
+	 * 0.5vw означает, что на экране 1920px будет ~14px + 9.6px = ~23.6px
+	 */
+	font-size: clamp(14px, 0.5vw + 0.75rem, 26px);
 	--font-sans: 'LV', system-ui, sans-serif;
 }
 
-@media screen and (min-width: 1920px) {
+/* Корректировка для десктопов */
+@media screen and (min-width: 70rem) {
 	:root {
-		/* Для экранов 1920px+: базовый размер 20px, максимум 28px на очень больших экранах */
-		font-size: clamp(20px, 1.2vw + 0.5rem, 24px);
+		/* Для больших экранов можно немного уменьшить базовый размер */
+		font-size: clamp(14px, 0.5vw + 0.51rem, 28px);
 	}
 }
 
-/* Дополнительное увеличение для экранов с высоким DPI */
-/* @media screen and (min-width: 1920px) and (min-resolution: 1.5dppx),
-	screen and (min-width: 1920px) and (-webkit-min-device-pixel-ratio: 1.5) {
+@media screen and (min-width: 193rem) {
 	:root {
-		font-size: clamp(22px, 1.4vw + 0.5rem, 28px);
+		/* Более агрессивное масштабирование для wide screens */
+		font-size: clamp(20px, 1vw + 0.5rem, 36px);
 	}
-} */
+}
