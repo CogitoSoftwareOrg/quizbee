@@ -6,7 +6,7 @@ import httpx
 
 from src.lib.di import AgentEnvelope
 
-from src.apps.material_search.app.contracts import MaterialApp
+from src.apps.material.app.contracts import MaterialApp
 from src.apps.llm_tools.app.contracts import LLMToolsApp
 
 from .adapters.out import (
@@ -53,7 +53,7 @@ async def init_quiz_generator_deps(
 
 def init_quiz_generator_app(
     llm_tools: LLMToolsApp,
-    material_search: MaterialApp,
+    material: MaterialApp,
     quiz_repository: QuizRepository,
     quiz_indexer: QuizIndexer,
     patch_generator: PatchGenerator,
@@ -64,7 +64,7 @@ def init_quiz_generator_app(
         quiz_repository=quiz_repository,
         quiz_indexer=quiz_indexer,
         llm_tools=llm_tools,
-        material_search=material_search,
+        material=material,
         patch_generator=patch_generator,
         finalizer=finalizer,
     )

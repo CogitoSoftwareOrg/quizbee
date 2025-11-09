@@ -10,9 +10,9 @@ from src.apps.edge_api.di import init_edge_api_app
 from src.apps.llm_tools.di import init_llm_tools_app, init_llm_tools_deps
 from src.apps.user_auth.di import init_auth_user_app, init_user_auth_deps
 from src.apps.message_owner.di import init_message_owner_app, init_message_owner_deps
-from src.apps.material_search.di import (
-    init_material_search_app,
-    init_material_search_deps,
+from src.apps.material.di import (
+    init_material_app,
+    init_material_deps,
 )
 from src.apps.quiz_generator.di import init_quiz_generator_app, init_quiz_generator_deps
 from src.apps.quiz_attempter.di import init_quiz_attempter_app, init_quiz_attempter_deps
@@ -72,16 +72,17 @@ async def lifespan(app: FastAPI):
         document_parser_adapter,
         material_indexer,
         searcher_provider,
-    ) = await init_material_search_deps(
+        llm_tools_adapter,
+    ) = await init_material_deps(
         lf=lf,
         admin_pb=admin_pb,
         meili=meili,
         llm_tools=llm_tools,
         document_parser_app=document_parser_app,
     )
-    material_search_app = init_material_search_app(
-        document_parser=document_parser_adapter,
-        llm_tools_app=llm_tools,
+    material_app = init_material_app(
+        document_parser_adapter=document_parser_adapter,
+        llm_tools_adapter=llm_tools_adapter,
         indexer=material_indexer,
         material_repository=material_repository,
         searcher_provider=searcher_provider,
@@ -102,7 +103,7 @@ async def lifespan(app: FastAPI):
     )
     quiz_generator_app = init_quiz_generator_app(
         llm_tools=llm_tools,
-        material_search=material_search_app,
+        material=material_app,
         quiz_repository=quiz_repository,
         quiz_indexer=quiz_indexer,
         patch_generator=patch_generator,
@@ -128,7 +129,7 @@ async def lifespan(app: FastAPI):
         auth_user_app=auth_user_app,
         quiz_generator_app=quiz_generator_app,
         quiz_attempter_app=quiz_attempter_app,
-        material_search_app=material_search_app,
+        material_app=material_app,
     )
 
     # ARQ Redis pool для отправки задач

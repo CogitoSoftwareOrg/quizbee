@@ -13,7 +13,7 @@ from src.apps.edge_api.app.contracts import (
     PublicAddMaterialCmd,
     PublicRemoveMaterialCmd,
 )
-from src.apps.material_search.app.contracts import MaterialFile
+from src.apps.material.app.contracts import MaterialFile
 
 from .deps import ensure_admin_pb
 

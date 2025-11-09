@@ -1,7 +1,7 @@
 import logging
 
 from src.apps.llm_tools.app.contracts import LLMToolsApp
-from src.apps.material_search.app.contracts import MaterialApp, SearchCmd
+from src.apps.material.app.contracts import MaterialApp, SearchCmd
 from src.apps.user_auth.app.contracts import Principal
 
 from ..domain.ports import (
@@ -32,13 +32,13 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
         quiz_repository: QuizRepository,
         quiz_indexer: QuizIndexer,
         llm_tools: LLMToolsApp,
-        material_search: MaterialApp,
+        material: MaterialApp,
         patch_generator: PatchGenerator,
         finalizer: QuizFinalizer,
     ):
         self.quiz_repository = quiz_repository
         self.quiz_indexer = quiz_indexer
-        self.material_search = material_search
+        self.material = material
         self.llm_tools = llm_tools
         self.patch_generator = patch_generator
         self.finalizer = finalizer
@@ -119,7 +119,7 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
         self, quiz: Quiz, token_limit: int, user: Principal
     ) -> None:
         logging.info(f"Building material content for quiz {quiz.id}")
-        chunks = await self.material_search.search(
+        chunks = await self.material.search(
             SearchCmd(
                 query=quiz.query,
                 user=user,

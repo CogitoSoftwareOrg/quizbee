@@ -40,7 +40,7 @@ def mock_llm_tools():
 
 
 @pytest.fixture
-def mock_material_search():
+def mock_material():
     """Mock для MaterialSearchApp"""
     return AsyncMock()
 
@@ -97,7 +97,7 @@ def quiz_generator_app(
     mock_quiz_repository,
     mock_quiz_indexer,
     mock_llm_tools,
-    mock_material_search,
+    mock_material,
     mock_patch_generator,
     mock_finalizer,
 ):
@@ -106,7 +106,7 @@ def quiz_generator_app(
         quiz_repository=mock_quiz_repository,
         quiz_indexer=mock_quiz_indexer,
         llm_tools=mock_llm_tools,
-        material_search=mock_material_search,
+        material=mock_material,
         patch_generator=mock_patch_generator,
         finalizer=mock_finalizer,
     )

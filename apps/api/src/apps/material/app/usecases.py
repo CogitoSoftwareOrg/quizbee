@@ -6,8 +6,6 @@ from src.lib.settings import settings
 
 from src.apps.document_parser.domain import DocumentParseCmd
 
-from src.apps.llm_tools.app.contracts import LLMToolsApp
-
 from ..domain.models import (
     Material,
     MaterialFile,
@@ -19,11 +17,13 @@ from ..domain.models import (
 from ..domain.ports import (
     MaterialIndexer,
     MaterialRepository,
-    DocumentParser,
     SearcherProvider,
+    DocumentParser,
+    LLMTools,
 )
 from ..domain.errors import TooLargeFileError, TooManyTextTokensError
 from ..domain.constants import MAX_SIZE_MB, COMPLEX_EXTENSIONS
+from ..domain.ports import LLMTools
 from .contracts import MaterialApp, AddMaterialCmd, RemoveMaterialCmd, SearchCmd
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ class MaterialAppImpl(MaterialApp):
         self,
         material_repository: MaterialRepository,
         document_parser: DocumentParser,
-        llm_tools: LLMToolsApp,
+        llm_tools: LLMTools,
         indexer: MaterialIndexer,
         searcher_provider: SearcherProvider,
     ):

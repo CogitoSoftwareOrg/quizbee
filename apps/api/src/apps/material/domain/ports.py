@@ -10,7 +10,6 @@ from .models import Material, MaterialFile, MaterialChunk, ParsedDocument, Searc
 # ======ADAPTERS INTERFACES======
 
 
-
 # Material Repository
 class MaterialRepository(Protocol):
     async def get(self, id: str) -> Material | None: ...
@@ -53,7 +52,7 @@ class DocumentParser(Protocol):
 class LLMTools(Protocol):
     """
     Port для работы с LLM инструментами (подсчет токенов, chunking).
-    
+
     Реализация: LLMToolsAdapter
     """
 
@@ -81,7 +80,6 @@ class MaterialIndexer(Protocol):
     async def delete(self, material_ids: list[str]) -> None: ...
 
 
-
 # Searcher
 class Searcher(Protocol):
     async def search(
@@ -94,11 +92,9 @@ class Searcher(Protocol):
     ) -> list[MaterialChunk]: ...
 
 
-
-
 # Indexer
 class SearcherProvider(Protocol):
     def get(
         self,
         search_type: SearchType,
-    ) -> Searcher : ...
+    ) -> Searcher: ...

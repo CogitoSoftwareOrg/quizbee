@@ -8,7 +8,7 @@ from .meili_material_distribution_searcher import MeiliMaterialDistributionSearc
 class MaterialSearcherProvider(SearcherProvider):
     """
     Provider для получения нужного Searcher в зависимости от типа поиска.
-    
+
     Поддерживает два типа поиска:
     - QUERY: Поиск по запросу пользователя (MeiliMaterialQuerySearcher)
     - DISTRIBUTION: Равномерное распределение чанков по материалам (MeiliMaterialDistributionSearcher)
@@ -25,13 +25,13 @@ class MaterialSearcherProvider(SearcherProvider):
     def get(self, search_type: SearchType) -> Searcher:
         """
         Возвращает соответствующий Searcher для указанного типа поиска.
-        
+
         Args:
             search_type: Тип поиска (QUERY или DISTRIBUTION)
-            
+
         Returns:
             Searcher: Соответствующая реализация Searcher
-            
+
         Raises:
             ValueError: Если передан неподдерживаемый тип поиска
         """

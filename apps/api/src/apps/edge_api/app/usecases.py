@@ -9,7 +9,7 @@ from src.apps.quiz_attempter.app.contracts import (
     FinalizeAttemptCmd,
     AskExplainerCmd,
 )
-from src.apps.material_search.app.contracts import (
+from src.apps.material.app.contracts import (
     AddMaterialCmd,
     MaterialApp,
     Material,
@@ -39,12 +39,12 @@ class EdgeAPIAppImpl(EdgeAPIApp):
         user_auth: AuthUserApp,
         quiz_generator: QuizGeneratorApp,
         quiz_attempter: QuizAttempterApp,
-        material_search: MaterialApp,
+        material: MaterialApp,
     ):
         self.user_auth = user_auth
         self.quiz_generator = quiz_generator
         self.quiz_attempter = quiz_attempter
-        self.material_search = material_search
+        self.material = material
 
     async def start_quiz(self, cmd: PublicStartQuizCmd) -> None:
         user = await self.user_auth.validate(cmd.token)
@@ -110,7 +110,7 @@ class EdgeAPIAppImpl(EdgeAPIApp):
 
     async def add_material(self, cmd: PublicAddMaterialCmd) -> Material:
         user = await self.user_auth.validate(cmd.token)
-        material = await self.material_search.add_material(
+        material = await self.material.add_material(
             AddMaterialCmd(
                 quiz_id=cmd.quiz_id,
                 user=user,
@@ -123,7 +123,7 @@ class EdgeAPIAppImpl(EdgeAPIApp):
 
     async def remove_material(self, cmd: PublicRemoveMaterialCmd) -> None:
         user = await self.user_auth.validate(cmd.token)
-        await self.material_search.remove_material(
+        await self.material.remove_material(
             RemoveMaterialCmd(
                 user=user,
                 material_id=cmd.material_id,

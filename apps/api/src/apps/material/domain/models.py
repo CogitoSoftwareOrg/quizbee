@@ -7,6 +7,7 @@ from src.lib.utils import genID
 @dataclass
 class ParsedDocumentImage:
     """Изображение, извлечённое из документа."""
+
     bytes: bytes
     ext: str  # png, jpg, jpeg и т.д.
     width: int
@@ -20,6 +21,7 @@ class ParsedDocumentImage:
 @dataclass
 class ParsedDocument:
     """Результат парсинга документа в material_search контексте."""
+
     text: str  # Извлечённый текст с маркерами изображений
     images: list[ParsedDocumentImage]  # Список извлечённых изображений
     contents: list[dict]  # Оглавление/структура документа
@@ -92,4 +94,3 @@ class Material:
 
     def to_big(self):
         self.status = MaterialStatus.TOO_BIG
-

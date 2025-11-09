@@ -2,7 +2,7 @@ import logging
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
-from src.apps.material_search.domain.errors import (
+from src.apps.material.domain.errors import (
     TooLargeFileError,
     TooManyTextTokensError,
 )
