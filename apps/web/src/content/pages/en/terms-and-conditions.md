@@ -3,7 +3,7 @@ title: "Terms and Conditions"
 lastUpdated: "21.10.2025"
 ---
 
-Cogito Software as registered with the Dutch Chamber of Commerce under registration number 98507125 ("Cogito Software", "Quizbee", "Service" or "we") is the provider of the Quizbee, a Software-as-a-Service (SaaS) application that allows users to generate quizzes from their own educational materials, such as PDF files, notes, and other documents ("User Content"). The customer (including its End Users) or you are hereinafter referred to as the "Customer" or "you".
+Cogito Software as registered with the Dutch Chamber of Commerce under registration number 98507125 (**"Cogito Software"**, **"Quizbee"**, **"Service"** or **"we"**) is the provider of the Quizbee, a Software-as-a-Service (SaaS) application that allows users to generate quizzes from their own educational materials, such as PDF files, notes, and other documents ("User Content"). The customer (including its End Users) or you are hereinafter referred to as the **"Customer"** or **"you"**.
 
 ## 1. Applicability
 

@@ -241,7 +241,7 @@
 
 						{#if item && quiz && quizAttempt}
 							<QuizAnswersList
-								class="relative mt-6 flex-1 overflow-y-auto"
+								class="relative mt-6 flex-1 overflow-y-auto md:text-lg"
 								{answers}
 								{quizItems}
 								{quizDecisions}
