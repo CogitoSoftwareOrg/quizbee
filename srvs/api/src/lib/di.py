@@ -10,14 +10,14 @@ from src.apps.quiz_attempter.adapters.out import (
     ExplainerOutput,
 )
 from src.apps.quiz_owner.adapters.out import (
-    AIPatchGeneratorOutput,
+    AIQuizInstantGeneratorOutput,
     QuizFinalizerOutput,
 )
 from src.lib.settings import settings
 
 AgentPayload = Annotated[
     Union[
-        AIPatchGeneratorOutput,
+        AIQuizInstantGeneratorOutput,
         QuizFinalizerOutput,
         ExplainerOutput,
         AttemptFinalizerOutput,

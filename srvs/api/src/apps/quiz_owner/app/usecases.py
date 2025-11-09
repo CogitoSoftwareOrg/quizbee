@@ -53,7 +53,14 @@ class QuizGeneratorAppImpl(QuizGeneratorApp):
             quiz.increment_generation()
             await self.quiz_repository.update(quiz)
 
-        quiz.generate_patch()
+        ready_items = quiz.generate_patch()
+        if len(ready_items) == 0:
+            logging.warning(
+                f"No items ready for generation in quiz {cmd.quiz_id}. "
+                f"All items may be FINAL or there are no items."
+            )
+            return
+
         await self.quiz_repository.update(quiz)
 
         await self.patch_generator.generate(quiz, cmd.cache_key)

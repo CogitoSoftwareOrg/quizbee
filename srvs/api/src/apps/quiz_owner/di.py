@@ -11,7 +11,7 @@ from src.apps.llm_tools.domain._in import LLMToolsApp
 
 from .adapters.out import (
     PBQuizRepository,
-    AIPatchGenerator,
+    AIQuizInstantGenerator,
     AIQuizFinalizer,
     MeiliQuizIndexer,
 )
@@ -32,7 +32,7 @@ async def init_quiz_generator_deps(
     llm_tools: LLMToolsApp,
 ) -> tuple[QuizRepository, PatchGenerator, QuizFinalizer, QuizIndexer]:
     quiz_repository = PBQuizRepository(admin_pb, http=http)
-    patch_generator = AIPatchGenerator(
+    patch_generator = AIQuizInstantGenerator(
         lf=lf,
         quiz_repository=quiz_repository,
         output_type=AgentEnvelope,

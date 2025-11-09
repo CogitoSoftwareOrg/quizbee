@@ -68,7 +68,15 @@ class AIQuizInstantGeneratorOutput(BaseModel):
     ]
 
     def merge(self, quiz: Quiz) -> None:
-        for schema in self.quiz_items:
+        generating_count = len(quiz.generating_items())
+        if generating_count == 0:
+            raise ValueError("No items in GENERATING status to merge results into")
+
+        # Only process as many items as there are GENERATING items
+        # This prevents errors if AI returns more items than expected
+        items_to_process = min(len(self.quiz_items), generating_count)
+
+        for schema in self.quiz_items[:items_to_process]:
             quiz.generation_step(
                 question=schema.question,
                 variants=[

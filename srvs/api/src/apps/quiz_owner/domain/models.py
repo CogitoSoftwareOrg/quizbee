@@ -79,6 +79,8 @@ class QuizItem:
         self.status = QuizItemStatus.GENERATING
 
     def regenerate(self) -> None:
+        # Reset all non-FINAL items to BLANK for regeneration
+        # This handles GENERATING, FAILED, GENERATED, and BLANK items
         if self.status not in {QuizItemStatus.FINAL}:
             self.status = QuizItemStatus.BLANK
             self.fresh_generated = False
@@ -216,7 +218,9 @@ class Quiz:
         ]
 
     def fail(self):
-        for item in self.items:
+        # Only fail items that are currently generating
+        # Other items (BLANK, FINAL, GENERATED, FAILED) should remain unchanged
+        for item in self.generating_items():
             item.to_failed()
 
     def generation_step(self, question: str, variants: list[QuizItemVariant]) -> None:
