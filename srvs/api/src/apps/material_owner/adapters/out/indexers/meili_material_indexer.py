@@ -1,6 +1,6 @@
 from dataclasses import asdict, dataclass
 import logging
-from typing import TypedDict
+from typing import Any, TypedDict
 from langfuse import Langfuse
 from meilisearch_python_sdk import AsyncClient
 from meilisearch_python_sdk.models.search import Hybrid
@@ -34,7 +34,7 @@ class Doc:
     userId: str
     title: str
     content: str
-    _vectors: dict[str, list[float]] | None = None
+    _vectors: dict[str, dict[str, list[list[float]]]] | None = None
 
     @classmethod
     def from_hit(cls, hit: dict) -> "Doc":
@@ -48,7 +48,9 @@ class Doc:
         )
 
     def to_chunk(self) -> MaterialChunk:
-        vector = (self._vectors or {}).get(EMBEDDER_NAME)
+        vectors = (self._vectors or {}).get(EMBEDDER_NAME, {}).get("embeddings", [])
+        vector = vectors[0] if len(vectors) > 0 else None
+
         return MaterialChunk(
             id=self.id,
             idx=int(self.id.split("-")[-1]),

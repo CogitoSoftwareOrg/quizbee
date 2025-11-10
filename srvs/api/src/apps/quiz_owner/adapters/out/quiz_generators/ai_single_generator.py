@@ -2,12 +2,13 @@ from dataclasses import dataclass
 import logging
 from typing import Annotated
 from langfuse import Langfuse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from pydantic_ai import (
     Agent,
     ModelMessage,
     ModelRequest,
     ModelRequestPart,
+    NativeOutput,
     RunContext,
     SystemPromptPart,
     UserPromptPart,
@@ -23,6 +24,9 @@ from ....domain.models import Quiz, QuizItemVariant
 
 QUIZ_GENERATOR_LLM = LLMS.GROK_4_FAST
 IN_QUERY = ""
+RETRIES = 1
+TEMPERATURE = 0.5
+TOP_P = 0.95
 
 
 @dataclass
@@ -41,7 +45,7 @@ class AnswerSchema(BaseModel):
     ]
 
 
-class AIQuizInstantGeneratorOutput(BaseModel):
+class AIQuizSingleGeneratorOutput(BaseModel):
     question: Annotated[
         str, Field(title="Question", description="The quiz question text.")
     ]
@@ -54,6 +58,17 @@ class AIQuizInstantGeneratorOutput(BaseModel):
             max_length=4,
         ),
     ]
+
+    @model_validator(mode="after")
+    def _check_answers(self):
+        if len(self.answers) != 4:
+            raise ValueError("Exactly 4 answers are required.")
+        if sum(1 for a in self.answers if a.correct) != 1:
+            raise ValueError("Exactly one answer must be correct.")
+        for a in self.answers:
+            if not a.answer.strip() or not a.explanation.strip():
+                raise ValueError("Answer and explanation must be non-empty.")
+        return self
 
     def merge(self, quiz: Quiz):
         quiz.generation_step(
@@ -75,9 +90,11 @@ class AISingleGenerator(PatchGenerator):
 
         self._ai = Agent(
             history_processors=[self._inject_request_prompt],
-            output_type=AIQuizInstantGeneratorOutput,
+            output_type=AIQuizSingleGeneratorOutput,
             deps_type=AISingleGeneratorDeps,
             model=QUIZ_GENERATOR_LLM,
+            retries=RETRIES,
+            instrument=settings.env == "local",
         )
 
     async def generate(self, dto: PatchGeneratorDto) -> None:
@@ -87,6 +104,7 @@ class AISingleGenerator(PatchGenerator):
         if dto.chunks is None:
             raise ValueError("Chunks are required")
 
+        schema = AIQuizSingleGeneratorOutput.model_json_schema()
         try:
             with self._lf.start_as_current_span(name=f"quiz-patch") as span:
                 run = await self._ai.run(
@@ -94,11 +112,19 @@ class AISingleGenerator(PatchGenerator):
                     model=QUIZ_GENERATOR_LLM,
                     deps=AISingleGeneratorDeps(quiz=dto.quiz, chunks=dto.chunks),
                     model_settings={
+                        "temperature": TEMPERATURE,
+                        "top_p": TOP_P,
                         "extra_body": {
-                            "reasoning_effort": "low",
-                            # "service_tier": "priority" if priority else "default",
-                            "service_tier": "default",
                             "prompt_cache_key": dto.cache_key,
+                            # "response_format": {
+                            #     "type": "json_schema",
+                            #     "json_schema": {
+                            #         "name": "AIQuizSingleGeneratorOutput",
+                            #         "schema": schema,
+                            #     },
+                            #     "strict": True,
+                            # },
+                            # "tool_choice": "none",
                         },
                     },
                 )
@@ -106,14 +132,14 @@ class AISingleGenerator(PatchGenerator):
                 payload = run.output
                 payload.merge(dto.quiz)
 
-                await update_span_with_result(
-                    self._lf,
-                    run,
-                    span,
-                    dto.quiz.author_id,
-                    dto.cache_key,
-                    QUIZ_GENERATOR_LLM,
-                )
+                # await update_span_with_result(
+                #     self._lf,
+                #     run,
+                #     span,
+                #     dto.quiz.author_id,
+                #     dto.cache_key,
+                #     QUIZ_GENERATOR_LLM,
+                # )
 
         except Exception as e:
             logging.exception("Failed to generate quiz instant: %s", e)

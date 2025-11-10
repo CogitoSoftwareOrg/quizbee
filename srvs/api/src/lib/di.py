@@ -1,3 +1,4 @@
+from pydantic_ai import Agent
 from pocketbase import PocketBase
 from langfuse import Langfuse
 from meilisearch_python_sdk import AsyncClient
@@ -7,6 +8,8 @@ from src.lib.settings import settings
 
 
 def init_global_deps() -> tuple[PocketBase, Langfuse, AsyncClient, httpx.AsyncClient]:
+    Agent.instrument_all(settings.env == "local")
+
     admin_pb = PocketBase(settings.pb_url)
     lf = Langfuse(
         public_key=settings.langfuse_public_key,

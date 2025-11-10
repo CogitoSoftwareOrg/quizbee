@@ -44,6 +44,7 @@ class QuizGeneratorImpl(QuizGenerator):
                 f"All items may be FINAL or there are no items."
             )
             raise NoItemsReadyForGenerationError(quiz_id=cmd.quiz_id)
+        await self._quiz_repository.update(quiz)
 
         chunks = await self._relevant_chunks(quiz, ready_items, cmd.user)
 
