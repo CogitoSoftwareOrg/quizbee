@@ -1,19 +1,12 @@
 import asyncio
 from dataclasses import dataclass
 import logging
+import os
 from typing import Annotated, Any, Literal
 import httpx
 from langfuse import Langfuse
+from openai import OpenAI
 from pydantic import BaseModel, Field
-from pydantic_ai import (
-    Agent,
-    ModelMessage,
-    ModelRequest,
-    ModelRequestPart,
-    RunContext,
-    SystemPromptPart,
-    UserPromptPart,
-)
 
 from src.lib.utils import update_span_with_result
 from src.lib.config import LLMS
@@ -25,11 +18,6 @@ from ....domain.models import Quiz, QuizItem, QuizItemStatus, QuizItemVariant
 
 PATCH_GENERATOR_LLM = LLMS.GPT_5_MINI
 IN_QUERY = "Generate Quiz Patch"
-
-
-@dataclass
-class AIPatchGeneratorDeps:
-    quiz: Quiz
 
 
 class AnswerSchema(BaseModel):
@@ -79,12 +67,12 @@ class AIPatchGenerator(PatchGenerator):
     ):
         self._lf = lf
         self._quiz_repository = quiz_repository
+        self._output_type = output_type
 
-        self._ai = Agent(
-            history_processors=[self._inject_request_prompt],
-            output_type=output_type,
-            deps_type=AIPatchGeneratorDeps,
-            model=PATCH_GENERATOR_LLM,
+        # Initialize OpenAI client for Grok API
+        self._client = OpenAI(
+            api_key=os.getenv("GROK_API_KEY"),
+            base_url="https://api.x.ai/v1",
         )
 
     async def generate(self, quiz: Quiz, cache_key: str) -> None:
@@ -93,230 +81,200 @@ class AIPatchGenerator(PatchGenerator):
         )
 
         generation = quiz.generation
-        seen = 0
         cancelled = False
 
         # Кэшируем начальные generating items ДО начала стриминга
-        # Иначе после обновления статуса на GENERATED они исчезнут из generating_items()
         initial_generating_items = quiz.generating_items()
         logging.info(f"Initial generating items count: {len(initial_generating_items)}")
 
         try:
             with self._lf.start_as_current_span(name=f"quiz-patch") as span:
-                async with self._ai.run_stream(
-                    IN_QUERY,
-                    model=PATCH_GENERATOR_LLM,
-                    deps=AIPatchGeneratorDeps(quiz=quiz),
-                    model_settings={
-                        "extra_body": {
-                            "reasoning_effort": "low",
-                            # "service_tier": "priority" if priority else "default",
-                            "service_tier": "default",
-                            "prompt_cache_key": cache_key,
-                        },
-                    },
-                ) as run:
-                    async for output in run.stream_output():
-                        if output.data.mode != "quiz":
-                            raise ValueError(f"Unexpected output type: {type(output)}")
+                # Build messages for OpenAI API
+                messages = self._build_messages(quiz)
+                
+                # Call OpenAI API with structured output
+                completion = self._client.beta.chat.completions.parse(
+                    model="grok-4-fast-non-reasoning",
+                    messages=messages,  # type: ignore
+                    response_format=self._output_type,
+                )
 
-                        # Перезагружаем quiz для проверки generation и актуального состояния
-                        fresh_quiz = await self._quiz_repository.get(quiz.id)
-                        if fresh_quiz.generation != generation:
-                            logging.info(
-                                "Quiz generation changed during patch generation: %s -> %s",
-                                generation,
-                                fresh_quiz.generation,
-                            )
-                            cancelled = True
-                            break
+                # Parse the result
+                result: AIPatchGeneratorOutput = completion.choices[0].message.parsed  # type: ignore
+                
+                if result.mode != "quiz":
+                    raise ValueError(f"Unexpected output type: {result.mode}")
 
-                        logging.info(
-                            f"Quiz generation is the same: {generation} == {fresh_quiz.generation}"
+                # Перезагружаем quiz для проверки generation
+                fresh_quiz = await self._quiz_repository.get(quiz.id)
+                if fresh_quiz.generation != generation:
+                    logging.info(
+                        "Quiz generation changed during patch generation: %s -> %s",
+                        generation,
+                        fresh_quiz.generation,
+                    )
+                    cancelled = True
+                    return
+
+                quiz = fresh_quiz
+
+                # Обновляем все items
+                for idx, schema in enumerate(result.quiz_items):
+                    if idx >= len(initial_generating_items):
+                        logging.warning(
+                            f"More items returned ({len(result.quiz_items)}) than expected ({len(initial_generating_items)})"
                         )
+                        break
+                    
+                    itm = initial_generating_items[idx]
+                    
+                    # Проверяем, не ответил ли пользователь уже
+                    current_item = next(
+                        (item for item in quiz.items if item.id == itm.id),
+                        None,
+                    )
+                    if current_item and current_item.status == QuizItemStatus.FINAL:
+                        logging.info(
+                            f"Skipping update for item {itm.id} - already FINAL (user answered)"
+                        )
+                        continue
 
-                        # Используем fresh_quiz для дальнейших операций (защита от race-condition)
-                        quiz = fresh_quiz
-
-                        payload: AIPatchGeneratorOutput = output.data
-                        # Стриминг накопительный - обрабатываем только новые items
-                        new_items_count = len(payload.quiz_items) - seen
-
-                        if new_items_count > 0:
-                            # Берем новые items из payload (начиная с индекса seen)
-                            new_quiz_items = payload.quiz_items[seen:]
-
-                            # Берем соответствующие items из НАЧАЛЬНОГО списка (закэшированного)
-                            items_to_update = initial_generating_items[
-                                seen : seen + new_items_count
-                            ]
-
-                            if len(items_to_update) != len(new_quiz_items):
-                                logging.warning(
-                                    f"Mismatch: expected {len(items_to_update)} items (from initial_generating_items[{seen}:{seen + new_items_count}]), got {len(new_quiz_items)} new items from payload"
-                                )
-
-                            logging.info(
-                                f"Updating {len(items_to_update)} items: seen={seen}, new_count={new_items_count}"
+                    upd = QuizItem(
+                        id=itm.id,
+                        question=schema.question,
+                        variants=[
+                            QuizItemVariant(
+                                content=a.answer,
+                                is_correct=a.correct,
+                                explanation=a.explanation,
                             )
+                            for a in schema.answers
+                        ],
+                        order=itm.order,
+                        status=QuizItemStatus.GENERATED,
+                    )
+                    quiz.update_item(upd)
 
-                            # Мержим только новые items
-                            for itm, schema in zip(items_to_update, new_quiz_items):
-                                # ВРЕМЕННОЕ РЕШЕНИЕ race-condition:
-                                # Если айтем уже FINAL (пользователь ответил), не затираем его
-                                # Проверяем актуальный статус из quiz.items (который теперь fresh_quiz)
-                                current_item = next(
-                                    (item for item in quiz.items if item.id == itm.id),
-                                    None,
-                                )
-                                if (
-                                    current_item
-                                    and current_item.status == QuizItemStatus.FINAL
-                                ):
-                                    logging.info(
-                                        f"Skipping update for item {itm.id} - already FINAL (user answered)"
-                                    )
-                                    continue
+                await self._quiz_repository.update(quiz)
 
-                                upd = QuizItem(
-                                    id=itm.id,
-                                    question=schema.question,
-                                    variants=[
-                                        QuizItemVariant(
-                                            content=a.answer,
-                                            is_correct=a.correct,
-                                            explanation=a.explanation,
-                                        )
-                                        for a in schema.answers
-                                    ],
-                                    order=itm.order,
-                                    status=QuizItemStatus.GENERATED,
-                                )
-                                quiz.update_item(upd)
-
-                            await self._quiz_repository.update(quiz)
-                            seen += new_items_count
-
-                await update_span_with_result(
-                    self._lf,
-                    run,
-                    span,
-                    quiz.author_id,
-                    cache_key,
-                    PATCH_GENERATOR_LLM,
+                # Update span with results
+                span.update(
+                    output={"quiz_items_count": len(result.quiz_items)},
+                    metadata={
+                        "quiz_id": quiz.id,
+                        "generation": generation,
+                        "model": "grok-2-1212",
+                    },
                 )
 
         except Exception as e:
             logging.exception("Failed to generate quiz patch: %s", e)
             await self._catch_exception(e, cancelled, quiz)
 
-    async def _inject_request_prompt(
-        self, ctx: RunContext[AIPatchGeneratorDeps], messages: list[ModelMessage]
-    ) -> list[ModelMessage]:
-        quiz = ctx.deps.quiz
-
-        return (
-            [ModelRequest(parts=self._build_pre_prompt(quiz))]
-            + messages
-            + [ModelRequest(parts=self._build_post_prompt(quiz))]
-        )
-
-    def _build_pre_prompt(self, quiz: Quiz) -> list[ModelRequestPart]:
-        user_contents = []
+    def _build_messages(self, quiz: Quiz) -> list[dict]:
+        """Build messages array for OpenAI API"""
+        messages = []
+        
+        # Add user content (query and materials)
+        user_content_parts = []
         if quiz.query:
-            user_contents.append(f"User query:\n{quiz.query}")
-
+            user_content_parts.append(f"User query:\n{quiz.query}")
+        
         if quiz.material_content:
-            user_contents.append("Quiz materials:")
-            user_contents.append(quiz.material_content)
-
-        parts = []
-        parts.append(UserPromptPart(content=user_contents))
-        return parts
-
-    def _build_post_prompt(self, quiz: Quiz) -> list[ModelRequestPart]:
+            user_content_parts.append("Quiz materials:")
+            user_content_parts.append(quiz.material_content)
+        
+        if user_content_parts:
+            messages.append({
+                "role": "user",
+                "content": "\n\n".join(user_content_parts)
+            })
+        
+        # Build system prompts
         prev_quiz_items = quiz.prev_items()
-
         dynamic_config = quiz.gen_config
         prev_questions = dynamic_config.negative_questions + [
             qi.question for qi in prev_quiz_items
         ]
         prev_questions = "\n".join(set(prev_questions))
-
+        
         difficulty = quiz.difficulty
-
+        
         extra_beginner = "\n".join(set(dynamic_config.extra_beginner))
         extra_expert = "\n".join(set(dynamic_config.extra_expert))
         more_on_topic = "\n".join(set(dynamic_config.more_on_topic))
         less_on_topic = "\n".join(set(dynamic_config.less_on_topic))
         adds = "\n".join(set(dynamic_config.additional_instructions))
-
-        post_parts = []
-
-        post_parts.append(
-            SystemPromptPart(
-                content=self._lf.get_prompt("quizer/base", label=settings.env).compile()
-            )
+        
+        # Base system prompt
+        system_parts = []
+        system_parts.append(
+            self._lf.get_prompt("quizer/base", label=settings.env).compile()
         )
-
+        
+        # Add difficulty prompt
+        system_parts.append(
+            self._lf.get_prompt(f"quizer/{difficulty}", label=settings.env).compile()
+        )
+        
+        messages.append({
+            "role": "system",
+            "content": "\n\n".join(system_parts)
+        })
+        
+        # Add additional instructions if any
         if len(adds) > 0:
-            post_parts.append(
-                UserPromptPart(
-                    content=f"Additional questions: {adds}",
-                )
-            )
-
+            messages.append({
+                "role": "user",
+                "content": f"Additional questions: {adds}"
+            })
+        
+        # Add negative questions prompt
         if len(prev_questions) > 0:
-            post_parts.append(
-                SystemPromptPart(
-                    content=self._lf.get_prompt(
-                        "quizer/negative_questions", label=settings.env
-                    ).compile(questions=prev_questions),
-                )
-            )
-
-        post_parts.append(
-            SystemPromptPart(
-                content=self._lf.get_prompt(
-                    f"quizer/{difficulty}", label=settings.env
-                ).compile()
-            )
-        )
-
+            messages.append({
+                "role": "system",
+                "content": self._lf.get_prompt(
+                    "quizer/negative_questions", label=settings.env
+                ).compile(questions=prev_questions)
+            })
+        
+        # Add extra beginner questions
         if len(extra_beginner) > 0:
-            post_parts.append(
-                SystemPromptPart(
-                    content=self._lf.get_prompt(
-                        "quizer/extra_beginner", label=settings.env
-                    ).compile(questions=extra_beginner),
-                )
-            )
+            messages.append({
+                "role": "system",
+                "content": self._lf.get_prompt(
+                    "quizer/extra_beginner", label=settings.env
+                ).compile(questions=extra_beginner)
+            })
+        
+        # Add extra expert questions
         if len(extra_expert) > 0:
-            post_parts.append(
-                SystemPromptPart(
-                    content=self._lf.get_prompt(
-                        "quizer/extra_expert", label=settings.env
-                    ).compile(questions=extra_expert),
-                )
-            )
+            messages.append({
+                "role": "system",
+                "content": self._lf.get_prompt(
+                    "quizer/extra_expert", label=settings.env
+                ).compile(questions=extra_expert)
+            })
+        
+        # Add more on topic
         if len(more_on_topic) > 0:
-            post_parts.append(
-                SystemPromptPart(
-                    content=self._lf.get_prompt(
-                        "quizer/more_on_topic", label=settings.env
-                    ).compile(questions=more_on_topic),
-                )
-            )
+            messages.append({
+                "role": "system",
+                "content": self._lf.get_prompt(
+                    "quizer/more_on_topic", label=settings.env
+                ).compile(questions=more_on_topic)
+            })
+        
+        # Add less on topic
         if len(less_on_topic) > 0:
-            post_parts.append(
-                SystemPromptPart(
-                    content=self._lf.get_prompt(
-                        "quizer/less_on_topic", label=settings.env
-                    ).compile(questions=less_on_topic),
-                )
-            )
-
-        return post_parts
+            messages.append({
+                "role": "system",
+                "content": self._lf.get_prompt(
+                    "quizer/less_on_topic", label=settings.env
+                ).compile(questions=less_on_topic)
+            })
+        
+        return messages
 
     async def _catch_exception(self, e: Exception, cancelled: bool, quiz: Quiz) -> None:
         if isinstance(e, httpx.ReadError):
