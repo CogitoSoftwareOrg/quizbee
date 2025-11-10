@@ -1,5 +1,7 @@
 from typing import Protocol
 
+from src.apps.user_owner.domain._in import Principal
+
 from .models import Quiz, QuizItem
 
 
@@ -30,9 +32,10 @@ class QuizFinalizer(Protocol):
     async def finalize(self, quiz: Quiz, cache_key: str) -> None: ...
 
 
-class QuizPreparator(Protocol):
-    async def prepare(self, quiz: Quiz) -> None: ...
-
+# class QuizClusterer(Protocol):
+#     async def cluster(self, quiz: Quiz, user: Principal) -> None: ...
+# class QuizSummarizer(Protocol):
+#     async def summarize(self, quiz: Quiz, user: Principal) -> None: ...
 
 # class UOW(Protocol):
 #     quizzes: QuizRepository

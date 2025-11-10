@@ -115,6 +115,7 @@ class Quiz:
     material_content: str = ""
     avoid_repeat: bool = False
     items: list[QuizItem] = field(default_factory=list)
+    cluster_vectors: list[list[float]] = field(default_factory=list)
 
     gen_config: QuizGenConfig = field(default_factory=QuizGenConfig)
 
@@ -165,6 +166,11 @@ class Quiz:
         self.material_content = content
         self.need_build_material_content = False
 
+    def set_cluster_vectors(self, vectors: list[list[float]]):
+        if len(vectors) != self.length:
+            raise ValueError("Cluster vectors length mismatch")
+        self.cluster_vectors = vectors
+
     def request_build_material_content(self) -> None:
         self.need_build_material_content = True
 
@@ -182,6 +188,12 @@ class Quiz:
 
     def set_slug(self, slug: str):
         self.slug = f"{slug}-{self.id[:6]}"
+
+    def merge_similar_quizes(self, quizes: list["Quiz"]):
+        questions = list(
+            set([q.question for quiz in quizes for q in quiz.items if q.question])
+        )
+        self.add_negative_questions(questions)
 
     def add_negative_questions(self, questions: list[str]):
         self.gen_config.negative_questions.extend(questions)

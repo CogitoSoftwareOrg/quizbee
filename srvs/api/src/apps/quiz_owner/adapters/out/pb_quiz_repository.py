@@ -112,6 +112,7 @@ class PBQuizRepository(QuizRepository):
             avoid_repeat=rec.get("avoidRepeat", False),
             gen_config=self._rec_to_config(rec),
             generation=rec.get("generation", 0),
+            cluster_vectors=rec.get("clusterVectors", []),
         )
 
         if not len(quiz.material_content) == 0 and len(quiz.materials) > 0:
@@ -175,6 +176,7 @@ class PBQuizRepository(QuizRepository):
             "dynamicConfig": self._config_to_rec(quiz.gen_config),
             "materials": [m.id for m in quiz.materials],
             "slug": quiz.slug,
+            "clusterVectors": json.dumps(quiz.cluster_vectors),
         }
 
         f = (

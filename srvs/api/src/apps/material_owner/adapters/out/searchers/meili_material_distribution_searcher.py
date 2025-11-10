@@ -81,7 +81,7 @@ class MeiliMaterialDistributionSearcher(Searcher):
 
             # Преобразуем результаты в MaterialChunk
             docs: list[Doc] = [Doc.from_hit(hit) for hit in res.hits]
-            chunks = [self._doc_to_chunk(doc) for doc in docs]
+            chunks = [doc.to_chunk() for doc in docs]
 
             all_chunks.extend(chunks)
 
@@ -95,19 +95,3 @@ class MeiliMaterialDistributionSearcher(Searcher):
         )
 
         return all_chunks[: dto.limit]
-
-    def _doc_to_chunk(self, doc: Doc) -> MaterialChunk:
-        """Преобразует Doc в MaterialChunk."""
-        idx = doc.id.split("-")[-1]
-
-        if not idx.isdigit():
-            raise ValueError(f"Invalid chunk id: {doc.id}")
-        idx = int(idx)
-
-        return MaterialChunk(
-            id=doc.id,
-            idx=int(idx),
-            material_id=doc.materialId,
-            title=doc.title,
-            content=doc.content,
-        )

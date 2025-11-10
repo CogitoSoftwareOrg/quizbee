@@ -16,13 +16,20 @@ class AddMaterialCmd:
     quiz_id: str
 
 
+# class SearchIntent(StrEnum):
+#     QUERY = "query"
+#     DISTRIBUTION = "ditribution"
+#     ALL = "all"
+
+
 @dataclass
 class SearchCmd:
     user: Principal
-    query: str
     material_ids: list[str]
-    limit_tokens: int
+    limit_tokens: int = 100
+    query: str = ""
     all_chunks: bool = False
+    # search_type: SearchType = SearchType.QUERY
 
 
 @dataclass

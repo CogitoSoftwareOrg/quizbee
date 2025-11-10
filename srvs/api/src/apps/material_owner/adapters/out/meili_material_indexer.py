@@ -47,6 +47,17 @@ class Doc:
             _vectors=hit.get("_vectors", {}),
         )
 
+    def to_chunk(self) -> MaterialChunk:
+        vector = (self._vectors or {}).get(EMBEDDER_NAME)
+        return MaterialChunk(
+            id=self.id,
+            idx=int(self.id.split("-")[-1]),
+            material_id=self.materialId,
+            title=self.title,
+            content=self.content,
+            vector=vector,
+        )
+
 
 class MeiliMaterialIndexer(MaterialIndexer):
     def __init__(self, lf: Langfuse, llm_tools: LLMTools, meili: AsyncClient):
@@ -159,21 +170,6 @@ class MeiliMaterialIndexer(MaterialIndexer):
             logging.info(f"Deleted materials: {material_ids}")
         else:
             logging.error(f"Unknown task status: {task}")
-
-    def _doc_to_chunk(self, doc: Doc) -> MaterialChunk:
-        idx = doc.id.split("-")[-1]
-
-        if not idx.isdigit():
-            raise ValueError(f"Invalid chunk id: {doc.id}")
-        idx = int(idx)
-
-        return MaterialChunk(
-            id=doc.id,
-            idx=int(idx),
-            material_id=doc.materialId,
-            title=doc.title,
-            content=doc.content,
-        )
 
     def _fill_template(self, doc: Doc):
         return EMBEDDER_TEMPLATE.replace("{{doc.title}}", doc.title).replace(

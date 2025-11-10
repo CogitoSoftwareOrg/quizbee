@@ -150,7 +150,6 @@ class MaterialAppImpl(MaterialApp):
 
         await self._material_repository.create(material)
 
-        print("material.tokens =", material.tokens)
         # Проверяем количество токенов
         if material.tokens < 40:
             material.status = MaterialStatus.NO_TEXT

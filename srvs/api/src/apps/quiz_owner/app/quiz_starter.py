@@ -1,24 +1,88 @@
 import logging
+import random
+
+from src.apps.material_owner.domain._in import MaterialApp, SearchCmd
+from src.apps.user_owner.domain._in import Principal
 
 from ..domain._in import QuizStarter, GenerateCmd
-from ..domain.out import QuizRepository, QuizPreparator
+from ..domain.out import QuizIndexer, QuizRepository
+from ..domain.models import Quiz
+from ..domain.constants import SUMMARY_TOKEN_LIMIT
 
 logger = logging.getLogger(__name__)
 
 
 class QuizStarterImpl(QuizStarter):
     def __init__(
-        self, quiz_repository: QuizRepository, quiz_preparator: QuizPreparator
+        self,
+        quiz_repository: QuizRepository,
+        material_app: MaterialApp,
+        quiz_indexer: QuizIndexer,
     ):
+        self._material_app = material_app
+        self._quiz_indexer = quiz_indexer
         self._quiz_repository = quiz_repository
-        self._quiz_preparator = quiz_preparator
 
     async def start(self, cmd: GenerateCmd) -> None:
         quiz = await self._quiz_repository.get(cmd.quiz_id)
         quiz.to_preparing()
         await self._quiz_repository.update(quiz)
 
-        await self._quiz_preparator.prepare(quiz)
+        await self._build_cluster_vectors(quiz, cmd.user)
+        if quiz.avoid_repeat:
+            await self._build_quiz_summary(quiz, cmd.user)
+
+            similar_quizes = await self._quiz_indexer.search(
+                user_id=quiz.author_id,
+                query=self._build_query(quiz),
+                limit=10,
+                ratio=0.5,
+                threshold=0.0,
+            )
+
+            logger.info(
+                f"Found {len(similar_quizes)} similar quizes for quiz {quiz.id}"
+            )
+
+            quiz.merge_similar_quizes(similar_quizes)
+
         quiz.to_creating()
         quiz.increment_generation()
         await self._quiz_repository.update(quiz)
+
+    async def _build_cluster_vectors(self, quiz: Quiz, user: Principal) -> None:
+        chunks = await self._material_app.search(
+            SearchCmd(
+                user=user,
+                material_ids=[m.id for m in quiz.materials],
+                all_chunks=True,
+            )
+        )
+        vectors = [c.vector for c in chunks]
+
+        centers: list[list[float]] = [
+            v
+            for v in random.sample(vectors, k=min(quiz.length, len(vectors)))
+            if v is not None
+        ]
+
+        quiz.set_cluster_vectors(centers)
+
+    async def _build_quiz_summary(self, quiz: Quiz, user: Principal) -> None:
+        chunks = await self._material_app.search(
+            SearchCmd(
+                user=user,
+                material_ids=[m.id for m in quiz.materials],
+                limit_tokens=SUMMARY_TOKEN_LIMIT,
+                # clusters = quiz.cluster_vectors,
+            )
+        )
+        summary = "\n<CHUNK>\n".join([c.content for c in chunks])
+        quiz.set_summary(summary)
+
+    def _build_query(self, quiz: Quiz):
+        return f"""
+Quiz title: {quiz.title}
+Query: {quiz.query}
+Summary: {quiz.summary}    
+"""
