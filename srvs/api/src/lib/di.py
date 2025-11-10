@@ -1,33 +1,9 @@
-from typing import Union, Annotated
 from pocketbase import PocketBase
 from langfuse import Langfuse
 from meilisearch_python_sdk import AsyncClient
 import httpx
-from pydantic import BaseModel, Field
 
-from src.apps.quiz_attempter.adapters.out import (
-    AttemptFinalizerOutput,
-    ExplainerOutput,
-)
-from src.apps.quiz_owner.adapters.out import (
-    AIQuizInstantGeneratorOutput,
-    QuizFinalizerOutput,
-)
 from src.lib.settings import settings
-
-AgentPayload = Annotated[
-    Union[
-        AIQuizInstantGeneratorOutput,
-        QuizFinalizerOutput,
-        ExplainerOutput,
-        AttemptFinalizerOutput,
-    ],
-    Field(discriminator="mode"),
-]
-
-
-class AgentEnvelope(BaseModel):
-    data: AgentPayload
 
 
 def init_global_deps() -> tuple[PocketBase, Langfuse, AsyncClient, httpx.AsyncClient]:

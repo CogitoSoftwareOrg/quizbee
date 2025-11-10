@@ -1,5 +1,5 @@
 import logging
-from typing import Annotated, Any, Literal
+from typing import Annotated, Literal
 from langfuse import Langfuse
 from pydantic import BaseModel, Field
 from dataclasses import dataclass
@@ -64,7 +64,7 @@ class QuizFinalizerOutput(BaseModel):
         ),
     ]
 
-    def _merge(self, quiz: Quiz):
+    def merge(self, quiz: Quiz):
         quiz.set_summary(self.summary)
         quiz.set_title(self.quiz_title)
         quiz.set_slug(self.quiz_slug)
@@ -78,14 +78,13 @@ class AIQuizFinalizer(QuizFinalizer):
         self,
         lf: Langfuse,
         quiz_repository: QuizRepository,
-        output_type: Any,
     ):
         self._lf = lf
         self._quiz_repository = quiz_repository
 
         self._ai = Agent(
             history_processors=[self._inject_request_prompt],
-            output_type=output_type,
+            output_type=QuizFinalizerOutput,
             deps_type=QuizFinalizerDeps,
             model=QUIZ_FINALIZER_LLM,
         )
@@ -114,12 +113,8 @@ class AIQuizFinalizer(QuizFinalizer):
                 QUIZ_FINALIZER_LLM,
             )
 
-            if res.output.data.mode != "summary":
-                raise ValueError(f"Unexpected output type: {type(res.output)}")
-
-            payload: QuizFinalizerOutput = res.output.data
-
-            payload._merge(quiz)
+            payload = res.output
+            payload.merge(quiz)
             await self._quiz_repository.update(quiz)
 
     async def _inject_request_prompt(

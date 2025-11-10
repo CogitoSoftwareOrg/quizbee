@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Protocol
 
 from src.apps.user_owner.domain._in import Principal
@@ -24,8 +25,15 @@ class QuizIndexer(Protocol):
     ) -> list[Quiz]: ...
 
 
+@dataclass(frozen=True, slots=True)
+class PatchGeneratorDto:
+    quiz: Quiz
+    cache_key: str
+    chunks: list[str] | None = None
+
+
 class PatchGenerator(Protocol):
-    async def generate(self, quiz: Quiz, cache_key: str) -> None: ...
+    async def generate(self, dto: PatchGeneratorDto) -> None: ...
 
 
 class QuizFinalizer(Protocol):

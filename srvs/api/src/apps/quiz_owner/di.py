@@ -4,14 +4,12 @@ from pocketbase import PocketBase
 import httpx
 
 
-from src.lib.di import AgentEnvelope
-
 from src.apps.material_owner.domain._in import MaterialApp
 from src.apps.llm_tools.domain._in import LLMToolsApp
 
 from .adapters.out import (
     PBQuizRepository,
-    AIQuizInstantGenerator,
+    AISingleGenerator,
     AIQuizFinalizer,
     MeiliQuizIndexer,
 )
@@ -32,15 +30,10 @@ async def init_quiz_deps(
     llm_tools: LLMToolsApp,
 ) -> tuple[QuizRepository, PatchGenerator, QuizFinalizer, QuizIndexer]:
     quiz_repository = PBQuizRepository(admin_pb, http=http)
-    patch_generator = AIQuizInstantGenerator(
-        lf=lf,
-        quiz_repository=quiz_repository,
-        output_type=AgentEnvelope,
-    )
+    patch_generator = AISingleGenerator(lf=lf)
     finalizer = AIQuizFinalizer(
         lf=lf,
         quiz_repository=quiz_repository,
-        output_type=AgentEnvelope,
     )
     quiz_indexer = await MeiliQuizIndexer.ainit(
         lf=lf,

@@ -1,9 +1,15 @@
 import logging
-from src.apps.material_owner.domain._in import MaterialApp
 
-from src.apps.quiz_owner.domain._in import GenMode, GenerateCmd, QuizGenerator
-from src.apps.quiz_owner.domain.errors import NotQuizOwnerError
-from src.apps.quiz_owner.domain.out import PatchGenerator, QuizIndexer, QuizRepository
+from src.apps.material_owner.domain._in import MaterialApp, SearchCmd
+from src.apps.user_owner.domain._in import Principal
+
+from ..domain._in import GenMode, GenerateCmd, QuizGenerator
+from ..domain.errors import NotQuizOwnerError
+from ..domain.out import PatchGenerator, PatchGeneratorDto, QuizIndexer, QuizRepository
+from ..domain.models import Quiz, QuizItem
+from ..domain.constants import PATCH_CHUNK_TOKEN_LIMIT
+
+from .errors import NoItemsReadyForGenerationError
 
 logger = logging.getLogger(__name__)
 
@@ -33,10 +39,37 @@ class QuizGeneratorImpl(QuizGenerator):
 
         ready_items = quiz.generate_patch()
         if len(ready_items) == 0:
-            logging.warning(
+            logging.error(
                 f"No items ready for generation in quiz {cmd.quiz_id}. "
                 f"All items may be FINAL or there are no items."
             )
-            return
+            raise NoItemsReadyForGenerationError(quiz_id=cmd.quiz_id)
 
-        await self._patch_generator.generate(quiz, cmd.cache_key)
+        chunks = await self._relevant_chunks(quiz, ready_items, cmd.user)
+
+        await self._patch_generator.generate(
+            dto=(
+                PatchGeneratorDto(
+                    quiz=quiz,
+                    cache_key=cmd.cache_key,
+                    chunks=chunks,
+                )
+            )
+        )
+        await self._quiz_repository.update(quiz)
+
+    async def _relevant_chunks(
+        self, quiz: Quiz, items: list[QuizItem], user: Principal
+    ) -> list[str]:
+        central_vectors = [quiz.cluster_vectors[item.order] for item in items]
+        logger.info(f"Central vectors: {len(central_vectors)}")
+
+        chunks = await self._material_app.search(
+            SearchCmd(
+                user=user,
+                material_ids=[m.id for m in quiz.materials],
+                limit_tokens=PATCH_CHUNK_TOKEN_LIMIT,
+                # central_vectors=central_vectors
+            )
+        )
+        return [c.content for c in chunks]

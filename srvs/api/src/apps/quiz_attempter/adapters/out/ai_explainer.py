@@ -47,22 +47,17 @@ class ExplainerDeps:
     current_item: QuizItemRef
 
 
-class ExplainerOutput(BaseModel):
-    mode: Literal["explanation"]
-    explanation: str
-
-
 logger = logging.getLogger(__name__)
 
 
 class AIExplainer(Explainer):
-    def __init__(self, lf: Langfuse, output_type: Any):
+    def __init__(self, lf: Langfuse):
         self._lf = lf
         self._ai = Agent(
             history_processors=[self._inject_system_prompt],
-            output_type=output_type,
             deps_type=ExplainerDeps,
             model=EXPLAINER_LLM,
+            output_type=str,
         )
 
     async def explain(
@@ -95,11 +90,7 @@ class AIExplainer(Explainer):
                     ) as r:
                         run = r
                         async for output in run.stream_output():
-                            if output.data.mode != "explanation":
-                                raise ValueError(
-                                    f"Unexpected output type: {type(output)}"
-                                )
-                            delta = output.data.explanation[len(content) :]
+                            delta = output[len(content) :]
                             content += delta
 
                             await queue.put(
