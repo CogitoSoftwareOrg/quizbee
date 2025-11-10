@@ -128,47 +128,6 @@ class MeiliMaterialIndexer(MaterialIndexer):
             material.user_id, material.id, total_tokens, "material-index-add"
         )
 
-    async def search(
-        self,
-        user_id: str,
-        query: str,
-        material_ids: list[str] | None = None,
-        limit=100,
-        ratio=0.5,
-        threshold=0,
-    ) -> list[MaterialChunk]:
-        f = f"userId = {user_id}"
-        if material_ids is not None:
-            f += f" AND materialId IN [{','.join(material_ids)}]"
-
-        logging.info(f"Meili Searching... {f}")
-
-        total_tokens = self.llm_tools.count_text(query, LLMS.TEXT_EMBEDDING_3_SMALL)
-        hybrid = (
-            Hybrid(
-                semantic_ratio=ratio,
-                embedder=EMBEDDER_NAME,
-            )
-            if ratio > 0
-            else None
-        )
-
-        res = await self.material_index.search(
-            query=query,
-            hybrid=hybrid,
-            ranking_score_threshold=threshold,
-            filter=f,
-            limit=limit,
-        )
-
-        if hybrid is not None:
-            self._log_langfuse(user_id, "", total_tokens, "material-index-search")
-
-        docs: list[Doc] = [Doc(**hit) for hit in res.hits]
-        chunks = [self._doc_to_chunk(doc) for doc in docs]
-
-        return chunks
-
     async def delete(self, material_ids: list[str]) -> None:
         if len(material_ids) == 0:
             return
