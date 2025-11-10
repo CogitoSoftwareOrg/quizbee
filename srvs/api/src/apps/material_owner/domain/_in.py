@@ -22,6 +22,7 @@ class SearchCmd:
     query: str
     material_ids: list[str]
     limit_tokens: int
+    all_chunks: bool = False
 
 
 @dataclass

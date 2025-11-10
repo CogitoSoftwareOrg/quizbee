@@ -3,6 +3,7 @@ from ....domain.models import SearchType
 
 from .meili_material_query_searcher import MeiliMaterialQuerySearcher
 from .meili_material_distribution_searcher import MeiliMaterialDistributionSearcher
+from .meili_all_searcher import MeiliMaterialAllSearcher
 
 
 class MaterialSearcherProvider(SearcherProvider):
@@ -18,9 +19,11 @@ class MaterialSearcherProvider(SearcherProvider):
         self,
         query_searcher: MeiliMaterialQuerySearcher,
         distribution_searcher: MeiliMaterialDistributionSearcher,
+        all_searcher: MeiliMaterialAllSearcher,
     ):
         self._query_searcher = query_searcher
         self._distribution_searcher = distribution_searcher
+        self._all_searcher = all_searcher
 
     def get(self, search_type: SearchType) -> Searcher:
         """
@@ -40,5 +43,7 @@ class MaterialSearcherProvider(SearcherProvider):
                 return self._query_searcher
             case SearchType.DISTRIBUTION:
                 return self._distribution_searcher
+            case SearchType.ALL:
+                return self._all_searcher
             case _:
                 raise ValueError(f"Unknown search type: {search_type}")

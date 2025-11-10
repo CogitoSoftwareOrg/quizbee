@@ -81,15 +81,17 @@ class MaterialIndexer(Protocol):
 
 
 # Searcher
+@dataclass(slots=True, kw_only=True)
+class SearchDto:
+    user_id: str
+    material_ids: list[str]
+    query: str = "*"
+    limit: int = 100
+    ratio: float = 0.0
+
+
 class Searcher(Protocol):
-    async def search(
-        self,
-        user_id: str,
-        query: str,
-        material_ids: list[str],
-        limit: int,
-        ratio: float,
-    ) -> list[MaterialChunk]: ...
+    async def search(self, dto: SearchDto) -> list[MaterialChunk]: ...
 
 
 # Indexer

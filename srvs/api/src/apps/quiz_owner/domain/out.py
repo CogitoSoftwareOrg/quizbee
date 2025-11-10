@@ -30,6 +30,10 @@ class QuizFinalizer(Protocol):
     async def finalize(self, quiz: Quiz, cache_key: str) -> None: ...
 
 
+class QuizPreparator(Protocol):
+    async def prepare(self, quiz: Quiz) -> None: ...
+
+
 # class UOW(Protocol):
 #     quizzes: QuizRepository
 #     attempts: AttemptRepository

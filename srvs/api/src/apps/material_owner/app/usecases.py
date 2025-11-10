@@ -17,6 +17,7 @@ from ..domain.models import (
 from ..domain.out import (
     MaterialIndexer,
     MaterialRepository,
+    SearchDto,
     SearcherProvider,
     DocumentParser,
     LLMTools,
@@ -175,13 +176,15 @@ class MaterialAppImpl(MaterialApp):
         return material
 
     async def search(self, cmd: SearchCmd) -> list[MaterialChunk]:
-        logger.info("MaterialAppImpl.query_search")
+        logger.info("MaterialAppImpl.search")
 
         limit_chunks = int(cmd.limit_tokens / self._llm_tools.chunk_size)
 
-        if cmd.query.strip() == "":
+        ratio = 0.0
+        if cmd.all_chunks:
+            search_type = SearchType.ALL
+        elif cmd.query.strip() == "":
             search_type = SearchType.DISTRIBUTION
-            ratio = 0.0
         else:
             search_type = SearchType.QUERY
             ratio = 0.5 if len(cmd.query.strip().split()) > 3 else 0
@@ -191,13 +194,14 @@ class MaterialAppImpl(MaterialApp):
         logger.info(
             f"Searching for material chunks for query: {cmd.query} (limit: {limit_chunks}, ratio: {ratio})"
         )
-
         chunks = await searcher.search(
-            user_id=cmd.user.id,
-            query=cmd.query,
-            material_ids=cmd.material_ids,
-            limit=limit_chunks,
-            ratio=ratio,
+            dto=SearchDto(
+                user_id=cmd.user.id,
+                material_ids=cmd.material_ids,
+                query=cmd.query,
+                limit=limit_chunks,
+                ratio=ratio,
+            )
         )
 
         return chunks

@@ -23,6 +23,7 @@ from .adapters.out import (
     MeiliMaterialDistributionSearcher,
     DocumentParserAdapter,
     LLMToolsAdapter,
+    MeiliMaterialAllSearcher,
 )
 from .app.usecases import MaterialAppImpl
 
@@ -48,6 +49,7 @@ async def init_material_deps(
         distribution_searcher=MeiliMaterialDistributionSearcher(
             lf=lf, llm_tools=llm_tools, meili=meili
         ),
+        all_searcher=MeiliMaterialAllSearcher(lf=lf, llm_tools=llm_tools, meili=meili),
     )
 
     # EXTERNAL HEX ADAPTERS

@@ -34,6 +34,18 @@ class Doc:
     userId: str
     title: str
     content: str
+    _vectors: dict[str, list[float]] | None = None
+
+    @classmethod
+    def from_hit(cls, hit: dict) -> "Doc":
+        return cls(
+            id=hit.get("id", ""),
+            materialId=hit.get("materialId", ""),
+            userId=hit.get("userId", ""),
+            title=hit.get("title", ""),
+            content=hit.get("content", ""),
+            _vectors=hit.get("_vectors", {}),
+        )
 
 
 class MeiliMaterialIndexer(MaterialIndexer):

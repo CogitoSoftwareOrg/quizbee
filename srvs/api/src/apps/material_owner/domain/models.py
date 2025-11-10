@@ -46,6 +46,13 @@ class MaterialStatus(StrEnum):
 class SearchType(StrEnum):
     QUERY = "query"
     DISTRIBUTION = "ditribution"
+    ALL = "all"
+
+
+class ChunkKind(StrEnum):
+    VECTOR_ONLY = "vector_only"
+    MATERIAL_ONLY = "material_only"
+    FULL = "full"
 
 
 @dataclass(slots=True, kw_only=True)
@@ -61,6 +68,8 @@ class MaterialChunk:
     material_id: str
     title: str
     content: str
+    kind: ChunkKind = ChunkKind.MATERIAL_ONLY
+    vector: list[float] | None = None
 
 
 @dataclass(slots=True, kw_only=True)
