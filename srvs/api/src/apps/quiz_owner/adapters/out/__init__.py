@@ -9,7 +9,6 @@ from .meili_quiz_indexer import MeiliQuizIndexer
 
 from .quiz_generators.ai_patch_generator import (
     AIPatchGenerator,
-    AIPatchGeneratorDeps,
     AIPatchGeneratorOutput,
     PATCH_GENERATOR_LLM,
 )
