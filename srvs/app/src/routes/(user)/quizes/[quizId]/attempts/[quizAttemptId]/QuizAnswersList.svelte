@@ -157,9 +157,11 @@
 
 									item.status = QuizItemsStatusOptions.final;
 									try {
+										// Update quiz attempt with the new decision
 										await pb!.collection('quizAttempts').update(quizAttempt!.id, {
 											choices: newDecisions
 										});
+										// Update item status to final
 										await pb!.collection('quizItems').update(item!.id, {
 											status: 'final'
 										});

@@ -1,21 +1,10 @@
-from dataclasses import dataclass
 import logging
 from typing import Annotated
 from langfuse import Langfuse
+from openai import OpenAI
+from openai.types.chat import ChatCompletionMessageParam
 from pydantic import BaseModel, Field, model_validator
-from pydantic_ai import (
-    Agent,
-    ModelMessage,
-    ModelRequest,
-    ModelRequestPart,
-    NativeOutput,
-    RunContext,
-    SystemPromptPart,
-    UserPromptPart,
-)
 
-from src.lib.utils import update_span_with_result
-from src.lib.config import LLMS
 from src.lib.settings import settings
 
 from ....domain.out import PatchGenerator, PatchGeneratorDto
@@ -23,17 +12,10 @@ from ....domain.models import Quiz, QuizItemVariant
 from ....domain.constants import PATCH_LIMIT
 
 
-QUIZ_GENERATOR_LLM = LLMS.GROK_4_FAST
-IN_QUERY = ""
+QUIZ_GENERATOR_MODEL = "grok-4-fast-non-reasoning"
 RETRIES = 1
 TEMPERATURE = 0.5
 TOP_P = 0.95
-
-
-@dataclass
-class AIGrokGeneratorDeps:
-    quiz: Quiz
-    chunks: list[str]
 
 
 class AnswerSchema(BaseModel):
@@ -101,15 +83,11 @@ class AIGrokGeneratorOutput(BaseModel):
 class AIGrokGenerator(PatchGenerator):
     def __init__(self, lf: Langfuse):
         self._lf = lf
-
-        self._ai = Agent(
-            history_processors=[self._inject_request_prompt],
-            output_type=AIGrokGeneratorOutput,
-            deps_type=AIGrokGeneratorDeps,
-            model=QUIZ_GENERATOR_LLM,
-            retries=RETRIES,
-            instrument=settings.env == "local",
+        self._client = OpenAI(
+            api_key=settings.grok_api_key,
+            base_url="https://api.x.ai/v1",
         )
+        logging.info("✓ Grok client initialized")
 
     async def generate(self, dto: PatchGeneratorDto) -> None:
         logging.info(
@@ -118,62 +96,55 @@ class AIGrokGenerator(PatchGenerator):
         if dto.chunks is None:
             raise ValueError("Chunks are required")
 
-        schema = AIGrokGeneratorOutput.model_json_schema()
         try:
-            with self._lf.start_as_current_span(name=f"quiz-patch") as span:
-                run = await self._ai.run(
-                    IN_QUERY,
-                    model=QUIZ_GENERATOR_LLM,
-                    deps=AIGrokGeneratorDeps(quiz=dto.quiz, chunks=dto.chunks),
-                    model_settings={
-                        "temperature": TEMPERATURE,
-                        "top_p": TOP_P,
-                        "extra_body": {
-                            "response_format": {
-                                "type": "json_schema",
-                                "json_schema": {
-                                    "name": "AIGrokGeneratorOutput",
-                                    "schema": schema,
-                                },
-                                "strict": True,
-                            },
-                            "tool_choice": "none",
-                        },
-                    },
+            with self._lf.start_as_current_span(name="quiz-patch") as span:
+                span.update_trace(
+                    user_id=dto.quiz.author_id,
+                    session_id=dto.cache_key,
+                )
+                
+                # Build messages
+                messages = self._build_messages(dto.quiz, dto.chunks)
+
+                # Make API call with structured output
+                completion = self._client.beta.chat.completions.parse(
+                    model=QUIZ_GENERATOR_MODEL,
+                    messages=messages,
+                    response_format=AIGrokGeneratorOutput,
+                    temperature=TEMPERATURE,
+                    top_p=TOP_P,
                 )
 
-                payload = run.output
+                # Extract and merge results
+                payload = completion.choices[0].message.parsed
+                if payload is None:
+                    raise ValueError("Failed to parse structured output")
+                
                 payload.merge(dto.quiz)
 
-                # await update_span_with_result(
-                #     self._lf,
-                #     run,
-                #     span,
-                #     dto.quiz.author_id,
-                #     dto.cache_key,
-                #     QUIZ_GENERATOR_LLM,
-                # )
+                # Update Langfuse generation
+                usage = completion.usage
+                self._lf.update_current_generation(
+                    input=messages,
+                    output=payload.model_dump(),
+                    model=QUIZ_GENERATOR_MODEL,
+                    usage_details={
+                        "input": usage.prompt_tokens if usage else 0,
+                        "output": usage.completion_tokens if usage else 0,
+                        "total": usage.total_tokens if usage else 0,
+                    } if usage else None,
+                )
 
         except Exception as e:
             logging.exception("Failed to generate quiz instant: %s", e)
             dto.quiz.fail()
             raise e
 
-    async def _inject_request_prompt(
-        self, ctx: RunContext[AIGrokGeneratorDeps], messages: list[ModelMessage]
-    ) -> list[ModelMessage]:
-        quiz = ctx.deps.quiz
-        chunks = ctx.deps.chunks
+    def _build_messages(self, quiz: Quiz, chunks: list[str]) -> list[ChatCompletionMessageParam]:
+        """Build the messages array for the chat completion."""
+        messages: list[ChatCompletionMessageParam] = []
 
-        return (
-            [ModelRequest(parts=self._build_pre_prompt(quiz, chunks))]
-            + messages
-            + [ModelRequest(parts=self._build_post_prompt(quiz))]
-        )
-
-    def _build_pre_prompt(
-        self, quiz: Quiz, chunks: list[str]
-    ) -> list[ModelRequestPart]:
+        # Add user context (materials and query)
         user_contents = []
         if quiz.query:
             user_contents.append(f"User query:\n{quiz.query}\n")
@@ -182,90 +153,88 @@ class AIGrokGenerator(PatchGenerator):
             user_contents.append("Quiz materials:\n")
             user_contents.append("\n".join(chunks))
 
-        parts = []
-        parts.append(UserPromptPart(content=user_contents))
-        return parts
+        if user_contents:
+            messages.append({
+                "role": "user",
+                "content": "\n".join(user_contents)
+            })
 
-    def _build_post_prompt(self, quiz: Quiz) -> list[ModelRequestPart]:
-        prev_quiz_items = quiz.prev_items()
+        # Add system prompts
+        messages.append({
+            "role": "system",
+            "content": self._lf.get_prompt("quizer/base", label=settings.env).compile()
+        })
 
+        # Add additional instructions if present
         dynamic_config = quiz.gen_config
+        if dynamic_config.additional_instructions:
+            adds = "\n".join(set(dynamic_config.additional_instructions))
+            if adds:
+                messages.append({
+                    "role": "user",
+                    "content": f"Additional questions: {adds}"
+                })
+
+        # Add negative questions (questions to avoid)
+        prev_quiz_items = quiz.prev_items()
         prev_questions = dynamic_config.negative_questions + [
             qi.question for qi in prev_quiz_items
         ]
-        prev_questions = "\n".join(set(prev_questions))
+        if prev_questions:
+            prev_questions_str = "\n".join(set(prev_questions))
+            messages.append({
+                "role": "system",
+                "content": self._lf.get_prompt(
+                    "quizer/negative_questions", label=settings.env
+                ).compile(questions=prev_questions_str)
+            })
 
-        difficulty = quiz.difficulty
+        # Add difficulty level
+        messages.append({
+            "role": "system",
+            "content": self._lf.get_prompt(
+                f"quizer/{quiz.difficulty}", label=settings.env
+            ).compile()
+        })
 
-        extra_beginner = "\n".join(set(dynamic_config.extra_beginner))
-        extra_expert = "\n".join(set(dynamic_config.extra_expert))
-        more_on_topic = "\n".join(set(dynamic_config.more_on_topic))
-        less_on_topic = "\n".join(set(dynamic_config.less_on_topic))
-        adds = "\n".join(set(dynamic_config.additional_instructions))
+        # Add extra beginner questions if present
+        if dynamic_config.extra_beginner:
+            extra_beginner = "\n".join(set(dynamic_config.extra_beginner))
+            messages.append({
+                "role": "system",
+                "content": self._lf.get_prompt(
+                    "quizer/extra_beginner", label=settings.env
+                ).compile(questions=extra_beginner)
+            })
 
-        post_parts = []
+        # Add extra expert questions if present
+        if dynamic_config.extra_expert:
+            extra_expert = "\n".join(set(dynamic_config.extra_expert))
+            messages.append({
+                "role": "system",
+                "content": self._lf.get_prompt(
+                    "quizer/extra_expert", label=settings.env
+                ).compile(questions=extra_expert)
+            })
 
-        post_parts.append(
-            SystemPromptPart(
-                content=self._lf.get_prompt("quizer/base", label=settings.env).compile()
-            )
-        )
+        # Add more on topic questions if present
+        if dynamic_config.more_on_topic:
+            more_on_topic = "\n".join(set(dynamic_config.more_on_topic))
+            messages.append({
+                "role": "system",
+                "content": self._lf.get_prompt(
+                    "quizer/more_on_topic", label=settings.env
+                ).compile(questions=more_on_topic)
+            })
 
-        if len(adds) > 0:
-            post_parts.append(
-                UserPromptPart(
-                    content=f"Additional questions: {adds}",
-                )
-            )
+        # Add less on topic questions if present
+        if dynamic_config.less_on_topic:
+            less_on_topic = "\n".join(set(dynamic_config.less_on_topic))
+            messages.append({
+                "role": "system",
+                "content": self._lf.get_prompt(
+                    "quizer/less_on_topic", label=settings.env
+                ).compile(questions=less_on_topic)
+            })
 
-        if len(prev_questions) > 0:
-            post_parts.append(
-                SystemPromptPart(
-                    content=self._lf.get_prompt(
-                        "quizer/negative_questions", label=settings.env
-                    ).compile(questions=prev_questions),
-                )
-            )
-
-        post_parts.append(
-            SystemPromptPart(
-                content=self._lf.get_prompt(
-                    f"quizer/{difficulty}", label=settings.env
-                ).compile()
-            )
-        )
-
-        if len(extra_beginner) > 0:
-            post_parts.append(
-                SystemPromptPart(
-                    content=self._lf.get_prompt(
-                        "quizer/extra_beginner", label=settings.env
-                    ).compile(questions=extra_beginner),
-                )
-            )
-        if len(extra_expert) > 0:
-            post_parts.append(
-                SystemPromptPart(
-                    content=self._lf.get_prompt(
-                        "quizer/extra_expert", label=settings.env
-                    ).compile(questions=extra_expert),
-                )
-            )
-        if len(more_on_topic) > 0:
-            post_parts.append(
-                SystemPromptPart(
-                    content=self._lf.get_prompt(
-                        "quizer/more_on_topic", label=settings.env
-                    ).compile(questions=more_on_topic),
-                )
-            )
-        if len(less_on_topic) > 0:
-            post_parts.append(
-                SystemPromptPart(
-                    content=self._lf.get_prompt(
-                        "quizer/less_on_topic", label=settings.env
-                    ).compile(questions=less_on_topic),
-                )
-            )
-
-        return post_parts
+        return messages
