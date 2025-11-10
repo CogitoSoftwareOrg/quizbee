@@ -28,10 +28,13 @@ class QuizStarterImpl(QuizStarter):
         quiz.to_preparing()
         await self._quiz_repository.update(quiz)
 
+        logger.info(f"Building cluster vectors for quiz {quiz.id}")
         await self._build_cluster_vectors(quiz, cmd.user)
         if quiz.avoid_repeat:
+            logger.info(f"Building quiz summary for quiz {quiz.id}")
             await self._build_quiz_summary(quiz, cmd.user)
 
+            logger.info(f"Searching for similar quizes for quiz {quiz.id}")
             similar_quizes = await self._quiz_indexer.search(
                 user_id=quiz.author_id,
                 query=self._build_query(quiz),

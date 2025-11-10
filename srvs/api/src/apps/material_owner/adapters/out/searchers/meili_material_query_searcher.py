@@ -14,7 +14,7 @@ from src.lib.config import LLMS
 from ....domain.models import MaterialChunk
 from ....domain.out import SearchDto, Searcher, LLMTools
 
-from ..meili_material_indexer import EMBEDDER_NAME, Doc
+from ..indexers.meili_material_indexer import EMBEDDER_NAME, Doc
 
 
 class MeiliMaterialQuerySearcher(Searcher):

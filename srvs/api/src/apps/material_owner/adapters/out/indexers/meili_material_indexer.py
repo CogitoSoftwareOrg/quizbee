@@ -9,10 +9,10 @@ from meilisearch_python_sdk.models.settings import Embedders, OpenAiEmbedder
 from src.lib.config import LLMS
 from src.lib.settings import settings
 
-from ...domain.models import Material, MaterialChunk, MaterialKind
-from ...domain.constants import MAX_TEXT_INDEX_TOKENS
-from ...domain.out import MaterialIndexer, LLMTools
-from ...domain.errors import TooManyTextTokensError
+from ....domain.models import Material, MaterialChunk, MaterialKind
+from ....domain.constants import MAX_TEXT_INDEX_TOKENS
+from ....domain.out import MaterialIndexer, LLMTools
+from ....domain.errors import TooManyTextTokensError
 
 EMBEDDER_NAME = "materialChunks"
 EMBEDDER_TEMPLATE = "Chunk {{doc.title}}: {{doc.content}}"
@@ -58,6 +58,15 @@ class Doc:
             vector=vector,
         )
 
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "materialId": self.materialId,
+            "userId": self.userId,
+            "title": self.title,
+            "content": self.content,
+        }
+
 
 class MeiliMaterialIndexer(MaterialIndexer):
     def __init__(self, lf: Langfuse, llm_tools: LLMTools, meili: AsyncClient):
@@ -98,7 +107,7 @@ class MeiliMaterialIndexer(MaterialIndexer):
             raise ValueError("Material has no text content")
 
         chunks = self.llm_tools.chunk(text)
-        docs = []
+        docs: list[Doc] = []
         for i, chunk in enumerate(chunks):
             docs.append(
                 Doc(
@@ -122,7 +131,7 @@ class MeiliMaterialIndexer(MaterialIndexer):
             raise TooManyTextTokensError(docs_tokens)
 
         task = await self.material_index.add_documents(
-            [asdict(doc) for doc in docs], primary_key="id"
+            [doc.to_dict() for doc in docs], primary_key="id"
         )
 
         logging.info(f"Created task for {len(docs)} documents")
@@ -135,9 +144,8 @@ class MeiliMaterialIndexer(MaterialIndexer):
 
         if task.status == "failed":
             logging.error(f"Failed to index material batch: {task}")
-            # raise ValueError(f"Failed to index material batch: {task}")
+            raise ValueError(f"Failed to index material batch: {task}")
         elif task.status == "succeeded":
-            # All documents in this batch are indexed successfully
             for doc in docs:
                 indexed = self._fill_template(doc)
                 total_tokens += self.llm_tools.count_text(
