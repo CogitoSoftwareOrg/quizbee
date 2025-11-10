@@ -2,3 +2,4 @@ from .material_search_provider import MaterialSearcherProvider
 from .meili_material_query_searcher import MeiliMaterialQuerySearcher
 from .meili_material_distribution_searcher import MeiliMaterialDistributionSearcher
 from .meili_all_searcher import MeiliMaterialAllSearcher
+from .meili_material_vector_searcher import MeiliMaterialVectorSearcher

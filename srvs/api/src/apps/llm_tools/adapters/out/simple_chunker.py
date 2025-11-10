@@ -1,6 +1,7 @@
 import re
 
 from ...domain.out import Chunker, TextTokenizer
+from ...domain.constants import DEFAULT_CHUNK_SIZE, DEFAULT_CHUNK_OVERLAP
 
 
 class SimpleChunker(Chunker):
@@ -17,8 +18,8 @@ class SimpleChunker(Chunker):
     def __init__(
         self,
         tokenizer: TextTokenizer,
-        chunk_size: int = 512,
-        overlap: int = 128,
+        chunk_size: int = DEFAULT_CHUNK_SIZE,
+        overlap: int = DEFAULT_CHUNK_OVERLAP,
         split_on_sentences: bool = True,
     ):
         self._tokenizer = tokenizer

@@ -1,5 +1,6 @@
 import logging
-import random
+import numpy as np
+from sklearn.cluster import KMeans
 
 from src.apps.material_owner.domain._in import MaterialApp, SearchCmd
 from src.apps.user_owner.domain._in import Principal
@@ -61,13 +62,33 @@ class QuizStarterImpl(QuizStarter):
                 all_chunks=True,
             )
         )
-        vectors = [c.vector for c in chunks]
-
-        centers: list[list[float]] = [
-            v
-            for v in random.sample(vectors, k=min(quiz.length, len(vectors)))
-            if v is not None
-        ]
+        
+        # Сразу фильтруем и конвертируем в numpy - одна итерация вместо двух
+        vector_list = [c.vector for c in chunks if c.vector is not None]
+        
+        if not vector_list:
+            quiz.set_cluster_vectors([])
+            return
+        
+        vectors = np.array(vector_list, dtype=np.float32)  # float32 вместо float64 - экономия памяти в 2 раза
+        n_clusters = min(quiz.length, len(vectors))
+        
+        if n_clusters == len(vectors):
+            # If we need as many clusters as vectors, just use the vectors
+            centers = vectors.tolist()
+        else:
+            # Perform KMeans clustering
+            # max_iter=200 вместо дефолтных 300 - быстрее
+            # algorithm='elkan' - быстрее для плотных данных (embeddings)
+            kmeans = KMeans(
+                n_clusters=n_clusters, 
+                random_state=505, 
+                n_init=10,
+                max_iter=200,
+                algorithm='elkan'
+            )
+            kmeans.fit(vectors)
+            centers = kmeans.cluster_centers_.tolist()
 
         quiz.set_cluster_vectors(centers)
 
@@ -77,7 +98,7 @@ class QuizStarterImpl(QuizStarter):
                 user=user,
                 material_ids=[m.id for m in quiz.materials],
                 limit_tokens=SUMMARY_TOKEN_LIMIT,
-                # clusters = quiz.cluster_vectors,
+                vectors = quiz.cluster_vectors,
             )
         )
         summary = "\n<CHUNK>\n".join([c.content for c in chunks])

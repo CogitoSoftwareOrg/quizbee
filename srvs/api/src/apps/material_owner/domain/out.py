@@ -88,6 +88,7 @@ class SearchDto:
     query: str = "*"
     limit: int = 100
     ratio: float = 0.0
+    vectors: list[list[float]] | None = None
 
 
 class Searcher(Protocol):

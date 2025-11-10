@@ -28,6 +28,8 @@ class QuizGeneratorImpl(QuizGenerator):
         self._patch_generator = patch_generator
 
     async def generate(self, cmd: GenerateCmd) -> None:
+        ### эта функция отвечает за генерацию одного патча 
+
         quiz = await self._quiz_repository.get(cmd.quiz_id)
         if quiz.author_id != cmd.user.id:
             raise NotQuizOwnerError(quiz_id=cmd.quiz_id, user_id=cmd.user.id)
@@ -37,7 +39,7 @@ class QuizGeneratorImpl(QuizGenerator):
             quiz.increment_generation()
             await self._quiz_repository.update(quiz)
 
-        ready_items = quiz.generate_patch()
+        ready_items = quiz.generate_patch() ### это те айтемы которые нужно сгенерить (они еще не сгенерены)
         if len(ready_items) == 0:
             logging.error(
                 f"No items ready for generation in quiz {cmd.quiz_id}. "
@@ -70,7 +72,8 @@ class QuizGeneratorImpl(QuizGenerator):
                 user=user,
                 material_ids=[m.id for m in quiz.materials],
                 limit_tokens=PATCH_CHUNK_TOKEN_LIMIT,
-                # central_vectors=central_vectors
+                vectors=central_vectors
             )
         )
         return [c.content for c in chunks]
+        

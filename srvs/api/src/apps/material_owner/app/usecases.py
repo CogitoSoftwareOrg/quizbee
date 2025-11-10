@@ -182,6 +182,8 @@ class MaterialAppImpl(MaterialApp):
         ratio = 0.0
         if cmd.all_chunks:
             search_type = SearchType.ALL
+        elif cmd.vectors is not None and len(cmd.vectors) > 0 and cmd.query.strip() == "":
+            search_type = SearchType.VECTOR
         elif cmd.query.strip() == "":
             search_type = SearchType.DISTRIBUTION
         else:
@@ -191,7 +193,7 @@ class MaterialAppImpl(MaterialApp):
         searcher = self._searcher_provider.get(search_type=search_type)
 
         logger.info(
-            f"Searching for material chunks for query: {cmd.query} (limit: {limit_chunks}, ratio: {ratio})"
+            f"Searching for material chunks (type: {search_type}, limit: {limit_chunks}, ratio: {ratio})"
         )
         chunks = await searcher.search(
             dto=SearchDto(
@@ -200,6 +202,7 @@ class MaterialAppImpl(MaterialApp):
                 query=cmd.query,
                 limit=limit_chunks,
                 ratio=ratio,
+                vectors=cmd.vectors,
             )
         )
 

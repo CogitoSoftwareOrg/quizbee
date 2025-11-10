@@ -29,6 +29,8 @@ class SearchCmd:
     limit_tokens: int = 100
     query: str = ""
     all_chunks: bool = False
+    vectors: list[list[float]] | None = None
+    
     # search_type: SearchType = SearchType.QUERY
 
 

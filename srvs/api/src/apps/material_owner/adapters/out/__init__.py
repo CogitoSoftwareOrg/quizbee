@@ -6,5 +6,6 @@ from .searchers import (
     MeiliMaterialQuerySearcher,
     MeiliMaterialDistributionSearcher,
     MeiliMaterialAllSearcher,
+    MeiliMaterialVectorSearcher,
 )
 from .llm_tools_adapter import LLMToolsAdapter
