@@ -157,14 +157,14 @@
 
 									item.status = QuizItemsStatusOptions.final;
 									try {
-										const batch = pb!.createBatch();
-										batch.collection('quizAttempts').update(quizAttempt!.id, {
+										// Update quiz attempt with the new decision
+										await pb!.collection('quizAttempts').update(quizAttempt!.id, {
 											choices: newDecisions
 										});
-										batch.collection('quizItems').update(item!.id, {
+										// Update item status to final
+										await pb!.collection('quizItems').update(item!.id, {
 											status: 'final'
 										});
-										await batch.send();
 									} catch (error) {
 										console.error(error);
 										itemDecision = null;
