@@ -16,7 +16,8 @@ class LLMS(StrEnum):
     # GEMINI_2_5_FLASH_LITE = "gemini-2.5-flash-lite"
 
     # Grok
-    GROK_4_FAST = "grok:grok-4-fast"
+    GROK_4_FAST_REASONING = "grok:grok-4-fast"
+    GROK_4_FAST = "grok:grok-4-fast-non-reasoning"
 
 
 class LLMCosts(BaseModel):

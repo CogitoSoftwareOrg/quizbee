@@ -7,7 +7,7 @@ from src.apps.llm_tools.domain._in import LLMToolsApp
 
 from .adapters.out import (
     PBAttemptRepository,
-    AIExplainer,
+    AIGrokExplainer,
     AIAttemptFinalizer,
 )
 from .domain.out import AttemptRepository, Explainer, AttemptFinalizer
@@ -18,9 +18,7 @@ def init_quiz_attempter_deps(
     lf: Langfuse, admin_pb: PocketBase, http: httpx.AsyncClient
 ) -> tuple[AttemptRepository, Explainer, AttemptFinalizer]:
     attempt_repository = PBAttemptRepository(admin_pb, http=http)
-    explainer = AIExplainer(
-        lf=lf,
-    )
+    explainer = AIGrokExplainer(lf=lf)
     finalizer = AIAttemptFinalizer(lf=lf, attempt_repository=attempt_repository)
     return attempt_repository, explainer, finalizer
 

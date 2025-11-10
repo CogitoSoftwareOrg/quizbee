@@ -109,13 +109,16 @@ class PBAttemptRepository(AttemptRepository):
             total_content = await self._load_file_text(
                 "quizes", rec.get("id", ""), fname
             )
-            material_content = total_content
+            cluster_vectors = json.loads(total_content)
+        else:
+            cluster_vectors = []
 
         return QuizRef(
             id=rec.get("id", ""),
             items=items,
             query=rec.get("query", ""),
-            material_content=material_content,
+            material_content="",
+            cluster_vectors=cluster_vectors,
         )
 
     def _rec_to_choice(self, rec: Record):

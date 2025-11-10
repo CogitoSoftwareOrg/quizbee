@@ -48,3 +48,4 @@ class QuizRef:
     items: list[QuizItemRef]
     query: str
     material_content: str
+    cluster_vectors: list[list[float]] = field(default_factory=list)
