@@ -14,7 +14,7 @@ from src.apps.material_owner.di import (
     init_material_app,
     init_material_deps,
 )
-from src.apps.quiz_owner.di import init_quiz_generator_app, init_quiz_generator_deps
+from src.apps.quiz_owner.di import init_quiz_app, init_quiz_deps
 from src.apps.quiz_attempter.di import init_quiz_attempter_app, init_quiz_attempter_deps
 
 from src.lib.di import init_global_deps
@@ -94,14 +94,14 @@ async def lifespan(app: FastAPI):
         patch_generator,
         quiz_finalizer,
         quiz_indexer,
-    ) = await init_quiz_generator_deps(
+    ) = await init_quiz_deps(
         meili=meili,
         lf=lf,
         admin_pb=admin_pb,
         http=http,
         llm_tools=llm_tools,
     )
-    quiz_generator_app = init_quiz_generator_app(
+    quiz_app = init_quiz_app(
         llm_tools=llm_tools,
         material=material_app,
         quiz_repository=quiz_repository,
@@ -127,7 +127,7 @@ async def lifespan(app: FastAPI):
     # V2 EDGE API
     edge_api_app = init_edge_api_app(
         auth_user_app=auth_user_app,
-        quiz_generator_app=quiz_generator_app,
+        quiz_app=quiz_app,
         quiz_attempter_app=quiz_attempter_app,
         material_app=material_app,
     )

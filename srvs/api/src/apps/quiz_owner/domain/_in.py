@@ -25,14 +25,16 @@ class GenerateCmd:
     user: Principal
 
 
-@dataclass(frozen=True, slots=True)
-class AttachMaterialCmd:
-    quiz_id: str
-    material_id: str
-    user: Principal
-
-
-class QuizGeneratorApp(Protocol):
+class QuizStarter(Protocol):
     async def start(self, cmd: GenerateCmd) -> None: ...
+
+
+class QuizGenerator(Protocol):
     async def generate(self, cmd: GenerateCmd) -> None: ...
+
+
+class QuizFinalizer(Protocol):
     async def finalize(self, cmd: FinalizeQuizCmd) -> None: ...
+
+
+class QuizApp(QuizStarter, QuizGenerator, QuizFinalizer): ...

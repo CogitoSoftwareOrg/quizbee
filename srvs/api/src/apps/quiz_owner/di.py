@@ -21,10 +21,10 @@ from .domain.out import (
     QuizIndexer,
     PatchGenerator,
 )
-from .app.usecases import QuizGeneratorAppImpl
+from .app.usecases import QuizAppImpl
 
 
-async def init_quiz_generator_deps(
+async def init_quiz_deps(
     meili: AsyncClient,
     lf: Langfuse,
     admin_pb: PocketBase,
@@ -51,16 +51,15 @@ async def init_quiz_generator_deps(
     return quiz_repository, patch_generator, finalizer, quiz_indexer
 
 
-def init_quiz_generator_app(
+def init_quiz_app(
     llm_tools: LLMToolsApp,
     material: MaterialApp,
     quiz_repository: QuizRepository,
     quiz_indexer: QuizIndexer,
     patch_generator: PatchGenerator,
     finalizer: QuizFinalizer,
-) -> QuizGeneratorAppImpl:
-    """Factory for QuizGeneratorApp - all dependencies explicit"""
-    return QuizGeneratorAppImpl(
+) -> QuizAppImpl:
+    return QuizAppImpl(
         quiz_repository=quiz_repository,
         quiz_indexer=quiz_indexer,
         llm_tools=llm_tools,

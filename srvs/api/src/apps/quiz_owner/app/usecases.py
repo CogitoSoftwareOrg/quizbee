@@ -22,11 +22,11 @@ from ..domain._in import (
     GenerateCmd,
     FinalizeQuizCmd,
     GenMode,
-    QuizGeneratorApp,
+    QuizApp,
 )
 
 
-class QuizGeneratorAppImpl(QuizGeneratorApp):
+class QuizAppImpl(QuizApp):
     def __init__(
         self,
         quiz_repository: QuizRepository,

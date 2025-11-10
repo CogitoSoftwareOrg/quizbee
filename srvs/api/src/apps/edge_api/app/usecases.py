@@ -1,5 +1,5 @@
 from src.apps.quiz_owner.domain._in import (
-    QuizGeneratorApp,
+    QuizApp,
     GenerateCmd,
     FinalizeQuizCmd,
     GenMode,
@@ -37,12 +37,12 @@ class EdgeAPIAppImpl(EdgeAPIApp):
     def __init__(
         self,
         user_auth: AuthUserApp,
-        quiz_generator: QuizGeneratorApp,
+        quiz_app: QuizApp,
         quiz_attempter: QuizAttempterApp,
         material: MaterialApp,
     ):
         self.user_auth = user_auth
-        self.quiz_generator = quiz_generator
+        self.quiz_app = quiz_app
         self.quiz_attempter = quiz_attempter
         self.material = material
 
@@ -54,7 +54,7 @@ class EdgeAPIAppImpl(EdgeAPIApp):
                 quiz_id=cmd.quiz_id, user_id=user.id, cost=cost, stored=user.remaining
             )
 
-        await self.quiz_generator.start(
+        await self.quiz_app.start(
             GenerateCmd(
                 user=user,
                 quiz_id=cmd.quiz_id,
@@ -73,7 +73,7 @@ class EdgeAPIAppImpl(EdgeAPIApp):
                 quiz_id=cmd.quiz_id, user_id=user.id, cost=cost, stored=user.remaining
             )
 
-        await self.quiz_generator.generate(
+        await self.quiz_app.generate(
             GenerateCmd(
                 user=user,
                 quiz_id=cmd.quiz_id,
@@ -86,7 +86,7 @@ class EdgeAPIAppImpl(EdgeAPIApp):
 
     async def finalize_quiz(self, cmd: PublicFinalizeQuizCmd) -> None:
         user = await self.user_auth.validate(cmd.token)
-        await self.quiz_generator.finalize(
+        await self.quiz_app.finalize(
             FinalizeQuizCmd(
                 user=user,
                 quiz_id=cmd.quiz_id,
