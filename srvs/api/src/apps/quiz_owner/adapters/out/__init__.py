@@ -13,6 +13,6 @@ from .quiz_generators.ai_patch_generator import (
 from .quiz_generators.ai_quiz_instant_generator import (
     AIQuizInstantGenerator,
 )
-from .quiz_generators.ai_single_generator import (
-    AISingleGenerator,
+from .quiz_generators.ai_grok_generator import (
+    AIGrokGenerator,
 )

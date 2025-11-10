@@ -171,7 +171,7 @@
 										item.status = QuizItemsStatusOptions.generated;
 									}
 
-									if (toAnswer <= 3 && quizItems.some((qi) => ['blank'].includes(qi.status))) {
+									if (toAnswer <= 2 && quizItems.some((qi) => ['blank'].includes(qi.status))) {
 										const result = await patchApi(`quizes/${quiz?.id}`, {
 											attempt_id: quizAttempt!.id,
 											mode: 'continue'

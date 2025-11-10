@@ -9,7 +9,7 @@ from src.apps.llm_tools.domain._in import LLMToolsApp
 
 from .adapters.out import (
     PBQuizRepository,
-    AISingleGenerator,
+    AIGrokGenerator,
     AIQuizFinalizer,
     MeiliQuizIndexer,
 )
@@ -30,7 +30,7 @@ async def init_quiz_deps(
     llm_tools: LLMToolsApp,
 ) -> tuple[QuizRepository, PatchGenerator, QuizFinalizer, QuizIndexer]:
     quiz_repository = PBQuizRepository(admin_pb, http=http)
-    patch_generator = AISingleGenerator(lf=lf)
+    patch_generator = AIGrokGenerator(lf=lf)
     finalizer = AIQuizFinalizer(
         lf=lf,
         quiz_repository=quiz_repository,

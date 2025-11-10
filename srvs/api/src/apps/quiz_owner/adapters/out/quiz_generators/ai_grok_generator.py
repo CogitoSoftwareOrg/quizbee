@@ -20,6 +20,7 @@ from src.lib.settings import settings
 
 from ....domain.out import PatchGenerator, PatchGeneratorDto
 from ....domain.models import Quiz, QuizItemVariant
+from ....domain.constants import PATCH_LIMIT
 
 
 QUIZ_GENERATOR_LLM = LLMS.GROK_4_FAST
@@ -30,7 +31,7 @@ TOP_P = 0.95
 
 
 @dataclass
-class AISingleGeneratorDeps:
+class AIGrokGeneratorDeps:
     quiz: Quiz
     chunks: list[str]
 
@@ -45,7 +46,7 @@ class AnswerSchema(BaseModel):
     ]
 
 
-class AIQuizSingleGeneratorOutput(BaseModel):
+class QuizItemSchema(BaseModel):
     question: Annotated[
         str, Field(title="Question", description="The quiz question text.")
     ]
@@ -70,28 +71,41 @@ class AIQuizSingleGeneratorOutput(BaseModel):
                 raise ValueError("Answer and explanation must be non-empty.")
         return self
 
+
+class AIGrokGeneratorOutput(BaseModel):
+    quiz_items: Annotated[
+        list[QuizItemSchema],
+        Field(
+            title="Quiz Items",
+            description=f"An array of exactly {PATCH_LIMIT} quiz items.",
+            min_length=PATCH_LIMIT,
+            max_length=PATCH_LIMIT,
+        ),
+    ]
+
     def merge(self, quiz: Quiz):
-        quiz.generation_step(
-            question=self.question,
-            variants=[
-                QuizItemVariant(
-                    content=a.answer,
-                    is_correct=a.correct,
-                    explanation=a.explanation,
-                )
-                for a in self.answers
-            ],
-        )
+        for schema in self.quiz_items:
+            quiz.generation_step(
+                question=schema.question,
+                variants=[
+                    QuizItemVariant(
+                        content=a.answer,
+                        is_correct=a.correct,
+                        explanation=a.explanation,
+                    )
+                    for a in schema.answers
+                ],
+            )
 
 
-class AISingleGenerator(PatchGenerator):
+class AIGrokGenerator(PatchGenerator):
     def __init__(self, lf: Langfuse):
         self._lf = lf
 
         self._ai = Agent(
             history_processors=[self._inject_request_prompt],
-            output_type=AIQuizSingleGeneratorOutput,
-            deps_type=AISingleGeneratorDeps,
+            output_type=AIGrokGeneratorOutput,
+            deps_type=AIGrokGeneratorDeps,
             model=QUIZ_GENERATOR_LLM,
             retries=RETRIES,
             instrument=settings.env == "local",
@@ -104,27 +118,26 @@ class AISingleGenerator(PatchGenerator):
         if dto.chunks is None:
             raise ValueError("Chunks are required")
 
-        schema = AIQuizSingleGeneratorOutput.model_json_schema()
+        schema = AIGrokGeneratorOutput.model_json_schema()
         try:
             with self._lf.start_as_current_span(name=f"quiz-patch") as span:
                 run = await self._ai.run(
                     IN_QUERY,
                     model=QUIZ_GENERATOR_LLM,
-                    deps=AISingleGeneratorDeps(quiz=dto.quiz, chunks=dto.chunks),
+                    deps=AIGrokGeneratorDeps(quiz=dto.quiz, chunks=dto.chunks),
                     model_settings={
                         "temperature": TEMPERATURE,
                         "top_p": TOP_P,
                         "extra_body": {
-                            "prompt_cache_key": dto.cache_key,
-                            # "response_format": {
-                            #     "type": "json_schema",
-                            #     "json_schema": {
-                            #         "name": "AIQuizSingleGeneratorOutput",
-                            #         "schema": schema,
-                            #     },
-                            #     "strict": True,
-                            # },
-                            # "tool_choice": "none",
+                            "response_format": {
+                                "type": "json_schema",
+                                "json_schema": {
+                                    "name": "AIGrokGeneratorOutput",
+                                    "schema": schema,
+                                },
+                                "strict": True,
+                            },
+                            "tool_choice": "none",
                         },
                     },
                 )
@@ -147,7 +160,7 @@ class AISingleGenerator(PatchGenerator):
             raise e
 
     async def _inject_request_prompt(
-        self, ctx: RunContext[AISingleGeneratorDeps], messages: list[ModelMessage]
+        self, ctx: RunContext[AIGrokGeneratorDeps], messages: list[ModelMessage]
     ) -> list[ModelMessage]:
         quiz = ctx.deps.quiz
         chunks = ctx.deps.chunks
@@ -163,10 +176,10 @@ class AISingleGenerator(PatchGenerator):
     ) -> list[ModelRequestPart]:
         user_contents = []
         if quiz.query:
-            user_contents.append(f"User query:\n{quiz.query}")
+            user_contents.append(f"User query:\n{quiz.query}\n")
 
         if chunks:
-            user_contents.append("Quiz materials:")
+            user_contents.append("Quiz materials:\n")
             user_contents.append("\n".join(chunks))
 
         parts = []

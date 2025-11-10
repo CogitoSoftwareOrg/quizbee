@@ -25,24 +25,24 @@ from src.lib.config import LLMS
 from src.lib.settings import settings
 from src.lib.utils import update_span_with_result
 
-from ...domain.models import (
+from ....domain.models import (
     Attempt,
     QuizRef,
 )
-from ...domain.refs import (
+from ....domain.refs import (
     MessageRef,
     QuizItemRef,
     MessageRoleRef,
     MessageStatusRef,
     MessageMetadataRef,
 )
-from ...domain.out import Explainer
+from ....domain.out import Explainer
 
-EXPLAINER_LLM = LLMS.GPT_5_MINI
+EXPLAINER_LLM = LLMS.GROK_4_FAST
 
 
 @dataclass
-class ExplainerDeps:
+class AIGrokExplainerDeps:
     quiz: QuizRef
     current_item: QuizItemRef
 
@@ -50,12 +50,12 @@ class ExplainerDeps:
 logger = logging.getLogger(__name__)
 
 
-class AIExplainer(Explainer):
+class AIGrokExplainer(Explainer):
     def __init__(self, lf: Langfuse):
         self._lf = lf
         self._ai = Agent(
             history_processors=[self._inject_system_prompt],
-            deps_type=ExplainerDeps,
+            deps_type=AIGrokExplainerDeps,
             model=EXPLAINER_LLM,
             output_type=str,
         )
@@ -69,7 +69,7 @@ class AIExplainer(Explainer):
         cache_key: str,
     ) -> AsyncIterable[MessageRef]:
         queue: asyncio.Queue[MessageRef | None] = asyncio.Queue()
-        deps = ExplainerDeps(quiz=attempt.quiz, current_item=item)
+        deps = AIGrokExplainerDeps(quiz=attempt.quiz, current_item=item)
 
         async def producer():
             with self._lf.start_as_current_span(name="explainer-agent") as span:
@@ -77,16 +77,11 @@ class AIExplainer(Explainer):
                 run = None
                 try:
                     async with self._ai.run_stream(
-                        query,
+                        "",
                         message_history=self._ai_history(attempt.message_history),
                         deps=deps,
                         model=EXPLAINER_LLM,
-                        model_settings={
-                            "extra_body": {
-                                "reasoning_effort": "low",
-                                "prompt_cache_key": cache_key,
-                            }
-                        },
+                        model_settings={},
                     ) as r:
                         run = r
                         async for output in run.stream_output():
@@ -117,14 +112,15 @@ class AIExplainer(Explainer):
 
                 finally:
                     with contextlib.suppress(Exception):
-                        await update_span_with_result(
-                            self._lf,
-                            run,
-                            span,
-                            attempt.user_id,
-                            cache_key,
-                            EXPLAINER_LLM,
-                        )
+                        ...
+                    # await update_span_with_result(
+                    #     self._lf,
+                    #     run,
+                    #     span,
+                    #     attempt.user_id,
+                    #     cache_key,
+                    #     EXPLAINER_LLM,
+                    # )
                     await queue.put(None)
 
         producer_task = asyncio.create_task(producer())
@@ -140,22 +136,22 @@ class AIExplainer(Explainer):
                 await producer_task
 
     async def _inject_system_prompt(
-        self, ctx: RunContext[ExplainerDeps], messages: list[ModelMessage]
+        self, ctx: RunContext[AIGrokExplainerDeps], messages: list[ModelMessage]
     ) -> list[ModelMessage]:
         pre_parts = self._build_pre_prompt(ctx.deps)
 
         return [ModelRequest(parts=pre_parts)] + messages
 
-    def _build_pre_prompt(self, deps: ExplainerDeps) -> list[ModelRequestPart]:
+    def _build_pre_prompt(self, deps: AIGrokExplainerDeps) -> list[ModelRequestPart]:
         user_contents = []
         if deps.quiz.query:
-            user_contents.append(f"User query:\n{deps.quiz.query}")
+            user_contents.append(f"User query:\n{deps.quiz.query}\n")
 
         if deps.quiz.material_content:
             logger.info(
                 f"Attaching quiz materials to prompt: {len(deps.quiz.material_content)}"
             )
-            user_contents.append("Quiz materials:")
+            user_contents.append("Quiz materials:\n")
             user_contents.append(deps.quiz.material_content)
 
         parts = []
