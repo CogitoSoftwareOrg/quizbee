@@ -44,7 +44,7 @@ async def worker_heartbeat_task(ctx):
 
 async def startup(ctx):
     # GLOBAL
-    admin_pb, lf, meili, http, grok_client = init_global_deps()
+    admin_pb, lf, meili, http, grok_provider = init_global_deps()
 
     parser_provider = init_document_parser_deps()
     document_parser_app = init_document_parser_app(parser_provider=parser_provider)
@@ -98,7 +98,7 @@ async def startup(ctx):
         admin_pb=admin_pb,
         http=http,
         llm_tools=llm_tools,
-        grok_client=grok_client,
+        llm_provider=grok_provider,
     )
     quiz_app = init_quiz_app(
         llm_tools=llm_tools,

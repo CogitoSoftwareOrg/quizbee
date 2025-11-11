@@ -17,9 +17,9 @@ from src.apps.material_owner.domain._in import (
 )
 from src.apps.user_owner.domain._in import AuthUserApp
 from src.apps.user_owner.domain.models import Tariff
+from src.apps.quiz_owner.domain.constants import PATCH_LIMIT
 
 from ..domain.errors import NotEnoughQuizItemsError
-from ..domain.constants import PATCH_LIMIT
 
 from ..domain._in import (
     EdgeAPIApp,

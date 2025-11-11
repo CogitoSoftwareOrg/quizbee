@@ -3,6 +3,7 @@ from meilisearch_python_sdk import AsyncClient
 from openai import AsyncOpenAI
 from pocketbase import PocketBase
 import httpx
+from pydantic_ai.providers.openai import OpenAIProvider
 
 
 from src.apps.material_owner.domain._in import MaterialApp
@@ -29,10 +30,10 @@ async def init_quiz_deps(
     admin_pb: PocketBase,
     http: httpx.AsyncClient,
     llm_tools: LLMToolsApp,
-    grok_client: AsyncOpenAI,
+    llm_provider: OpenAIProvider,
 ) -> tuple[QuizRepository, PatchGenerator, QuizFinalizer, QuizIndexer]:
     quiz_repository = PBQuizRepository(admin_pb, http=http)
-    patch_generator = AIGrokGenerator(lf=lf, grok_client=grok_client)
+    patch_generator = AIGrokGenerator(lf=lf, provider=llm_provider)
     finalizer = AIQuizFinalizer(
         lf=lf,
         quiz_repository=quiz_repository,

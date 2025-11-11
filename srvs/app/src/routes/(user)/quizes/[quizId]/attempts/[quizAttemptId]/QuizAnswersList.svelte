@@ -335,7 +335,7 @@
 				<!-- Timeline Info -->
 				<div class="bg-base-200/50 rounded-lg p-4 text-center">
 					<p class="text-base-content/70 text-sm">
-						<span class="text-base-content font-semibold">Usually takes less than 1 minute</span>
+						<span class="text-base-content font-semibold">Usually takes less than 10 seconds</span>
 						<br />
 						<span class="text-xs">Your AI tutor is working hard! ⏱️</span>
 					</p>

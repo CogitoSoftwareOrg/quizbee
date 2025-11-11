@@ -4,12 +4,13 @@ from pocketbase import PocketBase
 from langfuse import Langfuse
 from meilisearch_python_sdk import AsyncClient
 import httpx
+from pydantic_ai.providers.openai import OpenAIProvider
 
 from src.lib.settings import settings
 
 
 def init_global_deps() -> (
-    tuple[PocketBase, Langfuse, AsyncClient, httpx.AsyncClient, AsyncOpenAI]
+    tuple[PocketBase, Langfuse, AsyncClient, httpx.AsyncClient, OpenAIProvider]
 ):
     Agent.instrument_all(settings.env == "local")
 
@@ -23,8 +24,10 @@ def init_global_deps() -> (
     meili = AsyncClient(settings.meili_url, settings.meili_master_key)
     http = httpx.AsyncClient()
 
-    grok_client = AsyncOpenAI(
-        api_key=settings.grok_api_key,
-        base_url="https://api.x.ai/v1",
+    grok_provider = OpenAIProvider(
+        openai_client=AsyncOpenAI(
+            api_key=settings.grok_api_key,
+            base_url="https://api.x.ai/v1",
+        )
     )
-    return admin_pb, lf, meili, http, grok_client
+    return admin_pb, lf, meili, http, grok_provider
