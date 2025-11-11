@@ -44,7 +44,7 @@ class MeiliMaterialAllSearcher(Searcher):
             filter=f,
             limit=ALL_CHUNKS_LIMIT,
             retrieve_vectors=True,
-            attributes_to_retrieve=["id", "_vectors"],
+            attributes_to_retrieve=["id", "_vectors", 'content'],
         )
 
         docs: list[Doc] = [Doc.from_hit(hit) for hit in res.hits]
