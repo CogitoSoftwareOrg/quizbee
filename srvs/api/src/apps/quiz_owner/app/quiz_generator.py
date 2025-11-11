@@ -48,9 +48,13 @@ class QuizGeneratorImpl(QuizGenerator):
             raise NoItemsReadyForGenerationError(quiz_id=cmd.quiz_id)
         await self._quiz_repository.update(quiz)
 
-        chunk_contents, chunk_ids = await self._relevant_chunks(
-            quiz, items_to_generate, cmd.user
-        )
+        if len(quiz.materials) > 0:
+            chunk_contents, chunk_ids = await self._relevant_chunks(
+                quiz, items_to_generate, cmd.user
+            )
+        else:
+            chunk_contents = []
+            chunk_ids = []
 
         await self._patch_generator.generate(
             dto=(
@@ -62,7 +66,6 @@ class QuizGeneratorImpl(QuizGenerator):
             )
         )
 
-        # Отмечаем чанки как использованные после успешной генерации
         await self._material_app.mark_chunks_as_used(chunk_ids)
         logger.info(f"Marked {len(chunk_ids)} chunks as used for quiz {quiz.id}")
 
@@ -71,7 +74,6 @@ class QuizGeneratorImpl(QuizGenerator):
     async def _relevant_chunks(
         self, quiz: Quiz, items: list[QuizItem], user: Principal
     ) -> tuple[list[str], list[str]]:
-        # Используем modulo для циклического повторения векторов если их меньше чем items
         num_clusters = len(quiz.cluster_vectors)
         central_vectors = [
             quiz.cluster_vectors[item.order % num_clusters] for item in items
