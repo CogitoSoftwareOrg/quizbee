@@ -62,19 +62,20 @@ class QuizStarterImpl(QuizStarter):
                 all_chunks=True,
             )
         )
-        
+
         # Сразу фильтруем и конвертируем в numpy - одна итерация вместо двух
         vector_list = [c.vector for c in chunks if c.vector is not None]
-        
+
         if not vector_list:
-            logger.warning(f"No vectors found for quiz {quiz.id}, setting empty cluster vectors")
+            logger.warning(
+                f"No vectors found for quiz {quiz.id}, setting empty cluster vectors"
+            )
             quiz.set_cluster_vectors([])
             return
-        
-        vectors = np.array(vector_list, dtype=np.float32)  # float32 вместо float64 - экономия памяти в 2 раза
+
+        vectors = np.array(vector_list, dtype=np.float32)
         n_clusters = min(quiz.length, len(vectors))
-        
-        # Если чанков меньше чем нужно вопросов, используем все доступные векторы
+
         if len(vectors) < quiz.length:
             logger.warning(
                 f"Not enough chunks for quiz {quiz.id}: found {len(vectors)} chunks, "
@@ -82,18 +83,14 @@ class QuizStarterImpl(QuizStarter):
             )
             centers = vectors.tolist()
         elif n_clusters == len(vectors):
-            # If we need as many clusters as vectors, just use the vectors
             centers = vectors.tolist()
         else:
-            # Perform KMeans clustering
-            # max_iter=200 вместо дефолтных 300 - быстрее
-            # algorithm='elkan' - быстрее для плотных данных (embeddings)
             kmeans = KMeans(
-                n_clusters=n_clusters, 
-                random_state=505, 
-                n_init=10,
+                n_clusters=n_clusters,
+                random_state=505,
+                n_init="auto",
                 max_iter=200,
-                algorithm='elkan'
+                algorithm="elkan",
             )
             kmeans.fit(vectors)
             centers = kmeans.cluster_centers_.tolist()
@@ -106,16 +103,16 @@ class QuizStarterImpl(QuizStarter):
                 user=user,
                 material_ids=[m.id for m in quiz.materials],
                 limit_tokens=SUMMARY_TOKEN_LIMIT,
-                vectors = quiz.cluster_vectors,
+                vectors=quiz.cluster_vectors,
             )
         )
         summary = "\n<CHUNK>\n".join([c.content for c in chunks])
         quiz.set_summary(summary)
-        
+
         # Отмечаем использованные чанки
-        chunk_ids = [c.id for c in chunks]
-        await self._material_app.mark_chunks_as_used(chunk_ids)
-        logger.info(f"Marked {len(chunk_ids)} chunks as used for quiz {quiz.id}")
+        # chunk_ids = [c.id for c in chunks]
+        # await self._material_app.mark_chunks_as_used(chunk_ids)
+        # logger.info(f"Marked {len(chunk_ids)} chunks as used for quiz {quiz.id}")
 
     def _build_query(self, quiz: Quiz):
         return f"""

@@ -39,10 +39,8 @@ class QuizGeneratorImpl(QuizGenerator):
             quiz.increment_generation()
             await self._quiz_repository.update(quiz)
 
-        ready_items = (
-            quiz.generate_patch()
-        )  ### это те айтемы которые нужно сгенерить (они еще не сгенерены)
-        if len(ready_items) == 0:
+        items_to_generate = quiz.generate_patch()
+        if len(items_to_generate) == 0:
             logging.error(
                 f"No items ready for generation in quiz {cmd.quiz_id}. "
                 f"All items may be FINAL or there are no items."
@@ -51,7 +49,7 @@ class QuizGeneratorImpl(QuizGenerator):
         await self._quiz_repository.update(quiz)
 
         chunk_contents, chunk_ids = await self._relevant_chunks(
-            quiz, ready_items, cmd.user
+            quiz, items_to_generate, cmd.user
         )
 
         await self._patch_generator.generate(

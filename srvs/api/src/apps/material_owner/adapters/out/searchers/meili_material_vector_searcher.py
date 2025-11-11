@@ -73,27 +73,31 @@ class MeiliMaterialVectorSearcher(Searcher):
                 res = await self._material_index.search(
                     query="",  # Пустой query
                     vector=central_vector,  # Прямой поиск по вектору
-                    hybrid=Hybrid(semantic_ratio=1.0, embedder=EMBEDDER_NAME),  # Только векторный поиск
+                    hybrid=Hybrid(
+                        semantic_ratio=1.0, embedder=EMBEDDER_NAME
+                    ),  # Только векторный поиск
                     filter=f,
                     limit=10,  # Берем топ-10 для выбора неиспользованного
                     ranking_score_threshold=0,
                     show_ranking_score=True,
                 )
-                
+
                 # Преобразуем результаты
                 docs: list[Doc] = [Doc.from_hit(hit) for hit in res.hits]
-                
+
                 if not docs:
-                    logging.debug(f"Vector {idx + 1}/{len(dto.vectors)}: no chunks found")
+                    logging.debug(
+                        f"Vector {idx + 1}/{len(dto.vectors)}: no chunks found"
+                    )
                     continue
-                
+
                 # Конвертируем в чанки
                 candidate_chunks = [doc.to_chunk() for doc in docs]
-                
+
                 # Выбираем первый неиспользованный чанк, либо случайный если все использованы
                 most_relevant = None
                 unused_chunks = [c for c in candidate_chunks if not c.used]
-                
+
                 if unused_chunks:
                     most_relevant = unused_chunks[0]
                     logging.debug(
@@ -107,51 +111,55 @@ class MeiliMaterialVectorSearcher(Searcher):
                         f"Vector {idx + 1}/{len(dto.vectors)}: all {len(candidate_chunks)} chunks are used, "
                         f"selected random chunk {most_relevant.id} (idx={most_relevant.idx})"
                     )
-                
+
                 # Получаем соседние чанки (слева и справа)
                 neighbor_chunks = await self._get_neighbor_chunks(most_relevant)
-                
+
                 logging.debug(
                     f"Vector {idx + 1}/{len(dto.vectors)}: found {len(neighbor_chunks)} neighbor chunks for chunk {most_relevant.id} (idx={most_relevant.idx})"
                 )
-                
+
                 # Добавляем чанки с соседями
                 added_count = 0
                 skipped_duplicate = 0
                 skipped_limit = 0
-                
+
                 for chunk in neighbor_chunks:
                     if chunk.id in seen_chunk_ids:
-                        logging.debug(f"  Chunk {chunk.id} (idx={chunk.idx}) already seen, skipping")
+                        logging.debug(
+                            f"  Chunk {chunk.id} (idx={chunk.idx}) already seen, skipping"
+                        )
                         skipped_duplicate += 1
                         continue
-                    
+
                     chunk_tokens = self._llm_tools.count_text(chunk.content)
-                    
+
                     # Проверяем лимит токенов
-                    if total_tokens + chunk_tokens > dto.limit * self._llm_tools.chunk_size:
+                    if (
+                        total_tokens + chunk_tokens
+                        > dto.limit * self._llm_tools.chunk_size
+                    ):
                         logging.debug(
                             f"  Chunk {chunk.id} (idx={chunk.idx}) exceeds token limit: {total_tokens + chunk_tokens} > {dto.limit * self._llm_tools.chunk_size}, skipping remaining"
                         )
                         skipped_limit += 1
                         break
-                    
-                    logging.debug(f"  Adding chunk {chunk.id} (idx={chunk.idx}, tokens={chunk_tokens})")
+
+                    logging.debug(
+                        f"  Adding chunk {chunk.id} (idx={chunk.idx}, tokens={chunk_tokens})"
+                    )
                     seen_chunk_ids.add(chunk.id)
                     selected_chunks.append(chunk)
                     total_tokens += chunk_tokens
                     added_count += 1
-                
+
                 logging.debug(
                     f"Vector {idx + 1}/{len(dto.vectors)}: selected {added_count} chunks (skipped {skipped_duplicate} duplicates, {skipped_limit} over limit), total tokens: {total_tokens}"
                 )
-                
+
             except Exception as e:
                 logging.error(f"Error searching for vector {idx + 1}: {e}")
                 continue
-
-            
-            
 
         logging.info(
             f"Vector search complete: {len(selected_chunks)} chunks, {total_tokens} tokens from {len(dto.vectors)} vectors"
@@ -163,49 +171,49 @@ class MeiliMaterialVectorSearcher(Searcher):
     ) -> list[MaterialChunk]:
         """
         Получает чанк вместе с его соседями (предыдущий и следующий).
-        
+
         Args:
             target_chunk: Целевой чанк (самый релевантный)
-            
+
         Returns:
             Список из до 3 чанков: [предыдущий, целевой, следующий] (если они существуют)
         """
         result = []
-        
+
         # Формируем фильтр для поиска соседних чанков
         try:
             current_idx = target_chunk.idx
             material_id = target_chunk.material_id
-            
+
             # Определяем диапазон индексов
             min_idx = max(0, current_idx - 1)  # Не меньше 0
             max_idx = current_idx + 1
-            
+
             # Запрашиваем чанки по materialId и диапазону idx
             # Используем >= и <= для диапазона (более эффективно чем OR)
             f = f"materialId = {material_id} AND idx >= {min_idx} AND idx <= {max_idx}"
-            
+
             res = await self._material_index.search(
                 query="*",
                 filter=f,
                 limit=3,
                 retrieve_vectors=False,  # Векторы не нужны для соседей
             )
-            
+
             docs: list[Doc] = [Doc.from_hit(hit) for hit in res.hits]
             chunks = [doc.to_chunk() for doc in docs]
-            
+
             # Сортируем по idx
             chunks.sort(key=lambda c: c.idx)
             result = chunks
-            
+
             logging.debug(
                 f"_get_neighbor_chunks for material {material_id}, idx {current_idx}: "
                 f"found {len(result)} chunks with indices {[c.idx for c in result]}"
             )
-            
+
         except Exception as e:
             logging.error(f"Error fetching neighbor chunks: {e}")
             result = [target_chunk]
-        
+
         return result if result else [target_chunk]
