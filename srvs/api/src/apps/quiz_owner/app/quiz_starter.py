@@ -67,13 +67,21 @@ class QuizStarterImpl(QuizStarter):
         vector_list = [c.vector for c in chunks if c.vector is not None]
         
         if not vector_list:
+            logger.warning(f"No vectors found for quiz {quiz.id}, setting empty cluster vectors")
             quiz.set_cluster_vectors([])
             return
         
         vectors = np.array(vector_list, dtype=np.float32)  # float32 вместо float64 - экономия памяти в 2 раза
         n_clusters = min(quiz.length, len(vectors))
         
-        if n_clusters == len(vectors):
+        # Если чанков меньше чем нужно вопросов, используем все доступные векторы
+        if len(vectors) < quiz.length:
+            logger.warning(
+                f"Not enough chunks for quiz {quiz.id}: found {len(vectors)} chunks, "
+                f"but quiz length is {quiz.length}. Using all available vectors."
+            )
+            centers = vectors.tolist()
+        elif n_clusters == len(vectors):
             # If we need as many clusters as vectors, just use the vectors
             centers = vectors.tolist()
         else:
@@ -103,6 +111,11 @@ class QuizStarterImpl(QuizStarter):
         )
         summary = "\n<CHUNK>\n".join([c.content for c in chunks])
         quiz.set_summary(summary)
+        
+        # Отмечаем использованные чанки
+        chunk_ids = [c.id for c in chunks]
+        await self._material_app.mark_chunks_as_used(chunk_ids)
+        logger.info(f"Marked {len(chunk_ids)} chunks as used for quiz {quiz.id}")
 
     def _build_query(self, quiz: Quiz):
         return f"""

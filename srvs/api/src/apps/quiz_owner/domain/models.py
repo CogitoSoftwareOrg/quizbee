@@ -167,8 +167,11 @@ class Quiz:
         self.need_build_material_content = False
 
     def set_cluster_vectors(self, vectors: list[list[float]]):
-        if len(vectors) != self.length:
-            raise ValueError("Cluster vectors length mismatch")
+        # Разрешаем меньше векторов чем длина квиза, если недостаточно материала
+        if len(vectors) > self.length:
+            raise ValueError(
+                f"Too many cluster vectors: got {len(vectors)}, expected at most {self.length}"
+            )
         self.cluster_vectors = vectors
 
     def request_build_material_content(self) -> None:

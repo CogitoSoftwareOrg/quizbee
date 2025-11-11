@@ -30,6 +30,7 @@ class QuizAppImpl(QuizApp):
         self._quiz_repository = quiz_repository
         self._quiz_indexer = quiz_indexer
         self._finalizer = finalizer
+        self._material = material
 
         self._quiz_generator = QuizGeneratorImpl(
             quiz_repository=quiz_repository,
@@ -60,3 +61,12 @@ class QuizAppImpl(QuizApp):
         await self._finalizer.finalize(quiz, cmd.cache_key)
 
         await self._quiz_indexer.index(quiz)
+
+    async def mark_chunks_as_used(self, chunk_ids: list[str]) -> None:
+        """
+        Отмечает чанки материалов как использованные.
+        
+        Args:
+            chunk_ids: Список ID чанков для пометки
+        """
+        await self._material.mark_chunks_as_used(chunk_ids)

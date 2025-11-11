@@ -71,6 +71,7 @@ class MaterialChunk:
     content: str
     kind: ChunkKind = ChunkKind.MATERIAL_ONLY
     vector: list[float] | None = None
+    used: bool = False
 
 
 @dataclass(slots=True, kw_only=True)

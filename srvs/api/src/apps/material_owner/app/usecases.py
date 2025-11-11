@@ -221,6 +221,16 @@ class MaterialAppImpl(MaterialApp):
 
         await self._material_repository.delete(cmd.material_id)
 
+    async def mark_chunks_as_used(self, chunk_ids: list[str]) -> None:
+        """
+        Отмечает чанки как использованные.
+        
+        Args:
+            chunk_ids: Список ID чанков для пометки
+        """
+        logger.info(f"MaterialAppImpl.mark_chunks_as_used: {len(chunk_ids)} chunks")
+        await self._indexer.mark_chunks_as_used(chunk_ids)
+
     async def _deduplicate_material(self, cmd: AddMaterialCmd) -> Material | None:
         material = await self._material_repository.get(cmd.material_id)
         if material is not None:

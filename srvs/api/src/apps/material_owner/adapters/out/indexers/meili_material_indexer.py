@@ -34,6 +34,8 @@ class Doc:
     userId: str
     title: str
     content: str
+    idx: int = 0
+    used: bool = False
     _vectors: dict[str, dict[str, list[list[float]]]] | None = None
 
     @classmethod
@@ -44,6 +46,8 @@ class Doc:
             userId=hit.get("userId", ""),
             title=hit.get("title", ""),
             content=hit.get("content", ""),
+            idx=hit.get("idx", 0),
+            used=hit.get("used", False),
             _vectors=hit.get("_vectors", {}),
         )
 
@@ -53,11 +57,12 @@ class Doc:
 
         return MaterialChunk(
             id=self.id,
-            idx=int(self.id.split("-")[-1]),
+            idx=self.idx,
             material_id=self.materialId,
             title=self.title,
             content=self.content,
             vector=vector,
+            used=self.used,
         )
 
     def to_dict(self) -> dict:
@@ -67,6 +72,8 @@ class Doc:
             "userId": self.userId,
             "title": self.title,
             "content": self.content,
+            "idx": self.idx,
+            "used": self.used,
         }
 
 
@@ -87,7 +94,7 @@ class MeiliMaterialIndexer(MaterialIndexer):
             Embedders(embedders=meiliEmbeddings)  # pyright: ignore[reportArgumentType]
         )
         await instance.material_index.update_filterable_attributes(
-            ["userId", "materialId"]
+            ["userId", "materialId", "idx", "used"]
         )
         return instance
 
@@ -118,6 +125,8 @@ class MeiliMaterialIndexer(MaterialIndexer):
                     userId=material.user_id,
                     title=material.title,
                     content=chunk,
+                    idx=i,
+                    used=False,  # По умолчанию чанки не использованы
                 )
             )
 
@@ -178,6 +187,33 @@ class MeiliMaterialIndexer(MaterialIndexer):
             # raise ValueError(f"Failed to delete material: {task}")
         elif task.status == "succeeded":
             logging.info(f"Deleted materials: {material_ids}")
+        else:
+            logging.error(f"Unknown task status: {task}")
+
+    async def mark_chunks_as_used(self, chunk_ids: list[str]) -> None:
+        """
+        Отмечает чанки как использованные.
+        
+        Args:
+            chunk_ids: Список ID чанков для пометки
+        """
+        if len(chunk_ids) == 0:
+            return
+
+        # Обновляем документы, устанавливая used=True
+        docs_to_update = [{"id": chunk_id, "used": True} for chunk_id in chunk_ids]
+        
+        task = await self.material_index.update_documents(docs_to_update, primary_key="id")
+        task = await self.meili.wait_for_task(
+            task.task_uid,
+            timeout_in_ms=int(30 * 1000),
+            interval_in_ms=int(0.5 * 1000),
+        )
+        
+        if task.status == "failed":
+            logging.error(f"Failed to mark chunks as used: {task}")
+        elif task.status == "succeeded":
+            logging.info(f"Marked {len(chunk_ids)} chunks as used")
         else:
             logging.error(f"Unknown task status: {task}")
 
