@@ -28,7 +28,7 @@ from ....domain.constants import PATCH_LIMIT
 
 QUIZ_GENERATOR_LLM = LLMS.GROK_4_FAST
 IN_QUERY = ""
-RETRIES = 5
+RETRIES = 1
 TEMPERATURE = 0.4
 TOP_P = 0.95
 
@@ -61,7 +61,7 @@ class QuizItemSchema(BaseModel):
             title="Answers",
             description="The answers to the question. 4 in total with ONLY one correct answer.",
             min_length=4,
-            max_length=4,
+            # max_length=4,
         ),
     ]
 
@@ -102,9 +102,14 @@ class AIGrokGeneratorOutput(BaseModel):
             title="Quiz Items",
             description=f"An array of exactly {PATCH_LIMIT} quiz items.",
             min_length=PATCH_LIMIT,
-            max_length=PATCH_LIMIT,
+            # max_length=PATCH_LIMIT,
         ),
     ]
+
+    @model_validator(mode="after")
+    def _check_quiz_items(self):
+        self.quiz_items = self.quiz_items[:PATCH_LIMIT]
+        return self
 
     def merge(self, quiz: Quiz):
         for schema in self.quiz_items:
@@ -131,7 +136,7 @@ class AIGrokGenerator(PatchGenerator):
             deps_type=AIGrokGeneratorDeps,
             model=OpenAIChatModel(QUIZ_GENERATOR_LLM, provider=provider),
             retries=RETRIES,
-            instrument=settings.env == "local",
+            # instrument=settings.env == "local",
         )
 
     async def generate(self, dto: PatchGeneratorDto) -> None:
@@ -152,14 +157,14 @@ class AIGrokGenerator(PatchGenerator):
                         "temperature": TEMPERATURE,
                         "top_p": TOP_P,
                         "extra_body": {
-                            "response_format": {
-                                "type": "json_schema",
-                                "json_schema": {
-                                    "name": "AIGrokGeneratorOutput",
-                                    "schema": schema,
-                                },
-                                "strict": True,
-                            },
+                            # "response_format": {
+                            #     "type": "json_schema",
+                            #     "json_schema": {
+                            #         "name": "AIGrokGeneratorOutput",
+                            #         "schema": schema,
+                            #     },
+                            #     "strict": True,
+                            # },
                             # "tool_choice": "none",
                         },
                     },
@@ -168,14 +173,14 @@ class AIGrokGenerator(PatchGenerator):
                 payload = run.output
                 payload.merge(dto.quiz)
 
-                # await update_span_with_result(
-                #     self._lf,
-                #     run,
-                #     span,
-                #     dto.quiz.author_id,
-                #     dto.cache_key,
-                #     QUIZ_GENERATOR_LLM,
-                # )
+                await update_span_with_result(
+                    self._lf,
+                    run,
+                    span,
+                    dto.quiz.author_id,
+                    dto.cache_key,
+                    QUIZ_GENERATOR_LLM,
+                )
 
         except Exception as e:
             logging.exception("Failed to generate quiz instant: %s", e)

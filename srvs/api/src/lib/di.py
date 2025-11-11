@@ -12,7 +12,7 @@ from src.lib.settings import settings
 def init_global_deps() -> (
     tuple[PocketBase, Langfuse, AsyncClient, httpx.AsyncClient, OpenAIProvider]
 ):
-    Agent.instrument_all(settings.env == "local")
+    # Agent.instrument_all(settings.env == "local")
 
     admin_pb = PocketBase(settings.pb_url)
     lf = Langfuse(

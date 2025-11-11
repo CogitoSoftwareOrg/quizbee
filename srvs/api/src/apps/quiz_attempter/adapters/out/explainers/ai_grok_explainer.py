@@ -112,15 +112,14 @@ class AIGrokExplainer(Explainer):
 
                 finally:
                     with contextlib.suppress(Exception):
-                        ...
-                    # await update_span_with_result(
-                    #     self._lf,
-                    #     run,
-                    #     span,
-                    #     attempt.user_id,
-                    #     cache_key,
-                    #     EXPLAINER_LLM,
-                    # )
+                        await update_span_with_result(
+                            self._lf,
+                            run,
+                            span,
+                            attempt.user_id,
+                            cache_key,
+                            EXPLAINER_LLM,
+                        )
                     await queue.put(None)
 
         producer_task = asyncio.create_task(producer())
