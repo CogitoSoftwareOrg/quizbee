@@ -151,7 +151,7 @@ class AIGrokGenerator(PatchGenerator):
 
         if chunks:
             user_contents.append("Quiz materials:\n")
-            user_contents.append("\n".join(chunks))
+            user_contents.append("\n<CHUNK>\n".join(chunks))
 
         if user_contents:
             messages.append({
