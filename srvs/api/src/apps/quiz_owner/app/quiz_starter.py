@@ -1,8 +1,10 @@
 import logging
 import numpy as np
-from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+from sklearn.feature_extraction.text import CountVectorizer
 from hdbscan import HDBSCAN
 from umap import UMAP
+from bertopic import BERTopic
+from bertopic.vectorizers import ClassTfidfTransformer
 
 from src.apps.material_owner.domain._in import MaterialApp, SearchCmd
 from src.apps.user_owner.domain._in import Principal
@@ -58,11 +60,10 @@ class QuizStarterImpl(QuizStarter):
 
     async def _build_cluster_vectors(self, quiz: Quiz, user: Principal) -> None:
         """
-        Build cluster vectors using BERTopic-like algorithm:
-        1. Get embeddings from chunks
-        2. Reduce dimensionality with UMAP to 5 dimensions
-        3. Cluster with HDBSCAN
-        4. Extract topic representations with CountVectorizer + TF-IDF
+        Build cluster vectors using BERTopic algorithm with pre-computed embeddings:
+        1. Get embeddings from chunks (already computed)
+        2. Use BERTopic with UMAP + HDBSCAN for clustering
+        3. Extract topic representations with c-TF-IDF
         """
         chunks = await self._material_app.search(
             SearchCmd(
@@ -72,19 +73,23 @@ class QuizStarterImpl(QuizStarter):
             )
         )
         
-        # Filter chunks with vectors
-        chunks_with_vectors = [c for c in chunks if c.vector is not None]
-        logger.info(f"Found {len(chunks_with_vectors)} chunks with vectors for quiz {quiz.id}")
+        # Filter chunks with vectors and content
+        chunks_with_vectors = [c for c in chunks if c.vector is not None and c.content and c.content.strip()]
+        logger.info(f"Found {len(chunks_with_vectors)} chunks with vectors and content for quiz {quiz.id}")
+        
         if not chunks_with_vectors:
-            logger.warning(f"No vectors found for quiz {quiz.id}, setting empty cluster vectors")
+            logger.warning(f"No valid chunks found for quiz {quiz.id}, setting empty cluster vectors")
             quiz.set_cluster_vectors([])
             return
         
-        vectors = np.array([c.vector for c in chunks_with_vectors], dtype=np.float32)
-        n_samples = len(vectors)
-        n_features = vectors.shape[1]
+        # Extract embeddings and documents
+        embeddings = np.array([c.vector for c in chunks_with_vectors], dtype=np.float32)
+        documents = [c.content.strip() for c in chunks_with_vectors]
         
-        logger.info(f"Starting dimensionality reduction for quiz {quiz.id}: {n_samples} samples, {n_features} features")
+        n_samples = len(documents)
+        n_features = embeddings.shape[1]
+        
+        logger.info(f"Starting BERTopic for quiz {quiz.id}: {n_samples} documents, {n_features} embedding dimensions")
         
         # If not enough chunks, use all available vectors
         if n_samples < quiz.length:
@@ -92,13 +97,14 @@ class QuizStarterImpl(QuizStarter):
                 f"Not enough chunks for quiz {quiz.id}: found {n_samples} chunks, "
                 f"but quiz length is {quiz.length}. Using all available vectors."
             )
-            quiz.set_cluster_vectors(vectors.tolist())
+            quiz.set_cluster_vectors(embeddings.tolist())
             return
         
-        # Step 1: Reduce with UMAP to 5 dimensions
+        # Configure BERTopic components
+        # Step 1: UMAP for dimensionality reduction
         umap_components = min(5, n_samples - 1)
         n_neighbors = min(15, n_samples - 1)
-        logger.info(f"Step 1: UMAP reducing from {n_features} to {umap_components} components (n_neighbors={n_neighbors}) for quiz {quiz.id}")
+        logger.info(f"Configuring UMAP: {n_features} → {umap_components} dimensions (n_neighbors={n_neighbors})")
         
         umap_model = UMAP(
             n_neighbors=n_neighbors,
@@ -107,230 +113,105 @@ class QuizStarterImpl(QuizStarter):
             metric='cosine',
             random_state=505
         )
-        reduced_vectors = umap_model.fit_transform(vectors)
-        logger.info(f"UMAP complete: {reduced_vectors.shape[0]} samples × {reduced_vectors.shape[1]} dimensions")
         
-        # Step 2: Cluster with HDBSCAN
+        # Step 2: HDBSCAN for clustering
         min_cluster_size = max(2, min(15, n_samples // 10))
-        logger.info(f"Step 2: Clustering with HDBSCAN (min_cluster_size={min_cluster_size}) for quiz {quiz.id}")
+        logger.info(f"Configuring HDBSCAN: min_cluster_size={min_cluster_size}")
         
         hdbscan_model = HDBSCAN(
             min_cluster_size=min_cluster_size,
             metric='euclidean',
             cluster_selection_method='eom',
-            prediction_data=False
+            prediction_data=True
         )
-        cluster_labels = hdbscan_model.fit_predict(reduced_vectors)
         
-        unique_clusters = [label for label in np.unique(cluster_labels) if label != -1]
-        n_clusters = len(unique_clusters)
-        
-        logger.info(f"Found {n_clusters} clusters for quiz {quiz.id} (noise points: {np.sum(cluster_labels == -1)})")
-        
-        if n_clusters == 0:
-            logger.warning(f"HDBSCAN found no clusters for quiz {quiz.id}, using all vectors")
-            n_vectors = min(quiz.length, len(vectors))
-            quiz.set_cluster_vectors(vectors[:n_vectors].tolist())
-            return
-        
-        # Step 3: Extract topic representations using CountVectorizer + TF-IDF
-        # Group chunks by cluster
-        cluster_documents = {}
-        for idx, label in enumerate(cluster_labels):
-            if label != -1:  # Skip noise points
-                if label not in cluster_documents:
-                    cluster_documents[label] = []
-                chunk_content = chunks_with_vectors[idx].content
-                # Log first few chunks to see what we're getting
-                if len(cluster_documents[label]) < 3:
-                    content_preview = (chunk_content[:100] if chunk_content else "(empty)").replace('\n', ' ')
-                    logger.info(f"  Chunk sample for cluster {label}: '{content_preview}...' (len={len(chunk_content) if chunk_content else 0})")
-                cluster_documents[label].append(chunk_content)
-        
-        logger.info(f"Grouped chunks into {len(cluster_documents)} clusters for quiz {quiz.id}")
-        for label, docs in cluster_documents.items():
-            # Count non-empty chunks
-            non_empty = sum(1 for d in docs if d and d.strip())
-            total_content_chars = sum(len(d) for d in docs if d)
-            logger.info(f"  Cluster {label}: {len(docs)} chunks ({non_empty} non-empty, {total_content_chars} total chars)")
-        
-        # Combine all documents in each cluster into one document, filtering empty ones
-        cluster_texts = []
-        for label in sorted(cluster_documents.keys()):
-            # Filter out empty or whitespace-only chunks
-            non_empty_chunks = [chunk.strip() for chunk in cluster_documents[label] if chunk and chunk.strip()]
-            if non_empty_chunks:
-                cluster_text = " ".join(non_empty_chunks)
-                cluster_texts.append(cluster_text)
-                logger.info(f"  Cluster {label} combined text: {len(non_empty_chunks)} chunks → {len(cluster_text)} chars")
-            else:
-                logger.warning(f"  Cluster {label} has no non-empty chunks, skipping")
-        
-        if not cluster_texts:
-            logger.warning(f"No non-empty cluster texts generated for quiz {quiz.id}")
-            quiz.set_cluster_vectors(vectors[:min(quiz.length, len(vectors))].tolist())
-            return
-        
-        # Debug: Log cluster text statistics
-        total_chars = sum(len(text) for text in cluster_texts)
-        avg_chars = total_chars / len(cluster_texts) if cluster_texts else 0
-        logger.info(f"Cluster texts stats for quiz {quiz.id}: {len(cluster_texts)} clusters, {total_chars} total chars, {avg_chars:.0f} avg chars per cluster")
-        
-        # Log preview of each cluster text
-        for idx, text in enumerate(cluster_texts):
-            text_preview = text[:150].replace('\n', ' ') if text else "(empty)"
-            logger.info(f"  Cluster {idx} preview ({len(text)} chars): {text_preview}...")
-        
-        # Apply CountVectorizer with multiple fallback strategies
-        # Try with English stop words first, if that fails, try without stop words
-        vectorizer = CountVectorizer(
-            max_features=100,  # Top 100 words per topic
+        # Step 3: CountVectorizer for tokenization
+        vectorizer_model = CountVectorizer(
             stop_words='english',
             min_df=1,
             max_df=0.95,
-            token_pattern=r'(?u)\b\w+\b',  # Match words with 1+ characters (more permissive)
-            lowercase=True
+            ngram_range=(1, 2)  # unigrams and bigrams
         )
         
-        topic_extraction_successful = False
+        # Step 4: c-TF-IDF for topic representation
+        ctfidf_model = ClassTfidfTransformer()
         
+        # Initialize BERTopic with pre-computed embeddings
+        logger.info(f"Initializing BERTopic for quiz {quiz.id}")
+        topic_model = BERTopic(
+            umap_model=umap_model,
+            hdbscan_model=hdbscan_model,
+            vectorizer_model=vectorizer_model,
+            ctfidf_model=ctfidf_model,
+            verbose=True,
+            calculate_probabilities=True
+        )
+        
+        # Fit BERTopic with pre-computed embeddings
+        logger.info(f"Fitting BERTopic on {n_samples} documents for quiz {quiz.id}")
         try:
-            logger.info(f"Attempting topic extraction with English stop words for quiz {quiz.id}")
-            word_counts = vectorizer.fit_transform(cluster_texts)
-            logger.info(f"Vocabulary size: {len(vectorizer.get_feature_names_out())} words")
+            topics, probabilities = topic_model.fit_transform(documents, embeddings)
             
-            # Apply TF-IDF (class-based TF-IDF as per BERTopic)
-            tfidf = TfidfTransformer()
-            tfidf_matrix = tfidf.fit_transform(word_counts)
+            # Get topic info
+            topic_info = topic_model.get_topic_info()
+            n_topics = len(topic_info[topic_info['Topic'] != -1])
+            n_outliers = len(topic_info[topic_info['Topic'] == -1])
             
-            # Get feature names (words)
-            feature_names = vectorizer.get_feature_names_out()
-            logger.info(f"Sample vocabulary (first 10 words): {', '.join(feature_names[:10])}")
+            logger.info(f"BERTopic found {n_topics} topics for quiz {quiz.id} (outliers: {n_outliers})")
+            logger.info(f"Topic distribution:\n{topic_info.to_string()}")
             
-            # Extract top N words per cluster to represent topics
-            n_words = 10
-            topic_words = {}
+            # Log top words for each topic
+            logger.info(f"Topic representations for quiz {quiz.id}:")
+            for topic_id in sorted(topic_model.get_topics().keys()):
+                if topic_id != -1:  # Skip outlier topic
+                    topic_words = topic_model.get_topic(topic_id)
+                    top_5_words = ', '.join([word for word, _ in topic_words[:5]])
+                    logger.info(f"  Topic {topic_id}: {top_5_words}")
             
-            logger.info(f"Extracted topic representations for quiz {quiz.id}:")
-            for cluster_idx in range(tfidf_matrix.shape[0]):
-                # Get top words for this cluster
-                top_indices = tfidf_matrix[cluster_idx].toarray()[0].argsort()[-n_words:][::-1]
-                top_words = [feature_names[i] for i in top_indices]
-                cluster_label = sorted(cluster_documents.keys())[cluster_idx]
-                topic_words[cluster_label] = top_words
-                
-                # Log the topic name (top 5 words that represent this topic)
-                topic_name = ', '.join(top_words[:5])
-                logger.info(f"  Topic {cluster_label}: {topic_name}")
+            # Get representative vectors for each topic (centroids of documents in each topic)
+            centers = []
+            unique_topics = [t for t in np.unique(topics) if t != -1]
             
-            # Log summary of all topics
-            all_topic_names = [', '.join(words[:3]) for words in topic_words.values()]
-            logger.info(f"Summary - {len(topic_words)} topics found for quiz {quiz.id}: {' | '.join(all_topic_names)}")
-            topic_extraction_successful = True
+            for topic_id in unique_topics:
+                topic_mask = topics == topic_id
+                topic_embeddings = embeddings[topic_mask]
+                # Use mean as representative vector
+                center = np.mean(topic_embeddings, axis=0)
+                centers.append(center.tolist())
+                logger.info(f"Topic {topic_id}: {np.sum(topic_mask)} documents, center computed")
             
-        except ValueError as e:
-            if "empty vocabulary" in str(e):
-                # Retry without stop words (might be non-English content or very technical)
-                logger.warning(f"Empty vocabulary with English stop words for quiz {quiz.id}: {str(e)}")
-                logger.info(f"Retrying without stop words for quiz {quiz.id}")
-                try:
-                    vectorizer_no_stop = CountVectorizer(
-                        max_features=100,
-                        min_df=1,
-                        max_df=0.95,
-                        token_pattern=r'(?u)\b\w+\b',  # Match any word characters
-                        lowercase=True
-                    )
-                    word_counts = vectorizer_no_stop.fit_transform(cluster_texts)
-                    logger.info(f"Vocabulary size (no stop words): {len(vectorizer_no_stop.get_feature_names_out())} words")
-                    
-                    tfidf = TfidfTransformer()
-                    tfidf_matrix = tfidf.fit_transform(word_counts)
-                    feature_names = vectorizer_no_stop.get_feature_names_out()
-                    logger.info(f"Sample vocabulary (first 10 words): {', '.join(feature_names[:10])}")
-                    
-                    n_words = 10
-                    logger.info(f"Extracted topic representations for quiz {quiz.id} (without stop words):")
-                    for cluster_idx in range(tfidf_matrix.shape[0]):
-                        top_indices = tfidf_matrix[cluster_idx].toarray()[0].argsort()[-n_words:][::-1]
-                        top_words = [feature_names[i] for i in top_indices]
-                        cluster_label = sorted(cluster_documents.keys())[cluster_idx]
-                        topic_name = ', '.join(top_words[:5])
-                        logger.info(f"  Topic {cluster_label}: {topic_name}")
-                    topic_extraction_successful = True
-                except ValueError as e2:
-                    # Last resort: try with character n-grams
-                    logger.warning(f"Still empty vocabulary without stop words for quiz {quiz.id}: {str(e2)}")
-                    logger.info(f"Trying character n-grams for quiz {quiz.id}")
-                    try:
-                        vectorizer_chars = CountVectorizer(
-                            max_features=50,
-                            analyzer='char_wb',  # Character n-grams within word boundaries
-                            ngram_range=(3, 6),  # 3-6 character sequences
-                            min_df=1
-                        )
-                        word_counts = vectorizer_chars.fit_transform(cluster_texts)
-                        feature_names = vectorizer_chars.get_feature_names_out()
-                        logger.info(f"Character n-gram vocabulary size: {len(feature_names)} patterns")
-                        
-                        logger.info(f"Extracted character-based patterns for quiz {quiz.id}:")
-                        for cluster_idx, cluster_label in enumerate(sorted(cluster_documents.keys())):
-                            top_indices = word_counts[cluster_idx].toarray()[0].argsort()[-5:][::-1]
-                            top_patterns = [feature_names[i] for i in top_indices if word_counts[cluster_idx, i] > 0]
-                            if top_patterns:
-                                logger.info(f"  Cluster {cluster_label}: {', '.join(top_patterns)}")
-                        topic_extraction_successful = True
-                    except Exception as e3:
-                        logger.error(f"Failed all topic extraction methods for quiz {quiz.id}: {str(e3)}")
-                        # Log sample of cluster texts for debugging
-                        logger.info(f"Cluster text samples for debugging:")
-                        for idx, text in enumerate(cluster_texts[:2]):
-                            preview = text[:300] if text else "(empty)"
-                            logger.info(f"  Cluster {idx} ({len(text)} chars): {preview}")
-                except Exception as e2:
-                    logger.error(f"Unexpected error without stop words for quiz {quiz.id}: {str(e2)}")
-            else:
-                logger.error(f"ValueError in topic extraction for quiz {quiz.id}: {str(e)}")
-        except Exception as e:
-            logger.error(f"Unexpected error extracting topic words for quiz {quiz.id}: {str(e)}")
-        
-        if not topic_extraction_successful:
-            logger.warning(f"Could not extract meaningful topics for quiz {quiz.id}, proceeding with cluster vectors only")
-        
-        # Step 4: Get representative vectors for each cluster (centroids)
-        # Even though HDBSCAN doesn't assume centroid-based clusters,
-        # we still need representative vectors for the quiz generation
-        centers = []
-        for label in unique_clusters:
-            cluster_mask = cluster_labels == label
-            cluster_vectors = vectors[cluster_mask]
-            # Use mean as representative vector
-            center = np.mean(cluster_vectors, axis=0)
-            centers.append(center.tolist())
-        
-        # If we have fewer clusters than desired quiz length, pad with additional vectors
-        if len(centers) < quiz.length:
-            logger.info(
-                f"Only {len(centers)} clusters found, but quiz length is {quiz.length}. "
-                f"Adding additional representative vectors."
-            )
-            # Add noise points' vectors if available
-            noise_mask = cluster_labels == -1
-            if np.any(noise_mask):
-                noise_vectors = vectors[noise_mask]
+            # If we have fewer topics than desired quiz length, add outlier vectors
+            if len(centers) < quiz.length:
+                logger.info(
+                    f"Only {len(centers)} topics found, but quiz length is {quiz.length}. "
+                    f"Adding outlier vectors."
+                )
+                outlier_mask = topics == -1
+                if np.any(outlier_mask):
+                    outlier_embeddings = embeddings[outlier_mask]
+                    additional_needed = quiz.length - len(centers)
+                    centers.extend(outlier_embeddings[:additional_needed].tolist())
+                    logger.info(f"Added {min(additional_needed, len(outlier_embeddings))} outlier vectors")
+            
+            # If still need more, sample from existing vectors
+            if len(centers) < quiz.length:
                 additional_needed = quiz.length - len(centers)
-                centers.extend(noise_vectors[:additional_needed].tolist())
-        
-        # If we still need more, sample from existing vectors
-        if len(centers) < quiz.length:
-            additional_needed = quiz.length - len(centers)
-            remaining_vectors = [v.tolist() for v in vectors if v.tolist() not in centers]
-            centers.extend(remaining_vectors[:additional_needed])
-        
-        # Limit to quiz length
-        centers = centers[:quiz.length]
-        
-        quiz.set_cluster_vectors(centers)
+                remaining_vectors = [v.tolist() for v in embeddings if v.tolist() not in centers]
+                centers.extend(remaining_vectors[:additional_needed])
+                logger.info(f"Added {min(additional_needed, len(remaining_vectors))} additional vectors")
+            
+            # Limit to quiz length
+            centers = centers[:quiz.length]
+            logger.info(f"Final cluster vectors: {len(centers)} vectors for quiz {quiz.id}")
+            
+            quiz.set_cluster_vectors(centers)
+            
+        except Exception as e:
+            logger.error(f"Error running BERTopic for quiz {quiz.id}: {str(e)}", exc_info=True)
+            # Fallback: use first N embeddings
+            logger.warning(f"Falling back to using first {quiz.length} embeddings")
+            n_vectors = min(quiz.length, len(embeddings))
+            quiz.set_cluster_vectors(embeddings[:n_vectors].tolist())
 
     async def _build_quiz_summary(self, quiz: Quiz, user: Principal) -> None:
         chunks = await self._material_app.search(
