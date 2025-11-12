@@ -1,10 +1,11 @@
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 import logging
-from typing import Any, TypedDict
+import asyncio
+import voyageai
 from langfuse import Langfuse
 from meilisearch_python_sdk import AsyncClient
 from meilisearch_python_sdk.models.search import Hybrid
-from meilisearch_python_sdk.models.settings import Embedders, OpenAiEmbedder
+from meilisearch_python_sdk.models.settings import Embedders, UserProvidedEmbedder
 
 from src.lib.config import LLMS
 from src.lib.settings import settings
@@ -14,15 +15,13 @@ from ....domain.constants import MAX_TEXT_INDEX_TOKENS
 from ....domain.out import MaterialIndexer, LLMTools
 from ....domain.errors import TooManyTextTokensError
 
-EMBEDDER_NAME = "materialChunks"
+EMBEDDER_NAME = "materialChunk" # здесь я поменял с materialChunks потому что иначе у меня требовало размерность прошлого эмбедера
 EMBEDDER_TEMPLATE = "Chunk {{doc.title}}: {{doc.content}}"
 
-meiliEmbeddings = {
-    EMBEDDER_NAME: OpenAiEmbedder(
-        source="openAi",
-        model=LLMS.TEXT_EMBEDDING_3_SMALL,
-        api_key=settings.openai_api_key,
-        document_template=EMBEDDER_TEMPLATE,
+meiliVoyageEmbeddings = {
+    EMBEDDER_NAME: UserProvidedEmbedder(
+        source="userProvided",
+        dimensions=1024,
     ),
 }
 
@@ -66,7 +65,7 @@ class Doc:
         )
 
     def to_dict(self) -> dict:
-        return {
+        doc_dict = {
             "id": self.id,
             "materialId": self.materialId,
             "userId": self.userId,
@@ -75,6 +74,9 @@ class Doc:
             "idx": self.idx,
             "used": self.used,
         }
+        if self._vectors:
+            doc_dict["_vectors"] = self._vectors
+        return doc_dict
 
 
 class MeiliMaterialIndexer(MaterialIndexer):
@@ -83,6 +85,7 @@ class MeiliMaterialIndexer(MaterialIndexer):
         self.llm_tools = llm_tools
         self.meili = meili
         self.material_index = meili.index(EMBEDDER_NAME)
+        self.voyage_client = voyageai.AsyncClient(api_key=settings.voyageai_api_key)
 
     @classmethod
     async def ainit(
@@ -91,7 +94,7 @@ class MeiliMaterialIndexer(MaterialIndexer):
         instance = cls(lf, llm_tools, meili)
 
         await instance.material_index.update_embedders(
-            Embedders(embedders=meiliEmbeddings)  # pyright: ignore[reportArgumentType]
+            Embedders(embedders=meiliVoyageEmbeddings)  # pyright: ignore[reportArgumentType]
         )
         await instance.material_index.update_filterable_attributes(
             ["userId", "materialId", "idx", "used"]
@@ -133,13 +136,37 @@ class MeiliMaterialIndexer(MaterialIndexer):
         docs_tokens = sum(
             [
                 self.llm_tools.count_text(
-                    self._fill_template(doc), LLMS.TEXT_EMBEDDING_3_SMALL
+                    self._fill_template(doc), LLMS.VOYAGE_3_5_LITE
                 )
                 for doc in docs
             ]
         )
         if docs_tokens > MAX_TEXT_INDEX_TOKENS:
             raise TooManyTextTokensError(docs_tokens)
+
+        batch_size = 512
+        all_embeddings = []
+        
+        embed_tasks = []
+        for i in range(0, len(docs), batch_size):
+            batch = docs[i : i + batch_size]
+            batch_texts = [self._fill_template(doc) for doc in batch]
+            embed_tasks.append(
+                self.voyage_client.embed(
+                    batch_texts,
+                    model="voyage-3.5-lite",
+                    input_type="document",
+                )
+            )
+
+        results = await asyncio.gather(*embed_tasks)
+        for result in results:
+            all_embeddings.extend(result.embeddings)
+                
+        for doc, embedding in zip(docs, all_embeddings):
+            doc._vectors = {
+                EMBEDDER_NAME: embedding
+            }
 
         task = await self.material_index.add_documents(
             [doc.to_dict() for doc in docs], primary_key="id"
@@ -160,7 +187,7 @@ class MeiliMaterialIndexer(MaterialIndexer):
             for doc in docs:
                 indexed = self._fill_template(doc)
                 total_tokens += self.llm_tools.count_text(
-                    indexed, LLMS.TEXT_EMBEDDING_3_SMALL
+                    indexed, LLMS.VOYAGE_3_5_LITE
                 )
                 logging.info(f"Indexed chunk {doc.id}: (tokens: {total_tokens})")
         else:
@@ -227,7 +254,7 @@ class MeiliMaterialIndexer(MaterialIndexer):
     ) -> None:
         with self._lf.start_as_current_span(name=name) as span:
             self._lf.update_current_generation(
-                model=LLMS.TEXT_EMBEDDING_3_SMALL,
+                model=LLMS.VOYAGE_3_5_LITE,
                 usage_details={
                     "total": total_tokens,
                 },

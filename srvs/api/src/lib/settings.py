@@ -43,6 +43,7 @@ class Settings(BaseSettings):
 
     openai_api_key: str = Field(default="key")
     grok_api_key: str = Field(default="key")
+    voyageai_api_key: str = Field(default="key")
 
     meili_url: str = Field(default="http://localhost:7700")
     meili_master_key: str = Field(default="key")

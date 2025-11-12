@@ -1,11 +1,16 @@
 import logging
 import numpy as np
+import voyageai
 from sklearn.feature_extraction.text import CountVectorizer
 from hdbscan import HDBSCAN
 from umap import UMAP
 from bertopic import BERTopic
+from bertopic.backend import BaseEmbedder
 from bertopic.vectorizers import ClassTfidfTransformer
+from bertopic.representation import KeyBERTInspired, MaximalMarginalRelevance
 
+from src.lib.config import LLMS
+from src.lib.settings import settings
 from src.apps.material_owner.domain._in import MaterialApp, SearchCmd
 from src.apps.user_owner.domain._in import Principal
 
@@ -15,6 +20,35 @@ from ..domain.models import Quiz
 from ..domain.constants import SUMMARY_TOKEN_LIMIT
 
 logger = logging.getLogger(__name__)
+
+
+class VoyageEmbedder(BaseEmbedder):
+    """Voyage AI embedder for BERTopic - inherits from BaseEmbedder"""
+    
+    def __init__(self, model: str = "voyage-3.5-lite", api_key: str | None = None):
+        super().__init__()
+        self.client = voyageai.Client(api_key=api_key or settings.voyage_api_key)
+        self.model = model
+    
+    def embed(self, documents: list[str], verbose: bool = False) -> np.ndarray:
+        """Synchronous embed method required by BaseEmbedder"""
+        if not documents:
+            return np.array([], dtype=np.float32)
+        
+        batch_size = 128
+        all_embeddings = []
+        
+        for i in range(0, len(documents), batch_size):
+            batch = documents[i : i + batch_size]
+            result = self.client.embed(
+                batch,
+                model=self.model,
+                input_type="document",
+            )
+            all_embeddings.extend(result.embeddings)
+        
+        embeddings = np.array(all_embeddings, dtype=np.float32)
+        return embeddings
 
 
 class QuizStarterImpl(QuizStarter):
@@ -134,24 +168,54 @@ class QuizStarterImpl(QuizStarter):
         )
         
         # Step 4: c-TF-IDF for topic representation
-        ctfidf_model = ClassTfidfTransformer()
+        ctfidf_model = ClassTfidfTransformer(bm25_weighting=True)
+        
+        # Step 5: Create Voyage AI embedder for representation models
+        voyage_embedder = VoyageEmbedder(
+            model="voyage-3.5-lite",
+            api_key=settings.voyageai_api_key
+        )
+        
+        # Step 6: Configure multi-aspect topic representations
+        main_representation = KeyBERTInspired(
+            top_n_words=10,
+            nr_repr_docs=5,
+            nr_samples=min(500, n_samples),
+            nr_candidate_words=100,
+            random_state=42
+        )
+        
+        aspect_representation = MaximalMarginalRelevance(diversity=0.3)
+        
+        representation_model = {
+            "Main": main_representation,
+            # "Diversity": aspect_representation,
+        }
+       
+        
+        logger.info(f"Configured multi-aspect representations for quiz {quiz.id}")
+        logger.info(f"  - Main: KeyBERTInspired (top_n_words=10)")
+        logger.info(f"  - Diversity: MaximalMarginalRelevance (diversity=0.5)")
         
         # Initialize BERTopic with pre-computed embeddings
         logger.info(f"Initializing BERTopic for quiz {quiz.id}")
         topic_model = BERTopic(
+            embedding_model=voyage_embedder,
+            min_topic_size=25, # можно как то по умному ставить, ПОКА ЧТО ПОЧЕМУ ТО НЕ РАБОТАЕТ 
             umap_model=umap_model,
             hdbscan_model=hdbscan_model,
             vectorizer_model=vectorizer_model,
             ctfidf_model=ctfidf_model,
+            representation_model=representation_model,
             verbose=True,
             calculate_probabilities=True
-        )
+        ).fit(documents, embeddings)
         
         # Fit BERTopic with pre-computed embeddings
         logger.info(f"Fitting BERTopic on {n_samples} documents for quiz {quiz.id}")
         try:
-            topics, probabilities = topic_model.fit_transform(documents, embeddings)
-            
+    
+            topics, probs = topic_model.transform(documents, embeddings)
             # Get topic info
             topic_info = topic_model.get_topic_info()
             n_topics = len(topic_info[topic_info['Topic'] != -1])
@@ -160,13 +224,17 @@ class QuizStarterImpl(QuizStarter):
             logger.info(f"BERTopic found {n_topics} topics for quiz {quiz.id} (outliers: {n_outliers})")
             logger.info(f"Topic distribution:\n{topic_info.to_string()}")
             
-            # Log top words for each topic
-            logger.info(f"Topic representations for quiz {quiz.id}:")
+            logger.info(f"🔑 KeyBERT-enhanced topic representations for quiz {quiz.id}:")
             for topic_id in sorted(topic_model.get_topics().keys()):
-                if topic_id != -1:  # Skip outlier topic
+                if topic_id != -1:
                     topic_words = topic_model.get_topic(topic_id)
                     top_5_words = ', '.join([word for word, _ in topic_words[:5]])
-                    logger.info(f"  Topic {topic_id}: {top_5_words}")
+                    
+                    topic_count = len([t for t in topics if t == topic_id])
+                    
+                    logger.info(
+                        f"  Topic {topic_id} ({topic_count} docs): {top_5_words}"
+                    )
             
             # Get representative vectors for each topic (centroids of documents in each topic)
             centers = []
