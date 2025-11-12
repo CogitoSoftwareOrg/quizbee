@@ -287,16 +287,16 @@ class QuizStarterImpl(QuizStarter):
                 user=user,
                 material_ids=[m.id for m in quiz.materials],
                 limit_tokens=SUMMARY_TOKEN_LIMIT,
-                vectors = quiz.cluster_vectors,
+                vectors=quiz.cluster_vectors,
             )
         )
         summary = "\n<CHUNK>\n".join([c.content for c in chunks])
         quiz.set_summary(summary)
-        
+
         # Отмечаем использованные чанки
-        chunk_ids = [c.id for c in chunks]
-        await self._material_app.mark_chunks_as_used(chunk_ids)
-        logger.info(f"Marked {len(chunk_ids)} chunks as used for quiz {quiz.id}")
+        # chunk_ids = [c.id for c in chunks]
+        # await self._material_app.mark_chunks_as_used(chunk_ids)
+        # logger.info(f"Marked {len(chunk_ids)} chunks as used for quiz {quiz.id}")
 
     def _build_query(self, quiz: Quiz):
         return f"""

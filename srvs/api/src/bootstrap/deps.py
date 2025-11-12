@@ -1,20 +1,31 @@
 from typing import Annotated
-from fastapi import Request, Depends
+from fastapi import Request, Depends, HTTPException
 from arq import ArqRedis
 
-from src.lib.settings import settings
+from src.lib.pb_admin import ensure_admin_auth
 
 
 async def http_ensure_admin_pb(request: Request):
-    pb = request.app.state.admin_pb
-    token = pb._inners.auth._token
+    """
+    Зависимость FastAPI для обеспечения валидной авторизации админа.
 
-    if not token or pb._inners.auth._is_token_expired():
-        a = await pb.collection("_superusers").auth.with_password(
-            settings.pb_email, settings.pb_password
-        )
-        pb._inners.auth.set_user(
-            {"token": a.get("token", ""), "record": a.get("record", {})}
+    Вызывается перед каждым HTTP запросом благодаря глобальной зависимости
+    в create_app().
+
+    Пропускает проверку для health check эндпоинтов.
+    """
+    # Пропускаем health check эндпоинты
+    if request.url.path in ["/health", "/readyz", "/livez"]:
+        return
+
+    pb = request.app.state.admin_pb
+    try:
+        await ensure_admin_auth(pb)
+    except Exception as e:
+        # Если авторизация не удалась, возвращаем 500 ошибку
+        # Это критическая ошибка, так как без админа API не может работать
+        raise HTTPException(
+            status_code=500, detail=f"Failed to authenticate admin: {str(e)}"
         )
 
 

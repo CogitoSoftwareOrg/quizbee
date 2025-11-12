@@ -42,7 +42,7 @@ async def lifespan(app: FastAPI):
     logger.info(greet("World"))
 
     # GLOBAL
-    admin_pb, lf, meili, http = init_global_deps()
+    admin_pb, lf, meili, http, grok_provider = init_global_deps()
 
     parser_provider = init_document_parser_deps()
     document_parser_app = init_document_parser_app(parser_provider=parser_provider)
@@ -100,6 +100,7 @@ async def lifespan(app: FastAPI):
         admin_pb=admin_pb,
         http=http,
         llm_tools=llm_tools,
+        llm_provider=grok_provider,
     )
     quiz_app = init_quiz_app(
         llm_tools=llm_tools,

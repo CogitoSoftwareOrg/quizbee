@@ -3,7 +3,6 @@ import re
 from ...domain.out import Chunker, TextTokenizer
 from ...domain.constants import DEFAULT_CHUNK_SIZE, DEFAULT_CHUNK_OVERLAP
 
-
 class SimpleChunker(Chunker):
     """
     Classical text chunker for RAG scenarios with token-aware splitting.
