@@ -11,7 +11,13 @@ async def http_ensure_admin_pb(request: Request):
 
     Вызывается перед каждым HTTP запросом благодаря глобальной зависимости
     в create_app().
+
+    Пропускает проверку для health check эндпоинтов.
     """
+    # Пропускаем health check эндпоинты
+    if request.url.path in ["/health", "/readyz", "/livez"]:
+        return
+
     pb = request.app.state.admin_pb
     try:
         await ensure_admin_auth(pb)
