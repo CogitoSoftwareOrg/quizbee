@@ -1,0 +1,5 @@
+[project]
+name = "torch"
+version = "2.9.1"
+description = "Local stub for torch to satisfy dependency resolution"
+requires-python = ">=3.8"

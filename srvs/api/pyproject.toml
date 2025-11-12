@@ -45,11 +45,6 @@ dev = [
   "testcontainers>=4.9.0",
   "testcontainers[redis]>=4.9.0",
 ]
-[tool.uv]
-# Override PyTorch version to ensure macOS x86_64 compatibility
-override-dependencies = [
-    "torch==2.5.1",
-]
 
 [tool.uv.sources]
 # Development override: use workspace packages for hot-reload
