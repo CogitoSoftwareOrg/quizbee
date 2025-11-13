@@ -70,6 +70,7 @@ class QuizItem:
     variants: list[QuizItemVariant]
     order: int
     status: QuizItemStatus
+    managed: bool
 
     fresh_generated: bool = False
 
@@ -106,6 +107,11 @@ class QuizItem:
         if self.status not in {QuizItemStatus.GENERATED}:
             raise ValueError("Item is not in generated status for final")
         self.status = QuizItemStatus.FINAL
+
+    def to_managed(self) -> None:
+        if self.status not in {QuizItemStatus.FINAL}:
+            raise ValueError("Item is not in final status for managing")
+        self.managed = True
 
 
 @dataclass(slots=True, kw_only=True)
@@ -210,6 +216,17 @@ class Quiz:
         self.gen_config.negative_questions.extend(questions)
 
     def increment_generation(self) -> None:
+        finals = self.get_final_items()
+        if len(finals) == 0:
+            return
+        last_final = finals[-1]
+        if last_final.managed:
+            raise ValueError(
+                "Cannot increment generation if last final item is managed"
+            )
+
+        last_final.to_managed()
+
         for item in self.items:
             item.regenerate()
         self.generation += 1

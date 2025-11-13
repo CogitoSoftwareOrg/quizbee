@@ -150,10 +150,6 @@
 					// Optimistic update
 					item.managed = true;
 
-					await pb!.collection('quizItems').update(item.id, {
-						managed: true
-					});
-
 					const upd = { dynamicConfig: quiz.dynamicConfig } as any;
 
 					if (difficulty === 'easier') {

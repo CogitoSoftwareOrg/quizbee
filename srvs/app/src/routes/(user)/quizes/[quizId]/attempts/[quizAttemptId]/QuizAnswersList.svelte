@@ -13,7 +13,7 @@
 	import type { Answer } from '$lib/apps/quizes/types';
 	import { ChevronDown, ChevronRight, Info } from 'lucide-svelte';
 	import { patchApi, putApi } from '$lib/api/call-api';
-	import { QuizItemsStatusOptions } from '$lib/pb/pocketbase-types';
+	import { QuizesStatusOptions, QuizItemsStatusOptions } from '$lib/pb/pocketbase-types';
 	import { userStore } from '$lib/apps/users/user.svelte.js';
 
 	interface Props {
@@ -159,25 +159,22 @@
 										await pb!.collection('quizAttempts').update(quizAttempt!.id, {
 											choices: newDecisions
 										});
+										if (quiz.author === user?.id) {
+											await pb!.collection('quizItems').update(item.id, {
+												status: QuizItemsStatusOptions.final
+											});
+										}
 									} catch (error) {
 										console.error(error);
 										itemDecision = null;
 										item.status = QuizItemsStatusOptions.generated;
 									}
-									await patchApi(`quizes/${quiz?.id}`, {
-										attempt_id: quizAttempt!.id,
-										mode: 'continue'
-									});
 
 									if (
 										item.order + 1 === quizItems.length &&
 										!(quizAttempt?.feedback as any)?.overview
 									) {
 										await finalizeAttempt();
-									}
-
-									if (item.order + 1 === quizItems.length && quiz.author === user?.id) {
-										await finalizeQuiz();
 									}
 
 									return;

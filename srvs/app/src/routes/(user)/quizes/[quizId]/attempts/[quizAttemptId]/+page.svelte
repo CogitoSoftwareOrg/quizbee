@@ -21,6 +21,7 @@
 	import SwipeableContent from './SwipeableContent.svelte';
 	import MobileAIChat from './MobileAIChat.svelte';
 	import { X } from 'lucide-svelte';
+	import { patchApi } from '$lib/api/call-api';
 
 	const { data } = $props();
 
@@ -131,13 +132,19 @@
 		}
 	}
 
-	function handleSwipeRight() {
-		if (itemDecision) {
-			if (order + 1 === quizItems.length) {
-				gotoFinal();
-			} else {
-				gotoItem(order + 1);
-			}
+	async function handleSwipeRight() {
+		if (!itemDecision || !quiz || !quizAttempt || !item) return;
+		if (order + 1 === quizItems.length) {
+			gotoFinal();
+		} else {
+			gotoItem(order + 1);
+		}
+
+		if (quiz.author === user?.id && quizDecisions.length === item?.order + 1) {
+			await patchApi(`quizes/${quiz.id}`, {
+				attempt_id: quizAttempt.id,
+				mode: 'continue'
+			});
 		}
 	}
 
