@@ -77,7 +77,7 @@ class AIGrokExplainer(Explainer):
                 run = None
                 try:
                     async with self._ai.run_stream(
-                        "",
+                        query or "Generate explanation",
                         message_history=self._ai_history(attempt.message_history),
                         deps=deps,
                         model=EXPLAINER_LLM,
@@ -176,6 +176,8 @@ class AIGrokExplainer(Explainer):
             role = msg.role
             meta = msg.metadata
             content = msg.content.strip()
+            if len(content) == 0:
+                continue
 
             if role == "user":
                 if content:

@@ -198,10 +198,12 @@ class QuizStarterImpl(QuizStarter):
 
         aspect_representation = MaximalMarginalRelevance(diversity=0.3)
 
-        representation_model = {
-            "Main": main_representation,
-            # "Diversity": aspect_representation,
-        }
+        representation_model = None
+        if settings.env == "local":
+            representation_model = {
+                "Main": main_representation,
+                # "Diversity": aspect_representation,
+            }
 
         logger.info(f"Configured multi-aspect representations for quiz {quiz.id}")
         logger.info(f"  - Main: KeyBERTInspired (top_n_words=10)")
@@ -265,33 +267,32 @@ class QuizStarterImpl(QuizStarter):
                 )
 
             # If we have fewer topics than desired quiz length, add outlier vectors
-            if len(centers) < quiz.length:
-                logger.info(
-                    f"Only {len(centers)} topics found, but quiz length is {quiz.length}. "
-                    f"Adding outlier vectors."
-                )
-                outlier_mask = topics == -1
-                if np.any(outlier_mask):
-                    outlier_embeddings = embeddings[outlier_mask]
-                    additional_needed = quiz.length - len(centers)
-                    centers.extend(outlier_embeddings[:additional_needed].tolist())
-                    logger.info(
-                        f"Added {min(additional_needed, len(outlier_embeddings))} outlier vectors"
-                    )
+            # if len(centers) < quiz.length:
+            #     logger.info(
+            #         f"Only {len(centers)} topics found, but quiz length is {quiz.length}. "
+            #         f"Adding outlier vectors."
+            #     )
+            #     outlier_mask = topics == -1
+            #     if np.any(outlier_mask):
+            #         outlier_embeddings = embeddings[outlier_mask]
+            #         additional_needed = quiz.length - len(centers)
+            #         centers.extend(outlier_embeddings[:additional_needed].tolist())
+            #         logger.info(
+            #             f"Added {min(additional_needed, len(outlier_embeddings))} outlier vectors"
+            #         )
 
             # If still need more, sample from existing vectors
-            if len(centers) < quiz.length:
-                additional_needed = quiz.length - len(centers)
-                remaining_vectors = [
-                    v.tolist() for v in embeddings if v.tolist() not in centers
-                ]
-                centers.extend(remaining_vectors[:additional_needed])
-                logger.info(
-                    f"Added {min(additional_needed, len(remaining_vectors))} additional vectors"
-                )
+            # if len(centers) < quiz.length:
+            #     additional_needed = quiz.length - len(centers)
+            #     remaining_vectors = [
+            #         v.tolist() for v in embeddings if v.tolist() not in centers
+            #     ]
+            #     centers.extend(remaining_vectors[:additional_needed])
+            #     logger.info(
+            #         f"Added {min(additional_needed, len(remaining_vectors))} additional vectors"
+            #     )
 
             # Limit to quiz length
-            centers = centers[: quiz.length]
             logger.info(
                 f"Final cluster vectors: {len(centers)} vectors for quiz {quiz.id}"
             )

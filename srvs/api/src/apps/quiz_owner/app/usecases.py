@@ -11,7 +11,7 @@ from ..domain.errors import (
     NotQuizOwnerError,
 )
 
-from ..domain._in import GenerateCmd, FinalizeQuizCmd, QuizApp
+from ..domain._in import GenMode, GenerateCmd, FinalizeQuizCmd, QuizApp
 
 from .quiz_starter import QuizStarterImpl
 from .quiz_generator import QuizGeneratorImpl
@@ -46,10 +46,20 @@ class QuizAppImpl(QuizApp):
 
     async def start(self, cmd: GenerateCmd) -> None:
         await self._quiz_starter.start(cmd)
+
+        await self._quiz_generator.generate(cmd)
         await self._quiz_generator.generate(cmd)
 
     async def generate(self, cmd: GenerateCmd) -> None:
         await self._quiz_generator.generate(cmd)
+        if cmd.mode == GenMode.Regenerate:
+            new_cmd = GenerateCmd(
+                cache_key=cmd.cache_key,
+                quiz_id=cmd.quiz_id,
+                mode=GenMode.Continue,
+                user=cmd.user,
+            )
+            await self._quiz_generator.generate(new_cmd)
 
     async def finalize(self, cmd: FinalizeQuizCmd) -> None:
         quiz = await self._quiz_repository.get(cmd.quiz_id)
@@ -65,7 +75,7 @@ class QuizAppImpl(QuizApp):
     async def mark_chunks_as_used(self, chunk_ids: list[str]) -> None:
         """
         Отмечает чанки материалов как использованные.
-        
+
         Args:
             chunk_ids: Список ID чанков для пометки
         """

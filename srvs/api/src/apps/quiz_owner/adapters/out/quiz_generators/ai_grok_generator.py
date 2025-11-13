@@ -51,7 +51,7 @@ class AnswerSchema(BaseModel):
     ]
 
 
-class QuizItemSchema(BaseModel):
+class AIGrokGeneratorOutput(BaseModel):
     question: Annotated[
         str, Field(title="Question", description="The quiz question text.")
     ]
@@ -94,36 +94,18 @@ class QuizItemSchema(BaseModel):
 
         return self
 
-
-class AIGrokGeneratorOutput(BaseModel):
-    quiz_items: Annotated[
-        list[QuizItemSchema],
-        Field(
-            title="Quiz Items",
-            description=f"An array of exactly {PATCH_LIMIT} quiz items.",
-            min_length=PATCH_LIMIT,
-            # max_length=PATCH_LIMIT,
-        ),
-    ]
-
-    @model_validator(mode="after")
-    def _check_quiz_items(self):
-        self.quiz_items = self.quiz_items[:PATCH_LIMIT]
-        return self
-
     def merge(self, quiz: Quiz):
-        for schema in self.quiz_items:
-            quiz.generation_step(
-                question=schema.question,
-                variants=[
-                    QuizItemVariant(
-                        content=a.answer,
-                        is_correct=a.correct,
-                        explanation=a.explanation,
-                    )
-                    for a in schema.answers
-                ],
-            )
+        quiz.generation_step(
+            question=self.question,
+            variants=[
+                QuizItemVariant(
+                    content=a.answer,
+                    is_correct=a.correct,
+                    explanation=a.explanation,
+                )
+                for a in self.answers
+            ],
+        )
 
 
 class AIGrokGenerator(PatchGenerator):
@@ -202,6 +184,12 @@ class AIGrokGenerator(PatchGenerator):
     def _build_pre_prompt(
         self, quiz: Quiz, chunks: list[str]
     ) -> list[ModelRequestPart]:
+        parts: list[ModelRequestPart] = [
+            SystemPromptPart(
+                content=self._lf.get_prompt("quizer/base", label=settings.env).compile()
+            )
+        ]
+
         user_contents = []
         if quiz.query:
             user_contents.append(f"User query:\n{quiz.query}\n")
@@ -210,7 +198,6 @@ class AIGrokGenerator(PatchGenerator):
             user_contents.append("Quiz materials:\n")
             user_contents.append("\n".join(chunks))
 
-        parts = []
         parts.append(UserPromptPart(content=user_contents))
         return parts
 
@@ -232,12 +219,6 @@ class AIGrokGenerator(PatchGenerator):
         adds = "\n".join(set(dynamic_config.additional_instructions))
 
         post_parts = []
-
-        post_parts.append(
-            SystemPromptPart(
-                content=self._lf.get_prompt("quizer/base", label=settings.env).compile()
-            )
-        )
 
         if len(adds) > 0:
             post_parts.append(

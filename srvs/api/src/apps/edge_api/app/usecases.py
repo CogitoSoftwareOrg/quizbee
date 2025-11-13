@@ -48,7 +48,7 @@ class EdgeAPIAppImpl(EdgeAPIApp):
 
     async def start_quiz(self, cmd: PublicStartQuizCmd) -> None:
         user = await self.user_auth.validate(cmd.token)
-        cost = PATCH_LIMIT
+        cost = PATCH_LIMIT * 2
         if user.remaining < cost:
             raise NotEnoughQuizItemsError(
                 quiz_id=cmd.quiz_id, user_id=user.id, cost=cost, stored=user.remaining
