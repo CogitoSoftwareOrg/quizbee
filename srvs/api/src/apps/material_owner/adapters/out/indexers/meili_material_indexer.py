@@ -144,9 +144,13 @@ class MeiliMaterialIndexer(MaterialIndexer):
         if docs_tokens > MAX_TEXT_INDEX_TOKENS:
             raise TooManyTextTokensError(docs_tokens)
 
-        batch_size = 512
-        all_embeddings = []
-        
+
+
+
+
+        #optimal batching 
+        batch_size = 1000
+
         embed_tasks = []
         for i in range(0, len(docs), batch_size):
             batch = docs[i : i + batch_size]
@@ -156,10 +160,16 @@ class MeiliMaterialIndexer(MaterialIndexer):
                     batch_texts,
                     model="voyage-3.5-lite",
                     input_type="document",
+                    output_dimension=1024
+                
                 )
             )
 
+        logging.info(f"Sent {len(embed_tasks)} embedding requests to gather")
         results = await asyncio.gather(*embed_tasks)
+        logging.info(f"Received all embedding results from gather")
+        
+        all_embeddings = []
         for result in results:
             all_embeddings.extend(result.embeddings)
                 

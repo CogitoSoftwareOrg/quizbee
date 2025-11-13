@@ -11,7 +11,7 @@ class DocumentParseCmd:
 
 
 class DocumentParserApp(Protocol):
-    def parse(self, cmd: DocumentParseCmd) -> ParsedDocument:
+    async def parse(self, cmd: DocumentParseCmd) -> ParsedDocument:
         """
         Парсит документ.
         """

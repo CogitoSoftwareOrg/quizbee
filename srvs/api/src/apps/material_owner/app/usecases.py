@@ -83,7 +83,7 @@ class MaterialAppImpl(MaterialApp):
             COMPLEX_EXTENSIONS
         ):  # Просто парсим комплексные файлы через document_parsing. Парсер сам определит формат по расширению файла
             try:
-                doc_data = self._document_parser.parse(
+                doc_data = await self._document_parser.parse(
                     cmd=DocumentParseCmd(
                         file_bytes=cmd.file.file_bytes,
                         file_name=cmd.file.file_name,

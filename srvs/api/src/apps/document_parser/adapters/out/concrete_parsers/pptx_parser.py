@@ -4,6 +4,7 @@ PPTX парсер для извлечения текста и изображен
 Использует библиотеку python-pptx для извлечения текста, таблиц и изображений из презентаций.
 """
 
+import asyncio
 import logging
 from io import BytesIO
 
@@ -42,7 +43,14 @@ class PptxDocumentParser(DocumentParser):
         self.min_height = min_height
         self.min_file_size = min_file_size
 
-    def parse(
+    async def parse(
+        self, file_bytes: bytes, file_name: str, process_images: bool = False
+    ) -> ParsedDocument:
+        return await asyncio.to_thread(
+            self._parse, file_bytes, file_name, process_images
+        )
+
+    def _parse(
         self,
         file_bytes: bytes,
         file_name: str,
