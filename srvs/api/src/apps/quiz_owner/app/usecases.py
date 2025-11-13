@@ -17,6 +17,7 @@ from ..domain._in import GenMode, GenerateCmd, FinalizeQuizCmd, QuizApp
 
 from .quiz_starter import QuizStarterImpl
 from .quiz_generator import QuizGeneratorImpl
+from .errors import NoItemsReadyForGenerationError
 
 
 class QuizAppImpl(QuizApp):
@@ -53,7 +54,17 @@ class QuizAppImpl(QuizApp):
         await self._quiz_generator.generate(cmd)
 
     async def generate(self, cmd: GenerateCmd) -> None:
-        await self._quiz_generator.generate(cmd)
+        try:
+            await self._quiz_generator.generate(cmd)
+        except NoItemsReadyForGenerationError:
+            if cmd.mode == GenMode.Continue:
+                await self.finalize(
+                    FinalizeQuizCmd(
+                        cache_key=cmd.cache_key,
+                        quiz_id=cmd.quiz_id,
+                        user=cmd.user,
+                    )
+                )
 
     async def finalize(self, cmd: FinalizeQuizCmd) -> None:
         quiz = await self._quiz_repository.get(cmd.quiz_id)

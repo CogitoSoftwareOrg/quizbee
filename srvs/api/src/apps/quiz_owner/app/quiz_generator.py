@@ -1,5 +1,6 @@
 import logging
 import redis.asyncio as redis
+import asyncio
 
 from src.apps.material_owner.domain._in import MaterialApp, SearchCmd
 from src.apps.user_owner.domain._in import Principal
@@ -46,24 +47,18 @@ class QuizGeneratorImpl(QuizGenerator):
             if quiz.author_id != cmd.user.id:
                 raise NotQuizOwnerError(quiz_id=cmd.quiz_id, user_id=cmd.user.id)
 
-            to_generate = (
-                PATCH_LIMIT if cmd.mode == GenMode.Continue else PATCH_LIMIT + HOLDOUT
-            )
-
-            if cmd.mode == GenMode.Continue:
-                generated_items = quiz.generated_items()
-                for item in generated_items[:HOLDOUT]:
-                    item.to_final()
-                await self._quiz_repository.update(quiz)
-
             if cmd.mode == GenMode.Regenerate:
                 logger.info(f"Incrementing generation for quiz {cmd.quiz_id}")
                 quiz.increment_generation()
                 await self._quiz_repository.update(quiz)
 
+            to_generate = (
+                PATCH_LIMIT + HOLDOUT if cmd.mode == GenMode.Start else PATCH_LIMIT
+            )
+
             items_to_generate = quiz.generate_patch(to_generate)
             if len(items_to_generate) == 0:
-                logging.error(
+                logger.warning(
                     f"No items ready for generation in quiz {cmd.quiz_id}. "
                     f"All items may be FINAL or there are no items."
                 )
@@ -80,20 +75,25 @@ class QuizGeneratorImpl(QuizGenerator):
                 chunk_ids = []
 
             # Generate for each specific item by order to avoid race conditions
+            generation_tasks = []
             for idx, item in enumerate(items_to_generate):
                 item_chunks = (
                     chunk_contents_list[idx]
                     if chunk_contents_list and idx < len(chunk_contents_list)
                     else []
                 )
-                await self._patch_generator.generate(
-                    dto=PatchGeneratorDto(
-                        quiz=quiz,
-                        cache_key=cmd.cache_key,
-                        chunks=item_chunks,
-                        item_order=item.order,
+                generation_tasks.append(
+                    self._patch_generator.generate(
+                        dto=PatchGeneratorDto(
+                            quiz=quiz,
+                            cache_key=cmd.cache_key,
+                            chunks=item_chunks,
+                            item_order=item.order,
+                        )
                     )
                 )
+
+            await asyncio.gather(*generation_tasks)
 
             await self._material_app.mark_chunks_as_used(chunk_ids)
             logger.info(f"Marked {len(chunk_ids)} chunks as used for quiz {quiz.id}")

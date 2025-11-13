@@ -144,6 +144,7 @@ class PBQuizRepository(QuizRepository):
             variants=[self._rec_to_variant(a) for a in answers],
             order=item_rec.get("order", 0),
             status=item_rec.get("status", ""),
+            managed=item_rec.get("managed", False),
         )
 
     def _rec_to_variant(self, rec: dict[str, Any]) -> QuizItemVariant:
@@ -199,6 +200,7 @@ class PBQuizRepository(QuizRepository):
             "question": item.question,
             "order": item.order,
             "status": item.status,
+            "managed": item.managed,
         }
 
         if len(item.variants) > 0:
