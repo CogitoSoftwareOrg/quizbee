@@ -207,7 +207,7 @@ class QuizStarterImpl(QuizStarter):
         if settings.env == "local":
             representation_model = {
                 "Main": main_representation,
-                # "Diversity": aspect_representation,
+                "Diversity": aspect_representation,
             }
 
         logger.info(f"Configured multi-aspect representations for quiz {quiz.id}")
