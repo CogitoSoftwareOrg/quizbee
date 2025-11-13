@@ -1,6 +1,8 @@
 import logging
+from typing import cast
 
 from src.apps.material_owner.domain._in import MaterialApp, SearchCmd
+from src.apps.material_owner.domain.models import MaterialChunk
 from src.apps.user_owner.domain._in import Principal
 
 from ..domain._in import GenMode, GenerateCmd, QuizGenerator
@@ -49,11 +51,14 @@ class QuizGeneratorImpl(QuizGenerator):
         await self._quiz_repository.update(quiz)
 
         if len(quiz.materials) > 0:
-            chunk_contents, chunk_ids = await self._relevant_chunks(
+            result = await self._relevant_chunks(
                 quiz, items_to_generate, cmd.user
             )
+            
+            chunk_contents_list = [contents for contents, _ in result]
+            chunk_ids = [chunk_id for _, ids in result for chunk_id in ids]
         else:
-            chunk_contents = []
+            chunk_contents_list = []
             chunk_ids = []
 
         await self._patch_generator.generate(
@@ -61,7 +66,7 @@ class QuizGeneratorImpl(QuizGenerator):
                 PatchGeneratorDto(
                     quiz=quiz,
                     cache_key=cmd.cache_key,
-                    chunks=chunk_contents,
+                    chunks=chunk_contents_list,
                 )
             )
         )
@@ -73,23 +78,31 @@ class QuizGeneratorImpl(QuizGenerator):
 
     async def _relevant_chunks(
         self, quiz: Quiz, items: list[QuizItem], user: Principal
-    ) -> tuple[list[str], list[str]]:
+    ) -> list[tuple[list[str], list[str]]]:
         num_clusters = len(quiz.cluster_vectors)
         central_vectors = [
             quiz.cluster_vectors[item.order % num_clusters] for item in items
         ]
         logger.info(f"Central vectors: {len(central_vectors)}")
 
-        chunks = await self._material_app.search(
-            SearchCmd(
-                user=user,
-                material_ids=[m.id for m in quiz.materials],
-                limit_tokens=PATCH_CHUNK_TOKEN_LIMIT,
-                vectors=central_vectors,
+        result_list: list[tuple[list[str], list[str]]] = []
+        
+        for idx, vector in enumerate(central_vectors):
+            logger.info(f"Searching for vector {idx + 1}/{len(central_vectors)}")
+            
+            chunks = await self._material_app.search(
+                SearchCmd(
+                    user=user,
+                    material_ids=[m.id for m in quiz.materials],
+                    limit_tokens=PATCH_CHUNK_TOKEN_LIMIT,
+                    vectors=[vector],
+                )
             )
-        )
 
-        chunk_ids = [c.id for c in chunks]
-        chunk_contents = [c.content for c in chunks]
+            chunk_ids = [c.id for c in chunks]
+            chunk_contents = [c.content for c in chunks]
+            
+            result_list.append((chunk_contents, chunk_ids))
+            logger.info(f"Vector {idx + 1}: found {len(chunks)} chunks")
 
-        return chunk_contents, chunk_ids
+        return result_list

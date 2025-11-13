@@ -107,7 +107,6 @@ class QuizStarterImpl(QuizStarter):
             )
         )
         
-        # Filter chunks with vectors and content
         chunks_with_vectors = [c for c in chunks if c.vector is not None and c.content and c.content.strip()]
         logger.info(f"Found {len(chunks_with_vectors)} chunks with vectors and content for quiz {quiz.id}")
         
@@ -290,6 +289,7 @@ class QuizStarterImpl(QuizStarter):
                 vectors=quiz.cluster_vectors,
             )
         )
+        
         summary = "\n<CHUNK>\n".join([c.content for c in chunks])
         quiz.set_summary(summary)
 

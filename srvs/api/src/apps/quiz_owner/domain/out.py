@@ -29,7 +29,7 @@ class QuizIndexer(Protocol):
 class PatchGeneratorDto:
     quiz: Quiz
     cache_key: str
-    chunks: list[str] | None = None
+    chunks: list[list[str]] | None = None
 
 
 class PatchGenerator(Protocol):
