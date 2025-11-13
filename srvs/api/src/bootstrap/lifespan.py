@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import FastAPI
 import logging
 import contextlib
@@ -141,6 +142,7 @@ async def lifespan(app: FastAPI):
     app.state.edge_api_app = edge_api_app
     app.state.http = http
     app.state.admin_pb = admin_pb
+    app.state.admin_auth_lock = asyncio.Lock()
     app.state.meili_client = meili
 
     async with contextlib.AsyncExitStack() as stack:
