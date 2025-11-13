@@ -1,4 +1,5 @@
 import logging
+import asyncio
 from arq.connections import RedisSettings, create_pool
 
 from src.apps.edge_api.adapters.in_.events.subscribers import (
@@ -143,6 +144,7 @@ async def startup(ctx):
 
     ctx["edge"] = edge_api_app
     ctx["pb"] = admin_pb
+    ctx["admin_auth_lock"] = asyncio.Lock()
     ctx["meili"] = meili
     ctx["http"] = http
 
