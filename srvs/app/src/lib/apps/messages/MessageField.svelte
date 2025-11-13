@@ -47,6 +47,7 @@
 	bind:value={inputText}
 	grow
 	{onkeydown}
+	{disabled}
 	placeholder="Type your message…"
 	rows={0}
 ></TextArea>
