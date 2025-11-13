@@ -6,6 +6,7 @@ from src.apps.user_owner.domain._in import Principal
 
 
 class GenMode(StrEnum):
+    Start = "start"
     Continue = "continue"
     Regenerate = "regenerate"
 

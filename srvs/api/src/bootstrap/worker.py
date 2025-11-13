@@ -1,6 +1,7 @@
 import logging
 import asyncio
 from arq.connections import RedisSettings, create_pool
+import redis.asyncio as redis
 
 from src.apps.edge_api.adapters.in_.events.subscribers import (
     start_quiz_job,
@@ -87,7 +88,7 @@ async def startup(ctx):
         searcher_provider=searcher_provider,
     )
 
-    # V2 QUIZ GENERATOR
+    # V2 QUIZ GENERATOR (will be reinitialized with redis_client later)
     (
         quiz_repository,
         patch_generator,
@@ -100,14 +101,6 @@ async def startup(ctx):
         http=http,
         llm_tools=llm_tools,
         llm_provider=grok_provider,
-    )
-    quiz_app = init_quiz_app(
-        llm_tools=llm_tools,
-        material=material_app,
-        quiz_repository=quiz_repository,
-        quiz_indexer=quiz_indexer,
-        patch_generator=patch_generator,
-        finalizer=quiz_finalizer,
     )
 
     # V2 MESSAGE OWNER
@@ -128,6 +121,29 @@ async def startup(ctx):
         finalizer=attempt_finalizer,
     )
 
+    redis_settings = RedisSettings.from_dsn(settings.redis_dsn)
+    arq_pool = await create_pool(redis_settings)
+
+    # Create Redis client for distributed locks
+    redis_client = redis.Redis(
+        host=redis_settings.host,  # type: ignore
+        port=redis_settings.port,
+        password=redis_settings.password,
+        db=redis_settings.database,
+        decode_responses=False,
+    )
+
+    # Reinitialize quiz_app with redis_client
+    quiz_app = init_quiz_app(
+        llm_tools=llm_tools,
+        material=material_app,
+        quiz_repository=quiz_repository,
+        quiz_indexer=quiz_indexer,
+        patch_generator=patch_generator,
+        finalizer=quiz_finalizer,
+        redis_client=redis_client,
+    )
+
     # V2 EDGE API
     edge_api_app = init_edge_api_app(
         auth_user_app=auth_user_app,
@@ -136,9 +152,8 @@ async def startup(ctx):
         material_app=material_app,
     )
 
-    redis_settings = RedisSettings.from_dsn(settings.redis_dsn)
-    arq_pool = await create_pool(redis_settings)
     ctx["arq_pool"] = arq_pool
+    ctx["redis_client"] = redis_client
 
     await update_worker_heartbeat(arq_pool)
     logger.info("Worker heartbeat initialized")
@@ -154,6 +169,7 @@ async def shutdown(ctx):
     await ctx["http"].aclose()
     await ctx["meili"].aclose()
     await ctx["arq_pool"].close()
+    await ctx["redis_client"].aclose()
 
 
 class WorkerSettings:

@@ -4,7 +4,7 @@ from openai import AsyncOpenAI
 from pocketbase import PocketBase
 import httpx
 from pydantic_ai.providers.openai import OpenAIProvider
-
+import redis.asyncio as redis
 
 from src.apps.material_owner.domain._in import MaterialApp
 from src.apps.llm_tools.domain._in import LLMToolsApp
@@ -54,6 +54,7 @@ def init_quiz_app(
     quiz_indexer: QuizIndexer,
     patch_generator: PatchGenerator,
     finalizer: QuizFinalizer,
+    redis_client: redis.Redis,
 ) -> QuizAppImpl:
     return QuizAppImpl(
         quiz_repository=quiz_repository,
@@ -62,4 +63,5 @@ def init_quiz_app(
         material=material,
         patch_generator=patch_generator,
         finalizer=finalizer,
+        redis_client=redis_client,
     )

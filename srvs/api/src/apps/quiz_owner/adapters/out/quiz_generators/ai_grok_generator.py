@@ -94,7 +94,7 @@ class AIGrokGeneratorOutput(BaseModel):
 
         return self
 
-    def merge(self, quiz: Quiz):
+    def merge(self, quiz: Quiz, item_order: int):
         quiz.generation_step(
             question=self.question,
             variants=[
@@ -105,6 +105,7 @@ class AIGrokGeneratorOutput(BaseModel):
                 )
                 for a in self.answers
             ],
+            order=item_order,
         )
 
 
@@ -127,6 +128,8 @@ class AIGrokGenerator(PatchGenerator):
         )
         if dto.chunks is None:
             raise ValueError("Chunks are required")
+        if dto.item_order is None:
+            raise ValueError("Item order is required")
 
         schema = AIGrokGeneratorOutput.model_json_schema()
         try:
@@ -153,7 +156,7 @@ class AIGrokGenerator(PatchGenerator):
                 )
 
                 payload = run.output
-                payload.merge(dto.quiz)
+                payload.merge(dto.quiz, item_order=dto.item_order)
 
                 await update_span_with_result(
                     self._lf,

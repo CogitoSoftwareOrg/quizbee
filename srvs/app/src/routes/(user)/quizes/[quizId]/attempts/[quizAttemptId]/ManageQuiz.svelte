@@ -204,7 +204,7 @@
 					});
 				}}
 				color="success"
-				style="soft">Confirm (-5 questions)</Button
+				style="soft">Confirm</Button
 			>
 		</div>
 	</div>

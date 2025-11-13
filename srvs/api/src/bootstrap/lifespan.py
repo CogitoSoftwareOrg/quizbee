@@ -4,6 +4,7 @@ import logging
 import contextlib
 from contextlib import asynccontextmanager
 from arq.connections import RedisSettings, create_pool
+import redis.asyncio as redis
 
 from quizbee_example_lib import greet
 
@@ -89,7 +90,7 @@ async def lifespan(app: FastAPI):
         searcher_provider=searcher_provider,
     )
 
-    # V2 QUIZ GENERATOR
+    # V2 QUIZ GENERATOR (will be reinitialized with redis_client later)
     (
         quiz_repository,
         patch_generator,
@@ -102,14 +103,6 @@ async def lifespan(app: FastAPI):
         http=http,
         llm_tools=llm_tools,
         llm_provider=grok_provider,
-    )
-    quiz_app = init_quiz_app(
-        llm_tools=llm_tools,
-        material=material_app,
-        quiz_repository=quiz_repository,
-        quiz_indexer=quiz_indexer,
-        patch_generator=patch_generator,
-        finalizer=quiz_finalizer,
     )
 
     # V2 QUIZ ATTEMPTER
@@ -126,6 +119,30 @@ async def lifespan(app: FastAPI):
         finalizer=attempt_finalizer,
     )
 
+    # ARQ Redis pool для отправки задач
+    redis_settings = RedisSettings.from_dsn(settings.redis_dsn)
+    arq_pool = await create_pool(redis_settings)
+
+    # Create Redis client for distributed locks
+    redis_client = redis.Redis(
+        host=redis_settings.host,  # type: ignore
+        port=redis_settings.port,
+        password=redis_settings.password,
+        db=redis_settings.database,
+        decode_responses=False,
+    )
+
+    # Initialize quiz_app with redis_client
+    quiz_app = init_quiz_app(
+        llm_tools=llm_tools,
+        material=material_app,
+        quiz_repository=quiz_repository,
+        quiz_indexer=quiz_indexer,
+        patch_generator=patch_generator,
+        finalizer=quiz_finalizer,
+        redis_client=redis_client,
+    )
+
     # V2 EDGE API
     edge_api_app = init_edge_api_app(
         auth_user_app=auth_user_app,
@@ -134,11 +151,8 @@ async def lifespan(app: FastAPI):
         material_app=material_app,
     )
 
-    # ARQ Redis pool для отправки задач
-    redis_settings = RedisSettings.from_dsn(settings.redis_dsn)
-    arq_pool = await create_pool(redis_settings)
     app.state.arq_pool = arq_pool
-
+    app.state.redis_client = redis_client
     app.state.edge_api_app = edge_api_app
     app.state.http = http
     app.state.admin_pb = admin_pb
@@ -152,5 +166,6 @@ async def lifespan(app: FastAPI):
     # CLEANUP LOGIC
     logger.info("Shutting down Quizbee API server")
     await arq_pool.close()
+    await redis_client.aclose()
     await http.aclose()
     await meili.aclose()

@@ -1,3 +1,5 @@
+import redis.asyncio as redis
+
 from src.apps.llm_tools.domain._in import LLMToolsApp
 from src.apps.material_owner.domain._in import MaterialApp
 
@@ -26,6 +28,7 @@ class QuizAppImpl(QuizApp):
         material: MaterialApp,
         patch_generator: PatchGenerator,
         finalizer: QuizFinalizer,
+        redis_client: redis.Redis,
     ):
         self._quiz_repository = quiz_repository
         self._quiz_indexer = quiz_indexer
@@ -37,6 +40,7 @@ class QuizAppImpl(QuizApp):
             quiz_indexer=quiz_indexer,
             material_app=material,
             patch_generator=patch_generator,
+            redis_client=redis_client,
         )
         self._quiz_starter = QuizStarterImpl(
             quiz_repository=quiz_repository,
@@ -46,20 +50,10 @@ class QuizAppImpl(QuizApp):
 
     async def start(self, cmd: GenerateCmd) -> None:
         await self._quiz_starter.start(cmd)
-
-        await self._quiz_generator.generate(cmd)
         await self._quiz_generator.generate(cmd)
 
     async def generate(self, cmd: GenerateCmd) -> None:
         await self._quiz_generator.generate(cmd)
-        if cmd.mode == GenMode.Regenerate:
-            new_cmd = GenerateCmd(
-                cache_key=cmd.cache_key,
-                quiz_id=cmd.quiz_id,
-                mode=GenMode.Continue,
-                user=cmd.user,
-            )
-            await self._quiz_generator.generate(new_cmd)
 
     async def finalize(self, cmd: FinalizeQuizCmd) -> None:
         quiz = await self._quiz_repository.get(cmd.quiz_id)

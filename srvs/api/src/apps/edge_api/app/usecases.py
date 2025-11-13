@@ -59,7 +59,7 @@ class EdgeAPIAppImpl(EdgeAPIApp):
                 user=user,
                 quiz_id=cmd.quiz_id,
                 cache_key=cmd.cache_key,
-                mode=GenMode.Continue,
+                mode=GenMode.Start,
             )
         )
 

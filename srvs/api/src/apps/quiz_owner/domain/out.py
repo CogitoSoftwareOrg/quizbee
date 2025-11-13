@@ -30,6 +30,7 @@ class PatchGeneratorDto:
     quiz: Quiz
     cache_key: str
     chunks: list[str] | None = None
+    item_order: int | None = None  # Order of the item to generate
 
 
 class PatchGenerator(Protocol):

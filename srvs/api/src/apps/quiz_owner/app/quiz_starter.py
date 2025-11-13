@@ -68,7 +68,12 @@ class QuizStarterImpl(QuizStarter):
         await self._quiz_repository.update(quiz)
 
         logger.info(f"Building cluster vectors for quiz {quiz.id}")
-        await self._build_cluster_vectors(quiz, cmd.user)
+
+        if len(quiz.materials) > 0:
+            await self._build_cluster_vectors(quiz, cmd.user)
+        else:
+            quiz.set_cluster_vectors([])
+
         if quiz.avoid_repeat:
             logger.info(f"Building quiz summary for quiz {quiz.id}")
             await self._build_quiz_summary(quiz, cmd.user)

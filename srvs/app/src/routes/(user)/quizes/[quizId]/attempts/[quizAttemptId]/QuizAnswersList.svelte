@@ -144,7 +144,6 @@
 							type="button"
 							class="focus-visible:ring-primary/60 flex w-full min-w-0 cursor-pointer items-start gap-3 p-4 text-left transition focus-visible:outline-none focus-visible:ring-2"
 							onclick={async () => {
-								const toAnswer = readyItemsWithoutAnswers.length;
 								if (!itemDecision) {
 									itemDecision = {
 										answerIndex: index,
@@ -160,22 +159,15 @@
 										await pb!.collection('quizAttempts').update(quizAttempt!.id, {
 											choices: newDecisions
 										});
-										await pb!.collection('quizItems').update(item!.id, {
-											status: 'final'
-										});
 									} catch (error) {
 										console.error(error);
 										itemDecision = null;
 										item.status = QuizItemsStatusOptions.generated;
 									}
-
-									if (toAnswer <= 2 && quizItems.some((qi) => ['blank'].includes(qi.status))) {
-										const result = await patchApi(`quizes/${quiz?.id}`, {
-											attempt_id: quizAttempt!.id,
-											mode: 'continue'
-										});
-										console.log('Quiz settings updated:', result);
-									}
+									await patchApi(`quizes/${quiz?.id}`, {
+										attempt_id: quizAttempt!.id,
+										mode: 'continue'
+									});
 
 									if (
 										item.order + 1 === quizItems.length &&
