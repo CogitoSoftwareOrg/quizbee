@@ -322,6 +322,7 @@ class QuizStarterImpl(QuizStarter):
                 vectors=quiz.cluster_vectors,
             )
         )
+
         summary = "\n<CHUNK>\n".join([c.content for c in chunks])
         quiz.set_summary(summary)
 

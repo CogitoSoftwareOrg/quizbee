@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class AIGrokGeneratorDeps:
     quiz: Quiz
-    chunks: list[str]
+    chunks: list[str] | list[list[str]]
 
 
 class AnswerSchema(BaseModel):
@@ -185,7 +185,7 @@ class AIGrokGenerator(PatchGenerator):
         )
 
     def _build_pre_prompt(
-        self, quiz: Quiz, chunks: list[str]
+        self, quiz: Quiz, chunks: list[str] | list[list[str]]
     ) -> list[ModelRequestPart]:
         parts: list[ModelRequestPart] = [
             SystemPromptPart(
@@ -199,7 +199,35 @@ class AIGrokGenerator(PatchGenerator):
 
         if chunks:
             user_contents.append("Quiz materials:\n")
-            user_contents.append("\n".join(chunks))
+
+            if len(chunks) > 0 and isinstance(chunks[0], list):
+                from typing import cast
+
+                chunks_nested = cast(list[list[str]], chunks)
+
+                formatted_collections = []
+                for idx, chunk_list in enumerate(chunks_nested, 1):
+                    collection_header = f"\n--- Chunk collection {idx} ---\n"
+                    formatted_chunks = []
+                    for chunk in chunk_list:
+                        formatted_chunks.append(
+                            f"START OF CHUNK\n{chunk}\nEND OF CHUNK"
+                        )
+                    formatted_collections.append(
+                        collection_header + "\n".join(formatted_chunks)
+                    )
+
+                user_contents.append("\n".join(formatted_collections))
+            else:
+                from typing import cast
+
+                chunks_flat = cast(list[str], chunks)
+
+                formatted_chunks = []
+                for chunk in chunks_flat:
+                    formatted_chunks.append(f"START OF CHUNK\n{chunk}\nEND OF CHUNK")
+
+                user_contents.append("\n".join(formatted_chunks))
 
         parts.append(UserPromptPart(content=user_contents))
         return parts
@@ -222,6 +250,14 @@ class AIGrokGenerator(PatchGenerator):
         adds = "\n".join(set(dynamic_config.additional_instructions))
 
         post_parts = []
+
+        post_parts.append(
+            SystemPromptPart(
+                content=self._lf.get_prompt(
+                    "quizer/base_patch1", label=settings.env
+                ).compile()
+            )
+        )
 
         if len(adds) > 0:
             post_parts.append(
