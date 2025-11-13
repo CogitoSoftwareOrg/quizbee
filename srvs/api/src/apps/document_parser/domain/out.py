@@ -13,7 +13,7 @@ class DocumentParser(Protocol):
     - PptxDocumentParser (для .pptx)
     """
 
-    def parse(
+    async def parse(
         self,
         file_bytes: bytes,
         file_name: str,

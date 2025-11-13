@@ -30,7 +30,7 @@ class DocumentParser(Protocol):
     Реализация: DocumentParsingAdapter
     """
 
-    def parse(
+    async def parse(
         self,
         cmd: DocumentParseCmd,
     ) -> ParsedDocument:
