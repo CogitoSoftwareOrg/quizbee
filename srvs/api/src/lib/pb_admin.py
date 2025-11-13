@@ -26,14 +26,20 @@ async def ensure_admin_auth(pb: PocketBase) -> None:
         Exception: Если авторизация не удалась
     """
     try:
-        # Проверяем наличие токена и его валидность
-        # Используем приватные поля библиотеки, так как публичных методов нет
         token = pb._inners.auth._token
 
-        # Если токена нет или он истек, выполняем авторизацию
-        if not token or pb._inners.auth._is_token_expired():
+        needs_auth = False
+        if not token:
+            needs_auth = True
+            logger.debug("Admin token missing")
+        elif pb._inners.auth._is_token_expired():
+            needs_auth = True
+            logger.debug("Admin token expired")
+
+        if needs_auth:
             logger.info("Admin token expired or missing, re-authenticating...")
 
+            pb._inners.auth.clean()
             auth_result = await pb.collection("_superusers").auth.with_password(
                 settings.pb_email, settings.pb_password
             )

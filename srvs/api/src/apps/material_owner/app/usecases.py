@@ -182,7 +182,9 @@ class MaterialAppImpl(MaterialApp):
         ratio = 0.0
         if cmd.all_chunks:
             search_type = SearchType.ALL
-        elif cmd.vectors is not None and len(cmd.vectors) > 0 and cmd.query.strip() == "":
+        elif (
+            cmd.vectors is not None and len(cmd.vectors) > 0 and cmd.query.strip() == ""
+        ):
             search_type = SearchType.VECTOR
         elif cmd.query.strip() == "":
             search_type = SearchType.DISTRIBUTION
@@ -224,7 +226,7 @@ class MaterialAppImpl(MaterialApp):
     async def mark_chunks_as_used(self, chunk_ids: list[str]) -> None:
         """
         Отмечает чанки как использованные.
-        
+
         Args:
             chunk_ids: Список ID чанков для пометки
         """
