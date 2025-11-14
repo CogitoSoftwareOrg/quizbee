@@ -81,9 +81,13 @@ class QuizGeneratorImpl(QuizGenerator):
     async def _run_generation_task(
         self, quiz: Quiz, item: QuizItem, user: Principal, cache_key: str
     ) -> None:
-        result = await self._relevant_chunks(quiz, [item], user)
-        item_chunks = [contents for contents, _ in result][0]
-        chunk_ids = [ids for _, ids in result][0]
+        item_chunks = []
+        chunk_ids = []
+
+        if len(quiz.materials) > 0:
+            result = await self._relevant_chunks(quiz, [item], user)
+            item_chunks = [contents for contents, _ in result][0]
+            chunk_ids = [ids for _, ids in result][0]
 
         await self._patch_generator.generate(
             dto=PatchGeneratorDto(
@@ -93,7 +97,9 @@ class QuizGeneratorImpl(QuizGenerator):
                 item_order=item.order,
             )
         )
-        await self._material_app.mark_chunks_as_used(chunk_ids)
+
+        if len(chunk_ids) > 0:
+            await self._material_app.mark_chunks_as_used(chunk_ids)
 
     async def _relevant_chunks(
         self, quiz: Quiz, items: list[QuizItem], user: Principal
