@@ -114,7 +114,7 @@
 				attempt={quizAttempt}
 				{quiz}
 				sender={userSender}
-				disabled={!canChat}
+				{messages}
 			/>
 			<div class="flex justify-end">
 				<SendMessage
@@ -122,8 +122,8 @@
 					attempt={quizAttempt}
 					{quiz}
 					sender={userSender}
+					{messages}
 					inputText={query}
-					disabled={!canChat}
 				/>
 			</div>
 		{/if}
