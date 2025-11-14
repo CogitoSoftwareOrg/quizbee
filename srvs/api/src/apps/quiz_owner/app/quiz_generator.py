@@ -65,42 +65,35 @@ class QuizGeneratorImpl(QuizGenerator):
                 raise NoItemsReadyForGenerationError(quiz_id=cmd.quiz_id)
             await self._quiz_repository.update(quiz)
 
-            if len(quiz.materials) > 0:
-                result = await self._relevant_chunks(quiz, items_to_generate, cmd.user)
-
-                chunk_contents_list = [contents for contents, _ in result]
-                chunk_ids = [chunk_id for _, ids in result for chunk_id in ids]
-            else:
-                chunk_contents_list = []
-                chunk_ids = []
-
             # Generate for each specific item by order to avoid race conditions
             generation_tasks = []
             for idx, item in enumerate(items_to_generate):
-                item_chunks = (
-                    chunk_contents_list[idx]
-                    if chunk_contents_list and idx < len(chunk_contents_list)
-                    else []
-                )
                 generation_tasks.append(
-                    self._patch_generator.generate(
-                        dto=PatchGeneratorDto(
-                            quiz=quiz,
-                            cache_key=cmd.cache_key,
-                            chunks=item_chunks,
-                            item_order=item.order,
-                        )
-                    )
+                    self._run_generation_task(quiz, item, cmd.user, cmd.cache_key)
                 )
 
             await asyncio.gather(*generation_tasks)
 
-            await self._material_app.mark_chunks_as_used(chunk_ids)
-            logger.info(f"Marked {len(chunk_ids)} chunks as used for quiz {quiz.id}")
-
             await self._quiz_repository.update(quiz, fresh_generated=True)
 
             logger.info(f"Generation completed for quiz {cmd.quiz_id}")
+
+    async def _run_generation_task(
+        self, quiz: Quiz, item: QuizItem, user: Principal, cache_key: str
+    ) -> None:
+        result = await self._relevant_chunks(quiz, [item], user)
+        item_chunks = [contents for contents, _ in result][0]
+        chunk_ids = [ids for _, ids in result][0]
+
+        await self._patch_generator.generate(
+            dto=PatchGeneratorDto(
+                quiz=quiz,
+                cache_key=cache_key,
+                chunks=item_chunks,
+                item_order=item.order,
+            )
+        )
+        await self._material_app.mark_chunks_as_used(chunk_ids)
 
     async def _relevant_chunks(
         self, quiz: Quiz, items: list[QuizItem], user: Principal
