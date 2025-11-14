@@ -18,6 +18,7 @@ from ..domain._in import GenMode, GenerateCmd, FinalizeQuizCmd, QuizApp
 from .quiz_starter import QuizStarterImpl
 from .quiz_generator import QuizGeneratorImpl
 from .errors import NoItemsReadyForGenerationError
+from ..adapters.out.quiz_preprocesser import QuizPreprocessor
 
 
 class QuizAppImpl(QuizApp):
@@ -29,6 +30,7 @@ class QuizAppImpl(QuizApp):
         material: MaterialApp,
         patch_generator: PatchGenerator,
         finalizer: QuizFinalizer,
+        quiz_preprocessor: QuizPreprocessor,
         redis_client: redis.Redis,
     ):
         self._quiz_repository = quiz_repository
@@ -47,6 +49,7 @@ class QuizAppImpl(QuizApp):
             quiz_repository=quiz_repository,
             material_app=material,
             quiz_indexer=quiz_indexer,
+            quiz_preprocessor=quiz_preprocessor,
         )
 
     async def start(self, cmd: GenerateCmd) -> None:

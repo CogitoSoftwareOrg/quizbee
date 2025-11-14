@@ -69,8 +69,8 @@ class LLMTools(Protocol):
         """Подсчитывает токены для изображения по его размерам."""
         ...
 
-    def chunk(self, text: str) -> list[str]:
-        """Разбивает текст на chunks."""
+    def chunk(self, text: str, respect_pages: bool = False) -> list[str] | list:
+        """Разбивает текст на chunks. Если respect_pages=True, возвращает список TextChunk с информацией о страницах."""
         ...
 
 

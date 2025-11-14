@@ -15,6 +15,7 @@ from .adapters.out import (
     AIQuizFinalizer,
     MeiliQuizIndexer,
 )
+from .adapters.out.quiz_preprocesser import QuizPreprocessor
 from .domain.out import (
     QuizFinalizer,
     QuizRepository,
@@ -31,9 +32,10 @@ async def init_quiz_deps(
     http: httpx.AsyncClient,
     llm_tools: LLMToolsApp,
     llm_provider: OpenAIProvider,
-) -> tuple[QuizRepository, PatchGenerator, QuizFinalizer, QuizIndexer]:
+) -> tuple[QuizRepository, PatchGenerator, QuizFinalizer, QuizIndexer, QuizPreprocessor]:
     quiz_repository = PBQuizRepository(admin_pb, http=http)
     patch_generator = AIGrokGenerator(lf=lf, provider=llm_provider)
+    quiz_preprocessor = QuizPreprocessor(lf=lf, provider=llm_provider)
     finalizer = AIQuizFinalizer(
         lf=lf,
         quiz_repository=quiz_repository,
@@ -44,7 +46,7 @@ async def init_quiz_deps(
         meili=meili,
         quiz_repository=quiz_repository,
     )
-    return quiz_repository, patch_generator, finalizer, quiz_indexer
+    return quiz_repository, patch_generator, finalizer, quiz_indexer, quiz_preprocessor
 
 
 def init_quiz_app(
@@ -54,6 +56,7 @@ def init_quiz_app(
     quiz_indexer: QuizIndexer,
     patch_generator: PatchGenerator,
     finalizer: QuizFinalizer,
+    quiz_preprocessor: QuizPreprocessor,
     redis_client: redis.Redis,
 ) -> QuizAppImpl:
     return QuizAppImpl(
@@ -63,5 +66,6 @@ def init_quiz_app(
         material=material,
         patch_generator=patch_generator,
         finalizer=finalizer,
+        quiz_preprocessor=quiz_preprocessor,
         redis_client=redis_client,
     )

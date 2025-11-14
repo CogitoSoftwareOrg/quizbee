@@ -94,6 +94,7 @@ async def startup(ctx):
         patch_generator,
         quiz_finalizer,
         quiz_indexer,
+        quiz_preprocessor,
     ) = await init_quiz_deps(
         meili=meili,
         lf=lf,
@@ -141,6 +142,7 @@ async def startup(ctx):
         quiz_indexer=quiz_indexer,
         patch_generator=patch_generator,
         finalizer=quiz_finalizer,
+        quiz_preprocessor=quiz_preprocessor,
         redis_client=redis_client,
     )
 

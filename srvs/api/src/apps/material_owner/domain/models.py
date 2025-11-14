@@ -86,6 +86,7 @@ class Material:
     is_book: bool = False
     status: MaterialStatus = MaterialStatus.UPLOADED
     text_file: MaterialFile | None = None
+    table_of_contents: list[dict] | None = None
     id: str = field(default_factory=genID)
 
     @classmethod

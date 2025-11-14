@@ -83,7 +83,10 @@ class DocxDocumentParser(DocumentParser):
 
             # Извлекаем текст из документа
             text_parts = self.extract_text_from_document(doc)
-            final_text = "\n\n".join(text_parts)
+            
+            # Добавляем маркер страницы в начало документа
+            page_marker = "{quizbee_page_number_1}\n\n"
+            final_text = page_marker + "\n\n".join(text_parts)
 
             # Изображения
             images: list[DocumentImage] = []

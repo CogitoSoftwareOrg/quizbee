@@ -87,8 +87,12 @@ class PptxDocumentParser(DocumentParser):
             for slide_num, slide in enumerate(prs.slides, start=1):
                 logger.debug(f"Обработка слайда {slide_num}/{len(prs.slides)}")
 
+                # Добавляем маркер номера слайда в начало
+                page_marker = f"{{quizbee_page_number_{slide_num}}}\n\n"
+                
                 # Извлекаем текст из слайда
                 slide_text = self.extract_text_from_slide(slide, slide_num)
+                slide_text = page_marker + slide_text
                 text_parts.append(slide_text)
 
                 # Добавляем заголовок слайда в оглавление

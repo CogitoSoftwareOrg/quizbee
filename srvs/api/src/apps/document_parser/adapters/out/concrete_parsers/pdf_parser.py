@@ -98,10 +98,10 @@ class FitzPDFParser(DocumentParser):
                 page = doc.load_page(page_num)
                 page_text: str = page.get_text()  # type: ignore
 
-                # Добавляем маркер номера страницы в начало (ПОКА ЧТО ВЫКЛЮЧЕНО)
-                # page_marker = f"{{quizbee_page_number_{page_num + 1}}}\n\n"
+                # Добавляем маркер номера страницы в начало 
+                page_marker = f"{{quizbee_page_number_{page_num + 1}}}\n\n"
 
-                page_text = page_text
+                page_text = page_marker + page_text
 
                 if process_images:
                     # Если на странице есть изображения, вставляем маркеры

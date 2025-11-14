@@ -189,7 +189,7 @@ class AIGrokGenerator(PatchGenerator):
     ) -> list[ModelRequestPart]:
         parts: list[ModelRequestPart] = [
             SystemPromptPart(
-                content=self._lf.get_prompt("quizer/base", label=settings.env).compile()
+                content=self._lf.get_prompt("quizer/base_patch1", label=settings.env).compile()
             )
         ]
 
@@ -251,13 +251,13 @@ class AIGrokGenerator(PatchGenerator):
 
         post_parts = []
 
-        post_parts.append(
-            SystemPromptPart(
-                content=self._lf.get_prompt(
-                    "quizer/base_patch1", label=settings.env
-                ).compile()
-            )
-        )
+        # post_parts.append(
+        #     SystemPromptPart(
+        #         content=self._lf.get_prompt(
+        #             "quizer/base_patch1", label=settings.env
+        #         ).compile()
+        #     )
+        # )
 
         if len(adds) > 0:
             post_parts.append(

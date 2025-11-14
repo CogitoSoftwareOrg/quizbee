@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from enum import StrEnum
+from typing import Any
 
 from src.lib.utils import genID
 
@@ -137,6 +138,7 @@ class Quiz:
     tags: list[str] | None = None
     category: QuizCategory | None = None
     slug: str | None = None
+    table_of_contents: dict[str, Any] | None = None
 
     need_build_material_content: bool = False
 
@@ -181,11 +183,6 @@ class Quiz:
         self.need_build_material_content = False
 
     def set_cluster_vectors(self, vectors: list[list[float]]):
-        # Разрешаем меньше векторов чем длина квиза, если недостаточно материала
-        if len(vectors) > self.length:
-            raise ValueError(
-                f"Too many cluster vectors: got {len(vectors)}, expected at most {self.length}"
-            )
         self.cluster_vectors = vectors
 
     def request_build_material_content(self) -> None:
@@ -205,6 +202,9 @@ class Quiz:
 
     def set_slug(self, slug: str):
         self.slug = f"{slug}-{self.id[:6]}"
+
+    def set_table_of_contents(self, table_of_contents: dict[str, Any]):
+        self.table_of_contents = table_of_contents
 
     def merge_similar_quizes(self, quizes: list["Quiz"]):
         questions = list(
