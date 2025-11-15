@@ -2,6 +2,7 @@ from langfuse import Langfuse
 from pocketbase import PocketBase
 import httpx
 
+from src.apps.material_owner.domain._in import MaterialApp
 from src.apps.message_owner.domain._in import MessageOwnerApp
 from src.apps.llm_tools.domain._in import LLMToolsApp
 
@@ -29,6 +30,7 @@ def init_quiz_attempter_app(
     attempt_repository: AttemptRepository,
     explainer: Explainer,
     finalizer: AttemptFinalizer,
+    material_app: MaterialApp,
 ) -> QuizAttempterAppImpl:
     """Factory for QuizAttempterApp - all dependencies explicit"""
     return QuizAttempterAppImpl(
@@ -37,4 +39,5 @@ def init_quiz_attempter_app(
         message_owner=message_owner,
         llm_tools=llm_tools,
         finalizer=finalizer,
+        material_app=material_app,
     )

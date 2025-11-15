@@ -118,6 +118,7 @@ class PBAttemptRepository(AttemptRepository):
             items=items,
             query=rec.get("query", ""),
             material_content="",
+            material_ids=rec.get("materials", []),
             cluster_vectors=cluster_vectors,
         )
 

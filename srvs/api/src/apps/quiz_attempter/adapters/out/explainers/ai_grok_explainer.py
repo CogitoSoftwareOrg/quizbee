@@ -21,6 +21,7 @@ from pydantic_ai import (
     TextPart,
 )
 
+from src.apps.material_owner.domain.models import MaterialChunk
 from src.lib.config import LLMS
 from src.lib.settings import settings
 from src.lib.utils import update_span_with_result
@@ -45,6 +46,7 @@ EXPLAINER_LLM = LLMS.GROK_4_FAST
 class AIGrokExplainerDeps:
     quiz: QuizRef
     current_item: QuizItemRef
+    chunks: list[MaterialChunk]
 
 
 logger = logging.getLogger(__name__)
@@ -67,9 +69,10 @@ class AIGrokExplainer(Explainer):
         item: QuizItemRef,
         ai_msg: MessageRef,
         cache_key: str,
+        chunks: list[MaterialChunk],
     ) -> AsyncIterable[MessageRef]:
         queue: asyncio.Queue[MessageRef | None] = asyncio.Queue()
-        deps = AIGrokExplainerDeps(quiz=attempt.quiz, current_item=item)
+        deps = AIGrokExplainerDeps(quiz=attempt.quiz, current_item=item, chunks=chunks)
 
         async def producer():
             with self._lf.start_as_current_span(name="explainer-agent") as span:
@@ -139,7 +142,19 @@ class AIGrokExplainer(Explainer):
     ) -> list[ModelMessage]:
         pre_parts = self._build_pre_prompt(ctx.deps)
 
-        return [ModelRequest(parts=pre_parts)] + messages
+        return (
+            [ModelRequest(parts=pre_parts)]
+            + messages
+            + [ModelRequest(parts=self._build_material_prompt(ctx.deps.chunks))]
+        )
+
+    def _build_material_prompt(
+        self, chunks: list[MaterialChunk]
+    ) -> list[ModelRequestPart]:
+        parts = []
+        for chunk in chunks:
+            parts.append(UserPromptPart(content=chunk.content))
+        return parts
 
     def _build_pre_prompt(self, deps: AIGrokExplainerDeps) -> list[ModelRequestPart]:
         user_contents = []

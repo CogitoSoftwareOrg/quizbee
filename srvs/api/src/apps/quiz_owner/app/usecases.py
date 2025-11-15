@@ -50,6 +50,7 @@ class QuizAppImpl(QuizApp):
             material_app=material,
             quiz_indexer=quiz_indexer,
             quiz_preprocessor=quiz_preprocessor,
+            llm_tools=llm_tools,
         )
 
     async def start(self, cmd: GenerateCmd) -> None:

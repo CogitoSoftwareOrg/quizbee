@@ -16,6 +16,9 @@ from src.apps.message_owner.domain.models import (
 )
 from src.apps.llm_tools.domain._in import LLMToolsApp
 from src.apps.user_owner.domain.models import Tariff
+from src.apps.material_owner.domain._in import MaterialApp, SearchCmd
+from src.apps.material_owner.domain.constants import RAG_CHUNK_TOKEN_LIMIT
+
 
 from ..domain.models import Attempt
 from ..domain.refs import (
@@ -23,6 +26,7 @@ from ..domain.refs import (
     MessageRoleRef,
     MessageStatusRef,
     MessageMetadataRef,
+    QuizItemRef,
 )
 from ..domain.out import AttemptRepository, Explainer, AttemptFinalizer
 from ..domain.errors import NotAttemptOwnerError, AttemptAlreadyFinalizedError
@@ -45,12 +49,14 @@ class QuizAttempterAppImpl(QuizAttempterApp):
         message_owner: MessageOwnerApp,
         llm_tools: LLMToolsApp,
         finalizer: AttemptFinalizer,
+        material_app: MaterialApp,
     ):
         self.attempt_repository = attempt_repository
         self.explainer = explainer
         self.message_owner = message_owner
-        self.llm_tools = llm_tools
         self.finalizer = finalizer
+        self._material_app = material_app
+        self._llm_tools = llm_tools
 
     async def finalize(self, cmd: FinalizeAttemptCmd) -> None:
         logger.info(f"Finalize attempt: {cmd.attempt_id}")
@@ -80,26 +86,37 @@ class QuizAttempterAppImpl(QuizAttempterApp):
 
         item = attempt.get_item(cmd.item_id)
 
-        logger.info(
-            f"Explain attempt: {attempt.id} with material content: {len(attempt.quiz.material_content)}"
+        q_vec = (await self._llm_tools.vectorize([cmd.query]))[0].tolist()
+        material_ids = attempt.quiz.material_ids
+        chunks = await self._material_app.search(
+            SearchCmd(
+                limit_tokens=RAG_CHUNK_TOKEN_LIMIT,
+                user=cmd.user,
+                material_ids=material_ids,
+                vectors=[q_vec],
+            )
         )
-        async for message in self.explainer.explain(
-            cmd.query, attempt, item, ai_message_ref, cmd.cache_key
-        ):
-            logger.debug(f"Message: {len(message.content)} chars, id: {message.id}")
-            status = "chunk" if message.status == "streaming" else "done"
 
-            if message.status == MessageStatus.FINAL:
+        logger.info(
+            f"Explain attempt: {attempt.id} with material content: {len(attempt.quiz.material_ids)}"
+        )
+        async for chunk in self.explainer.explain(
+            cmd.query, attempt, item, ai_message_ref, cmd.cache_key, chunks
+        ):
+            logger.debug(f"Message: {len(chunk.content)} chars, id: {chunk.id}")
+            status = "chunk" if chunk.status == "streaming" else "done"
+
+            if chunk.status == MessageStatus.FINAL:
                 await self.message_owner.finalize_message(
                     FinalizeMessageCmd(
-                        message_id=message.id,
-                        content=message.content,
-                        metadata=self._to_message_metadata(message.metadata),
+                        message_id=chunk.id,
+                        content=chunk.content,
+                        metadata=self._to_message_metadata(chunk.metadata),
                     )
                 )
 
             yield AskExplainerResult(
-                text=message.content, msg_id=message.id, i=0, status=status
+                text=chunk.content, msg_id=chunk.id, i=0, status=status
             )
 
     async def validate_attempt(

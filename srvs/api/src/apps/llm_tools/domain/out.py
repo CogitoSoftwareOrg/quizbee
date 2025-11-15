@@ -1,4 +1,5 @@
 from typing import Protocol
+import numpy as np
 from dataclasses import dataclass
 
 from src.lib.config import LLMS
@@ -8,13 +9,14 @@ from src.lib.config import LLMS
 class TextChunk:
     """
     Chunk of text with metadata.
-    
+
     Attributes:
         content: The text content of the chunk
         page: Page number where this chunk appears (1-indexed), or None if not tracked
         start_char: Starting character position in the original text
         end_char: Ending character position in the original text
     """
+
     content: str
     page: int | None = None
     start_char: int = 0
@@ -35,4 +37,11 @@ class Chunker(Protocol):
     @property
     def chunk_size(self) -> int: ...
 
-    def chunk(self, text: str, respect_pages: bool = False) -> list[str] | list[TextChunk]: ...
+    def chunk(
+        self, text: str, respect_pages: bool = False
+    ) -> list[str] | list[TextChunk]: ...
+
+
+class Vectorizer(Protocol):
+    async def vectorize(self, chunks: list[str]) -> np.ndarray: ...
+    def embed(self, documents: list[str]) -> np.ndarray: ...

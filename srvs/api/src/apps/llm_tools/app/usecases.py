@@ -1,8 +1,9 @@
 import logging
+import numpy as np
 
 from src.lib.config import LLMS
 
-from ..domain.out import TextTokenizer, ImageTokenizer, Chunker
+from ..domain.out import TextTokenizer, ImageTokenizer, Chunker, Vectorizer
 
 from ..domain._in import LLMToolsApp
 
@@ -15,10 +16,16 @@ class LLMToolsAppImpl(LLMToolsApp):
         text_tokenizer: TextTokenizer,
         image_tokenizer: ImageTokenizer,
         chunker: Chunker,
+        vectorizer: Vectorizer,
     ):
         self.text_tokenizer = text_tokenizer
         self.image_tokenizer = image_tokenizer
         self.chunker = chunker
+        self._vectorizer = vectorizer
+
+    @property
+    def vectorizer(self) -> Vectorizer:
+        return self._vectorizer
 
     @property
     def chunk_size(self) -> int:
@@ -44,3 +51,7 @@ class LLMToolsAppImpl(LLMToolsApp):
     def chunk(self, text: str, respect_pages: bool = False) -> list[str] | list:
         logger.debug("LLMToolsAppImpl.chunk")
         return self.chunker.chunk(text, respect_pages)
+
+    async def vectorize(self, chunks: list[str]) -> np.ndarray:
+        logger.debug("LLMToolsAppImpl.vectorize")
+        return await self.vectorizer.vectorize(chunks)

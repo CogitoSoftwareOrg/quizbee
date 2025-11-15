@@ -1,15 +1,13 @@
 import logging
 import numpy as np
-import voyageai
 from sklearn.feature_extraction.text import CountVectorizer
 from hdbscan import HDBSCAN
 from umap import UMAP
 from bertopic import BERTopic
-from bertopic.backend import BaseEmbedder
 from bertopic.vectorizers import ClassTfidfTransformer
 from bertopic.representation import KeyBERTInspired, MaximalMarginalRelevance
 
-from src.lib.config import LLMS
+from src.apps.llm_tools.domain._in import LLMToolsApp
 from src.lib.settings import settings
 from src.apps.material_owner.domain._in import MaterialApp, SearchCmd
 from src.apps.user_owner.domain._in import Principal
@@ -23,43 +21,16 @@ from ..adapters.out.quiz_preprocesser import QuizPreprocessor
 logger = logging.getLogger(__name__)
 
 
-class VoyageEmbedder(BaseEmbedder):
-    """Voyage AI embedder for BERTopic - inherits from BaseEmbedder"""
-
-    def __init__(self, model: str = "voyage-3.5-lite", api_key: str | None = None):
-        super().__init__()
-        self.client = voyageai.Client(api_key=api_key or settings.voyage_api_key)
-        self.model = model
-
-    def embed(self, documents: list[str], verbose: bool = False) -> np.ndarray:
-        """Synchronous embed method required by BaseEmbedder"""
-        if not documents:
-            return np.array([], dtype=np.float32)
-
-        batch_size = 128
-        all_embeddings = []
-
-        for i in range(0, len(documents), batch_size):
-            batch = documents[i : i + batch_size]
-            result = self.client.embed(
-                batch,
-                model=self.model,
-                input_type="document",
-            )
-            all_embeddings.extend(result.embeddings)
-
-        embeddings = np.array(all_embeddings, dtype=np.float32)
-        return embeddings
-
-
 class QuizStarterImpl(QuizStarter):
     def __init__(
         self,
+        llm_tools: LLMToolsApp,
         quiz_repository: QuizRepository,
         material_app: MaterialApp,
         quiz_indexer: QuizIndexer,
         quiz_preprocessor: QuizPreprocessor,
     ):
+        self._llm_tools = llm_tools
         self._material_app = material_app
         self._quiz_indexer = quiz_indexer
         self._quiz_repository = quiz_repository
@@ -201,11 +172,6 @@ class QuizStarterImpl(QuizStarter):
         # Step 4: c-TF-IDF for topic representation
         ctfidf_model = ClassTfidfTransformer(bm25_weighting=True)
 
-        # Step 5: Create Voyage AI embedder for representation models
-        voyage_embedder = VoyageEmbedder(
-            model="voyage-3.5-lite", api_key=settings.voyageai_api_key
-        )
-
         # Step 6: Configure multi-aspect topic representations
         main_representation = KeyBERTInspired(
             top_n_words=10,
@@ -219,10 +185,11 @@ class QuizStarterImpl(QuizStarter):
 
         representation_model = None
         if settings.env == "local":
-            representation_model = {
-                "Main": main_representation,
-                "Diversity": aspect_representation,
-            }
+            # representation_model = {
+            #     "Main": main_representation,
+            #     "Diversity": aspect_representation,
+            # }
+            representation_model = None
 
         logger.info(f"Configured multi-aspect representations for quiz {quiz.id}")
         logger.info(f"  - Main: KeyBERTInspired (top_n_words=10)")
@@ -231,13 +198,13 @@ class QuizStarterImpl(QuizStarter):
         # Initialize BERTopic with pre-computed embeddings
         logger.info(f"Initializing BERTopic for quiz {quiz.id}")
         topic_model = BERTopic(
-            embedding_model=voyage_embedder,
+            embedding_model=self._llm_tools.vectorizer,
             min_topic_size=25,  # можно как то по умному ставить, ПОКА ЧТО ПОЧЕМУ ТО НЕ РАБОТАЕТ
             umap_model=umap_model,
             hdbscan_model=hdbscan_model,
             vectorizer_model=vectorizer_model,
             ctfidf_model=ctfidf_model,
-            representation_model=None,
+            representation_model=representation_model,  # type: ignore
             verbose=True,
             calculate_probabilities=True,
         ).fit(documents, embeddings)
@@ -422,13 +389,12 @@ Summary: {quiz.summary}
 
             if topics and len(topics) > 0:
                 quiz.gen_config.more_on_topic.extend(topics)
-                logger.info(
-                    f"Added {len(topics)} topics to quiz {quiz.id}: {topics}"
-                )
+                logger.info(f"Added {len(topics)} topics to quiz {quiz.id}: {topics}")
 
                 logger.info(f"Embedding {len(topics)} topics for quiz {quiz.id}")
-                topic_vectors = await self._embed_topics(topics)
+                topic_vectors = await self._llm_tools.vectorize(topics)
                 logger.info(f"Generated {len(topic_vectors)} topic vectors")
+                topic_vectors = topic_vectors.tolist()
                 return topic_vectors
 
             logger.info(f"Query preprocessing completed for quiz {quiz.id}")
@@ -441,23 +407,3 @@ Summary: {quiz.summary}
             )
             logger.warning(f"Continuing without query preprocessing for quiz {quiz.id}")
             return None
-
-    async def _embed_topics(self, topics: list[str]) -> list[list[float]]:
-        """
-        Embed topics using Voyage AI embedder.
-        Returns list of embedding vectors.
-        """
-        try:
-            client = voyageai.Client(api_key=settings.voyageai_api_key)
-            result = client.embed(
-                topics,
-                model="voyage-3.5-lite",
-                input_type="document",
-            )
-            embeddings = [emb for emb in result.embeddings]
-            logger.info(f"Successfully embedded {len(embeddings)} topics")
-            return embeddings
-        except Exception as e:
-            logger.error(f"Failed to embed topics: {e}", exc_info=True)
-            raise e
-

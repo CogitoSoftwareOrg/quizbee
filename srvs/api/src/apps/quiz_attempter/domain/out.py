@@ -1,5 +1,7 @@
 from typing import Any, AsyncIterable, Protocol
 
+from src.apps.material_owner.domain.models import MaterialChunk
+
 from .models import Attempt
 from .refs import MessageRef, QuizItemRef
 
@@ -22,4 +24,5 @@ class Explainer(Protocol):
         item: QuizItemRef,
         ai_msg: MessageRef,
         cache_key: str,
+        chunks: list[MaterialChunk],
     ) -> AsyncIterable[MessageRef]: ...
