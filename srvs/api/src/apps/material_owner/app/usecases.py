@@ -17,6 +17,7 @@ from ..domain.models import (
 from ..domain.out import (
     MaterialIndexer,
     MaterialRepository,
+    SearchDto,
     SearcherProvider,
     DocumentParser,
     LLMTools,
@@ -43,6 +44,9 @@ class MaterialAppImpl(MaterialApp):
         self._llm_tools = llm_tools
         self._indexer = indexer
         self._searcher_provider = searcher_provider
+
+    async def get_material(self, material_id: str) -> Material | None:
+        return await self._material_repository.get(material_id)
 
     async def add_material(self, cmd: AddMaterialCmd) -> Material:
 
@@ -82,7 +86,7 @@ class MaterialAppImpl(MaterialApp):
             COMPLEX_EXTENSIONS
         ):  # Просто парсим комплексные файлы через document_parsing. Парсер сам определит формат по расширению файла
             try:
-                doc_data = self._document_parser.parse(
+                doc_data = await self._document_parser.parse(
                     cmd=DocumentParseCmd(
                         file_bytes=cmd.file.file_bytes,
                         file_name=cmd.file.file_name,
@@ -112,6 +116,7 @@ class MaterialAppImpl(MaterialApp):
                 material.tokens = text_tokens + image_tokens
                 material.contents = json.dumps(doc_data.contents)
                 material.is_book = doc_data.is_book
+                material.table_of_contents = doc_data.contents if doc_data.is_book else None
 
                 # Сохраняем текст как файл
                 text_bytes = text.encode("utf-8")
@@ -149,7 +154,6 @@ class MaterialAppImpl(MaterialApp):
 
         await self._material_repository.create(material)
 
-        print("material.tokens =", material.tokens)
         # Проверяем количество токенов
         if material.tokens < 40:
             material.status = MaterialStatus.NO_TEXT
@@ -175,13 +179,19 @@ class MaterialAppImpl(MaterialApp):
         return material
 
     async def search(self, cmd: SearchCmd) -> list[MaterialChunk]:
-        logger.info("MaterialAppImpl.query_search")
+        logger.info("MaterialAppImpl.search")
 
         limit_chunks = int(cmd.limit_tokens / self._llm_tools.chunk_size)
 
-        if cmd.query.strip() == "":
+        ratio = 0.0
+        if cmd.all_chunks:
+            search_type = SearchType.ALL
+        elif (
+            cmd.vectors is not None and len(cmd.vectors) > 0 and cmd.query.strip() == ""
+        ):
+            search_type = SearchType.VECTOR
+        elif cmd.query.strip() == "":
             search_type = SearchType.DISTRIBUTION
-            ratio = 0.0
         else:
             search_type = SearchType.QUERY
             ratio = 0.5 if len(cmd.query.strip().split()) > 3 else 0
@@ -189,15 +199,17 @@ class MaterialAppImpl(MaterialApp):
         searcher = self._searcher_provider.get(search_type=search_type)
 
         logger.info(
-            f"Searching for material chunks for query: {cmd.query} (limit: {limit_chunks}, ratio: {ratio})"
+            f"Searching for material chunks (type: {search_type}, limit: {limit_chunks}, ratio: {ratio})"
         )
-
         chunks = await searcher.search(
-            user_id=cmd.user.id,
-            query=cmd.query,
-            material_ids=cmd.material_ids,
-            limit=limit_chunks,
-            ratio=ratio,
+            dto=SearchDto(
+                user_id=cmd.user.id,
+                material_ids=cmd.material_ids,
+                query=cmd.query,
+                limit=limit_chunks,
+                ratio=ratio,
+                vectors=cmd.vectors,
+            )
         )
 
         return chunks
@@ -214,6 +226,16 @@ class MaterialAppImpl(MaterialApp):
             await self._indexer.delete([cmd.material_id])
 
         await self._material_repository.delete(cmd.material_id)
+
+    async def mark_chunks_as_used(self, chunk_ids: list[str]) -> None:
+        """
+        Отмечает чанки как использованные.
+
+        Args:
+            chunk_ids: Список ID чанков для пометки
+        """
+        logger.info(f"MaterialAppImpl.mark_chunks_as_used: {len(chunk_ids)} chunks")
+        await self._indexer.mark_chunks_as_used(chunk_ids)
 
     async def _deduplicate_material(self, cmd: AddMaterialCmd) -> Material | None:
         material = await self._material_repository.get(cmd.material_id)

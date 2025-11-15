@@ -16,12 +16,22 @@ class AddMaterialCmd:
     quiz_id: str
 
 
+# class SearchIntent(StrEnum):
+#     QUERY = "query"
+#     DISTRIBUTION = "ditribution"
+#     ALL = "all"
+
+
 @dataclass
 class SearchCmd:
     user: Principal
-    query: str
     material_ids: list[str]
-    limit_tokens: int
+    limit_tokens: int = 100
+    query: str = ""
+    all_chunks: bool = False
+    vectors: list[list[float]] | None = None
+    
+    # search_type: SearchType = SearchType.QUERY
 
 
 @dataclass
@@ -33,6 +43,10 @@ class RemoveMaterialCmd:
 class MaterialApp(Protocol):
     async def add_material(self, cmd: AddMaterialCmd) -> Material: ...
 
+    async def get_material(self, material_id: str) -> Material | None: ...
+
     async def search(self, cmd: SearchCmd) -> list[MaterialChunk]: ...
 
     async def remove_material(self, cmd: RemoveMaterialCmd) -> None: ...
+
+    async def mark_chunks_as_used(self, chunk_ids: list[str]) -> None: ...

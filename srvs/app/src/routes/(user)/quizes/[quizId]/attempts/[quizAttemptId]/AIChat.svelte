@@ -15,7 +15,7 @@
 	import Messages from '$lib/apps/messages/Messages.svelte';
 	import MessageField from '$lib/apps/messages/MessageField.svelte';
 	import SendMessage from '$lib/apps/messages/SendMessage.svelte';
-	import { Crown, X } from 'lucide-svelte';
+	import { Crown, HelpCircle, X } from 'lucide-svelte';
 	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
 	import { uiStore } from '$lib/apps/users/ui.svelte';
 
@@ -47,6 +47,7 @@
 
 	const sub = $derived(subscriptionStore.subscription);
 	const isFreePlan = $derived(sub?.tariff === 'free');
+	const canChat = $derived(!!(itemDecision && item && quizAttempt && quiz && !isFreePlan));
 </script>
 
 <div class={['flex h-full flex-col overflow-hidden', className]}>
@@ -63,14 +64,8 @@
 		</Button>
 	</header>
 
-	{#if !itemDecision || !item || !quizAttempt}
-		<section class="flex flex-1 items-center justify-center px-6 text-center">
-			<p class="text-lg font-semibold">
-				You need to answer the question before interacting with the AI
-			</p>
-		</section>
-	{:else if quiz}
-		<section class="flex flex-1 flex-col overflow-hidden px-3 py-0">
+	<section class="flex flex-1 flex-col overflow-hidden px-3 py-0">
+		{#if canChat && quiz && item && quizAttempt}
 			<div class="flex-1 overflow-y-auto pr-1">
 				<Messages
 					class="flex-1"
@@ -82,43 +77,55 @@
 					itemId={item.id}
 				/>
 			</div>
-		</section>
+		{:else}
+			<div class="flex flex-1 items-center justify-center px-6">
+				<div
+					class="border-base-200 bg-base-100 flex flex-col items-center gap-3 rounded-xl border p-8 text-center shadow-sm"
+				>
+					<HelpCircle class="opacity-40" size={48} />
+					<div class="space-y-1">
+						<p class="font-medium">Answer the question first</p>
+						<p class="text-base-content/70 text-sm">
+							You need to answer the question before interacting with the AI
+						</p>
+					</div>
+				</div>
+			</div>
+		{/if}
+	</section>
 
-		<footer class="border-base-200 border-t px-3 py-2">
-			{#if quizAttempt.feedback}
-				<Button
-					size="lg"
-					color="neutral"
-					style="soft"
-					block
-					href={`/quizes/${quizAttempt?.quiz}/attempts/${quizAttempt?.id}/feedback`}
-				>
-					View Feedback
-				</Button>
-			{:else if isFreePlan}
-				<Button
-					size="lg"
-					color="neutral"
-					style="soft"
-					block
-					onclick={() => uiStore.setPaywallOpen(true)}
-					class="flex items-center justify-center gap-2"
-				>
-					<p class="text-center font-semibold">Only premium users can use chat with AI</p>
-					<Crown class="block" size={24} />
-				</Button>
-			{:else}
-				<MessageField
-					bind:inputText={query}
+	<footer class="border-base-200 border-t px-3 py-2">
+		{#if isFreePlan && quiz && item && quizAttempt}
+			<Button
+				size="lg"
+				color="neutral"
+				style="soft"
+				block
+				onclick={() => uiStore.setPaywallOpen(true)}
+				class="flex items-center justify-center gap-2"
+			>
+				<p class="text-center font-semibold">Only premium users can use chat with AI</p>
+				<Crown class="block" size={24} />
+			</Button>
+		{:else if quiz && item && quizAttempt}
+			<MessageField
+				bind:inputText={query}
+				{item}
+				attempt={quizAttempt}
+				{quiz}
+				sender={userSender}
+				{messages}
+			/>
+			<div class="flex justify-end">
+				<SendMessage
 					{item}
 					attempt={quizAttempt}
 					{quiz}
 					sender={userSender}
+					{messages}
+					inputText={query}
 				/>
-				<div class="flex justify-end">
-					<SendMessage {item} attempt={quizAttempt} {quiz} sender={userSender} inputText={query} />
-				</div>
-			{/if}
-		</footer>
-	{/if}
+			</div>
+		{/if}
+	</footer>
 </div>

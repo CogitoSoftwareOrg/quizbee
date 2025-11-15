@@ -13,7 +13,7 @@
 	import type { Answer } from '$lib/apps/quizes/types';
 	import { ChevronDown, ChevronRight, Info } from 'lucide-svelte';
 	import { patchApi, putApi } from '$lib/api/call-api';
-	import { QuizItemsStatusOptions } from '$lib/pb/pocketbase-types';
+	import { QuizesStatusOptions, QuizItemsStatusOptions } from '$lib/pb/pocketbase-types';
 	import { userStore } from '$lib/apps/users/user.svelte.js';
 
 	interface Props {
@@ -144,7 +144,6 @@
 							type="button"
 							class="focus-visible:ring-primary/60 flex w-full min-w-0 cursor-pointer items-start gap-3 p-4 text-left transition focus-visible:outline-none focus-visible:ring-2"
 							onclick={async () => {
-								const toAnswer = readyItemsWithoutAnswers.length;
 								if (!itemDecision) {
 									itemDecision = {
 										answerIndex: index,
@@ -160,21 +159,15 @@
 										await pb!.collection('quizAttempts').update(quizAttempt!.id, {
 											choices: newDecisions
 										});
-										await pb!.collection('quizItems').update(item!.id, {
-											status: 'final'
-										});
+										if (quiz.author === user?.id) {
+											await pb!.collection('quizItems').update(item.id, {
+												status: QuizItemsStatusOptions.final
+											});
+										}
 									} catch (error) {
 										console.error(error);
 										itemDecision = null;
 										item.status = QuizItemsStatusOptions.generated;
-									}
-
-									if (toAnswer <= 3 && quizItems.some((qi) => ['blank'].includes(qi.status))) {
-										const result = await patchApi(`quizes/${quiz?.id}`, {
-											attempt_id: quizAttempt!.id,
-											mode: 'continue'
-										});
-										console.log('Quiz settings updated:', result);
 									}
 
 									if (
@@ -182,10 +175,6 @@
 										!(quizAttempt?.feedback as any)?.overview
 									) {
 										await finalizeAttempt();
-									}
-
-									if (item.order + 1 === quizItems.length && quiz.author === user?.id) {
-										await finalizeQuiz();
 									}
 
 									return;
@@ -333,7 +322,7 @@
 				<!-- Timeline Info -->
 				<div class="bg-base-200/50 rounded-lg p-4 text-center">
 					<p class="text-base-content/70 text-sm">
-						<span class="text-base-content font-semibold">Usually takes less than 1 minute</span>
+						<span class="text-base-content font-semibold">Usually takes less than 10 seconds</span>
 						<br />
 						<span class="text-xs">Your AI tutor is working hard! ⏱️</span>
 					</p>

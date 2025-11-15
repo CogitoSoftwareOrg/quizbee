@@ -55,7 +55,9 @@ async def start_quiz(
         cache_key=cache_key(dto.attempt_id),
     )
     await arq_pool.enqueue_job(
-        JobName.start_quiz, asdict(cmd), _queue_name=ARQ_QUEUE_NAME
+        JobName.start_quiz,
+        asdict(cmd),
+        _queue_name=ARQ_QUEUE_NAME,
     )
 
     return JSONResponse(
@@ -80,8 +82,11 @@ async def generate_quiz_items(
         cache_key=cache_key(dto.attempt_id),
         mode=dto.mode,
     )
+    # Distributed lock inside QuizGeneratorImpl ensures sequential execution
     await arq_pool.enqueue_job(
-        JobName.generate_quiz_items, asdict(cmd), _queue_name=ARQ_QUEUE_NAME
+        JobName.generate_quiz_items,
+        asdict(cmd),
+        _queue_name=ARQ_QUEUE_NAME,
     )
 
     return JSONResponse(content={"scheduled": True, "quiz_id": quiz_id})

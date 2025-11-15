@@ -8,10 +8,13 @@ from ...domain.out import TextTokenizer
 class TiktokenTokenizer(TextTokenizer):
     def __init__(self):
         self.encoders = {
-            # llm: tiktoken.encoding_for_model(llm.split(":")[-1])
-            llm: tiktoken.encoding_for_model(llm)
+            llm: tiktoken.encoding_for_model(
+                LLMS.TEXT_EMBEDDING_3_SMALL.split(":")[-1]
+                if "voyage" in llm
+                else llm.split(":")[-1]
+            )
             for llm in LLMS
-            # if "openai" in llm and llm != LLMS.GPT_5
+            if "openai" in llm or llm == LLMS.TEXT_EMBEDDING_3_SMALL or "voyage" in llm
         }
 
     def encode(self, text: str, llm: LLMS = LLMS.GPT_5_MINI) -> list[int]:

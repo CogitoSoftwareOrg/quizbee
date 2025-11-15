@@ -6,6 +6,7 @@ from src.apps.user_owner.domain._in import Principal
 
 
 class GenMode(StrEnum):
+    Start = "start"
     Continue = "continue"
     Regenerate = "regenerate"
 
@@ -25,14 +26,17 @@ class GenerateCmd:
     user: Principal
 
 
-@dataclass(frozen=True, slots=True)
-class AttachMaterialCmd:
-    quiz_id: str
-    material_id: str
-    user: Principal
-
-
-class QuizGeneratorApp(Protocol):
+class QuizStarter(Protocol):
     async def start(self, cmd: GenerateCmd) -> None: ...
+
+
+class QuizGenerator(Protocol):
     async def generate(self, cmd: GenerateCmd) -> None: ...
+
+
+class QuizFinalizer(Protocol):
     async def finalize(self, cmd: FinalizeQuizCmd) -> None: ...
+
+
+class QuizApp(QuizStarter, QuizGenerator, QuizFinalizer):
+    async def mark_chunks_as_used(self, chunk_ids: list[str]) -> None: ...

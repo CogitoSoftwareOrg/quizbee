@@ -150,10 +150,6 @@
 					// Optimistic update
 					item.managed = true;
 
-					await pb!.collection('quizItems').update(item.id, {
-						managed: true
-					});
-
 					const upd = { dynamicConfig: quiz.dynamicConfig } as any;
 
 					if (difficulty === 'easier') {
@@ -204,7 +200,7 @@
 					});
 				}}
 				color="success"
-				style="soft">Confirm (-5 questions)</Button
+				style="soft">Confirm</Button
 			>
 		</div>
 	</div>

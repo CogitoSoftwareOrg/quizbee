@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from enum import StrEnum
+from typing import Any
 
 from src.lib.utils import genID
 
@@ -70,12 +71,16 @@ class QuizItem:
     variants: list[QuizItemVariant]
     order: int
     status: QuizItemStatus
+    managed: bool
 
     fresh_generated: bool = False
 
     def to_generating(self) -> None:
+        # Idempotent: if already GENERATING, it's ok (parallel request may have set it)
+        if self.status == QuizItemStatus.GENERATING:
+            return
         if self.status not in {QuizItemStatus.BLANK}:
-            raise ValueError("Item is not in blank status for generating")
+            raise ValueError(f"Item cannot transition to GENERATING from {self.status}")
         self.status = QuizItemStatus.GENERATING
 
     def regenerate(self) -> None:
@@ -99,6 +104,16 @@ class QuizItem:
         self.question = question
         self.variants = variants
 
+    def to_final(self) -> None:
+        if self.status not in {QuizItemStatus.GENERATED}:
+            raise ValueError("Item is not in generated status for final")
+        self.status = QuizItemStatus.FINAL
+
+    def to_managed(self) -> None:
+        if self.status not in {QuizItemStatus.FINAL}:
+            raise ValueError("Item is not in final status for managing")
+        self.managed = True
+
 
 @dataclass(slots=True, kw_only=True)
 class Quiz:
@@ -115,6 +130,7 @@ class Quiz:
     material_content: str = ""
     avoid_repeat: bool = False
     items: list[QuizItem] = field(default_factory=list)
+    cluster_vectors: list[list[float]] = field(default_factory=list)
 
     gen_config: QuizGenConfig = field(default_factory=QuizGenConfig)
 
@@ -122,6 +138,7 @@ class Quiz:
     tags: list[str] | None = None
     category: QuizCategory | None = None
     slug: str | None = None
+    table_of_contents: dict[str, Any] | None = None
 
     need_build_material_content: bool = False
 
@@ -165,6 +182,9 @@ class Quiz:
         self.material_content = content
         self.need_build_material_content = False
 
+    def set_cluster_vectors(self, vectors: list[list[float]]):
+        self.cluster_vectors = vectors
+
     def request_build_material_content(self) -> None:
         self.need_build_material_content = True
 
@@ -183,10 +203,30 @@ class Quiz:
     def set_slug(self, slug: str):
         self.slug = f"{slug}-{self.id[:6]}"
 
+    def set_table_of_contents(self, table_of_contents: dict[str, Any]):
+        self.table_of_contents = table_of_contents
+
+    def merge_similar_quizes(self, quizes: list["Quiz"]):
+        questions = list(
+            set([q.question for quiz in quizes for q in quiz.items if q.question])
+        )
+        self.add_negative_questions(questions)
+
     def add_negative_questions(self, questions: list[str]):
         self.gen_config.negative_questions.extend(questions)
 
     def increment_generation(self) -> None:
+        finals = self.get_final_items()
+        if len(finals) == 0:
+            return
+        last_final = finals[-1]
+        if last_final.managed:
+            raise ValueError(
+                "Cannot increment generation if last final item is managed"
+            )
+
+        last_final.to_managed()
+
         for item in self.items:
             item.regenerate()
         self.generation += 1
@@ -194,13 +234,16 @@ class Quiz:
     def get_final_items(self) -> list[QuizItem]:
         return [item for item in self.items if item.status == QuizItemStatus.FINAL]
 
-    def generate_patch(self) -> list[QuizItem]:
+    def generate_patch(self, to_generate: int) -> list[QuizItem]:
         ready_items = [
             item for item in self.items if item.status == QuizItemStatus.BLANK
-        ][:PATCH_LIMIT]
+        ][:to_generate]
         for item in ready_items:
             item.to_generating()
         return ready_items
+
+    def generated_items(self) -> list[QuizItem]:
+        return [item for item in self.items if item.status == QuizItemStatus.GENERATED]
 
     def generating_items(self) -> list[QuizItem]:
         return [
@@ -223,8 +266,15 @@ class Quiz:
         for item in self.generating_items():
             item.to_failed()
 
-    def generation_step(self, question: str, variants: list[QuizItemVariant]) -> None:
-        items = self.generating_items()
-        if len(items) == 0:
-            raise ValueError("No items to generate")
-        items[0].to_generated(question, variants)
+    def generation_step(
+        self, question: str, variants: list[QuizItemVariant], order: int
+    ) -> None:
+        # Find the specific item by order instead of always taking the first one
+        item = next((item for item in self.items if item.order == order), None)
+        if item is None:
+            raise ValueError(f"Item with order {order} not found")
+        if item.status != QuizItemStatus.GENERATING:
+            raise ValueError(
+                f"Item with order {order} is not in GENERATING status (current: {item.status})"
+            )
+        item.to_generated(question, variants)

@@ -89,16 +89,17 @@ class PBQuizRepository(QuizRepository):
         )
 
         fname = rec.get("materialsContext")
-        material_content = ""
         if fname:
             total_content = await self._load_file_text("quizes", q_id, fname)
-            material_content = total_content
+            cluster_vectors = json.loads(total_content)
+        else:
+            cluster_vectors = []
 
         quiz = Quiz(
             id=rec.get("id", ""),
             materials=materials,
             items=items,
-            material_content=material_content,
+            material_content="",
             author_id=rec.get("author", ""),
             title=rec.get("title", ""),
             length=rec.get("itemsLimit", 0),
@@ -112,10 +113,8 @@ class PBQuizRepository(QuizRepository):
             avoid_repeat=rec.get("avoidRepeat", False),
             gen_config=self._rec_to_config(rec),
             generation=rec.get("generation", 0),
+            cluster_vectors=cluster_vectors,
         )
-
-        if not len(quiz.material_content) == 0 and len(quiz.materials) > 0:
-            quiz.request_build_material_content()
 
         return quiz
 
@@ -145,6 +144,7 @@ class PBQuizRepository(QuizRepository):
             variants=[self._rec_to_variant(a) for a in answers],
             order=item_rec.get("order", 0),
             status=item_rec.get("status", ""),
+            managed=item_rec.get("managed", False),
         )
 
     def _rec_to_variant(self, rec: dict[str, Any]) -> QuizItemVariant:
@@ -155,7 +155,7 @@ class PBQuizRepository(QuizRepository):
         )
 
     async def _to_record(self, quiz: Quiz) -> dict[str, Any]:
-        content = quiz.material_content
+        cluster_vectors = quiz.cluster_vectors
 
         dto = {
             # Simple fields
@@ -177,14 +177,15 @@ class PBQuizRepository(QuizRepository):
             "slug": quiz.slug,
         }
 
+        cluster_vectors_json = json.dumps(cluster_vectors)
         f = (
             FileUpload(
                 (
-                    self._file_url("quizes", quiz.id, "materialsContext.txt"),
-                    content.encode("utf-8"),
+                    self._file_url("quizes", quiz.id, "clusterVectors.json"),
+                    cluster_vectors_json.encode("utf-8"),
                 )
             )
-            if quiz.status == QuizStatus.PREPARING
+            if cluster_vectors and len(cluster_vectors) > 0
             else None
         )
 
@@ -199,6 +200,7 @@ class PBQuizRepository(QuizRepository):
             "question": item.question,
             "order": item.order,
             "status": item.status,
+            "managed": item.managed,
         }
 
         if len(item.variants) > 0:

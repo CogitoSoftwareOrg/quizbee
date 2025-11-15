@@ -29,10 +29,10 @@ class DocumentParserAdapter(DocumentParser):
     def __init__(self, document_parser_app: DocumentParserApp):
         self._document_parser_app = document_parser_app
 
-    def parse(
+    async def parse(
         self,
         cmd: DocumentParseCmd,
-    ) -> ParsedDocument:
+    ):
         """
         Парсит документ, выбрав подходящий парсер по расширению файла.
 
@@ -50,7 +50,7 @@ class DocumentParserAdapter(DocumentParser):
         """
         logger.info(f"DocumentParsingAdapter: парсинг {cmd.file_name}")
 
-        parser_result = self._document_parser_app.parse(cmd)
+        parser_result = await self._document_parser_app.parse(cmd)
         return self._convert_to_domain_model(parser_result)
 
     def _convert_to_domain_model(

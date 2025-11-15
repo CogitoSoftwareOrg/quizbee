@@ -4,6 +4,7 @@ DOCX парсер для извлечения текста и изображен
 Использует библиотеку python-docx для извлечения текста, таблиц и структуры документа.
 """
 
+import asyncio
 import logging
 from io import BytesIO
 from typing import Any
@@ -44,7 +45,14 @@ class DocxDocumentParser(DocumentParser):
         self.min_height = min_height
         self.min_file_size = min_file_size
 
-    def parse(
+    async def parse(
+        self, file_bytes: bytes, file_name: str, process_images: bool = False
+    ) -> ParsedDocument:
+        return await asyncio.to_thread(
+            self._parse, file_bytes, file_name, process_images
+        )
+
+    def _parse(
         self,
         file_bytes: bytes,
         file_name: str,
@@ -75,7 +83,10 @@ class DocxDocumentParser(DocumentParser):
 
             # Извлекаем текст из документа
             text_parts = self.extract_text_from_document(doc)
-            final_text = "\n\n".join(text_parts)
+            
+            # Добавляем маркер страницы в начало документа
+            page_marker = "{quizbee_page_number_1}\n\n"
+            final_text = page_marker + "\n\n".join(text_parts)
 
             # Изображения
             images: list[DocumentImage] = []
@@ -98,7 +109,9 @@ class DocxDocumentParser(DocumentParser):
             logger.error(f"❌ Ошибка при парсинге DOCX файла {file_name}: {str(e)}")
             raise Exception(f"Ошибка при парсинге DOCX файла: {str(e)}")
 
-    def extract_text_from_document(self, doc: Document) -> list[str]:
+    def extract_text_from_document(
+        self, doc: Document  # pyright: ignore[reportGeneralTypeIssues]
+    ) -> list[str]:
         """
         Извлекает текст из документа DOCX.
 

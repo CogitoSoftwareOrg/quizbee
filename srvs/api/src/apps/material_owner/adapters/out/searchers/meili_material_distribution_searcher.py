@@ -10,9 +10,9 @@ from langfuse import Langfuse
 from meilisearch_python_sdk import AsyncClient
 
 from ....domain.models import MaterialChunk
-from ....domain.out import Searcher, LLMTools
+from ....domain.out import SearchDto, Searcher, LLMTools
 
-from ..meili_material_indexer import EMBEDDER_NAME, Doc
+from ..indexers.meili_material_indexer import EMBEDDER_NAME, Doc
 
 
 class MeiliMaterialDistributionSearcher(Searcher):
@@ -31,11 +31,7 @@ class MeiliMaterialDistributionSearcher(Searcher):
 
     async def search(
         self,
-        user_id: str,
-        query: str,
-        material_ids: list[str],
-        limit: int,
-        ratio: float,  # Для distribution searcher ratio всегда 0.0, но параметр нужен для совместимости с Protocol
+        dto: SearchDto,
     ) -> list[MaterialChunk]:
         """
         Получает чанки, равномерно распределенные по материалам.
@@ -53,26 +49,26 @@ class MeiliMaterialDistributionSearcher(Searcher):
         Returns:
             Список равномерно распределенных чанков
         """
-        if not material_ids:
+        if not dto.material_ids:
             logging.warning("No material_ids provided for distribution search")
             return []
 
         logging.info(
-            f"Meili Distribution Search for {len(material_ids)} materials, limit={limit}"
+            f"Meili Distribution Search for {len(dto.material_ids)} materials, limit={dto.limit}"
         )
 
         # Вычисляем количество чанков на материал
-        num_materials = len(material_ids)
-        chunks_per_material = max(1, limit // num_materials)
+        num_materials = len(dto.material_ids)
+        chunks_per_material = max(1, dto.limit // num_materials)
 
         logging.info(f"Fetching {chunks_per_material} chunks per material")
 
         # Для каждого материала делаем отдельный запрос на получение N чанков
         all_chunks: list[MaterialChunk] = []
 
-        for material_id in material_ids:
+        for material_id in dto.material_ids:
             # Формируем фильтр для конкретного материала
-            f = f"userId = {user_id} AND materialId = {material_id}"
+            f = f"userId = {dto.user_id} AND materialId = {material_id}"
 
             # Получаем N чанков для этого материала
             res = await self._material_index.search(
@@ -84,8 +80,8 @@ class MeiliMaterialDistributionSearcher(Searcher):
             )
 
             # Преобразуем результаты в MaterialChunk
-            docs: list[Doc] = [Doc(**hit) for hit in res.hits]
-            chunks = [self._doc_to_chunk(doc) for doc in docs]
+            docs: list[Doc] = [Doc.from_hit(hit) for hit in res.hits]
+            chunks = [doc.to_chunk() for doc in docs]
 
             all_chunks.extend(chunks)
 
@@ -98,20 +94,4 @@ class MeiliMaterialDistributionSearcher(Searcher):
             f"Distributed {len(all_chunks)} chunks from {num_materials} materials"
         )
 
-        return all_chunks[:limit]
-
-    def _doc_to_chunk(self, doc: Doc) -> MaterialChunk:
-        """Преобразует Doc в MaterialChunk."""
-        idx = doc.id.split("-")[-1]
-
-        if not idx.isdigit():
-            raise ValueError(f"Invalid chunk id: {doc.id}")
-        idx = int(idx)
-
-        return MaterialChunk(
-            id=doc.id,
-            idx=int(idx),
-            material_id=doc.materialId,
-            title=doc.title,
-            content=doc.content,
-        )
+        return all_chunks[: dto.limit]

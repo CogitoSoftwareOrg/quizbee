@@ -41,6 +41,6 @@ class LLMToolsAppImpl(LLMToolsApp):
         logger.debug("LLMToolsAppImpl.count_image")
         return self.image_tokenizer.count_image(width, height)
 
-    def chunk(self, text: str) -> list[str]:
+    def chunk(self, text: str, respect_pages: bool = False) -> list[str] | list:
         logger.debug("LLMToolsAppImpl.chunk")
-        return self.chunker.chunk(text)
+        return self.chunker.chunk(text, respect_pages)

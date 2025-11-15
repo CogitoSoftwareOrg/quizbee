@@ -23,6 +23,8 @@ from .adapters.out import (
     MeiliMaterialDistributionSearcher,
     DocumentParserAdapter,
     LLMToolsAdapter,
+    MeiliMaterialAllSearcher,
+    MeiliMaterialVectorSearcher,
 )
 from .app.usecases import MaterialAppImpl
 
@@ -46,6 +48,10 @@ async def init_material_deps(
             lf=lf, llm_tools=llm_tools, meili=meili
         ),
         distribution_searcher=MeiliMaterialDistributionSearcher(
+            lf=lf, llm_tools=llm_tools, meili=meili
+        ),
+        all_searcher=MeiliMaterialAllSearcher(lf=lf, llm_tools=llm_tools, meili=meili),
+        vector_searcher=MeiliMaterialVectorSearcher(
             lf=lf, llm_tools=llm_tools, meili=meili
         ),
     )

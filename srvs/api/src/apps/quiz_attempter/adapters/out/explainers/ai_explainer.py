@@ -25,18 +25,18 @@ from src.lib.config import LLMS
 from src.lib.settings import settings
 from src.lib.utils import update_span_with_result
 
-from ...domain.models import (
+from ....domain.models import (
     Attempt,
     QuizRef,
 )
-from ...domain.refs import (
+from ....domain.refs import (
     MessageRef,
     QuizItemRef,
     MessageRoleRef,
     MessageStatusRef,
     MessageMetadataRef,
 )
-from ...domain.out import Explainer
+from ....domain.out import Explainer
 
 EXPLAINER_LLM = LLMS.GPT_5_MINI
 
@@ -47,22 +47,17 @@ class ExplainerDeps:
     current_item: QuizItemRef
 
 
-class ExplainerOutput(BaseModel):
-    mode: Literal["explanation"]
-    explanation: str
-
-
 logger = logging.getLogger(__name__)
 
 
 class AIExplainer(Explainer):
-    def __init__(self, lf: Langfuse, output_type: Any):
+    def __init__(self, lf: Langfuse):
         self._lf = lf
         self._ai = Agent(
             history_processors=[self._inject_system_prompt],
-            output_type=output_type,
             deps_type=ExplainerDeps,
             model=EXPLAINER_LLM,
+            output_type=str,
         )
 
     async def explain(
@@ -95,11 +90,7 @@ class AIExplainer(Explainer):
                     ) as r:
                         run = r
                         async for output in run.stream_output():
-                            if output.data.mode != "explanation":
-                                raise ValueError(
-                                    f"Unexpected output type: {type(output)}"
-                                )
-                            delta = output.data.explanation[len(content) :]
+                            delta = output[len(content) :]
                             content += delta
 
                             await queue.put(

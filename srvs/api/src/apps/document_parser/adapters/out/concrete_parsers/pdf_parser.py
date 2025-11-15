@@ -1,3 +1,4 @@
+import asyncio
 import fitz  # PyMuPDF
 from io import BytesIO
 from typing import Any
@@ -19,7 +20,14 @@ class FitzPDFParser(DocumentParser):
         self.min_height = min_height
         self.min_file_size = min_file_size
 
-    def parse(
+    async def parse(
+        self, file_bytes: bytes, file_name: str, process_images: bool = False
+    ) -> ParsedDocument:
+        return await asyncio.to_thread(
+            self._parse, file_bytes, file_name, process_images
+        )
+
+    def _parse(
         self, file_bytes: bytes, file_name: str, process_images: bool = False
     ) -> ParsedDocument:
         """
@@ -90,10 +98,10 @@ class FitzPDFParser(DocumentParser):
                 page = doc.load_page(page_num)
                 page_text: str = page.get_text()  # type: ignore
 
-                # Добавляем маркер номера страницы в начало (ПОКА ЧТО ВЫКЛЮЧЕНО)
-                # page_marker = f"{{quizbee_page_number_{page_num + 1}}}\n\n"
+                # Добавляем маркер номера страницы в начало 
+                page_marker = f"{{quizbee_page_number_{page_num + 1}}}\n\n"
 
-                page_text = page_text
+                page_text = page_marker + page_text
 
                 if process_images:
                     # Если на странице есть изображения, вставляем маркеры

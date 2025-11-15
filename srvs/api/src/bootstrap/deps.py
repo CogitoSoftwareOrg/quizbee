@@ -1,9 +1,11 @@
 from typing import Annotated
-from fastapi import Request, Depends
+from fastapi import Request, Depends, HTTPException
 from arq import ArqRedis
 from pocketbase import PocketBase
 
 from src.lib.settings import settings
+
+from src.lib.pb_admin import ensure_admin_auth
 
 
 async def http_ensure_admin_pb(request: Request):

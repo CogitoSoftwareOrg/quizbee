@@ -30,7 +30,7 @@ class DocumentParser(Protocol):
     Реализация: DocumentParsingAdapter
     """
 
-    def parse(
+    async def parse(
         self,
         cmd: DocumentParseCmd,
     ) -> ParsedDocument:
@@ -69,8 +69,8 @@ class LLMTools(Protocol):
         """Подсчитывает токены для изображения по его размерам."""
         ...
 
-    def chunk(self, text: str) -> list[str]:
-        """Разбивает текст на chunks."""
+    def chunk(self, text: str, respect_pages: bool = False) -> list[str] | list:
+        """Разбивает текст на chunks. Если respect_pages=True, возвращает список TextChunk с информацией о страницах."""
         ...
 
 
@@ -78,18 +78,22 @@ class LLMTools(Protocol):
 class MaterialIndexer(Protocol):
     async def index(self, material: Material) -> None: ...
     async def delete(self, material_ids: list[str]) -> None: ...
+    async def mark_chunks_as_used(self, chunk_ids: list[str]) -> None: ...
 
 
 # Searcher
+@dataclass(slots=True, kw_only=True)
+class SearchDto:
+    user_id: str
+    material_ids: list[str]
+    query: str = "*"
+    limit: int = 100
+    ratio: float = 0.0
+    vectors: list[list[float]] | None = None
+
+
 class Searcher(Protocol):
-    async def search(
-        self,
-        user_id: str,
-        query: str,
-        material_ids: list[str],
-        limit: int,
-        ratio: float,
-    ) -> list[MaterialChunk]: ...
+    async def search(self, dto: SearchDto) -> list[MaterialChunk]: ...
 
 
 # Indexer

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Annotated, Any, Literal
+from typing import Annotated, Literal
 from pydantic import BaseModel, Field
 from langfuse import Langfuse
 from pydantic_ai import (
@@ -54,7 +54,7 @@ class AttemptFinalizerOutput(BaseModel):
         ),
     ]
 
-    def _merge(self, attempt: Attempt):
+    def merge(self, attempt: Attempt):
         attempt.set_feedback(
             Feedback(
                 overview=self.overview,
@@ -69,14 +69,13 @@ class AIAttemptFinalizer(AttemptFinalizer):
         self,
         lf: Langfuse,
         attempt_repository: AttemptRepository,
-        output_type: Any,
     ):
         self._lf = lf
         self._attempt_repository = attempt_repository
 
         self._ai = Agent(
             history_processors=[self._inject_request_prompt],
-            output_type=output_type,
+            output_type=AttemptFinalizerOutput,
             deps_type=AttemptFinalizerDeps,
             model=ATTEMPT_FINALIZER_LLM,
         )
@@ -103,12 +102,9 @@ class AIAttemptFinalizer(AttemptFinalizer):
                 cache_key,
                 ATTEMPT_FINALIZER_LLM,
             )
-            if res.output.data.mode != "feedback":
-                raise ValueError(f"Unexpected output type: {type(res.output)}")
 
-            payload: AttemptFinalizerOutput = res.output.data
-
-            payload._merge(attempt)
+            payload = res.output
+            payload.merge(attempt)
             await self._attempt_repository.update(attempt)
 
     async def _inject_request_prompt(

@@ -46,6 +46,14 @@ class MaterialStatus(StrEnum):
 class SearchType(StrEnum):
     QUERY = "query"
     DISTRIBUTION = "ditribution"
+    ALL = "all"
+    VECTOR = "vector"
+
+
+class ChunkKind(StrEnum):
+    VECTOR_ONLY = "vector_only"
+    MATERIAL_ONLY = "material_only"
+    FULL = "full"
 
 
 @dataclass(slots=True, kw_only=True)
@@ -61,6 +69,9 @@ class MaterialChunk:
     material_id: str
     title: str
     content: str
+    kind: ChunkKind = ChunkKind.MATERIAL_ONLY
+    vector: list[float] | None = None
+    used: bool = False
 
 
 @dataclass(slots=True, kw_only=True)
@@ -75,6 +86,7 @@ class Material:
     is_book: bool = False
     status: MaterialStatus = MaterialStatus.UPLOADED
     text_file: MaterialFile | None = None
+    table_of_contents: list[dict] | None = None
     id: str = field(default_factory=genID)
 
     @classmethod

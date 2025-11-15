@@ -64,7 +64,7 @@ class QuizAttempterAppImpl(QuizAttempterApp):
     ) -> AsyncGenerator[AskExplainerResult, None]:
         logger.info(f"Ask explainer: {cmd.attempt_id}")
         attempt = await self.attempt_repository.get(cmd.attempt_id)
-        await self.validate_attempt(attempt, cmd.user)
+        await self.validate_attempt(attempt, cmd.user, with_feedback=False)
 
         ai_message = await self.message_owner.start_message(
             StartMessageCmd(attempt_id=attempt.id, item_id=cmd.item_id)
@@ -102,12 +102,14 @@ class QuizAttempterAppImpl(QuizAttempterApp):
                 text=message.content, msg_id=message.id, i=0, status=status
             )
 
-    async def validate_attempt(self, attempt: Attempt, user: Principal) -> None:
+    async def validate_attempt(
+        self, attempt: Attempt, user: Principal, with_feedback=True
+    ) -> None:
         if attempt.user_id != user.id:
             raise NotAttemptOwnerError(
                 attempt_id=attempt.id, user_id=user.id, quiz_id=attempt.quiz.id
             )
-        if attempt.feedback is not None:
+        if with_feedback and attempt.feedback is not None:
             raise AttemptAlreadyFinalizedError(
                 attempt_id=attempt.id, user_id=user.id, quiz_id=attempt.quiz.id
             )

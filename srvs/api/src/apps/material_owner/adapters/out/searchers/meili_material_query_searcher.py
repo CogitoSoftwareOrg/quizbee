@@ -12,9 +12,9 @@ from meilisearch_python_sdk.models.search import Hybrid
 from src.lib.config import LLMS
 
 from ....domain.models import MaterialChunk
-from ....domain.out import Searcher, LLMTools
+from ....domain.out import SearchDto, Searcher, LLMTools
 
-from ..meili_material_indexer import EMBEDDER_NAME, Doc
+from ..indexers.meili_material_indexer import EMBEDDER_NAME, Doc
 
 
 class MeiliMaterialQuerySearcher(Searcher):
@@ -33,11 +33,7 @@ class MeiliMaterialQuerySearcher(Searcher):
 
     async def search(
         self,
-        user_id: str,
-        query: str,
-        material_ids: list[str],
-        limit: int,
-        ratio: float,
+        dto: SearchDto,
     ) -> list[MaterialChunk]:
         """
         Ищет материалы по запросу пользователя.
@@ -53,60 +49,46 @@ class MeiliMaterialQuerySearcher(Searcher):
             Список найденных чанков материалов
         """
         # Формируем фильтр для MeiliSearch
-        f = f"userId = {user_id}"
-        if material_ids:
-            f += f" AND materialId IN [{','.join(material_ids)}]"
+        f = f"userId = {dto.user_id}"
+        if dto.material_ids:
+            f += f" AND materialId IN [{','.join(dto.material_ids)}]"
 
-        logging.info(f"Meili Query Search... {f}, ratio={ratio}")
+        logging.info(f"Meili Query Search... {f}, ratio={dto.ratio}")
 
         # Считаем токены для логирования
-        total_tokens = self._llm_tools.count_text(query, LLMS.TEXT_EMBEDDING_3_SMALL)
+        total_tokens = self._llm_tools.count_text(
+            dto.query, LLMS.TEXT_EMBEDDING_3_SMALL
+        )
 
         # Настраиваем гибридный поиск
         hybrid = (
             Hybrid(
-                semantic_ratio=ratio,
+                semantic_ratio=dto.ratio,
                 embedder=EMBEDDER_NAME,
             )
-            if ratio > 0
+            if dto.ratio > 0
             else None
         )
 
         # Выполняем поиск
         res = await self._material_index.search(
-            query=query,
+            query=dto.query,
             hybrid=hybrid,
             ranking_score_threshold=0,  # Для query поиска не используем threshold
             filter=f,
-            limit=limit,
+            limit=dto.limit,
         )
 
         # Логируем в Langfuse
         if hybrid is not None:
-            self._log_langfuse(user_id, "", total_tokens, "material-query-search")
+            self._log_langfuse(dto.user_id, "", total_tokens, "material-query-search")
 
         # Преобразуем результаты в MaterialChunk
-        docs: list[Doc] = [Doc(**hit) for hit in res.hits]
-        chunks = [self._doc_to_chunk(doc) for doc in docs]
+        docs: list[Doc] = [Doc.from_hit(hit) for hit in res.hits]
+        chunks = [doc.to_chunk() for doc in docs]
 
         logging.info(f"Found {len(chunks)} chunks for query search")
         return chunks
-
-    def _doc_to_chunk(self, doc: Doc) -> MaterialChunk:
-        """Преобразует Doc в MaterialChunk."""
-        idx = doc.id.split("-")[-1]
-
-        if not idx.isdigit():
-            raise ValueError(f"Invalid chunk id: {doc.id}")
-        idx = int(idx)
-
-        return MaterialChunk(
-            id=doc.id,
-            idx=int(idx),
-            material_id=doc.materialId,
-            title=doc.title,
-            content=doc.content,
-        )
 
     def _log_langfuse(
         self, user_id: str, session_id: str, total_tokens: int, name: str

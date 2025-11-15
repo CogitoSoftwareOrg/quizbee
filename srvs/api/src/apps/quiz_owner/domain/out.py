@@ -1,4 +1,7 @@
+from dataclasses import dataclass
 from typing import Protocol
+
+from src.apps.user_owner.domain._in import Principal
 
 from .models import Quiz, QuizItem
 
@@ -22,13 +25,26 @@ class QuizIndexer(Protocol):
     ) -> list[Quiz]: ...
 
 
+@dataclass(frozen=True, slots=True)
+class PatchGeneratorDto:
+    quiz: Quiz
+    cache_key: str
+    chunks: list[str] | None = None
+    item_order: int | None = None  # Order of the item to generate
+
+
 class PatchGenerator(Protocol):
-    async def generate(self, quiz: Quiz, cache_key: str) -> None: ...
+    async def generate(self, dto: PatchGeneratorDto) -> None: ...
 
 
 class QuizFinalizer(Protocol):
     async def finalize(self, quiz: Quiz, cache_key: str) -> None: ...
 
+
+# class QuizClusterer(Protocol):
+#     async def cluster(self, quiz: Quiz, user: Principal) -> None: ...
+# class QuizSummarizer(Protocol):
+#     async def summarize(self, quiz: Quiz, user: Principal) -> None: ...
 
 # class UOW(Protocol):
 #     quizzes: QuizRepository

@@ -1,5 +1,5 @@
 from src.apps.quiz_owner.domain._in import (
-    QuizGeneratorApp,
+    QuizApp,
     GenerateCmd,
     FinalizeQuizCmd,
     GenMode,
@@ -17,9 +17,9 @@ from src.apps.material_owner.domain._in import (
 )
 from src.apps.user_owner.domain._in import AuthUserApp
 from src.apps.user_owner.domain.models import Tariff
+from src.apps.quiz_owner.domain.constants import PATCH_LIMIT
 
 from ..domain.errors import NotEnoughQuizItemsError
-from ..domain.constants import PATCH_LIMIT
 
 from ..domain._in import (
     EdgeAPIApp,
@@ -37,29 +37,29 @@ class EdgeAPIAppImpl(EdgeAPIApp):
     def __init__(
         self,
         user_auth: AuthUserApp,
-        quiz_generator: QuizGeneratorApp,
+        quiz_app: QuizApp,
         quiz_attempter: QuizAttempterApp,
         material: MaterialApp,
     ):
         self.user_auth = user_auth
-        self.quiz_generator = quiz_generator
+        self.quiz_app = quiz_app
         self.quiz_attempter = quiz_attempter
         self.material = material
 
     async def start_quiz(self, cmd: PublicStartQuizCmd) -> None:
         user = await self.user_auth.validate(cmd.token)
-        cost = PATCH_LIMIT
+        cost = PATCH_LIMIT * 2
         if user.remaining < cost:
             raise NotEnoughQuizItemsError(
                 quiz_id=cmd.quiz_id, user_id=user.id, cost=cost, stored=user.remaining
             )
 
-        await self.quiz_generator.start(
+        await self.quiz_app.start(
             GenerateCmd(
                 user=user,
                 quiz_id=cmd.quiz_id,
                 cache_key=cmd.cache_key,
-                mode=GenMode.Continue,
+                mode=GenMode.Start,
             )
         )
 
@@ -67,13 +67,13 @@ class EdgeAPIAppImpl(EdgeAPIApp):
 
     async def generate_quiz_items(self, cmd: PublicGenerateQuizItemsCmd) -> None:
         user = await self.user_auth.validate(cmd.token)
-        cost = PATCH_LIMIT
-        if user.remaining < cost:
+        cost = PATCH_LIMIT if cmd.mode != GenMode.Regenerate else 0
+        if user.remaining <= cost:
             raise NotEnoughQuizItemsError(
                 quiz_id=cmd.quiz_id, user_id=user.id, cost=cost, stored=user.remaining
             )
 
-        await self.quiz_generator.generate(
+        await self.quiz_app.generate(
             GenerateCmd(
                 user=user,
                 quiz_id=cmd.quiz_id,
@@ -82,11 +82,12 @@ class EdgeAPIAppImpl(EdgeAPIApp):
             )
         )
 
-        await self.user_auth.charge(user.id, cost)
+        if cost > 0:
+            await self.user_auth.charge(user.id, cost)
 
     async def finalize_quiz(self, cmd: PublicFinalizeQuizCmd) -> None:
         user = await self.user_auth.validate(cmd.token)
-        await self.quiz_generator.finalize(
+        await self.quiz_app.finalize(
             FinalizeQuizCmd(
                 user=user,
                 quiz_id=cmd.quiz_id,

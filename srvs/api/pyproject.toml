@@ -27,6 +27,12 @@ dependencies = [
     "fastapi-limiter>=0.1.6",
     "nanoid>=2.0.0",
     "arq>=0.26.3",
+    "numpy>=2.0.0",
+    "scikit-learn>=1.6.0",
+    "hdbscan>=0.8.0",
+    "umap-learn>=0.5.9",
+    "voyageai>=0.3.5",
+    "bertopic>=0.17.3",
     # Workspace packages (resolved from PyPI in production, workspace in dev)
     "quizbee-example-lib>=0.1.0",
 ]
