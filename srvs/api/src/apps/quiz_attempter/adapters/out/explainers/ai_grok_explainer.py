@@ -154,7 +154,8 @@ class AIGrokExplainer(Explainer):
             user_contents.append(deps.quiz.material_content)
 
         parts = []
-        parts.append(UserPromptPart(content=user_contents))
+        if user_contents:
+            parts.append(UserPromptPart(content="\n".join(user_contents)))
         parts.append(
             SystemPromptPart(
                 content=self._lf.get_prompt(
