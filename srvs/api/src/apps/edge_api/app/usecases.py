@@ -33,6 +33,9 @@ from ..domain._in import (
 )
 
 
+
+
+
 class EdgeAPIAppImpl(EdgeAPIApp):
     def __init__(
         self,
@@ -111,6 +114,14 @@ class EdgeAPIAppImpl(EdgeAPIApp):
 
     async def add_material(self, cmd: PublicAddMaterialCmd) -> Material:
         user = await self.user_auth.validate(cmd.token)
+
+        # Check storage limit
+        file_size = len(cmd.file.file_bytes)
+        if user.storage_usage + file_size > user.storage_limit:
+            raise ValueError(
+                f"Storage limit exceeded. Used: {user.storage_usage}, Limit: {user.storage_limit}, File: {file_size}"
+            )
+
         material = await self.material.add_material(
             AddMaterialCmd(
                 quiz_id=cmd.quiz_id,
@@ -120,16 +131,27 @@ class EdgeAPIAppImpl(EdgeAPIApp):
                 material_id=cmd.material_id,
             )
         )
+
+        await self.user_auth.update_storage(user.id, file_size)
+
         return material
 
     async def remove_material(self, cmd: PublicRemoveMaterialCmd) -> None:
         user = await self.user_auth.validate(cmd.token)
+
+        # Get material to know its size
+        material = await self.material.get_material(cmd.material_id)
+        size_to_free = material.size_bytes if material else 0
+
         await self.material.remove_material(
             RemoveMaterialCmd(
                 user=user,
                 material_id=cmd.material_id,
             )
         )
+
+        if size_to_free > 0:
+            await self.user_auth.update_storage(user.id, -size_to_free)
 
     async def ask_explainer(self, cmd: PublicAskExplainerCmd):
         user = await self.user_auth.validate(cmd.token)

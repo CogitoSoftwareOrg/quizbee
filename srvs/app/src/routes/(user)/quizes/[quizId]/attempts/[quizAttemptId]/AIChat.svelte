@@ -47,7 +47,7 @@
 
 	const sub = $derived(subscriptionStore.subscription);
 	const isFreePlan = $derived(sub?.tariff === 'free');
-	const canChat = $derived(!!(itemDecision && item && quizAttempt && quiz && !isFreePlan));
+	const canChat = $derived(itemDecision && item && quizAttempt && quiz);
 
 	async function handleSend(content: string) {
 		if (!item || !quizAttempt || !quiz) return;

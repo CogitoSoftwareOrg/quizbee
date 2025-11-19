@@ -69,6 +69,7 @@ class PBMaterialRepository(MaterialRepository):
             status=MaterialStatus(rec.get("status") or ""),
             kind=MaterialKind(rec.get("kind") or ""),
             tokens=rec.get("tokens") or 0,
+            size_bytes=rec.get("bytes") or 0,
             file=MaterialFile(
                 file_name=rec.get("file") or "",
                 file_bytes=file_bytes,

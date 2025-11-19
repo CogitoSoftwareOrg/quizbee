@@ -34,8 +34,12 @@
 	let messagesContainer: HTMLElement | null = $state(null);
 	let showScrollButton = $state(false);
 
+	let lastLength = 0;
 	$effect(() => {
-		if (messages.length > 0) setTimeout(() => scrollToBottom(messagesContainer), 100);
+		if (messages.length > 0) {
+			if (messages.length > lastLength) setTimeout(() => scrollToBottom(messagesContainer), 100);
+			lastLength = messages.length;
+		}
 	});
 
 	function onscroll() {
@@ -55,7 +59,7 @@
 		{#if messages.length === 0}
 			<div class="flex h-full flex-col items-center justify-center text-center">
 				<div class="mb-4 text-6xl">💬</div>
-				<p class="mb-3 text-base-content/70 text-lg font-medium">No messages yet, waiting...</p>
+				<p class="text-base-content/70 mb-3 text-lg font-medium">No messages yet, waiting...</p>
 				<ExplainMore sender={userSender} {quizAttemptId} {itemId} {quiz} />
 			</div>
 		{:else}

@@ -16,13 +16,14 @@ class PBUserRepository(UserRepository):
         )
         return self._rec_to_user(rec)
 
-    async def save(self, user: User, cost: int) -> None:
+    async def save(self, user: User, cost: int = 0, storage_delta: int = 0) -> None:
         sub = user.subscription
         try:
             await self.pb.collection("subscriptions").update(
                 sub.id,
                 {
                     "quizItemsUsage+": cost,
+                    "storageUsage+": storage_delta,
                 },
             )
         except Exception as e:
@@ -39,6 +40,8 @@ class PBUserRepository(UserRepository):
                 id=sub_rec.get("id") or "",
                 quiz_items_limit=sub_rec.get("quizItemsLimit") or 0,
                 quiz_items_usage=sub_rec.get("quizItemsUsage") or 0,
+                storage_usage=sub_rec.get("storageUsage") or 0,
+                storage_limit=sub_rec.get("storageLimit") or 0,
                 tariff=sub_rec.get("tariff") or Tariff.FREE,
             ),
         )

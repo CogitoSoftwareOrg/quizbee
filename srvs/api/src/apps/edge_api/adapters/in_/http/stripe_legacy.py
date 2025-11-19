@@ -21,7 +21,8 @@ STRIPE_LOOKUPS = [
 @dataclass(slots=True, kw_only=True)
 class Limits:
     quizItemsLimit: int
-    bytesLimit: int
+    quizItemsLimit: int
+    storageLimit: int
 
 
 @dataclass(slots=True, kw_only=True)
@@ -48,7 +49,7 @@ for price in prices:
         tariff=tariff,
         limits=Limits(
             quizItemsLimit=1000 if tariff == "plus" else 2000,
-            bytesLimit=8_388_608 if tariff == "plus" else 83_886_080,  # 1GB
+            storageLimit=10 * 1024 * 1024 * 1024 if tariff == "plus" else 100 * 1024 * 1024 * 1024,
         ),
     )
     PRICES_MAP_BY_ID[price.id] = price_obj
