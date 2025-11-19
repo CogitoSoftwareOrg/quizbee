@@ -13,11 +13,11 @@
 
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
 	import Messages from '$lib/apps/messages/Messages.svelte';
-	import MessageField from '$lib/apps/messages/MessageField.svelte';
-	import SendMessage from '$lib/apps/messages/SendMessage.svelte';
+	import MessageControls from '$lib/apps/messages/MessageControls.svelte';
 	import { Crown, HelpCircle, X } from 'lucide-svelte';
 	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
 	import { uiStore } from '$lib/apps/users/ui.svelte';
+	import { messagesStore } from '$lib/apps/messages/stores/messages.svelte';
 
 	interface Props {
 		class?: ClassValue;
@@ -29,6 +29,7 @@
 		userSender: Sender;
 		assistantSender: Sender;
 		open: boolean;
+		showCloseButton?: boolean;
 	}
 
 	let {
@@ -40,28 +41,34 @@
 		messages,
 		userSender,
 		assistantSender,
-		open = $bindable(false)
+		open = $bindable(false),
+		showCloseButton = true
 	}: Props = $props();
-
-	let query = $state('');
 
 	const sub = $derived(subscriptionStore.subscription);
 	const isFreePlan = $derived(sub?.tariff === 'free');
 	const canChat = $derived(!!(itemDecision && item && quizAttempt && quiz && !isFreePlan));
+
+	async function handleSend(content: string) {
+		if (!item || !quizAttempt || !quiz) return;
+		await messagesStore.sendMessage(userSender, content, quizAttempt.id, quiz.id, item.id);
+	}
 </script>
 
 <div class={['flex h-full flex-col overflow-hidden', className]}>
 	<header class="border-base-200 relative flex items-center justify-center border-b px-3 py-2">
 		<h2 class="text-sm font-semibold uppercase tracking-wide">AI Chat</h2>
-		<Button
-			style="ghost"
-			circle
-			color="neutral"
-			class="absolute right-3"
-			onclick={() => (open = false)}
-		>
-			<X size={36} />
-		</Button>
+		{#if showCloseButton}
+			<Button
+				style="ghost"
+				circle
+				color="neutral"
+				class="absolute right-3"
+				onclick={() => (open = false)}
+			>
+				<X size={36} />
+			</Button>
+		{/if}
 	</header>
 
 	<section class="flex flex-1 flex-col overflow-hidden px-3 py-0">
@@ -108,24 +115,7 @@
 				<Crown class="block" size={24} />
 			</Button>
 		{:else if quiz && item && quizAttempt}
-			<MessageField
-				bind:inputText={query}
-				{item}
-				attempt={quizAttempt}
-				{quiz}
-				sender={userSender}
-				{messages}
-			/>
-			<div class="flex justify-end">
-				<SendMessage
-					{item}
-					attempt={quizAttempt}
-					{quiz}
-					sender={userSender}
-					{messages}
-					inputText={query}
-				/>
-			</div>
+			<MessageControls {messages} onSend={handleSend} />
 		{/if}
 	</footer>
 </div>

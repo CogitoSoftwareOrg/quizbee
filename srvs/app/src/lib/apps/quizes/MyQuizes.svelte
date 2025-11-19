@@ -216,7 +216,7 @@
 
 		<div class="flex flex-col gap-3 sm:flex-row">
 			<Input
-				class="flex-1"
+				class="w-full flex-1"
 				placeholder="Search by title, summary, materials, or tags"
 				value={searchQuery}
 				oninput={(event) => {

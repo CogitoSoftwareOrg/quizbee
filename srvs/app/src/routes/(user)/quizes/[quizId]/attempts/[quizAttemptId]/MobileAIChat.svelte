@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { ChevronUp } from 'lucide-svelte';
+	import { ChevronUp, X } from 'lucide-svelte';
+	import { Button } from '@quizbee/ui-svelte-daisy';
 
 	import type { Sender } from '$lib/apps/messages/types';
 	import type {
@@ -224,12 +225,20 @@
 	style:height="95vh"
 	style:transition-duration={isDragging ? '0ms' : '300ms'}
 >
-	<!-- Handle для свайпа -->
 	<div
 		bind:this={handleElement}
-		class="flex cursor-grab items-center justify-center py-3 active:cursor-grabbing"
+		class="relative flex cursor-grab items-center justify-center py-3 active:cursor-grabbing"
 	>
-		<div class="bg-base-300 h-1.5 w-12 rounded-full"></div>
+		<div class="bg-base-300 my-4 h-1.5 w-12 rounded-full"></div>
+		<Button
+			style="ghost"
+			circle
+			color="neutral"
+			class="absolute right-2 top-1/2 -translate-y-1/2"
+			onclick={() => (open = false)}
+		>
+			<X size={24} />
+		</Button>
 	</div>
 
 	<!-- AIChat контент -->
@@ -244,6 +253,7 @@
 			{userSender}
 			{assistantSender}
 			bind:open
+			showCloseButton={false}
 		/>
 	</div>
 </div>

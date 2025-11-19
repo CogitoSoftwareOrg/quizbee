@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 import logging
 import asyncio
-import voyageai
+from voyageai.client_async import AsyncClient as VoyageAsyncClient
 from langfuse import Langfuse
 from meilisearch_python_sdk import AsyncClient
 from meilisearch_python_sdk.models.search import Hybrid
@@ -16,7 +16,7 @@ from ....domain.out import MaterialIndexer, LLMTools
 from ....domain.errors import TooManyTextTokensError
 from src.apps.llm_tools.domain.out import TextChunk
 
-EMBEDDER_NAME = "materialChunk" # здесь я поменял с materialChunks потому что иначе у меня требовало размерность прошлого эмбедера
+EMBEDDER_NAME = "materialChunk"  # здесь я поменял с materialChunks потому что иначе у меня требовало размерность прошлого эмбедера
 EMBEDDER_TEMPLATE = "Chunk {{doc.title}}: {{doc.content}}"
 
 meiliVoyageEmbeddings = {
@@ -90,7 +90,7 @@ class MeiliMaterialIndexer(MaterialIndexer):
         self.llm_tools = llm_tools
         self.meili = meili
         self.material_index = meili.index(EMBEDDER_NAME)
-        self.voyage_client = voyageai.AsyncClient(api_key=settings.voyageai_api_key)
+        self.voyage_client = VoyageAsyncClient(api_key=settings.voyageai_api_key)
 
     @classmethod
     async def ainit(
@@ -99,7 +99,9 @@ class MeiliMaterialIndexer(MaterialIndexer):
         instance = cls(lf, llm_tools, meili)
 
         await instance.material_index.update_embedders(
-            Embedders(embedders=meiliVoyageEmbeddings)  # pyright: ignore[reportArgumentType]
+            Embedders(
+                embedders=meiliVoyageEmbeddings  # pyright: ignore[reportArgumentType]
+            )
         )
         await instance.material_index.update_filterable_attributes(
             ["userId", "materialId", "idx", "used", "page"]
@@ -125,10 +127,10 @@ class MeiliMaterialIndexer(MaterialIndexer):
 
         # Check if text has page markers (O(n) worst case, but typically O(1) due to early match)
         has_page_markers = "{quizbee_page_number_" in text[:100_000]
-        
+
         chunks_result = self.llm_tools.chunk(text, respect_pages=has_page_markers)
         docs: list[Doc] = []
-        
+
         for i, chunk in enumerate(chunks_result):
             if isinstance(chunk, TextChunk):
                 docs.append(
@@ -168,11 +170,7 @@ class MeiliMaterialIndexer(MaterialIndexer):
         if docs_tokens > MAX_TEXT_INDEX_TOKENS:
             raise TooManyTextTokensError(docs_tokens)
 
-
-
-
-
-        #optimal batching 
+        # optimal batching
         batch_size = 1000
 
         embed_tasks = []
@@ -184,23 +182,20 @@ class MeiliMaterialIndexer(MaterialIndexer):
                     batch_texts,
                     model="voyage-3.5-lite",
                     input_type="document",
-                    output_dimension=1024
-                
+                    output_dimension=1024,
                 )
             )
 
         logging.info(f"Sent {len(embed_tasks)} embedding requests to gather")
         results = await asyncio.gather(*embed_tasks)
         logging.info(f"Received all embedding results from gather")
-        
+
         all_embeddings = []
         for result in results:
             all_embeddings.extend(result.embeddings)
-                
+
         for doc, embedding in zip(docs, all_embeddings):
-            doc._vectors = {
-                EMBEDDER_NAME: embedding
-            }
+            doc._vectors = {EMBEDDER_NAME: embedding}
 
         task = await self.material_index.add_documents(
             [doc.to_dict() for doc in docs], primary_key="id"
@@ -220,9 +215,7 @@ class MeiliMaterialIndexer(MaterialIndexer):
         elif task.status == "succeeded":
             for doc in docs:
                 indexed = self._fill_template(doc)
-                total_tokens += self.llm_tools.count_text(
-                    indexed, LLMS.VOYAGE_3_5_LITE
-                )
+                total_tokens += self.llm_tools.count_text(indexed, LLMS.VOYAGE_3_5_LITE)
                 logging.info(f"Indexed chunk {doc.id}: (tokens: {total_tokens})")
         else:
             logging.error(f"Unknown task status: {task}")
@@ -254,7 +247,7 @@ class MeiliMaterialIndexer(MaterialIndexer):
     async def mark_chunks_as_used(self, chunk_ids: list[str]) -> None:
         """
         Отмечает чанки как использованные.
-        
+
         Args:
             chunk_ids: Список ID чанков для пометки
         """
@@ -263,14 +256,16 @@ class MeiliMaterialIndexer(MaterialIndexer):
 
         # Обновляем документы, устанавливая used=True
         docs_to_update = [{"id": chunk_id, "used": True} for chunk_id in chunk_ids]
-        
-        task = await self.material_index.update_documents(docs_to_update, primary_key="id")
+
+        task = await self.material_index.update_documents(
+            docs_to_update, primary_key="id"
+        )
         task = await self.meili.wait_for_task(
             task.task_uid,
             timeout_in_ms=int(30 * 1000),
             interval_in_ms=int(0.5 * 1000),
         )
-        
+
         if task.status == "failed":
             logging.error(f"Failed to mark chunks as used: {task}")
         elif task.status == "succeeded":
