@@ -40,20 +40,22 @@ export async function load({ depends }) {
 					.catch(() => null),
 				pb!
 					.collection('materials')
-					.getFullList({ filter: `user="${user.id}"` })
+					.getFullList({ filter: `user="${user.id}"`, sort: '-created' })
 					.catch(() => []),
 				pb!
 					.collection('quizAttempts')
 					.getFullList<QuizAttemptsResponse<unknown, unknown, QuizAttemptExpand>>({
 						filter: `user="${user.id}"`,
-						expand: 'quiz,quiz.quizItems_via_quiz'
+						expand: 'quiz,quiz.quizItems_via_quiz',
+						sort: '-created'
 					})
 					.catch(() => [] as QuizAttemptsResponse<unknown, unknown, QuizAttemptExpand>[]),
 				pb!
 					.collection('quizes')
 					.getFullList<QuizesResponse<unknown, unknown, unknown, QuizExpand>>({
 						filter: `author="${user.id}"`,
-						expand: 'quizItems_via_quiz'
+						expand: 'quizItems_via_quiz',
+						sort: '-created'
 					})
 					.catch(() => [] as QuizesResponse<unknown, unknown, unknown, QuizExpand>[])
 			]);

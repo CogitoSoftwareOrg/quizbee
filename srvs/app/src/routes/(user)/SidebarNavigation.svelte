@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { MediaQuery } from 'svelte/reactivity';
 	import { page } from '$app/state';
-	import { House, ChartBar, CreditCard, Plus, History, Pickaxe } from 'lucide-svelte';
+	import { House, ChartBar, CreditCard, Plus, History, Pickaxe, FileText } from 'lucide-svelte';
 	import { Button } from '@quizbee/ui-svelte-daisy';
 
 	import { uiStore } from '$lib/apps/users/ui.svelte';
@@ -27,6 +27,12 @@
 			label: 'Quizes',
 			href: '/quizes',
 			icon: History
+		},
+		{
+			name: '/materials',
+			label: 'Materials',
+			href: '/materials',
+			icon: FileText
 		},
 		{
 			name: '/analytics',

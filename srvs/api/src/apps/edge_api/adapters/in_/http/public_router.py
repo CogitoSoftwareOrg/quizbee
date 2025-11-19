@@ -171,15 +171,15 @@ async def ask_explainer(
 
 
 # Material Search
-@edge_api_router.post("/quizes/{quiz_id}/materials", status_code=201)
+@edge_api_router.post("/materials", status_code=201)
 async def add_material(
-    quiz_id: str,
     arq_pool: ArqPoolDeps,
     token: UserTokenDeps,
     edge_api_app: EdgeAPIAppDeps,
     file: UploadFile = File(...),
     title: str = Form(...),
     material_id: str = Form(...),
+    quiz_id: str | None = Form(None),
 ):
     file_bytes = await file.read()
     cmd = PublicAddMaterialCmd(
@@ -200,16 +200,14 @@ async def add_material(
 
 
 @edge_api_router.delete(
-    "/quizes/{quiz_id}/materials/{material_id}", status_code=status.HTTP_202_ACCEPTED
+    "/materials/{material_id}", status_code=status.HTTP_202_ACCEPTED
 )
 async def remove_material(
-    quiz_id: str,
     material_id: str,
     token: UserTokenDeps,
     arq_pool: ArqPoolDeps,
 ):
     cmd = PublicRemoveMaterialCmd(
-        quiz_id=quiz_id,
         material_id=material_id,
         token=token,
         cache_key=cache_key(material_id),
