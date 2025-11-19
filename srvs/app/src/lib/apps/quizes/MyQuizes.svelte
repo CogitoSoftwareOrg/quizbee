@@ -9,9 +9,7 @@
 		QuizItemsResponse,
 		QuizAttemptsResponse,
 		QuizExpand,
-
 		QuizAttemptExpand
-
 	} from '@quizbee/pb-types';
 
 	import type { ClassValue } from 'svelte/elements';
