@@ -6,6 +6,7 @@ import { useTranslatedPath } from "@/i18n/utils";
 import { defaultLang, type languages } from "@/i18n/ui";
 import QuizCategoryCover from "@/components/quizes/QuizCategoryCover.astro";
 import Pagination from "@/components/blog/Pagination.astro";
+import QuizGrid from "@/components/quizes/QuizGrid.svelte";
 
 const { page } = Astro.props as {
   page: Page;
@@ -58,73 +59,12 @@ const pageHref = (n: number) => tp(`/quizes/${category}/page/${n}`);
     </section>
 
     <!-- GRID карточек -->
-    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-      {
-        quizes.map((quiz: any) => {
-          const href = tp(`/quizes/${quiz.category}/${quiz.slug || quiz.id}`);
-          const difficulty = quiz.difficulty ?? "beginner";
-          const itemsCount = quiz.itemsLimit ?? 0;
-
-          return (
-            <a
-              href={href}
-              class="group rounded-2xl bg-card overflow-hidden hover:shadow-lg transition-shadow border border-base-300"
-            >
-              <div class="p-5">
-                <div class="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
-                  <span class="capitalize font-medium text-primary">
-                    {difficulty}
-                  </span>
-                  {itemsCount > 0 && (
-                    <>
-                      <span>·</span>
-                      <span>{itemsCount} questions</span>
-                    </>
-                  )}
-                  {quiz.generation && (
-                    <>
-                      <span>·</span>
-                      <span class="capitalize">v{quiz.generation}</span>
-                    </>
-                  )}
-                </div>
-
-                <h2 class="text-lg font-bold leading-snug group-hover:text-primary transition-colors line-clamp-2 mb-2">
-                  {quiz.title ?? quiz.slug}
-                </h2>
-
-                {quiz.summary && (
-                  <p class="text-sm text-muted-foreground line-clamp-2 mb-3">
-                    {quiz.summary}
-                  </p>
-                )}
-
-                {Array.isArray(quiz.tags) && quiz.tags.length > 0 && (
-                  <div class="flex flex-wrap gap-2">
-                    {quiz.tags.slice(0, 3).map((t: string) => (
-                      <span class="text-[11px] text-muted-foreground bg-muted px-2 py-1 rounded-full">
-                        #{t}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </a>
-          );
-        })
-      }
-    </section>
-
-    <!-- Empty state -->
-    {
-      quizes.length === 0 && (
-        <div class="text-center py-12">
-          <p class="text-muted-foreground">
-            No quizes found in this category yet.
-          </p>
-        </div>
-      )
-    }
+    <QuizGrid
+      client:load
+      initialQuizzes={quizes}
+      category={category}
+      localePrefix={locale === defaultLang ? "" : locale}
+    />
 
     <Pagination page={page} getPageHref={pageHref} />
   </div>

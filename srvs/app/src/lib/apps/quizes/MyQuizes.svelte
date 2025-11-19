@@ -6,11 +6,13 @@
 	import type {
 		MaterialsResponse,
 		QuizesResponse,
-		QuizExpand,
 		QuizItemsResponse,
 		QuizAttemptsResponse,
+		QuizExpand,
+
 		QuizAttemptExpand
-	} from '$lib/pb';
+
+	} from '@quizbee/pb-types';
 
 	import type { ClassValue } from 'svelte/elements';
 	import { quizItemsStore } from './quizItems.svelte';
@@ -32,6 +34,7 @@
 		lastAttemptDate: string;
 		isAuthor: boolean;
 		isInProgress: boolean;
+		archived: boolean;
 	}
 
 	interface Props {
@@ -127,7 +130,8 @@
 				attemptsCount: attempts.length,
 				lastAttemptDate,
 				isAuthor,
-				isInProgress
+				isInProgress,
+				archived: quiz.archived || false
 			} satisfies QuizItem;
 		});
 
@@ -140,6 +144,7 @@
 	let selectedDifficulties = $state<string[]>([]);
 	let selectedOwnership = $state<'all' | 'mine' | 'others'>('all');
 	let showInProgress = $state(true);
+	let showArchived = $state(false);
 	let showFilters = $state(false);
 
 	const filteredQuizes = $derived.by(() => {
@@ -149,6 +154,25 @@
 		// In-progress filter
 		if (!showInProgress) {
 			result = result.filter((item) => !item.isInProgress);
+		}
+
+		// Archived filter
+		if (showArchived) {
+			// If showArchived is true, we show ONLY archived quizzes (or include them? User said "toggle archived (hidden by default)")
+			// Usually "Show Archived" means include them or show only them.
+			// Let's implement it as: if showArchived is ON, we show archived quizzes.
+			// If showArchived is OFF, we HIDE archived quizzes.
+			// Wait, if I toggle it ON, do I see ONLY archived or BOTH?
+			// "Also in quiz filters one can toggle archived (by default they are hidden)"
+			// This implies they are hidden by default. Toggling ON reveals them.
+			// So if showArchived is TRUE, we include them. If FALSE, we exclude them.
+			// BUT, usually archived items are excluded from general lists.
+			// So:
+			// if (!showArchived) { result = result.filter(item => !item.archived); }
+			// This means by default (false), archived are hidden.
+			// If true, they are shown (mixed with others).
+		} else {
+			result = result.filter((item) => !item.archived);
 		}
 
 		// Search filter
@@ -188,6 +212,7 @@
 		selectedDifficulties = [];
 		selectedOwnership = 'all';
 		showInProgress = true;
+		showArchived = false;
 	}
 
 	function toggleDifficulty(difficulty: string) {
@@ -199,7 +224,11 @@
 	}
 
 	const hasActiveFilters = $derived(
-		searchQuery || selectedDifficulties.length > 0 || selectedOwnership !== 'all' || !showInProgress
+		searchQuery ||
+			selectedDifficulties.length > 0 ||
+			selectedOwnership !== 'all' ||
+			!showInProgress ||
+			showArchived
 	);
 </script>
 
@@ -245,26 +274,28 @@
 
 		{#if showFilters}
 			<div class="bg-base-200/50 border-base-300 flex flex-col gap-5 rounded-xl border p-5">
-				<!-- In Progress Filter -->
+				<!-- In Progress & Archived Filter -->
 				<div class="flex flex-col gap-2">
-					<span class="label-text font-medium">Show in progress</span>
+					<span class="label-text font-medium">Status</span>
 					<div class="flex flex-wrap gap-2">
 						<Button
 							size="sm"
 							color={showInProgress ? 'primary' : 'neutral'}
 							style={showInProgress ? 'solid' : 'outline'}
-							onclick={() => (showInProgress = true)}
+							onclick={() => (showInProgress = !showInProgress)}
 						>
 							<Loader2 size={14} />
-							Show In Progress
+							{showInProgress ? 'Showing In Progress' : 'Hidden In Progress'}
 						</Button>
+
 						<Button
 							size="sm"
-							color={!showInProgress ? 'primary' : 'neutral'}
-							style={!showInProgress ? 'solid' : 'outline'}
-							onclick={() => (showInProgress = false)}
+							color={showArchived ? 'warning' : 'neutral'}
+							style={showArchived ? 'solid' : 'outline'}
+							onclick={() => (showArchived = !showArchived)}
 						>
-							Hide In Progress
+							<FileText size={14} />
+							{showArchived ? 'Showing Archived' : 'Hidden Archived'}
 						</Button>
 					</div>
 				</div>
@@ -413,6 +444,10 @@
 										<Crown size={12} />
 										My Quiz
 									</span>
+								{/if}
+
+								{#if item.archived}
+									<span class="badge badge-warning">Archived</span>
 								{/if}
 
 								<!-- Difficulty -->

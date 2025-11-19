@@ -2,8 +2,15 @@ export const ssr = false;
 export const prerender = false;
 
 import { pb } from '$lib/pb';
-import type { UsersResponse, QuizesResponse, QuizAttemptsResponse } from '$lib/pb';
-import type { QuizExpand, UserExpand, QuizAttemptExpand } from '$lib/pb/expands';
+import type {
+	UsersResponse,
+	QuizesResponse,
+	QuizAttemptsResponse,
+	QuizItemsResponse,
+	QuizExpand,
+	UserExpand,
+	QuizAttemptExpand
+} from '@quizbee/pb-types';
 
 import { materialsStore } from '$lib/apps/materials/materials.svelte';
 import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte';

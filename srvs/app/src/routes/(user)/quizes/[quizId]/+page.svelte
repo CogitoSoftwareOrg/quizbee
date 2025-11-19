@@ -5,19 +5,21 @@
 	import { Clock, Search, BookOpen, Play, ChevronDown, ChevronRight } from 'lucide-svelte';
 
 	import { Button, Input } from '@quizbee/ui-svelte-daisy';
+	import { QuizesStatusOptions, QuizesVisibilityOptions } from '@quizbee/pb-types';
+	import type { QuizItemsResponse, QuizExpand } from '@quizbee/pb-types';
 
-	import { userStore } from '$lib/apps/users/user.svelte.js';
-	import { pb } from '$lib/pb/client.js';
-	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte.js';
-	import { quizItemsStore } from '$lib/apps/quizes/quizItems.svelte.js';
+	import { userStore } from '$lib/apps/users/user.svelte';
+	import { pb } from '$lib/pb';
+	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte';
+	import { quizItemsStore } from '$lib/apps/quizes/quizItems.svelte';
 	import ShareQuizButton from '$lib/apps/quizes/ShareQuizButton.svelte';
 	import ToggleQuizVisibility from '$lib/apps/quizes/ToggleQuizVisibility.svelte';
-	import type { QuizExpand, QuizItemsResponse } from '$lib/pb';
+	import ArchiveQuizButton from '$lib/apps/quizes/ArchiveQuizButton.svelte';
+	import QuizTitleEditor from '$lib/apps/quizes/QuizTitleEditor.svelte';
+
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
-	import { QuizesVisibilityOptions } from '$lib/pb';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
 	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
-	import { QuizesStatusOptions } from '@quizbee/pb-types';
 
 	const { data } = $props();
 	const quiz = $derived(
@@ -104,9 +106,18 @@
 		await goto(`/quizes/${quiz.id}/attempts/${attempt.id}`);
 	}
 
+	import { onDestroy } from 'svelte';
+
 	onMount(async () => {
+		if (user) {
+			await quizesStore.subscribe(user.id);
+		}
 		if (!forceStart || !user || !quiz) return;
 		await startQuiz(true);
+	});
+
+	onDestroy(() => {
+		quizesStore.unsubscribe();
 	});
 </script>
 
@@ -117,24 +128,39 @@
 	<section class="flex flex-1 flex-col gap-4 sm:min-h-0">
 		{#if quiz}
 			<div class="bg-base-200 space-y-4 rounded-2xl p-4">
-				<div class="flex flex-wrap items-start justify-between gap-3">
-					<h1 class="text-3xl font-bold leading-tight">{quiz.title || 'Quiz'}</h1>
+				<div class="flex flex-col gap-4">
+					<div class="flex flex-col flex-wrap items-start justify-between gap-3">
+						<QuizTitleEditor
+							class="w-full"
+							quizId={quiz.id}
+							initialTitle={quiz.title || 'Quiz'}
+							isOwner={user?.id === quiz.author}
+						/>
 
-					<!-- {#if quiz?.summary}
-					<p class="text-base-content/70 text-sm">{quiz.summary}</p>
-					{/if} -->
+						<div class="flex gap-2">
+							{#if quiz.visibility === QuizesVisibilityOptions.public || quiz.visibility === QuizesVisibilityOptions.search}
+								<ShareQuizButton block quizId={quiz.id} quizTitle={quiz.title || 'Quiz'} />
+							{/if}
 
-					{#if quiz.visibility === QuizesVisibilityOptions.public || quiz.visibility === QuizesVisibilityOptions.search}
-						<ShareQuizButton block quizId={quiz.id} quizTitle={quiz.title || 'Quiz'} />
+							{#if user?.id === quiz.author}
+								<ArchiveQuizButton
+									quizId={quiz.id}
+									quizTitle={quiz.title || 'Quiz'}
+									archived={quiz.archived || false}
+								/>
+							{/if}
+						</div>
+					</div>
+
+					{#if user?.id === quiz.author}
+						<div class="border-base-300 border-t pt-4">
+							<ToggleQuizVisibility
+								quizId={quiz.id}
+								visibility={quiz.visibility || QuizesVisibilityOptions.private}
+							/>
+						</div>
 					{/if}
 				</div>
-
-				{#if user?.id === quiz.author}
-					<ToggleQuizVisibility
-						quizId={quiz.id}
-						visibility={quiz.visibility || QuizesVisibilityOptions.private}
-					/>
-				{/if}
 
 				<!-- {#if user?.id === quiz.author && quiz.materials && quiz.materials.length > 0}
 					<div>

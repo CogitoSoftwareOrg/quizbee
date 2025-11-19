@@ -1,6 +1,7 @@
 import { userStore } from '$lib/apps/users/user.svelte';
 
-import type { UsersResponse } from './pocketbase-types';
+import type { UsersResponse } from '@quizbee/pb-types';
+
 import type { UserExpand } from './expands';
 import { pb } from './client';
 

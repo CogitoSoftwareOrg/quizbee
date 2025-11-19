@@ -2,9 +2,9 @@
 	import { Link, Search } from 'lucide-svelte';
 
 	import { Modal, Button } from '@quizbee/ui-svelte-daisy';
+	import { QuizesVisibilityOptions } from '@quizbee/pb-types';
 
-	import { pb } from '$lib/pb/client';
-	import { QuizesVisibilityOptions } from '$lib/pb';
+	import { pb } from '$lib/pb';
 
 	interface Props {
 		quizId: string;
@@ -92,15 +92,17 @@
 		</div>
 	</div>
 
-	<div class="toggle toggle-lg bg-transparent! [&:before]:bg-current" onclick={handleSearchToggleClick}>
-	<input
-		type="checkbox"
-		class="sr-only"
-		checked={isSearchable}
-		disabled={isUpdating}
-		
-		style="--tglbg: oklch(var(--b3));"
-	/>
+	<div
+		class="toggle toggle-lg bg-transparent! [&:before]:bg-current"
+		onclick={handleSearchToggleClick}
+	>
+		<input
+			type="checkbox"
+			class="sr-only"
+			checked={isSearchable}
+			disabled={isUpdating}
+			style="--tglbg: oklch(var(--b3));"
+		/>
 	</div>
 </div>
 

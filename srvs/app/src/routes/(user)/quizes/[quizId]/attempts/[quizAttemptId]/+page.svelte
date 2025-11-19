@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 
 	import { Button } from '@quizbee/ui-svelte-daisy';
+	import type { QuizExpand } from '@quizbee/pb-types';
 
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte.js';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte.js';
@@ -11,7 +12,6 @@
 	import type { Sender } from '$lib/apps/messages/types';
 	import { messagesStore } from '$lib/apps/messages/stores/messages.svelte';
 	import { userStore } from '$lib/apps/users/user.svelte';
-	import type { QuizExpand } from '$lib/pb';
 
 	import AIChat from './AIChat.svelte';
 	import QuizItemsNavigation from './QuizItemsNavigation.svelte';
