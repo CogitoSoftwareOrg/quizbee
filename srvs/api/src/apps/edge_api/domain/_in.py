@@ -49,15 +49,19 @@ class PublicAskExplainerCmd(BaseCmd):
 
 
 @dataclass(frozen=True, slots=True)
-class PublicAddMaterialCmd(BaseCmd):
-    quiz_id: str
+class PublicAddMaterialCmd:
+    token: str
+    cache_key: str
+    quiz_id: str | None
     file: MaterialFile
     title: str
     material_id: str
 
 
 @dataclass(frozen=True, slots=True)
-class PublicRemoveMaterialCmd(BaseCmd):
+class PublicRemoveMaterialCmd:
+    token: str
+    cache_key: str
     material_id: str
 
 

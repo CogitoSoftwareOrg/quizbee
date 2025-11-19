@@ -2,15 +2,15 @@
 	import { Clock, Search } from 'lucide-svelte';
 
 	import { Input } from '@quizbee/ui-svelte-daisy';
-
-	import type { Answer } from '$lib/apps/quizes/types';
 	import type {
 		MaterialsResponse,
 		QuizAttemptsResponse,
 		QuizesResponse,
 		QuizExpand,
 		QuizItemsResponse
-	} from '$lib/pb';
+	} from '@quizbee/pb-types';
+
+	import type { Answer } from '$lib/apps/quizes/types';
 
 	import type { Decision } from './types';
 	import type { ClassValue } from 'svelte/elements';

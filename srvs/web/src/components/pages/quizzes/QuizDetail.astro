@@ -1,12 +1,14 @@
 ---
 import { ArrowRight } from "@lucide/astro";
 
+import type { QuizExpand } from "@quizbee/pb-types";
+
 import Root from "@/layouts/Root.astro";
+import QuizOwnerControls from "@/components/quizes/QuizOwnerControls.svelte";
 import { pb, urlWithPR } from "@/lib";
 import { useTranslatedPath } from "@/i18n/utils";
 import { defaultLang, type languages } from "@/i18n/ui";
-import type { QuizExpand } from "@/lib/expands";
-import type { QuizesResponse } from "@/lib/pocketbase-types";
+import type { QuizesResponse } from "@quizbee/pb-types";
 
 const { quizSlugOrId, category } = Astro.params as {
   quizSlugOrId: string;
@@ -70,6 +72,14 @@ const quizUrl = `${appUrl}quizes/${quizSlugOrId}?forceStart=true`;
           {category}
         </a>
       </nav>
+
+      <QuizOwnerControls
+        client:load
+        quizId={quiz.id}
+        authorId={quiz.author}
+        initialTitle={quiz.title}
+        isArchived={quiz.archived || false}
+      />
 
       <h1 class="text-3xl md:text-4xl font-bold tracking-tight mb-4">
         {quiz.title}

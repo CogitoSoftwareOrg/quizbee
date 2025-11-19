@@ -14,6 +14,8 @@ export enum Collections {
   Blog = "blog",
   BlogI18n = "blogI18n",
   Feedbacks = "feedbacks",
+  JobRuns = "jobRuns",
+  Jobs = "jobs",
   Landings = "landings",
   LandingsI18n = "landingsI18n",
   Materials = "materials",
@@ -28,7 +30,9 @@ export enum Collections {
 
 // Alias types for improved usability
 export type IsoDateString = string;
+export type IsoAutoDateString = string & { readonly autodate: unique symbol };
 export type RecordIdString = string;
+export type FileNameString = string & { readonly filename: unique symbol };
 export type HTMLString = string;
 
 type ExpandType<T> = unknown extends T
@@ -55,50 +59,50 @@ export type AuthSystemFields<T = unknown> = {
 
 export type AuthoriginsRecord = {
   collectionRef: string;
-  created?: IsoDateString;
+  created: IsoAutoDateString;
   fingerprint: string;
   id: string;
   recordRef: string;
-  updated?: IsoDateString;
+  updated: IsoAutoDateString;
 };
 
 export type ExternalauthsRecord = {
   collectionRef: string;
-  created?: IsoDateString;
+  created: IsoAutoDateString;
   id: string;
   provider: string;
   providerId: string;
   recordRef: string;
-  updated?: IsoDateString;
+  updated: IsoAutoDateString;
 };
 
 export type MfasRecord = {
   collectionRef: string;
-  created?: IsoDateString;
+  created: IsoAutoDateString;
   id: string;
   method: string;
   recordRef: string;
-  updated?: IsoDateString;
+  updated: IsoAutoDateString;
 };
 
 export type OtpsRecord = {
   collectionRef: string;
-  created?: IsoDateString;
+  created: IsoAutoDateString;
   id: string;
   password: string;
   recordRef: string;
   sentTo?: string;
-  updated?: IsoDateString;
+  updated: IsoAutoDateString;
 };
 
 export type SuperusersRecord = {
-  created?: IsoDateString;
+  created: IsoAutoDateString;
   email: string;
   emailVisibility?: boolean;
   id: string;
   password: string;
   tokenKey: string;
-  updated?: IsoDateString;
+  updated: IsoAutoDateString;
   verified?: boolean;
 };
 
@@ -112,13 +116,13 @@ export enum BlogCategoryOptions {
 }
 export type BlogRecord<Ttags = unknown> = {
   category?: BlogCategoryOptions;
-  cover?: string;
-  created?: IsoDateString;
+  cover?: FileNameString;
+  created: IsoAutoDateString;
   id: string;
   published?: boolean;
   slug?: string;
   tags?: null | Ttags;
-  updated?: IsoDateString;
+  updated: IsoAutoDateString;
 };
 
 export enum BlogI18nStatusOptions {
@@ -136,13 +140,13 @@ export enum BlogI18nLocaleOptions {
 }
 export type BlogI18nRecord<Tdata = unknown> = {
   content?: HTMLString;
-  created?: IsoDateString;
+  created: IsoAutoDateString;
   data?: null | Tdata;
   id: string;
   locale?: BlogI18nLocaleOptions;
   post?: RecordIdString;
   status?: BlogI18nStatusOptions;
-  updated?: IsoDateString;
+  updated: IsoAutoDateString;
 };
 
 export enum FeedbacksTypeOptions {
@@ -151,23 +155,62 @@ export enum FeedbacksTypeOptions {
 }
 export type FeedbacksRecord<Tmetadata = unknown> = {
   content?: string;
-  created?: IsoDateString;
+  created: IsoAutoDateString;
   id: string;
   metadata?: null | Tmetadata;
   rating?: number;
   type?: FeedbacksTypeOptions;
-  updated?: IsoDateString;
+  updated: IsoAutoDateString;
+  user?: RecordIdString;
+};
+
+export enum JobRunsStatusOptions {
+  "queued" = "queued",
+  "running" = "running",
+  "failed" = "failed",
+  "aborted" = "aborted",
+  "success" = "success",
+  "retrying" = "retrying",
+}
+export type JobRunsRecord<Tresult = unknown> = {
+  attempt?: number;
+  created: IsoAutoDateString;
+  finishedAt?: IsoDateString;
+  id: string;
+  job?: RecordIdString;
+  result?: null | Tresult;
+  status?: JobRunsStatusOptions;
+  updated: IsoAutoDateString;
+  worker?: string;
+};
+
+export enum JobsKindOptions {
+  "once" = "once",
+  "every" = "every",
+  "cron" = "cron",
+}
+export type JobsRecord<Tconfig = unknown, Tpayload = unknown> = {
+  config?: null | Tconfig;
+  created: IsoAutoDateString;
+  enabled?: boolean;
+  id: string;
+  kind?: JobsKindOptions;
+  lastJobRun?: RecordIdString;
+  nextRunAt?: IsoDateString;
+  payload?: null | Tpayload;
+  task?: string;
+  updated: IsoAutoDateString;
   user?: RecordIdString;
 };
 
 export type LandingsRecord<Tmeta = unknown, Tstructure = unknown> = {
-  created?: IsoDateString;
+  created: IsoAutoDateString;
   id: string;
   meta?: null | Tmeta;
   published?: boolean;
   slug?: string;
   structure?: null | Tstructure;
-  updated?: IsoDateString;
+  updated: IsoAutoDateString;
   version?: number;
 };
 
@@ -183,14 +226,14 @@ export enum LandingsI18nStatusOptions {
   "published" = "published",
 }
 export type LandingsI18nRecord<Tdata = unknown> = {
-  created?: IsoDateString;
+  created: IsoAutoDateString;
   data?: null | Tdata;
   format?: LandingsI18nFormatOptions;
   id: string;
   landing?: RecordIdString;
   locale?: string;
   status?: LandingsI18nStatusOptions;
-  updated?: IsoDateString;
+  updated: IsoAutoDateString;
   version?: number;
 };
 
@@ -198,6 +241,9 @@ export enum MaterialsStatusOptions {
   "too big" = "too big",
   "uploaded" = "uploaded",
   "used" = "used",
+  "indexing" = "indexing",
+  "indexed" = "indexed",
+  "deleting" = "deleting",
 }
 
 export enum MaterialsKindOptions {
@@ -207,17 +253,17 @@ export enum MaterialsKindOptions {
 export type MaterialsRecord<Tcontents = unknown> = {
   bytes?: number;
   contents?: null | Tcontents;
-  created?: IsoDateString;
-  file?: string;
+  created: IsoAutoDateString;
+  file?: FileNameString;
   id: string;
-  images?: string[];
+  images?: FileNameString[];
   isBook?: boolean;
   kind?: MaterialsKindOptions;
   status?: MaterialsStatusOptions;
-  textFile?: string;
+  textFile?: FileNameString;
   title?: string;
   tokens?: number;
-  updated?: IsoDateString;
+  updated: IsoAutoDateString;
   user?: RecordIdString;
 };
 
@@ -233,23 +279,23 @@ export enum MessagesStatusOptions {
 }
 export type MessagesRecord<Tmetadata = unknown> = {
   content?: string;
-  created?: IsoDateString;
+  created: IsoAutoDateString;
   id: string;
   metadata?: null | Tmetadata;
   quizAttempt?: RecordIdString;
   role?: MessagesRoleOptions;
   status: MessagesStatusOptions;
   tokens?: number;
-  updated?: IsoDateString;
+  updated: IsoAutoDateString;
 };
 
 export type QuizAttemptsRecord<Tchoices = unknown, Tfeedback = unknown> = {
   choices?: null | Tchoices;
-  created?: IsoDateString;
+  created: IsoAutoDateString;
   feedback?: null | Tfeedback;
   id: string;
   quiz?: RecordIdString;
-  updated?: IsoDateString;
+  updated: IsoAutoDateString;
   user?: RecordIdString;
 };
 
@@ -262,14 +308,14 @@ export enum QuizItemsStatusOptions {
 }
 export type QuizItemsRecord<Tanswers = unknown> = {
   answers?: null | Tanswers;
-  created?: IsoDateString;
+  created: IsoAutoDateString;
   id: string;
   managed?: boolean;
   order?: number;
   question?: string;
   quiz?: RecordIdString;
   status: QuizItemsStatusOptions;
-  updated?: IsoDateString;
+  updated: IsoAutoDateString;
 };
 
 export enum QuizesDifficultyOptions {
@@ -283,6 +329,7 @@ export enum QuizesStatusOptions {
   "creating" = "creating",
   "final" = "final",
   "preparing" = "preparing",
+  "answered" = "answered",
 }
 
 export enum QuizesVisibilityOptions {
@@ -305,19 +352,20 @@ export enum QuizesCategoryOptions {
 export type QuizesRecord<
   TdynamicConfig = unknown,
   Tmetadata = unknown,
-  Ttags = unknown
+  Ttags = unknown,
 > = {
+  archived?: boolean;
   author?: RecordIdString;
   avoidRepeat?: boolean;
   category?: QuizesCategoryOptions;
-  created?: IsoDateString;
+  created: IsoAutoDateString;
   difficulty?: QuizesDifficultyOptions;
   dynamicConfig?: null | TdynamicConfig;
   generation?: number;
   id: string;
   itemsLimit?: number;
   materials?: RecordIdString[];
-  materialsContext?: string;
+  materialsContext?: FileNameString;
   metadata?: null | Tmetadata;
   query?: string;
   slug?: string;
@@ -325,17 +373,17 @@ export type QuizesRecord<
   summary?: string;
   tags?: null | Ttags;
   title?: string;
-  updated?: IsoDateString;
+  updated: IsoAutoDateString;
   visibility?: QuizesVisibilityOptions;
 };
 
 export type StripeEventsRecord<Tpayload = unknown> = {
-  created?: IsoDateString;
+  created: IsoAutoDateString;
   id: string;
   payload?: null | Tpayload;
   stripe?: string;
   type?: string;
-  updated?: IsoDateString;
+  updated: IsoAutoDateString;
 };
 
 export enum SubscriptionsStatusOptions {
@@ -354,7 +402,7 @@ export enum SubscriptionsTariffOptions {
 }
 export type SubscriptionsRecord<Tmetadata = unknown> = {
   cancelAtPeriodEnd?: boolean;
-  created?: IsoDateString;
+  created: IsoAutoDateString;
   currentPeriodEnd?: IsoDateString;
   currentPeriodStart?: IsoDateString;
   id: string;
@@ -367,18 +415,20 @@ export type SubscriptionsRecord<Tmetadata = unknown> = {
   quizesLimit?: number;
   quizesUsage?: number;
   status?: SubscriptionsStatusOptions;
+  storageLimit?: number;
+  storageUsage?: number;
   stripeCustomer?: string;
   stripePrice?: string;
   stripeProduct?: string;
   stripeSubscription?: string;
   tariff?: SubscriptionsTariffOptions;
-  updated?: IsoDateString;
+  updated: IsoAutoDateString;
   user?: RecordIdString;
 };
 
 export type UsersRecord<Tmetadata = unknown> = {
-  avatar?: string;
-  created?: IsoDateString;
+  avatar?: FileNameString;
+  created: IsoAutoDateString;
   email: string;
   emailVisibility?: boolean;
   id: string;
@@ -386,7 +436,7 @@ export type UsersRecord<Tmetadata = unknown> = {
   name?: string;
   password: string;
   tokenKey: string;
-  updated?: IsoDateString;
+  updated: IsoAutoDateString;
   verified?: boolean;
 };
 
@@ -411,12 +461,21 @@ export type BlogI18nResponse<Tdata = unknown, Texpand = unknown> = Required<
   BaseSystemFields<Texpand>;
 export type FeedbacksResponse<
   Tmetadata = unknown,
-  Texpand = unknown
+  Texpand = unknown,
 > = Required<FeedbacksRecord<Tmetadata>> & BaseSystemFields<Texpand>;
+export type JobRunsResponse<Tresult = unknown, Texpand = unknown> = Required<
+  JobRunsRecord<Tresult>
+> &
+  BaseSystemFields<Texpand>;
+export type JobsResponse<
+  Tconfig = unknown,
+  Tpayload = unknown,
+  Texpand = unknown,
+> = Required<JobsRecord<Tconfig, Tpayload>> & BaseSystemFields<Texpand>;
 export type LandingsResponse<
   Tmeta = unknown,
   Tstructure = unknown,
-  Texpand = unknown
+  Texpand = unknown,
 > = Required<LandingsRecord<Tmeta, Tstructure>> & BaseSystemFields<Texpand>;
 export type LandingsI18nResponse<Tdata = unknown, Texpand = unknown> = Required<
   LandingsI18nRecord<Tdata>
@@ -424,7 +483,7 @@ export type LandingsI18nResponse<Tdata = unknown, Texpand = unknown> = Required<
   BaseSystemFields<Texpand>;
 export type MaterialsResponse<
   Tcontents = unknown,
-  Texpand = unknown
+  Texpand = unknown,
 > = Required<MaterialsRecord<Tcontents>> & BaseSystemFields<Texpand>;
 export type MessagesResponse<Tmetadata = unknown, Texpand = unknown> = Required<
   MessagesRecord<Tmetadata>
@@ -433,7 +492,7 @@ export type MessagesResponse<Tmetadata = unknown, Texpand = unknown> = Required<
 export type QuizAttemptsResponse<
   Tchoices = unknown,
   Tfeedback = unknown,
-  Texpand = unknown
+  Texpand = unknown,
 > = Required<QuizAttemptsRecord<Tchoices, Tfeedback>> &
   BaseSystemFields<Texpand>;
 export type QuizItemsResponse<Tanswers = unknown, Texpand = unknown> = Required<
@@ -444,16 +503,16 @@ export type QuizesResponse<
   TdynamicConfig = unknown,
   Tmetadata = unknown,
   Ttags = unknown,
-  Texpand = unknown
+  Texpand = unknown,
 > = Required<QuizesRecord<TdynamicConfig, Tmetadata, Ttags>> &
   BaseSystemFields<Texpand>;
 export type StripeEventsResponse<
   Tpayload = unknown,
-  Texpand = unknown
+  Texpand = unknown,
 > = Required<StripeEventsRecord<Tpayload>> & BaseSystemFields<Texpand>;
 export type SubscriptionsResponse<
   Tmetadata = unknown,
-  Texpand = unknown
+  Texpand = unknown,
 > = Required<SubscriptionsRecord<Tmetadata>> & BaseSystemFields<Texpand>;
 export type UsersResponse<Tmetadata = unknown, Texpand = unknown> = Required<
   UsersRecord<Tmetadata>
@@ -471,6 +530,8 @@ export type CollectionRecords = {
   blog: BlogRecord;
   blogI18n: BlogI18nRecord;
   feedbacks: FeedbacksRecord;
+  jobRuns: JobRunsRecord;
+  jobs: JobsRecord;
   landings: LandingsRecord;
   landingsI18n: LandingsI18nRecord;
   materials: MaterialsRecord;
@@ -492,6 +553,8 @@ export type CollectionResponses = {
   blog: BlogResponse;
   blogI18n: BlogI18nResponse;
   feedbacks: FeedbacksResponse;
+  jobRuns: JobRunsResponse;
+  jobs: JobsResponse;
   landings: LandingsResponse;
   landingsI18n: LandingsI18nResponse;
   materials: MaterialsResponse;
@@ -504,26 +567,74 @@ export type CollectionResponses = {
   users: UsersResponse;
 };
 
+// Utility types for create/update operations
+
+type ProcessCreateAndUpdateFields<T> = Omit<
+  {
+    // Omit AutoDate fields
+    [K in keyof T as Extract<T[K], IsoAutoDateString> extends never
+      ? K
+      : never]: // Convert FileNameString to File
+    T[K] extends infer U
+      ? U extends FileNameString | FileNameString[]
+        ? U extends any[]
+          ? File[]
+          : File
+        : U
+      : never;
+  },
+  "id"
+>;
+
+// Create type for Auth collections
+export type CreateAuth<T> = {
+  id?: RecordIdString;
+  email: string;
+  emailVisibility?: boolean;
+  password: string;
+  passwordConfirm: string;
+  verified?: boolean;
+} & ProcessCreateAndUpdateFields<T>;
+
+// Create type for Base collections
+export type CreateBase<T> = {
+  id?: RecordIdString;
+} & ProcessCreateAndUpdateFields<T>;
+
+// Update type for Auth collections
+export type UpdateAuth<T> = Partial<
+  Omit<ProcessCreateAndUpdateFields<T>, keyof AuthSystemFields>
+> & {
+  email?: string;
+  emailVisibility?: boolean;
+  oldPassword?: string;
+  password?: string;
+  passwordConfirm?: string;
+  verified?: boolean;
+};
+
+// Update type for Base collections
+export type UpdateBase<T> = Partial<
+  Omit<ProcessCreateAndUpdateFields<T>, keyof BaseSystemFields>
+>;
+
+// Get the correct create type for any collection
+export type Create<T extends keyof CollectionResponses> =
+  CollectionResponses[T] extends AuthSystemFields
+    ? CreateAuth<CollectionRecords[T]>
+    : CreateBase<CollectionRecords[T]>;
+
+// Get the correct update type for any collection
+export type Update<T extends keyof CollectionResponses> =
+  CollectionResponses[T] extends AuthSystemFields
+    ? UpdateAuth<CollectionRecords[T]>
+    : UpdateBase<CollectionRecords[T]>;
+
 // Type for usage with type asserted PocketBase instance
 // https://github.com/pocketbase/js-sdk#specify-typescript-definitions
 
-export type TypedPocketBase = PocketBase & {
-  collection(idOrName: "_authOrigins"): RecordService<AuthoriginsResponse>;
-  collection(idOrName: "_externalAuths"): RecordService<ExternalauthsResponse>;
-  collection(idOrName: "_mfas"): RecordService<MfasResponse>;
-  collection(idOrName: "_otps"): RecordService<OtpsResponse>;
-  collection(idOrName: "_superusers"): RecordService<SuperusersResponse>;
-  collection(idOrName: "blog"): RecordService<BlogResponse>;
-  collection(idOrName: "blogI18n"): RecordService<BlogI18nResponse>;
-  collection(idOrName: "feedbacks"): RecordService<FeedbacksResponse>;
-  collection(idOrName: "landings"): RecordService<LandingsResponse>;
-  collection(idOrName: "landingsI18n"): RecordService<LandingsI18nResponse>;
-  collection(idOrName: "materials"): RecordService<MaterialsResponse>;
-  collection(idOrName: "messages"): RecordService<MessagesResponse>;
-  collection(idOrName: "quizAttempts"): RecordService<QuizAttemptsResponse>;
-  collection(idOrName: "quizItems"): RecordService<QuizItemsResponse>;
-  collection(idOrName: "quizes"): RecordService<QuizesResponse>;
-  collection(idOrName: "stripeEvents"): RecordService<StripeEventsResponse>;
-  collection(idOrName: "subscriptions"): RecordService<SubscriptionsResponse>;
-  collection(idOrName: "users"): RecordService<UsersResponse>;
-};
+export type TypedPocketBase = {
+  collection<T extends keyof CollectionResponses>(
+    idOrName: T
+  ): RecordService<CollectionResponses[T]>;
+} & PocketBase;

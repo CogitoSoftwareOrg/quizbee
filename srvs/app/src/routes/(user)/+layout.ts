@@ -2,8 +2,15 @@ export const ssr = false;
 export const prerender = false;
 
 import { pb } from '$lib/pb';
-import type { UsersResponse, QuizesResponse, QuizAttemptsResponse } from '$lib/pb';
-import type { QuizExpand, UserExpand, QuizAttemptExpand } from '$lib/pb/expands';
+import type {
+	UsersResponse,
+	QuizesResponse,
+	QuizAttemptsResponse,
+	QuizItemsResponse,
+	QuizExpand,
+	UserExpand,
+	QuizAttemptExpand
+} from '@quizbee/pb-types';
 
 import { materialsStore } from '$lib/apps/materials/materials.svelte';
 import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte';
@@ -33,20 +40,22 @@ export async function load({ depends }) {
 					.catch(() => null),
 				pb!
 					.collection('materials')
-					.getFullList({ filter: `user="${user.id}"` })
+					.getFullList({ filter: `user="${user.id}"`, sort: '-created' })
 					.catch(() => []),
 				pb!
 					.collection('quizAttempts')
 					.getFullList<QuizAttemptsResponse<unknown, unknown, QuizAttemptExpand>>({
 						filter: `user="${user.id}"`,
-						expand: 'quiz,quiz.quizItems_via_quiz'
+						expand: 'quiz,quiz.quizItems_via_quiz',
+						sort: '-created'
 					})
 					.catch(() => [] as QuizAttemptsResponse<unknown, unknown, QuizAttemptExpand>[]),
 				pb!
 					.collection('quizes')
 					.getFullList<QuizesResponse<unknown, unknown, unknown, QuizExpand>>({
 						filter: `author="${user.id}"`,
-						expand: 'quizItems_via_quiz'
+						expand: 'quizItems_via_quiz',
+						sort: '-created'
 					})
 					.catch(() => [] as QuizesResponse<unknown, unknown, unknown, QuizExpand>[])
 			]);

@@ -82,6 +82,7 @@ class Material:
     images: list[MaterialFile] = field(default_factory=list)
     kind: MaterialKind = MaterialKind.SIMPLE
     tokens: int = 0
+    size_bytes: int = 0
     contents: str = ""
     is_book: bool = False
     status: MaterialStatus = MaterialStatus.UPLOADED

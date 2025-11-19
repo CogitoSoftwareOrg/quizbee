@@ -4,17 +4,19 @@
 	import { untrack } from 'svelte';
 
 	import {
-		pb,
 		type QuizesResponse,
 		type QuizItemsResponse,
-		type QuizAttemptsResponse
-	} from '$lib/pb';
+		type QuizAttemptsResponse,
+		QuizesStatusOptions,
+		QuizItemsStatusOptions
+	} from '@quizbee/pb-types';
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
 	import type { Answer } from '$lib/apps/quizes/types';
 	import { ChevronDown, ChevronRight, Info } from 'lucide-svelte';
 	import { patchApi, putApi } from '$lib/api/call-api';
-	import { QuizesStatusOptions, QuizItemsStatusOptions } from '$lib/pb/pocketbase-types';
+
 	import { userStore } from '$lib/apps/users/user.svelte.js';
+	import { pb } from '$lib/pb';
 
 	interface Props {
 		class?: ClassValue;

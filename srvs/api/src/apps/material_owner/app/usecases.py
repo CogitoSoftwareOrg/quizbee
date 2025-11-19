@@ -157,8 +157,10 @@ class MaterialAppImpl(MaterialApp):
         # Проверяем количество токенов
         if material.tokens < 40:
             material.status = MaterialStatus.NO_TEXT
-            await self._material_repository.attach_to_quiz(material, cmd.quiz_id)
             await self._material_repository.update(material)
+
+            if cmd.quiz_id:
+                await self._material_repository.attach_to_quiz(material, cmd.quiz_id)
             return material
 
         material.status = MaterialStatus.INDEXING
@@ -173,7 +175,10 @@ class MaterialAppImpl(MaterialApp):
             raise e
 
         material.status = MaterialStatus.INDEXED
-        await self._material_repository.attach_to_quiz(material, cmd.quiz_id)
+
+        if cmd.quiz_id:
+            await self._material_repository.attach_to_quiz(material, cmd.quiz_id)
+            
         await self._material_repository.update(material)
 
         return material

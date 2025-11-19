@@ -22,10 +22,18 @@ class AuthUserAppImpl(AuthUserApp):
             - user.subscription.quiz_items_usage,
             used=user.subscription.quiz_items_usage,
             limit=user.subscription.quiz_items_limit,
+            storage_usage=user.subscription.storage_usage,
+            storage_limit=user.subscription.storage_limit
+            or (2 * 1024 * 1024 * 1024 if user.subscription.tariff == "free" else 0),
             tariff=user.subscription.tariff,
         )
 
     async def charge(self, user_id: str, cost: int) -> None:
         logger.info("AuthUserAppImpl.charge")
         user = await self.user_repository.get(user_id)
-        await self.user_repository.save(user, cost)
+        await self.user_repository.save(user, cost=cost)
+
+    async def update_storage(self, user_id: str, delta: int) -> None:
+        logger.info("AuthUserAppImpl.update_storage")
+        user = await self.user_repository.get(user_id)
+        await self.user_repository.save(user, storage_delta=delta)

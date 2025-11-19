@@ -13,6 +13,8 @@ class Subscription:
     id: str
     quiz_items_limit: int
     quiz_items_usage: int
+    storage_usage: int
+    storage_limit: int
     tariff: Tariff
 
 

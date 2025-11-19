@@ -3,6 +3,7 @@
 	import { Search, ChevronRight, ChevronLeft, Sparkles } from 'lucide-svelte';
 
 	import { Button, Input } from '@quizbee/ui-svelte-daisy';
+	import type { QuizExpand, QuizItemsResponse } from '@quizbee/pb-types';
 
 	import { quizAttemptsStore } from '$lib/apps/quiz-attempts/quizAttempts.svelte';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
@@ -10,7 +11,6 @@
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
 
 	import type { Answer } from '$lib/apps/quizes/types';
-	import type { QuizExpand, QuizItemsResponse } from '$lib/pb';
 	import { quizItemsStore } from '$lib/apps/quizes/quizItems.svelte';
 	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
 	import { uiStore } from '$lib/apps/users/ui.svelte';
@@ -67,7 +67,7 @@
 	class="relative mx-auto flex max-w-7xl flex-1 flex-col gap-6 p-1 pb-20 sm:h-full sm:flex-row sm:pb-1"
 >
 	{#if subscription?.tariff === 'free'}
-		<section class="flex mt-3 sm:mt-0 flex-1 flex-col items-center justify-center gap-4 p-0 sm:p-4">
+		<section class="mt-3 flex flex-1 flex-col items-center justify-center gap-4 p-0 sm:mt-0 sm:p-4">
 			<button
 				onclick={() => {
 					uiStore.setPaywallOpen(true);

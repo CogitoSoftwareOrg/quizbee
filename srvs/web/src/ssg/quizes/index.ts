@@ -1,6 +1,6 @@
 import type { GetStaticPaths } from "astro";
 import { pb } from "@/lib";
-import { QuizesCategoryOptions } from "@/lib/pocketbase-types";
+import { QuizesCategoryOptions } from "@quizbee/pb-types";
 import { defaultLang, languages } from "@/i18n/ui";
 
 type CatInfo = {

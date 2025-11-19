@@ -90,16 +90,12 @@
 	<div class="mx-auto max-w-xl space-y-0 sm:space-y-2 lg:col-span-1">
 		<ProfileCard />
 
-		<div class="divider"></div>
-
 		<SubscriptionCard />
-
-		<div class="divider"></div>
 
 		<LegalCard />
 
 		<!-- Logout Button -->
-		<Button onclick={logout} color="error" style="soft" block>
+		<Button class="mt-4" onclick={logout} color="error" style="soft" block>
 			<X class="h-4 w-4" />
 			Logout
 		</Button>
