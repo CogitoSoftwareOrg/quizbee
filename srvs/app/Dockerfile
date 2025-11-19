@@ -19,6 +19,10 @@ COPY pkgs/js pkgs/js
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm \
     PNPM_STORE_DIR=/pnpm \
     pnpm install --frozen-lockfile --filter "@quizbee/ui-svelte-daisy" --include-workspace-root=false
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm \
+    PNPM_STORE_DIR=/pnpm \
+    pnpm install --frozen-lockfile --filter "@quizbee/pb-types" --include-workspace-root=false
+
 
 # Now install app dependencies with workspace packages available
 COPY srvs/app/package.json srvs/app/
