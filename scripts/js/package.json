@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "update-quizes-visibility": "node update-quizes-visibility.js"
+    "update-quizes-visibility": "node update-quizes-visibility.js",
+    "migrate-storage-limits": "tsx migrate-storage-limits.ts"
   },
   "keywords": [],
   "author": "",
@@ -15,5 +16,8 @@
   "dependencies": {
     "pocketbase": "^0.26.3",
     "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2"
   }
 }

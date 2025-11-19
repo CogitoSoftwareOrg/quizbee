@@ -80,7 +80,7 @@ services:
       - ../envs/.env
     volumes:
       - ./pb/pb_data:/pb/pb_data
-      - ./pb/pb_migrations:/pb/pb_migrations:ro
+      - ./pb/pb_migrations:/pb/pb_migrations
       - ./pb/pb_hooks:/pb/pb_hooks:ro
     ports:
       - "8090:8090"
