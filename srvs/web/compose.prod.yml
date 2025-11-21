@@ -12,11 +12,12 @@ services:
         - PB_EMAIL=${PB_EMAIL}
         - PB_PASSWORD=${PB_PASSWORD}
         - COOLIFY_URL=${COOLIFY_URL}
+        - PUBLIC_POSTHOG=${PUBLIC_POSTHOG}
     environment:
       - PUBLIC_APP_URL=${PUBLIC_APP_URL:-https://app.quizbee.academy/}
       - PUBLIC_PB_URL=${PUBLIC_PB_URL:-https://pb.quizbee.academy/}
       - PB_URL=${PB_URL:-https://pb.quizbee.academy/}
       - PB_EMAIL=${PB_EMAIL}
       - PB_PASSWORD=${PB_PASSWORD}
-      - PUBLIC_POSTHOG=${PUBLIC_POSTHOG}
       - COOLIFY_URL=${COOLIFY_URL}
+      - PUBLIC_POSTHOG=${PUBLIC_POSTHOG}
