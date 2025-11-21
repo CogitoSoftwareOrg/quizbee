@@ -1,6 +1,7 @@
 import logging
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
+from posthog import Posthog
 
 from src.lib.stripe import stripe_client
 from src.lib.settings import settings
@@ -10,6 +11,13 @@ from .schemas import CreateStripeCheckoutDto, CreateBillingPortalSessionDto
 from .stripe_legacy import stripe_subscription_to_pb, verify, PRICES_MAP
 
 logger = logging.getLogger(__name__)
+
+posthog_client = None
+if settings.posthog_api_key:
+    posthog_client = Posthog(
+        project_api_key=settings.public_posthog,
+        host=settings.posthog_host
+    )
 
 stripe_router = APIRouter(prefix="/stripe", tags=["stripe legacy"])
 
@@ -72,6 +80,42 @@ async def stripe_webhook(request: Request, admin_pb: AdminPBDeps):
                 sub["id"], expand=["items.data.price"]
             )
         await stripe_subscription_to_pb(admin_pb, sub)
+    elif event.type == "invoice.paid":
+        sub_id = obj.get("subscription")
+        customer_id = obj.get("customer")
+        if sub_id:
+            sub = stripe_client.Subscription.retrieve(
+                sub_id, expand=["items.data.price"]
+            )
+            await stripe_subscription_to_pb(admin_pb, sub)
+            
+            if posthog_client and customer_id:
+                user_id = sub.metadata.get("user_id") if sub.metadata else None
+                price_lookup = (
+                    sub.items.data[0].price.lookup_key 
+                    if sub.items and sub.items.data and sub.items.data[0].price 
+                    else None
+                )
+                
+                logger.info(
+                    f"Tracking payment_completed: user={user_id}, "
+                    f"invoice={obj.get('id')}, amount={obj.get('amount_paid', 0) / 100}"
+                )
+                
+                posthog_client.capture(
+                    distinct_id=user_id or customer_id,
+                    event="payment_completed",
+                    properties={
+                        "invoice_id": obj.get("id"),
+                        "subscription_id": sub_id,
+                        "customer_id": customer_id,
+                        "amount": obj.get("amount_paid", 0) / 100,
+                        "currency": obj.get("currency"),
+                        "price_lookup": price_lookup,
+                        "billing_reason": obj.get("billing_reason"),
+                    }
+                )
+    
     elif event.type in ("invoice.payment_succeeded", "invoice.payment_failed"):
         sub_id = obj.get("subscription")
         if sub_id:

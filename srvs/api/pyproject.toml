@@ -33,6 +33,7 @@ dependencies = [
     "umap-learn>=0.5.9",
     "voyageai>=0.3.5",
     "bertopic>=0.17.3",
+    "posthog>=7.0.1",
     # Workspace packages (resolved from PyPI in production, workspace in dev)
     "quizbee-example-lib>=0.1.0",
 ]

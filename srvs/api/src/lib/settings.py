@@ -61,6 +61,10 @@ class Settings(BaseSettings):
     stripe_api_key: str = Field(default="key")
     stripe_webhook_secret: str = Field(default="key")
 
+    # PostHog configuration
+    public_posthog: str = Field(default="key")
+    posthog_host: str = Field(default="https://eu.i.posthog.com")
+
     @property
     def arq_job_prefix(self) -> str:
         """Префикс для ARQ задач в preview окружениях для изоляции."""

@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.13"
 
 [manifest]
@@ -2223,6 +2223,23 @@ wheels = [
 ]
 
 [[package]]
+name = "posthog"
+version = "7.0.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "backoff" },
+    { name = "distro" },
+    { name = "python-dateutil" },
+    { name = "requests" },
+    { name = "six" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a2/d4/b9afe855a8a7a1bf4459c28ae4c300b40338122dc850acabefcf2c3df24d/posthog-7.0.1.tar.gz", hash = "sha256:21150562c2630a599c1d7eac94bc5c64eb6f6acbf3ff52ccf1e57345706db05a", size = 126985, upload-time = "2025-11-15T12:44:22.465Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/05/0c/8b6b20b0be71725e6e8a32dcd460cdbf62fe6df9bc656a650150dc98fedd/posthog-7.0.1-py3-none-any.whl", hash = "sha256:efe212d8d88a9ba80a20c588eab4baf4b1a5e90e40b551160a5603bb21e96904", size = 145234, upload-time = "2025-11-15T12:44:21.247Z" },
+]
+
+[[package]]
 name = "pre-commit"
 version = "4.4.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2846,6 +2863,7 @@ dependencies = [
     { name = "numpy" },
     { name = "pillow" },
     { name = "pocketbase-async" },
+    { name = "posthog" },
     { name = "pydantic" },
     { name = "pydantic-ai-slim", extra = ["groq", "mcp", "openai"] },
     { name = "pydantic-settings" },
@@ -2887,6 +2905,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.0.0" },
     { name = "pillow", specifier = ">=11.3.0" },
     { name = "pocketbase-async", specifier = ">=0.12.0" },
+    { name = "posthog", specifier = ">=3.8.2" },
     { name = "pydantic", specifier = ">=2.11.9" },
     { name = "pydantic-ai-slim", extras = ["openai", "mcp", "groq"], specifier = ">=1.0.8" },
     { name = "pydantic-settings", specifier = ">=2.10.1" },
