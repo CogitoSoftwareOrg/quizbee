@@ -2905,7 +2905,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.0.0" },
     { name = "pillow", specifier = ">=11.3.0" },
     { name = "pocketbase-async", specifier = ">=0.12.0" },
-    { name = "posthog", specifier = ">=3.8.2" },
+    { name = "posthog", specifier = ">=7.0.1" },
     { name = "pydantic", specifier = ">=2.11.9" },
     { name = "pydantic-ai-slim", extras = ["openai", "mcp", "groq"], specifier = ">=1.0.8" },
     { name = "pydantic-settings", specifier = ">=2.10.1" },

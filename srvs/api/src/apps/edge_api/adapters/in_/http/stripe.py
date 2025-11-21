@@ -13,10 +13,9 @@ from .stripe_legacy import stripe_subscription_to_pb, verify, PRICES_MAP
 logger = logging.getLogger(__name__)
 
 posthog_client = None
-if settings.posthog_api_key:
+if settings.public_posthog:
     posthog_client = Posthog(
-        project_api_key=settings.public_posthog,
-        host=settings.posthog_host
+        project_api_key=settings.public_posthog, host=settings.posthog_host
     )
 
 stripe_router = APIRouter(prefix="/stripe", tags=["stripe legacy"])
@@ -88,20 +87,20 @@ async def stripe_webhook(request: Request, admin_pb: AdminPBDeps):
                 sub_id, expand=["items.data.price"]
             )
             await stripe_subscription_to_pb(admin_pb, sub)
-            
+
             if posthog_client and customer_id:
                 user_id = sub.metadata.get("user_id") if sub.metadata else None
                 price_lookup = (
-                    sub.items.data[0].price.lookup_key 
-                    if sub.items and sub.items.data and sub.items.data[0].price 
+                    sub.items.data[0].price.lookup_key
+                    if sub.items and sub.items.data and sub.items.data[0].price
                     else None
                 )
-                
+
                 logger.info(
                     f"Tracking payment_completed: user={user_id}, "
                     f"invoice={obj.get('id')}, amount={obj.get('amount_paid', 0) / 100}"
                 )
-                
+
                 posthog_client.capture(
                     distinct_id=user_id or customer_id,
                     event="payment_completed",
@@ -113,9 +112,9 @@ async def stripe_webhook(request: Request, admin_pb: AdminPBDeps):
                         "currency": obj.get("currency"),
                         "price_lookup": price_lookup,
                         "billing_reason": obj.get("billing_reason"),
-                    }
+                    },
                 )
-    
+
     elif event.type in ("invoice.payment_succeeded", "invoice.payment_failed"):
         sub_id = obj.get("subscription")
         if sub_id:

@@ -38,7 +38,7 @@ ver_normalize() { # strip leading 'v'
 }
 
 bump_version() { # $1=current vX.Y.Z  $2=major|minor|patch
-  local cur raw major minor patch
+  local raw major minor patch
   raw="$(ver_normalize "$1")"
   IFS='.' read -r major minor patch <<<"$raw"
   case "$2" in
@@ -61,21 +61,25 @@ head_of_main_commit() {
 
 create_and_push_tag() { # $1=new_tag  $2=commit
   local tag="$1" commit="$2"
+
   if git rev-parse -q --verify "refs/tags/${tag}" >/dev/null; then
     echo "✅ Тег ${tag} уже существует (пропускаю создание)"
+    return 0
+  fi
+
+  if [[ "$DRY" == true ]]; then
+    echo "🧪 DRY-RUN: git tag -a ${tag} ${commit} -m \"Release ${tag}\""
+    echo "🧪 DRY-RUN: git push ${REMOTE} ${tag}"
   else
-    if [[ "$DRY" == true ]]; then
-      echo "🧪 DRY-RUN: git tag -a ${tag} ${commit} -m \"Release ${tag}\""
-    else
-      git tag -a "${tag}" "${commit}" -m "Release ${tag}"
-      git push "$REMOTE" "${tag}"
-      echo "🏷️  Создан и отправлен тег ${tag} → ${REMOTE}"
-    fi
+    git tag -a "${tag}" "${commit}" -m "Release ${tag}"
+    git push "$REMOTE" "${tag}"
+    echo "🏷️  Создан и отправлен тег ${tag} → ${REMOTE}"
   fi
 }
 
 deploy_coolify_by_tag() { # $1=commit_sha
   local commit="$1"
+
   echo "🔍 Получаю список приложений с тегом '${APP_TAG}'..."
   local APPS_JSON
   APPS_JSON=$(curl -sS -H "Authorization: Bearer $COOLIFY_TOKEN" \
@@ -101,7 +105,7 @@ deploy_coolify_by_tag() { # $1=commit_sha
   curl -sS -H "Authorization: Bearer $COOLIFY_TOKEN" \
     "$COOLIFY_URL/deploy?tag=$APP_TAG&force=true" >/dev/null
 
-  echo "✅ Deployment triggered successfully!"
+  echo "✅ Deployment triggered successfully for commit ${commit}!"
 }
 
 # === Основной поток ===
@@ -112,26 +116,47 @@ if [[ -z "$LATEST_TAG" ]]; then
   LATEST_TAG="v0.0.0"  # стартовая точка, если тегов нет
 fi
 
+NEW_TAG=""
+TARGET_COMMIT=""
+
 if [[ "$BUMP" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  # Явно указанный тег, например v0.7.3
   NEW_TAG="$BUMP"
+
+  if git rev-parse -q --verify "refs/tags/${NEW_TAG}" >/dev/null; then
+    # Тег уже существует — деплоим ровно его коммит
+    TARGET_COMMIT="$(git rev-list -n1 "$NEW_TAG")"
+    echo "ℹ️  Используем существующий тег ${NEW_TAG} (commit ${TARGET_COMMIT})"
+  else
+    # Тег ещё не существует — создадим его на HEAD main
+    TARGET_COMMIT="$(head_of_main_commit)"
+    echo "ℹ️  Тег ${NEW_TAG} ещё не существует, будет создан на коммите ${TARGET_COMMIT}"
+  fi
 else
+  # Режим bump: major/minor/patch
   case "$BUMP" in
-    major|minor|patch) NEW_TAG="$(bump_version "$LATEST_TAG" "$BUMP")" ;;
-    *) echo "❌ Укажите major|minor|patch или явный vX.Y.Z"; exit 1 ;;
+    major|minor|patch)
+      NEW_TAG="$(bump_version "$LATEST_TAG" "$BUMP")"
+      TARGET_COMMIT="$(head_of_main_commit)"
+      echo "ℹ️  Bump ${BUMP}: ${LATEST_TAG} → ${NEW_TAG} на коммите ${TARGET_COMMIT}"
+      ;;
+    *)
+      echo "❌ Укажите major|minor|patch или явный vX.Y.Z"
+      exit 1
+      ;;
   esac
 fi
 
-MAIN_COMMIT="$(head_of_main_commit)"
 echo "ℹ️  Последний тег на ${REMOTE}/${MAIN_BRANCH}: ${LATEST_TAG}"
 echo "ℹ️  Новый релизный тег: ${NEW_TAG}"
-echo "ℹ️  Коммит для тега: ${MAIN_COMMIT}"
+echo "ℹ️  Коммит для тега/деплоя: ${TARGET_COMMIT}"
 
-create_and_push_tag "$NEW_TAG" "$MAIN_COMMIT"
+create_and_push_tag "$NEW_TAG" "$TARGET_COMMIT"
 
 if [[ "$NO_DEPLOY" == true ]]; then
   echo "ℹ️  Деплой отключён флагом --no-deploy${DRY:+ (DRY-RUN)}"
   exit 0
 fi
 
-# Деплой этого коммита в Coolify
-deploy_coolify_by_tag "$MAIN_COMMIT"
+# Деплой выбранного коммита в Coolify
+deploy_coolify_by_tag "$TARGET_COMMIT"
