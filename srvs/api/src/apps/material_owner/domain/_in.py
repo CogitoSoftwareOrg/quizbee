@@ -30,7 +30,7 @@ class SearchCmd:
     query: str = ""
     all_chunks: bool = False
     vectors: list[list[float]] | None = None
-    
+
     # search_type: SearchType = SearchType.QUERY
 
 

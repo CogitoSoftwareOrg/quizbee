@@ -33,9 +33,6 @@ from ..domain._in import (
 )
 
 
-
-
-
 class EdgeAPIAppImpl(EdgeAPIApp):
     def __init__(
         self,
@@ -124,7 +121,7 @@ class EdgeAPIAppImpl(EdgeAPIApp):
 
         material = await self.material.add_material(
             AddMaterialCmd(
-                quiz_id=cmd.quiz_id,
+                quiz_id=cmd.quiz_id or "",
                 user=user,
                 file=cmd.file,
                 title=cmd.title,

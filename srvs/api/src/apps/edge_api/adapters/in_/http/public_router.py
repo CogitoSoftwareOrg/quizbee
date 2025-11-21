@@ -181,6 +181,7 @@ async def add_material(
     material_id: str = Form(...),
     quiz_id: str | None = Form(None),
 ):
+    print("add_material called with quiz_id:", quiz_id)
     file_bytes = await file.read()
     cmd = PublicAddMaterialCmd(
         quiz_id=quiz_id,

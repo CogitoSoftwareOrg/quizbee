@@ -2,12 +2,12 @@
 	import { onMount } from 'svelte';
 
 	// import { TextArea } from '@quizbee/ui-svelte-daisy';
+	import type { MaterialsResponse } from '@quizbee/pb-types';
 
 	import { computeApiUrl } from '$lib/api/compute-url';
 	import { materialsStore } from '$lib/apps/materials/materials.svelte';
 	import type { AttachedFile } from '$lib/types/attached-file';
 	import { pb } from '$lib/pb';
-	import type { MaterialsResponse } from '$lib/pb';
 	import { generateId } from '$lib/utils/generate-id';
 	import { removeFile } from '../new/removeFile';
 	import { addExistingMaterial } from '../new/addExistingMaterial';
@@ -190,6 +190,7 @@
 
 	// Асинхронная загрузка файла (эта функция вызывается из processFiles)
 	async function uploadFileAsync(attachedFile: AttachedFile) {
+		console.log('uploadFileAsync called with attachedFile:', attachedFile);
 		try {
 			if ((attachedFile.file?.size || 0) > 1024 * 1024 * 200) {
 				console.warn('File is too big');
@@ -201,7 +202,9 @@
 			formData.append('title', attachedFile.name);
 			formData.append('material_id', attachedFile.materialId!);
 
-			const response = await fetch(`${computeApiUrl()}quizes/${quizTemplateId}/materials`, {
+			if (quizTemplateId) formData.append('quiz_id', quizTemplateId);
+
+			const response = await fetch(`${computeApiUrl()}materials`, {
 				method: 'POST',
 				body: formData,
 				credentials: 'include'
