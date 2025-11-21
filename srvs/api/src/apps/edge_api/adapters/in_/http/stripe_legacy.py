@@ -17,10 +17,11 @@ STRIPE_LOOKUPS = [
     "pro_early_yearly",
 ]
 
+PB_DT_FMT = "%Y-%m-%d %H:%M:%S.%fZ"
+
 
 @dataclass(slots=True, kw_only=True)
 class Limits:
-    quizItemsLimit: int
     quizItemsLimit: int
     storageLimit: int
 
@@ -49,7 +50,11 @@ for price in prices:
         tariff=tariff,
         limits=Limits(
             quizItemsLimit=1000 if tariff == "plus" else 2000,
-            storageLimit=10 * 1024 * 1024 * 1024 if tariff == "plus" else 100 * 1024 * 1024 * 1024,
+            storageLimit=(
+                10 * 1024 * 1024 * 1024
+                if tariff == "plus"
+                else 100 * 1024 * 1024 * 1024
+            ),
         ),
     )
     PRICES_MAP_BY_ID[price.id] = price_obj
@@ -61,46 +66,10 @@ logger.info(f"Final PRICES_MAP_BY_LOOKUP keys: {list(PRICES_MAP_BY_LOOKUP.keys()
 PRICES_MAP = PRICES_MAP_BY_LOOKUP
 
 
-PB_DT_FMT = "%Y-%m-%d %H:%M:%S.%fZ"
-
-
 def _ts_to_pb(ts: int | float | None) -> str | None:
     if not ts:
         return None
     return datetime.fromtimestamp(ts, tz=timezone.utc).strftime(PB_DT_FMT)
-
-
-def _pb_to_ts(pb_dt: str | None) -> int | None:
-    if not pb_dt:
-        return None
-    return int(
-        datetime.strptime(pb_dt, PB_DT_FMT).replace(tzinfo=timezone.utc).timestamp()
-    )
-
-
-def _maybe_reset_usage_on_period_change(sub: Record, new_cp_start_ts: int):
-    patch = {}
-
-    last_reset_pb = sub.get("lastUsageResetAt")
-    last_reset_ts = _pb_to_ts(last_reset_pb) if last_reset_pb else None
-    prev_cp_start_pb = sub.get("currentPeriodStart")
-    prev_cp_start_ts = _pb_to_ts(prev_cp_start_pb) if prev_cp_start_pb else None
-
-    need_reset = (prev_cp_start_ts is None) or (
-        new_cp_start_ts and prev_cp_start_ts and new_cp_start_ts > prev_cp_start_ts
-    )
-    already_reset_for_new = (
-        last_reset_ts is not None
-        and new_cp_start_ts is not None
-        and last_reset_ts >= new_cp_start_ts
-    )
-
-    if need_reset and not already_reset_for_new:
-        patch["messagesUsage"] = 0
-        patch["quizItemsUsage"] = 0
-        patch["quizesUsage"] = 0
-        patch["lastUsageResetAt"] = datetime.now(tz=timezone.utc).strftime(PB_DT_FMT)
-    return patch
 
 
 async def stripe_subscription_to_pb(
@@ -127,13 +96,14 @@ async def stripe_subscription_to_pb(
         }
     )
 
-    price = PRICES_MAP_BY_ID.get(price_id)
-    if not price:
+    price_obj = PRICES_MAP_BY_ID.get(price_id)
+    if not price_obj:
         raise Exception(f"Stripe price not found for {price_id}")
-    tariff = price.tariff
-    limits = price.limits
 
-    record = {
+    tariff = price_obj.tariff
+    limits = price_obj.limits
+
+    record: dict = {
         "stripeSubscription": stripe_subscription_id,
         "stripeCustomer": sub.get("customer"),
         "status": status,
@@ -145,28 +115,12 @@ async def stripe_subscription_to_pb(
         "currentPeriodEnd": _ts_to_pb(cp_end_raw),
         "cancelAtPeriodEnd": bool(sub.get("cancel_at_period_end")),
         "metadata": sub.get("metadata") or {},
+        "quizItemsLimit": limits.quizItemsLimit,
+        "storageLimit": limits.storageLimit,
     }
-
-    patch = _maybe_reset_usage_on_period_change(existing, cp_start_raw)
-    record.update(patch)
-    if limits:
-        record.update(asdict(limits))
 
     await admin_pb.collection("subscriptions").update(existing.get("id", ""), record)
     return existing.get("id", "")
-
-
-async def ensure_active_and_maybe_reset(admin_pb: PocketBase, sub: Record):
-    allowed = {"active", "trialing", "past_due"}
-    if sub.get("status") not in allowed:
-        raise HTTPException(402, "Subscription inactive")
-    current_period_start = _pb_to_ts(sub.get("currentPeriodStart", "")) or 0
-    patch = _maybe_reset_usage_on_period_change(sub, current_period_start)
-
-    if patch:
-        await admin_pb.collection("subscriptions").update(sub.get("id", ""), patch)
-
-    return sub
 
 
 async def verify(token: str):
