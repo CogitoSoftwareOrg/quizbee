@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
+	import posthog from 'posthog-js';
 
 	import { Button } from '@quizbee/ui-svelte-daisy';
 	import type { QuizExpand } from '@quizbee/pb-types';
@@ -95,6 +96,10 @@
 	const mainColumnWidth = $derived(chatOpen ? '50%' : '100%');
 	const chatColumnWidth = $derived(chatOpen ? '50%' : '0%');
 
+	// we need those vatiables for correct 1-time logging 
+	let firstQuestionLogged = $state(false);
+	let fifthQuestionLogged = $state(false);
+
 	$effect(() => {
 		if (!quizAttempt) return;
 
@@ -104,6 +109,28 @@
 		return () => {
 			messagesStore.unsubscribe();
 		};
+	});
+
+	$effect(() => {
+		const firstDecision = quizDecisions.at(0);
+		if (firstDecision && quiz?.id && quizAttempt?.id && !firstQuestionLogged) {
+			firstQuestionLogged = true;
+			posthog.capture('quiz_first_question_answered', {
+				quizId: quiz.id,
+				attemptId: quizAttempt.id
+			});
+		}
+	});
+
+	$effect(() => {
+		const fifthDecision = quizDecisions.at(4);
+		if (fifthDecision && quiz?.id && quizAttempt?.id && !fifthQuestionLogged) {
+			fifthQuestionLogged = true;
+			posthog.capture('quiz_fifth_question_answered', {
+				quizId: quiz.id,
+				attemptId: quizAttempt.id
+			});
+		}
 	});
 
 	// Swipe navigation helpers
