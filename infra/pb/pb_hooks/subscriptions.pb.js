@@ -21,6 +21,43 @@ onRecordCreate((e) => {
   $app.runInTransaction((txApp) => {});
 }, "subscriptions");
 
+onRecordUpdate((e) => {
+  const oldUsage = e.record.originalCopy().get("quizItemsUsage") || 0;
+  const newUsage = e.record.get("quizItemsUsage") || 0;
+
+  if (oldUsage < 40 && newUsage >= 40) {
+    const userId = e.record.get("user");
+    
+    try {
+      const user = $app.findRecordById("users", userId);
+      const email = user.get("email");
+      
+      $http.send({
+        url: "https://eu.i.posthog.com/capture/",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          api_key: process.env.PUBLIC_POSTHOG_KEY || "",
+          event: "quiz_items_usage_threshold_reached",
+          properties: {
+            distinct_id: userId,
+            email: email,
+            usage: newUsage,
+            threshold: 40
+          }
+        }),
+        timeout: 10
+      });
+    } catch (err) {
+      console.error("Failed to send posthog event:", err);
+    }
+  }
+
+  e.next();
+}, "subscriptions");
+
 cronAdd("subscriptions_usage_reset_daily", "0 0 * * *", () => {
   const now = new Date();
   const subs = $app.findRecordsByFilter(
