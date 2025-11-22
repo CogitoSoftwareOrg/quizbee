@@ -39,7 +39,7 @@ onRecordUpdate((e) => {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          api_key: process.env.PUBLIC_POSTHOG_KEY || "",
+          api_key: process.env.PUBLIC_POSTHOG || "",
           event: "quiz_items_usage_threshold_reached",
           properties: {
             distinct_id: userId,

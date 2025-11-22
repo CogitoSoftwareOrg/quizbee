@@ -64,7 +64,7 @@ onRecordCreate((e) => {
               "Content-Type": "application/json"
             },
             body: JSON.stringify({
-              api_key: process.env.PUBLIC_POSTHOG_KEY || "",
+              api_key: process.env.PUBLIC_POSTHOG || "",
               event: "user_active_two_days_after_first_quiz",
               properties: {
                 distinct_id: userId,
