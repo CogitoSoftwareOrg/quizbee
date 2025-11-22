@@ -24,6 +24,63 @@ onRecordCreate((e) => {
   });
 
   e.next();
+
+  const userId = e.record.get("user");
+  if (userId) {
+    try {
+      const userQuizes = $app.findRecordsByFilter(
+        "quizes",
+        `user = "${userId}"`,
+        "-created"
+      );
+
+      if (userQuizes.length === 1) {
+        return;
+      }
+
+      const firstQuizCreated = new Date(userQuizes[userQuizes.length - 1].get("created"));
+      const now = new Date();
+      const daysSinceFirstQuiz = Math.floor((now - firstQuizCreated) / (1000 * 60 * 60 * 24));
+
+      if (daysSinceFirstQuiz > 0 && daysSinceFirstQuiz <= 7) {
+        const uniqueDays = new Set();
+        
+        userQuizes.forEach((quiz) => {
+          const quizDate = new Date(quiz.get("created"));
+          const quizDaysSince = Math.floor((quizDate - firstQuizCreated) / (1000 * 60 * 60 * 24));
+          if (quizDaysSince <= 7) {
+            uniqueDays.add(quizDaysSince);
+          }
+        });
+
+        if (uniqueDays.size >= 2) {
+          const user = $app.findRecordById("users", userId);
+          const email = user.get("email");
+          
+          $http.send({
+            url: "https://eu.i.posthog.com/capture/",
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              api_key: process.env.PUBLIC_POSTHOG_KEY || "",
+              event: "user_active_two_days_after_first_quiz",
+              properties: {
+                distinct_id: userId,
+                email: email,
+                activeDays: uniqueDays.size,
+                daysSinceFirstQuiz: daysSinceFirstQuiz
+              }
+            }),
+            timeout: 10
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Failed to track first quiz activity:", err);
+    }
+  }
 }, "quizes");
 
 onRecordUpdate((e) => {
