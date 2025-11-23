@@ -58,6 +58,12 @@
 				attempt_id: attempt.id
 			});
 
+			if (attachedFiles.length > 0) {
+				posthog.capture('quiz_with_material_started', {
+					quizId,
+				});
+			}
+
 			posthog.capture('quiz_creation_started', {
 				quizId,
 				attemptId

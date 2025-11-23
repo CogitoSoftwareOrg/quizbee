@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import posthog from 'posthog-js';
 
 	// import { TextArea } from '@quizbee/ui-svelte-daisy';
 	import type { MaterialsResponse } from '@quizbee/pb-types';
@@ -214,6 +215,12 @@
 				const errorText = await response.text();
 				throw new Error(`Failed to upload material: ${errorText}`);
 			}
+
+	
+			posthog.capture('file_attached', {
+				quizTemplateId: quizTemplateId || null
+			});
+			
 		} catch (error) {
 			console.error('Failed to upload file:', attachedFile.name, error);
 			// Находим индекс файла в массиве и удаляем его
