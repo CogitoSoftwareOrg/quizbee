@@ -106,7 +106,7 @@
 				color="neutral"
 				style="outline"
 				size="lg"
-				class="dark:text-base-content/90 flex-1"
+				class="flex-1 dark:text-base-content/90"
 				onclick={(e) => {
 					e.preventDefault();
 					onPrevious();

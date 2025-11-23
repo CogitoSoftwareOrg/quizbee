@@ -45,3 +45,17 @@ class Chunker(Protocol):
 class Vectorizer(Protocol):
     async def vectorize(self, chunks: list[str]) -> np.ndarray: ...
     def embed(self, documents: list[str]) -> np.ndarray: ...
+
+
+@dataclass
+class RerankResult:
+    """Result from reranking operation."""
+    index: int
+    document: str
+    relevance_score: float
+
+
+class Reranker(Protocol):
+    async def rerank(
+        self, query: str, documents: list[str], top_k: int = 4
+    ) -> list[RerankResult]: ...

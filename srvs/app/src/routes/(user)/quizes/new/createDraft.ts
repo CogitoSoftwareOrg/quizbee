@@ -29,6 +29,7 @@ function createDraft(
 	const uniqueTitle = generateUniqueTitle(baseTitle, existingTitles);
 	formData.append('title', uniqueTitle);
 	formData.append('avoidRepeat', 'false');
+	formData.append('targetLanguage', currentQuiz ? currentQuiz.targetLanguage : 'English');
 	pb!.collection('quizes').create(formData);
 
 	const attachedFiles = currentQuiz
@@ -41,6 +42,7 @@ function createDraft(
 		inputText: currentQuiz ? currentQuiz.query || '' : '',
 		attachedFiles,
 		selectedDifficulty: currentQuiz ? currentQuiz.difficulty : 'intermediate',
+		selectedLanguage: currentQuiz ? currentQuiz.targetLanguage : 'English',
 		questionCount: currentQuiz ? currentQuiz.itemsLimit : 10,
 		avoidRepeat: currentQuiz ? currentQuiz.avoidRepeat : false
 	};

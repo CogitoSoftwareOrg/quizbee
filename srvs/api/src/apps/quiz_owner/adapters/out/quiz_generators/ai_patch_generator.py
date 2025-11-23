@@ -34,6 +34,9 @@ class QuizItemSchema(BaseModel):
     question: Annotated[
         str, Field(title="Question", description="The quiz question text.")
     ]
+    hint: Annotated[
+        str, Field(title="Hint", description="A hint for the question.", default="")
+    ]
     answers: Annotated[
         list[AnswerSchema],
         Field(
@@ -152,6 +155,7 @@ class AIPatchGenerator(PatchGenerator):
                         ],
                         order=itm.order,
                         status=QuizItemStatus.GENERATED,
+                        hint=schema.hint,
                     )
                     quiz.update_item(upd)
 

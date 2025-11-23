@@ -73,6 +73,12 @@ class LLMTools(Protocol):
         """Разбивает текст на chunks. Если respect_pages=True, возвращает список TextChunk с информацией о страницах."""
         ...
 
+    async def rerank(
+        self, query: str, documents: list[str], top_k: int = 4
+    ) -> list[Any]:
+        """Reranks documents by relevance to query."""
+        ...
+
 
 # Indexer
 class MaterialIndexer(Protocol):

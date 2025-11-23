@@ -74,6 +74,7 @@
 	});
 	const item = $derived(quizItems.find((i) => i.order === order) || null);
 	const answers = $derived((item?.answers as Answer[]) || []);
+	const hint = $derived((item?.hint as string) || '');
 
 	// Messages
 	const messages = $derived(
@@ -96,7 +97,7 @@
 	const mainColumnWidth = $derived(chatOpen ? '50%' : '100%');
 	const chatColumnWidth = $derived(chatOpen ? '50%' : '0%');
 
-	// we need those vatiables for correct 1-time logging 
+	// we need those vatiables for correct 1-time logging
 	let firstQuestionLogged = $state(false);
 	let fifthQuestionLogged = $state(false);
 
@@ -254,7 +255,7 @@
 		<div class="relative flex h-full min-w-0 flex-1">
 			<!-- Main column -->
 			<main
-				class="border-base-200 h-full min-w-0 flex-1 overflow-x-hidden border-r transition-[width] duration-300 ease-out"
+				class="h-full min-w-0 flex-1 overflow-x-hidden border-r border-base-200 transition-[width] duration-300 ease-out"
 				style:width={mainColumnWidth}
 			>
 				<SwipeableContent
@@ -264,10 +265,10 @@
 					onSwipeRight={handleSwipeRight}
 					class="relative h-full overflow-x-hidden pb-2"
 				>
-					<div class="mx-auto flex h-full min-w-0 max-w-3xl flex-col py-2">
+					<div class="mx-auto flex h-full max-w-3xl min-w-0 flex-col py-2">
 						<div class="flex min-w-0 items-start justify-between gap-4 px-3">
 							<p
-								class="wrap-break-words min-w-0 flex-1 text-center text-2xl font-bold leading-snug"
+								class="wrap-break-words min-w-0 flex-1 text-center text-2xl leading-snug font-bold"
 							>
 								{@html item?.question}
 							</p>
@@ -283,6 +284,7 @@
 								{item}
 								{quizAttempt}
 								bind:itemDecision
+								{hint}
 							/>
 						{/if}
 
@@ -309,13 +311,13 @@
 			</main>
 
 			{#if !chatOpen}
-				<div class="absolute -right-3 top-1/2 hidden -translate-y-1/2 sm:block">
+				<div class="absolute top-1/2 -right-3 hidden -translate-y-1/2 sm:block">
 					<button
-						class="bg-primary flex-1 cursor-pointer rounded-2xl p-2 text-center text-2xl font-semibold"
+						class="flex-1 cursor-pointer rounded-2xl bg-primary p-2 text-center text-2xl font-semibold"
 						onclick={() => (chatOpen = !chatOpen)}
 					>
 						<span
-							class="block select-none whitespace-nowrap tracking-widest text-black"
+							class="block tracking-widest whitespace-nowrap text-black select-none"
 							style="writing-mode: vertical-rl; transform: rotate(180deg);"
 						>
 							AI Chat

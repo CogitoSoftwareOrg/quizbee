@@ -19,6 +19,7 @@
 		inputText: string;
 		attachedFiles: AttachedFile[];
 		selectedDifficulty: string;
+		selectedLanguage: string;
 		questionCount: number;
 		draftSwitch: boolean;
 		searchQuery: string;
@@ -32,6 +33,7 @@
 		inputText = $bindable(),
 		attachedFiles = $bindable(),
 		selectedDifficulty = $bindable(),
+		selectedLanguage = $bindable(),
 		draftSwitch = $bindable(),
 		questionCount = $bindable(),
 
@@ -65,12 +67,13 @@
 		}
 
 		selectedDifficulty = quiz.selectedDifficulty;
+		selectedLanguage = quiz.target_language || 'English';
 		questionCount = quiz.itemsLimit;
 		onQuizSelected();
 	}
 </script>
 
-<div class="border-base-200 h-full w-full flex-shrink-0 overflow-y-auto border-r">
+<div class="h-full w-full flex-shrink-0 overflow-y-auto border-r border-base-200">
 	<div class="space-y-3">
 		{#if filteredQuizes.length === 0}
 			<div class="mt-8 text-center">
@@ -80,7 +83,7 @@
 		{:else}
 			{#each filteredQuizes as quiz}
 				<div
-					class="} border-base-200 cursor-pointer rounded-lg border p-4 shadow-sm transition-shadow hover:bg-red-100 hover:shadow-md"
+					class="} cursor-pointer rounded-lg border border-base-200 p-4 shadow-sm transition-shadow hover:bg-red-100 hover:shadow-md"
 					onclick={() => handleQuizClick(quiz)}
 					onkeydown={(e) => e.key === 'Enter' && handleQuizClick(quiz)}
 					role="button"
@@ -91,13 +94,13 @@
 					</h3>
 
 					{#if quiz.query}
-						<p class="text-primary mb-1 text-left text-xs">
+						<p class="mb-1 text-left text-xs text-primary">
 							<span class="font-medium">Query:</span>
 							{quiz.query.length > 160 ? quiz.query.substring(0, 160) + '...' : quiz.query}
 						</p>
 					{/if}
 					{#if quiz.materials && quiz.materials.length > 0}
-						<p class="text-success text-left text-xs">
+						<p class="text-left text-xs text-success">
 							<span class="font-medium">Materials:</span>
 							{quiz.materials.length} file(s)
 						</p>

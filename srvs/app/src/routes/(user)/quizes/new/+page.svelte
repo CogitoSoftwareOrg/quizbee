@@ -3,6 +3,7 @@
 	import DifficultySelector from './DifficultySelector.svelte';
 	import QuestionNumberSelector from './QuestionNumberSelector.svelte';
 	import StartQuizButton from './StartQuizButton.svelte';
+	import LanguageSelector from './LanguageSelector.svelte';
 	import { tick, onMount } from 'svelte';
 	import Draft from './Draft.svelte';
 
@@ -14,6 +15,7 @@
 	let title = $state<string>('');
 	let attachedFiles = $state<AttachedFile[]>([]);
 	let selectedDifficulty = $state('intermediate');
+	let selectedLanguage = $state('English');
 	let questionCount = $state(10);
 	let inputText = $state('');
 	let avoidRepeat = $state(false);
@@ -64,13 +66,14 @@
 
 <main class="relative flex h-full flex-row overflow-x-hidden">
 	<!-- Use Previous Quiz Settings Button - Fixed in top right corner on desktop -->
-	<div class="fixed right-4 top-2 z-50 hidden lg:block">
+	<div class="fixed top-2 right-4 z-50 hidden lg:block">
 		<Draft
 			bind:title
 			bind:quizTemplateId
 			bind:inputText
 			bind:attachedFiles
 			bind:selectedDifficulty
+			bind:selectedLanguage
 			bind:questionCount
 			bind:previousQuizes
 			bind:avoidRepeat
@@ -90,7 +93,7 @@
 							bind:this={inputElement}
 							type="text"
 							placeholder=""
-							class="hover:text-warning -mt-2 min-w-0 max-w-full cursor-pointer border-none bg-transparent px-0 text-center text-4xl font-bold leading-tight transition-colors focus:outline-none focus:ring-0 md:text-5xl"
+							class="-mt-2 max-w-full min-w-0 cursor-pointer border-none bg-transparent px-0 text-center text-4xl leading-tight font-bold transition-colors hover:text-warning focus:ring-0 focus:outline-none md:text-5xl"
 							style="width: auto;"
 							oninput={(e) => {
 								const target = e.target as HTMLInputElement;
@@ -106,13 +109,13 @@
 							}}
 						/>
 						{#if title.startsWith('Untitled Quiz')}
-							<Pencil class="text-base-content/40 -mt-8 ml-1 h-5 w-5" />
+							<Pencil class="-mt-8 ml-1 h-5 w-5 text-base-content/40" />
 						{/if}
 					</div>
 					{#if showWarningLength}
-						<p class="text-error -mt-1 text-center">Title is limited to 30 characters.</p>
+						<p class="-mt-1 text-center text-error">Title is limited to 30 characters.</p>
 					{:else}
-						<p class="text-base-content/60 -mt-3 text-lg">
+						<p class="-mt-3 text-lg text-base-content/60">
 							Customize your quiz settings and get started
 						</p>
 					{/if}
@@ -120,7 +123,7 @@
 
 				<!-- Main Card -->
 				<div
-					class="card bg-base-100 border-base-300 overflow-x-hidden border-2 shadow-xl backdrop-blur-sm"
+					class="card overflow-x-hidden border-2 border-base-300 bg-base-100 shadow-xl backdrop-blur-sm"
 				>
 					<div class="card-body overflow-x-hidden px-5 py-3.5">
 						<!-- Description Section -->
@@ -135,6 +138,7 @@
 										bind:inputText
 										bind:attachedFiles
 										bind:selectedDifficulty
+										bind:selectedLanguage
 										bind:questionCount
 										bind:previousQuizes
 										bind:avoidRepeat
@@ -147,7 +151,7 @@
 									bind:inputText
 									bind:quizTemplateId
 									bind:isUploading
-									previousQuizes.length
+									previousQuizesLength={previousQuizes.length}
 								/>
 							</div>
 						</div>
@@ -167,15 +171,21 @@
 							</div>
 						</div>
 
+						<!-- Language -->
+						<div class="mb-2">
+							<h3 class="mb-2 block text-base font-semibold">Choose language of the questions</h3>
+							<LanguageSelector bind:selectedLanguage />
+						</div>
+
 						<!-- Avoid Repeat Questions Section -->
 						{#if previousQuizes.length > 0}
-							<div class="bg-base-200/50 border-base-300 mb-2 rounded-lg border p-2.5 md:p-3.5">
+							<div class="mb-2 rounded-lg border border-base-300 bg-base-200/50 p-2.5 md:p-3.5">
 								<div
 									class="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between md:gap-4"
 								>
 									<div class="min-w-0 flex-1">
 										<h3 class="mb-1 text-base font-semibold">Avoid repeating questions</h3>
-										<p class="text-base-content/60 text-sm">
+										<p class="text-sm text-base-content/60">
 											We prevent questions from your previous quizzes on similar topics from
 											appearing again
 										</p>
@@ -186,7 +196,7 @@
 												? 'text-base-content/50'
 												: 'text-base-content'}">No</span
 										>
-										<div class="toggle md:toggle-lg bg-transparent! [&:before]:bg-current">
+										<div class="toggle bg-transparent! md:toggle-lg [&:before]:bg-current">
 											<input type="checkbox" bind:checked={avoidRepeat} class="sr-only" />
 										</div>
 										<span
@@ -206,6 +216,7 @@
 							{inputText}
 							{questionCount}
 							{isUploading}
+							{selectedLanguage}
 						/>
 					</div>
 				</div>

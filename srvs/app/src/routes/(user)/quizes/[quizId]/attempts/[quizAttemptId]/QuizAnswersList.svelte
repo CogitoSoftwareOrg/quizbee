@@ -1,6 +1,7 @@
 <script lang="ts">
 	import posthog from 'posthog-js';
 	import type { ClassValue } from 'svelte/elements';
+	import { Button } from '@quizbee/ui-svelte-daisy';
 	import { untrack } from 'svelte';
 
 	import {
@@ -27,6 +28,7 @@
 		item: QuizItemsResponse;
 		itemDecision: Decision | null;
 		quizAttempt: QuizAttemptsResponse;
+		hint: string;
 	}
 
 	let {
@@ -37,7 +39,8 @@
 		quiz,
 		item,
 		quizAttempt,
-		itemDecision = $bindable(null)
+		itemDecision = $bindable(null),
+		hint
 	}: Props = $props();
 
 	const user = $derived(userStore.user);
@@ -127,24 +130,24 @@
 
 <div class={[className, 'min-w-0']}>
 	{#if item.status === 'final' || item.status === 'generated'}
-		<ul class={['mb-1 mt-1 flex flex-col gap-3 px-3 sm:px-12']}>
+		<ul class={['mt-1 mb-1 flex flex-col gap-3 px-3 sm:px-12']}>
 			{#each answers as answer, index}
 				<li class="min-w-0">
 					<article
 						class={[
-							'border-base-300 bg-base-200 focus-within:ring-primary/60 group w-full min-w-0 overflow-hidden rounded-2xl border text-left shadow-sm transition focus-within:outline-none focus-within:ring-2',
+							'group w-full min-w-0 overflow-hidden rounded-2xl border border-base-300 bg-base-200 text-left shadow-sm transition focus-within:ring-2 focus-within:ring-primary/60 focus-within:outline-none',
 							!itemDecision ? 'hover:border-primary/50 hover:shadow-md' : '',
 							itemDecision && answer.correct
-								? 'border-success/40 bg-success/10 ring-success/60 ring-2'
+								? 'border-success/40 bg-success/10 ring-2 ring-success/60'
 								: '',
 							itemDecision?.answerIndex === index && !answer.correct
-								? 'border-error/40 bg-error/10 ring-error/60 ring-2'
+								? 'border-error/40 bg-error/10 ring-2 ring-error/60'
 								: ''
 						]}
 					>
 						<button
 							type="button"
-							class="focus-visible:ring-primary/60 flex w-full min-w-0 cursor-pointer items-start gap-3 p-4 text-left transition focus-visible:outline-none focus-visible:ring-2"
+							class="flex w-full min-w-0 cursor-pointer items-start gap-3 p-4 text-left transition focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
 							onclick={async () => {
 								if (!itemDecision) {
 									itemDecision = {
@@ -236,7 +239,7 @@
 										<div class="flex items-start gap-3">
 											<Info class="mt-0.5 shrink-0" size={18} />
 											<div class="min-w-0 flex-1 space-y-1">
-												<p class="text-xs font-semibold uppercase tracking-wide opacity-60">
+												<p class="text-xs font-semibold tracking-wide uppercase opacity-60">
 													Explanation
 												</p>
 												<p class="wrap-break-words leading-relaxed opacity-80 md:text-base">
@@ -252,6 +255,17 @@
 				</li>
 			{/each}
 		</ul>
+
+		{#if !itemDecision}
+			<div class="mt-4 flex justify-center">
+				<div class="tooltip">
+					<div class="tooltip-content px-3 py-2 text-lg">{hint}</div>
+					<Button color="neutral" style="outline" size="lg" class="dark:text-base-content/90">
+						Hint
+					</Button>
+				</div>
+			</div>
+		{/if}
 	{:else}
 		<div class="flex h-full flex-col items-center justify-center gap-8 px-4 py-16">
 			<!-- Main Loading Container -->
@@ -262,23 +276,23 @@
 						<div class="relative h-24 w-24">
 							<!-- Outer rotating ring -->
 							<div
-								class="border-t-primary border-r-primary absolute inset-0 animate-spin rounded-full border-4 border-transparent opacity-70"
+								class="absolute inset-0 animate-spin rounded-full border-4 border-transparent border-t-primary border-r-primary opacity-70"
 							></div>
 							<!-- Middle pulsing ring -->
 							<div
-								class="border-primary/30 absolute inset-2 animate-pulse rounded-full border-2"
+								class="absolute inset-2 animate-pulse rounded-full border-2 border-primary/30"
 							></div>
 							<!-- Inner icon -->
 							<div class="absolute inset-0 flex items-center justify-center">
 								<div
-									class="bg-primary/10 flex h-full w-full items-center justify-center rounded-full"
+									class="flex h-full w-full items-center justify-center rounded-full bg-primary/10"
 								>
 									<span class="text-3xl">✨</span>
 								</div>
 							</div>
 						</div>
 					</div>
-					<h2 class="text-base-content mb-2 text-2xl font-bold">Building Your Quiz</h2>
+					<h2 class="mb-2 text-2xl font-bold text-base-content">Building Your Quiz</h2>
 					<p class="text-base-content/70">We're preparing personalized questions just for you...</p>
 				</div>
 
@@ -286,45 +300,45 @@
 				<div class="mb-8 hidden space-y-4 sm:block">
 					<div class="flex items-center gap-3">
 						<div
-							class="bg-success/20 flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+							class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-success/20"
 						>
 							<span class="text-success">✓</span>
 						</div>
 						<div class="flex-1">
-							<p class="text-base-content text-sm font-medium">Quiz initialized</p>
-							<p class="text-base-content/60 text-xs">Ready to generate questions</p>
+							<p class="text-sm font-medium text-base-content">Quiz initialized</p>
+							<p class="text-xs text-base-content/60">Ready to generate questions</p>
 						</div>
 					</div>
 
 					<div class="flex items-center gap-3">
 						<div
-							class="bg-primary/20 flex h-8 w-8 shrink-0 animate-pulse items-center justify-center rounded-full"
+							class="flex h-8 w-8 shrink-0 animate-pulse items-center justify-center rounded-full bg-primary/20"
 						>
 							<span class="text-primary">⚡</span>
 						</div>
 						<div class="flex-1">
-							<p class="text-base-content text-sm font-medium">Generating questions</p>
-							<p class="text-base-content/60 text-xs">Using AI to create unique challenges</p>
+							<p class="text-sm font-medium text-base-content">Generating questions</p>
+							<p class="text-xs text-base-content/60">Using AI to create unique challenges</p>
 						</div>
 					</div>
 
 					<div class="flex items-center gap-3 opacity-50">
 						<div
-							class="border-base-300 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-dashed"
+							class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-dashed border-base-300"
 						>
 							<span class="text-base-content/40">3</span>
 						</div>
 						<div class="flex-1">
-							<p class="text-base-content text-sm font-medium">Ready to answer</p>
-							<p class="text-base-content/60 text-xs">Questions will appear shortly</p>
+							<p class="text-sm font-medium text-base-content">Ready to answer</p>
+							<p class="text-xs text-base-content/60">Questions will appear shortly</p>
 						</div>
 					</div>
 				</div>
 
 				<!-- Timeline Info -->
-				<div class="bg-base-200/50 rounded-lg p-4 text-center">
-					<p class="text-base-content/70 text-sm">
-						<span class="text-base-content font-semibold">Usually takes less than 10 seconds</span>
+				<div class="rounded-lg bg-base-200/50 p-4 text-center">
+					<p class="text-sm text-base-content/70">
+						<span class="font-semibold text-base-content">Usually takes less than 10 seconds</span>
 						<br />
 						<span class="text-xs">Your AI tutor is working hard! ⏱️</span>
 					</p>
@@ -333,15 +347,15 @@
 				<!-- Animated dots -->
 				<div class="mt-8 flex justify-center gap-2">
 					<div
-						class="bg-primary h-2 w-2 animate-bounce rounded-full"
+						class="h-2 w-2 animate-bounce rounded-full bg-primary"
 						style="animation-delay: 0s"
 					></div>
 					<div
-						class="bg-primary h-2 w-2 animate-bounce rounded-full"
+						class="h-2 w-2 animate-bounce rounded-full bg-primary"
 						style="animation-delay: 0.2s"
 					></div>
 					<div
-						class="bg-primary h-2 w-2 animate-bounce rounded-full"
+						class="h-2 w-2 animate-bounce rounded-full bg-primary"
 						style="animation-delay: 0.4s"
 					></div>
 				</div>

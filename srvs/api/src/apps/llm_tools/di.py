@@ -1,20 +1,22 @@
-from .domain.out import TextTokenizer, ImageTokenizer, Chunker
+from .domain.out import TextTokenizer, ImageTokenizer, Chunker, Reranker
 from .app.usecases import LLMToolsAppImpl
 from .adapters.out import (
     TiktokenTokenizer,
     OpenAIImageTokenizer,
     SimpleChunker,
     VoyageEmbedder,
+    VoyageReranker,
 )
 from .domain.out import Vectorizer
 
 
-def init_llm_tools_deps() -> tuple[TextTokenizer, ImageTokenizer, Chunker, Vectorizer]:
+def init_llm_tools_deps() -> tuple[TextTokenizer, ImageTokenizer, Chunker, Vectorizer, Reranker]:
     text_tokenizer = TiktokenTokenizer()
     image_tokenizer = OpenAIImageTokenizer()
     chunker = SimpleChunker(text_tokenizer)
     vectorizer = VoyageEmbedder()
-    return text_tokenizer, image_tokenizer, chunker, vectorizer
+    reranker = VoyageReranker()
+    return text_tokenizer, image_tokenizer, chunker, vectorizer, reranker
 
 
 def init_llm_tools_app(
@@ -22,6 +24,7 @@ def init_llm_tools_app(
     image_tokenizer: ImageTokenizer,
     chunker: Chunker,
     vectorizer: Vectorizer,
+    reranker: Reranker,
 ) -> LLMToolsAppImpl:
     """Factory for LLMToolsApp - all dependencies explicit"""
     return LLMToolsAppImpl(
@@ -29,4 +32,5 @@ def init_llm_tools_app(
         image_tokenizer=image_tokenizer,
         chunker=chunker,
         vectorizer=vectorizer,
+        reranker=reranker,
     )

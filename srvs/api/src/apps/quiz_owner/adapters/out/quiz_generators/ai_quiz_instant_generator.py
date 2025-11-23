@@ -44,6 +44,9 @@ class QuizItemSchema(BaseModel):
     question: Annotated[
         str, Field(title="Question", description="The quiz question text.")
     ]
+    hint: Annotated[
+        str, Field(title="Hint", description="A hint for the question.", default="")
+    ]
     answers: Annotated[
         list[AnswerSchema],
         Field(
@@ -68,7 +71,8 @@ class AIQuizInstantGeneratorOutput(BaseModel):
     ]
 
     def merge(self, quiz: Quiz) -> None:
-        generating_count = len(quiz.generating_items())
+        generating_items = quiz.generating_items()
+        generating_count = len(generating_items)
         if generating_count == 0:
             raise ValueError("No items in GENERATING status to merge results into")
 
@@ -76,7 +80,9 @@ class AIQuizInstantGeneratorOutput(BaseModel):
         # This prevents errors if AI returns more items than expected
         items_to_process = min(len(self.quiz_items), generating_count)
 
-        for schema in self.quiz_items[:items_to_process]:
+        for i in range(items_to_process):
+            schema = self.quiz_items[i]
+            item = generating_items[i]
             quiz.generation_step(
                 question=schema.question,
                 variants=[
@@ -87,6 +93,8 @@ class AIQuizInstantGeneratorOutput(BaseModel):
                     )
                     for a in schema.answers
                 ],
+                order=item.order,
+                hint=schema.hint,
             )
 
 

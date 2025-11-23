@@ -3,7 +3,7 @@ import numpy as np
 
 from src.lib.config import LLMS
 
-from ..domain.out import Vectorizer
+from ..domain.out import Vectorizer, RerankResult
 
 
 class LLMToolsApp(Protocol):
@@ -20,3 +20,6 @@ class LLMToolsApp(Protocol):
     def chunk(self, text: str, respect_pages: bool = False) -> list[str] | list: ...
 
     async def vectorize(self, chunks: list[str]) -> np.ndarray: ...
+    async def rerank(
+        self, query: str, documents: list[str], top_k: int = 4
+    ) -> list[RerankResult]: ...

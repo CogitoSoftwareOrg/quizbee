@@ -111,6 +111,7 @@ class PBQuizRepository(QuizRepository):
             status=rec.get("status", ""),
             visibility=rec.get("visibility", ""),
             avoid_repeat=rec.get("avoidRepeat", False),
+            target_language=rec.get("targetLanguage", "English"),
             gen_config=self._rec_to_config(rec),
             generation=rec.get("generation", 0),
             cluster_vectors=cluster_vectors,
@@ -145,6 +146,7 @@ class PBQuizRepository(QuizRepository):
             order=item_rec.get("order", 0),
             status=item_rec.get("status", ""),
             managed=item_rec.get("managed", False),
+            hint=item_rec.get("hint", ""),
         )
 
     def _rec_to_variant(self, rec: dict[str, Any]) -> QuizItemVariant:
@@ -201,6 +203,7 @@ class PBQuizRepository(QuizRepository):
             "order": item.order,
             "status": item.status,
             "managed": item.managed,
+            "hint": item.hint,
         }
 
         if len(item.variants) > 0:

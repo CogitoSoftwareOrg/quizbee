@@ -16,9 +16,17 @@
 		inputText: string;
 		questionCount: number;
 		isUploading: boolean;
+		selectedLanguage: string;
 	}
 
-	let { quizTemplateId, attachedFiles, inputText, questionCount, isUploading }: Props = $props();
+	let {
+		quizTemplateId,
+		attachedFiles,
+		inputText,
+		questionCount,
+		isUploading,
+		selectedLanguage
+	}: Props = $props();
 
 	const user = $derived(userStore.user);
 
@@ -58,12 +66,14 @@
 				attempt_id: attempt.id
 			});
 
+			// posthog events
 			if (attachedFiles.length > 0) {
 				posthog.capture('quiz_with_material_started', {
-					quizId,
+					quizId
 				});
 			}
 
+			// posthog events
 			posthog.capture('quiz_creation_started', {
 				quizId,
 				attemptId
@@ -93,10 +103,10 @@
 	style={quizRemained < questionCount ? 'soft' : 'solid'}
 >
 	{#if isLoading}
-		<span class="loading loading-md loading-spinner mr-2"></span>
+		<span class="loading mr-2 loading-md loading-spinner"></span>
 		Creating quiz...
 	{:else if isUploading}
-		<span class="loading loading-md loading-spinner mr-2"></span>
+		<span class="loading mr-2 loading-md loading-spinner"></span>
 		Uploading files...
 	{:else if quizRemained < questionCount}
 		You have {quizRemained} questions left

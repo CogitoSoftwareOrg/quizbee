@@ -64,6 +64,13 @@ class AIGrokGeneratorOutput(BaseModel):
             # max_length=4,
         ),
     ]
+    hint: Annotated[
+        str,
+        Field(
+            title="Hint",
+            description="A helpful hint for the user to guide them towards the correct answer without revealing it directly.",
+        ),
+    ]
 
     @model_validator(mode="after")
     def _check_answers(self):
@@ -106,6 +113,7 @@ class AIGrokGeneratorOutput(BaseModel):
                 for a in self.answers
             ],
             order=item_order,
+            hint=self.hint,
         )
 
 
@@ -189,7 +197,9 @@ class AIGrokGenerator(PatchGenerator):
     ) -> list[ModelRequestPart]:
         parts: list[ModelRequestPart] = [
             SystemPromptPart(
-                content=self._lf.get_prompt("quizer/base_patch1", label=settings.env).compile()
+                content=self._lf.get_prompt("quizer/base_patch1", label=settings.env).compile(
+                    target_language=quiz.target_language
+                )
             )
         ]
 

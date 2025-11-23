@@ -52,12 +52,13 @@ async def startup(ctx):
     document_parser_app = init_document_parser_app(parser_provider=parser_provider)
 
     # V2 LLM TOOLS
-    text_tokenizer, image_tokenizer, chunker, vectorizer = init_llm_tools_deps()
+    text_tokenizer, image_tokenizer, chunker, vectorizer, reranker = init_llm_tools_deps()
     llm_tools = init_llm_tools_app(
         text_tokenizer=text_tokenizer,
         image_tokenizer=image_tokenizer,
         chunker=chunker,
         vectorizer=vectorizer,
+        reranker=reranker,
     )
 
     # V2 USER AUTH

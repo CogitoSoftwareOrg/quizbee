@@ -56,10 +56,6 @@ class SimpleChunker(Chunker):
                 return self._chunk_by_tokens(text)
 
     def _chunk_by_sentences(self, text: str) -> list[str]:
-        """
-        Chunk text by sentences, respecting token limits.
-        """
-        # Split into sentences using common sentence boundaries
         sentence_endings = r"(?<=[.!?])\s+(?=[A-ZА-ЯЁ])"
         sentences = re.split(sentence_endings, text)
 
@@ -77,47 +73,40 @@ class SimpleChunker(Chunker):
 
             sentence_tokens = self._tokenizer.count_text(sentence)
 
-            # If single sentence exceeds chunk_size, split it by tokens
             if sentence_tokens > self._chunk_size:
-                # Save current chunk if exists
                 if current_chunk:
                     chunks.append(" ".join(current_chunk))
                     current_chunk = []
                     current_tokens = 0
-
-                # Split long sentence
                 chunks.extend(self._split_long_text(sentence))
                 continue
 
-            # Check if adding sentence exceeds limit
-            if current_tokens + sentence_tokens > self._chunk_size and current_chunk:
-                # Save current chunk
-                chunk_text = " ".join(current_chunk)
-                chunks.append(chunk_text)
+            potential_tokens = current_tokens + sentence_tokens
 
-                # Start new chunk with overlap
-                if self._overlap > 0:
-                    current_chunk, current_tokens = self._create_overlap(
-                        current_chunk, chunk_text
-                    )
-                else:
-                    current_chunk = []
-                    current_tokens = 0
+            if potential_tokens <= self._chunk_size:
+                current_chunk.append(sentence)
+                current_tokens = potential_tokens
+            else:
+                if current_chunk:
+                    chunks.append(" ".join(current_chunk))
+                    
+                    if self._overlap > 0:
+                        overlap_chunk, overlap_tokens = self._create_overlap(current_chunk)
+                        current_chunk = overlap_chunk
+                        current_tokens = overlap_tokens
+                    else:
+                        current_chunk = []
+                        current_tokens = 0
+                
+                current_chunk.append(sentence)
+                current_tokens += sentence_tokens
 
-            current_chunk.append(sentence)
-            current_tokens += sentence_tokens
-
-        # Add remaining chunk
         if current_chunk:
             chunks.append(" ".join(current_chunk))
 
         return chunks
 
     def _chunk_by_tokens(self, text: str) -> list[str]:
-        """
-        Simple chunking by character approximation of tokens.
-        """
-        # Split text into words for better chunking
         words = text.split()
 
         chunks = []
@@ -126,43 +115,37 @@ class SimpleChunker(Chunker):
 
         for word in words:
             word_tokens = self._tokenizer.count_text(word)
+            potential_tokens = current_tokens + word_tokens
 
-            if current_tokens + word_tokens > self._chunk_size and current_chunk:
-                # Save current chunk
-                chunk_text = " ".join(current_chunk)
-                chunks.append(chunk_text)
+            if potential_tokens <= self._chunk_size:
+                current_chunk.append(word)
+                current_tokens = potential_tokens
+            else:
+                if current_chunk:
+                    chunks.append(" ".join(current_chunk))
+                    
+                    if self._overlap > 0:
+                        overlap_chunk, overlap_tokens = self._create_overlap(current_chunk)
+                        current_chunk = overlap_chunk
+                        current_tokens = overlap_tokens
+                    else:
+                        current_chunk = []
+                        current_tokens = 0
+                
+                current_chunk.append(word)
+                current_tokens += word_tokens
 
-                # Start new chunk with overlap
-                if self._overlap > 0:
-                    current_chunk, current_tokens = self._create_overlap(
-                        current_chunk, chunk_text
-                    )
-                else:
-                    current_chunk = []
-                    current_tokens = 0
-
-            current_chunk.append(word)
-            current_tokens += word_tokens
-
-        # Add remaining chunk
         if current_chunk:
             chunks.append(" ".join(current_chunk))
 
         return chunks
 
     def _create_overlap(
-        self, previous_chunk: list[str], previous_text: str
+        self, previous_chunk: list[str]
     ) -> tuple[list[str], int]:
-        """
-        Create overlap from previous chunk.
-
-        Returns:
-            Tuple of (overlap_sentences, overlap_token_count)
-        """
         overlap_items = []
         overlap_tokens = 0
 
-        # Add sentences from the end until we reach overlap size
         for item in reversed(previous_chunk):
             item_tokens = self._tokenizer.count_text(item)
             if overlap_tokens + item_tokens > self._overlap:
@@ -173,9 +156,6 @@ class SimpleChunker(Chunker):
         return overlap_items, overlap_tokens
 
     def _split_long_text(self, text: str) -> list[str]:
-        """
-        Split text that's longer than chunk_size into smaller pieces.
-        """
         words = text.split()
         chunks = []
         current_chunk = []
@@ -183,14 +163,16 @@ class SimpleChunker(Chunker):
 
         for word in words:
             word_tokens = self._tokenizer.count_text(word)
+            potential_tokens = current_tokens + word_tokens
 
-            if current_tokens + word_tokens > self._chunk_size and current_chunk:
-                chunks.append(" ".join(current_chunk))
-                current_chunk = []
-                current_tokens = 0
-
-            current_chunk.append(word)
-            current_tokens += word_tokens
+            if potential_tokens <= self._chunk_size:
+                current_chunk.append(word)
+                current_tokens = potential_tokens
+            else:
+                if current_chunk:
+                    chunks.append(" ".join(current_chunk))
+                current_chunk = [word]
+                current_tokens = word_tokens
 
         if current_chunk:
             chunks.append(" ".join(current_chunk))

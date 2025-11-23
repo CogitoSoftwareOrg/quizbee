@@ -19,6 +19,7 @@
 		inputText: string;
 		attachedFiles: AttachedFile[];
 		selectedDifficulty: string;
+		selectedLanguage: string;
 		questionCount: number;
 		previousQuizes: any[];
 		avoidRepeat: boolean;
@@ -30,6 +31,7 @@
 		inputText = $bindable(),
 		attachedFiles = $bindable(),
 		selectedDifficulty = $bindable(),
+		selectedLanguage = $bindable(),
 		questionCount = $bindable(),
 		previousQuizes = $bindable(),
 		avoidRepeat = $bindable()
@@ -86,6 +88,14 @@
 		});
 	});
 
+	// Language pb update
+	$effect(() => {
+		const _ = selectedLanguage;
+		untrack(() => {
+			scheduleUpdate({ targetLanguage: selectedLanguage });
+		});
+	});
+
 	// Question count pb update
 	$effect(() => {
 		const _ = questionCount;
@@ -117,6 +127,7 @@
 			inputText = newDraft.inputText;
 			attachedFiles = newDraft.attachedFiles;
 			selectedDifficulty = newDraft.selectedDifficulty;
+			selectedLanguage = newDraft.selectedLanguage;
 			questionCount = newDraft.questionCount;
 			title = newDraft.title;
 			avoidRepeat = newDraft.avoidRepeat;
@@ -127,6 +138,7 @@
 				return createAttachedFileFromMaterial(materialId);
 			});
 			selectedDifficulty = drafts[0].difficulty;
+			selectedLanguage = (drafts[0] as any).target_language || 'English';
 			questionCount = drafts[0].itemsLimit;
 			title = drafts[0].title;
 			avoidRepeat = drafts[0].avoidRepeat;
@@ -159,6 +171,7 @@
 					return createAttachedFileFromMaterial(materialId);
 				});
 				selectedDifficulty = nextDraft.difficulty;
+				selectedLanguage = (nextDraft as any).target_language || 'English';
 				questionCount = nextDraft.itemsLimit;
 				title = nextDraft.title;
 			} else {
@@ -166,6 +179,7 @@
 				inputText = '';
 				attachedFiles = [];
 				selectedDifficulty = 'intermediate';
+				selectedLanguage = 'English';
 				questionCount = 10;
 				title = '';
 			}
@@ -175,7 +189,7 @@
 
 {#if previousQuizes.length > 0}
 	<button
-		class="btn btn-outline btn-xs lg:btn-lg gap-1 whitespace-nowrap rounded-lg sm:mt-1 lg:mr-2 lg:gap-3"
+		class="btn gap-1 rounded-lg whitespace-nowrap btn-outline btn-xs sm:mt-1 lg:mr-2 lg:gap-3 lg:btn-lg"
 		onclick={() => (showModal = true)}
 	>
 		<FilePlus class="h-4 w-4 lg:h-6 lg:w-6" />
@@ -191,11 +205,11 @@
 	class="max-h-screen max-w-sm items-start"
 >
 	<h3 class="text-center text-2xl font-bold">Choose a quiz to copy configuration from</h3>
-	<div class="relative mb-4 mt-4">
+	<div class="relative mt-4 mb-4">
 		<input
 			bind:value={searchQuery}
 			placeholder="Search previous quizes.."
-			class="border-base-300 focus:border-primary w-full rounded border py-1 pl-8 pr-2 text-sm focus:outline-none"
+			class="w-full rounded border border-base-300 py-1 pr-2 pl-8 text-sm focus:border-primary focus:outline-none"
 		/>
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
@@ -207,17 +221,18 @@
 			stroke-width="2"
 			stroke-linecap="round"
 			stroke-linejoin="round"
-			class="lucide lucide-search text-base-content/60 absolute left-2 top-1/2 -translate-y-1/2 transform"
+			class="lucide lucide-search absolute top-1/2 left-2 -translate-y-1/2 transform text-base-content/60"
 			><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg
 		>
 	</div>
-	<div class="max-h-135 flex justify-start overflow-y-auto">
+	<div class="flex max-h-135 justify-start overflow-y-auto">
 		<PreviousQuizes
 			bind:quizTemplateId
 			bind:title
 			bind:inputText
 			bind:attachedFiles
 			bind:selectedDifficulty
+			bind:selectedLanguage
 			bind:draftSwitch
 			bind:questionCount
 			{searchQuery}

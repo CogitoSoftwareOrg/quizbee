@@ -72,6 +72,7 @@ class QuizItem:
     order: int
     status: QuizItemStatus
     managed: bool
+    hint: str = ""
 
     fresh_generated: bool = False
 
@@ -95,7 +96,7 @@ class QuizItem:
             raise ValueError("Item is not in generating status for failing")
         self.status = QuizItemStatus.FAILED
 
-    def to_generated(self, question: str, variants: list[QuizItemVariant]) -> None:
+    def to_generated(self, question: str, variants: list[QuizItemVariant], hint: str = "") -> None:
         if self.status not in {QuizItemStatus.GENERATING}:
             raise ValueError("Item is not in generating status for generating")
 
@@ -103,6 +104,7 @@ class QuizItem:
         self.status = QuizItemStatus.GENERATED
         self.question = question
         self.variants = variants
+        self.hint = hint
 
     def to_final(self) -> None:
         if self.status not in {QuizItemStatus.GENERATED}:
@@ -129,6 +131,7 @@ class Quiz:
     status: QuizStatus = QuizStatus.DRAFT
     material_content: str = ""
     avoid_repeat: bool = False
+    target_language: str = "English"
     items: list[QuizItem] = field(default_factory=list)
     cluster_vectors: list[list[float]] = field(default_factory=list)
 
@@ -267,7 +270,7 @@ class Quiz:
             item.to_failed()
 
     def generation_step(
-        self, question: str, variants: list[QuizItemVariant], order: int
+        self, question: str, variants: list[QuizItemVariant], order: int, hint: str = ""
     ) -> None:
         # Find the specific item by order instead of always taking the first one
         item = next((item for item in self.items if item.order == order), None)
@@ -277,4 +280,4 @@ class Quiz:
             raise ValueError(
                 f"Item with order {order} is not in GENERATING status (current: {item.status})"
             )
-        item.to_generated(question, variants)
+        item.to_generated(question, variants, hint)

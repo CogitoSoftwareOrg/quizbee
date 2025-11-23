@@ -37,7 +37,7 @@ class MeiliMaterialVectorSearcher(Searcher):
         dto: SearchDto,
     ) -> list[MaterialChunk]:
         """
-        Ищет наиболее похожие чанки для векторов.
+        Ищет наиболее похожие чанки для векторов с использованием реранкинга.
 
         Args:
             dto: SearchDto с параметрами поиска
@@ -47,7 +47,7 @@ class MeiliMaterialVectorSearcher(Searcher):
                 - vectors: Список векторов для поиска
 
         Returns:
-            Список найденных чанков, сначала неиспользованные, потом использованные
+            Список найденных чанков после реранкинга
         """
         if not dto.vectors or len(dto.vectors) == 0:
             logging.warning("No vectors provided for vector search")
@@ -61,7 +61,7 @@ class MeiliMaterialVectorSearcher(Searcher):
             if dto.material_ids:
                 f_unused += f" AND materialId IN [{','.join(dto.material_ids)}]"
 
-            logging.info(f"Meili Vector Search {idx + 1}/{len(dto.vectors)} (unused): {f_unused}, limit: 4")
+            logging.info(f"Meili Vector Search {idx + 1}/{len(dto.vectors)} (unused): {f_unused}, limit: 20")
 
             try:
                 res = await self._material_index.search(
@@ -71,15 +71,15 @@ class MeiliMaterialVectorSearcher(Searcher):
                         semantic_ratio=1.0, embedder=EMBEDDER_NAME
                     ),
                     filter=f_unused,
-                    limit=4,
+                    limit=20,
                     ranking_score_threshold=0,
                     show_ranking_score=True,
                 )
 
                 docs: list[Doc] = [Doc.from_hit(hit) for hit in res.hits]
                 
-                if len(docs) < 4:
-                    needed = 4 - len(docs)
+                if len(docs) < 20:
+                    needed = 20 - len(docs)
                     logging.info(
                         f"Found only {len(docs)} unused chunks, fetching {needed} used chunks"
                     )
@@ -106,14 +106,28 @@ class MeiliMaterialVectorSearcher(Searcher):
                         f"Added {len(docs_used)} used chunks, total: {len(docs)}"
                     )
 
-                chunks = [doc.to_chunk() for doc in docs]
-                
-                for chunk in chunks:
-                    if chunk.id not in seen_chunk_ids:
-                        seen_chunk_ids.add(chunk.id)
-                        all_chunks.append(chunk)
-                
-                logging.info(f"Vector {idx + 1}: added {len([c for c in chunks if c.id in seen_chunk_ids])} unique chunks")
+                if len(docs) > 0:
+                    documents = [doc.content for doc in docs]
+                    query_for_reranking = f"Cluster {idx + 1}: semantically related educational content"
+                    
+                    logging.info(f"Reranking {len(documents)} chunks for vector {idx + 1}")
+                    rerank_results = await self._llm_tools.rerank(
+                        query=query_for_reranking,
+                        documents=documents,
+                        top_k=4
+                    )
+                    
+                    for result in rerank_results:
+                        doc = docs[result.index]
+                        chunk = doc.to_chunk()
+                        
+                        if chunk.id not in seen_chunk_ids:
+                            seen_chunk_ids.add(chunk.id)
+                            all_chunks.append(chunk)
+                            logging.info(
+                                f"Vector {idx + 1}: Reranked chunk #{result.index} "
+                                f"(score: {result.relevance_score:.3f})"
+                            )
 
             except Exception as e:
                 logging.error(f"Error searching for vector {idx + 1}: {e}")
