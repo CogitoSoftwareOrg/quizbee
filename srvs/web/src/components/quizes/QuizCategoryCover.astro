@@ -1,6 +1,18 @@
 ---
 import { Image } from "astro:assets";
+
+import { QuizesCategoryOptions } from "@quizbee/pb-types";
+
 import beeCover from "@/assets/images/pchel.png";
+import ArtsCover from "@/assets/images/Arts.png";
+import HistoryCover from "@/assets/images/History.png";
+import LawCover from "@/assets/images/Law.png";
+import LanguageCover from "@/assets/images/Language.png";
+import MathCover from "@/assets/images/Math.png";
+import PopCultureCover from "@/assets/images/Popculture.png";
+import PsychologyCover from "@/assets/images/Psychology.png";
+import STEMCover from "@/assets/images/STEM.png";
+import GeneralCover from "@/assets/images/General.png";
 
 type Props = {
   category: string;
@@ -11,15 +23,18 @@ type Props = {
 
 const { category, alt, class: className, priority = "high" } = Astro.props;
 
-// Маппинг категорий на изображения
 const categoryImages: Record<string, any> = {
-  // TODO: добавить изображения для конкретных категорий quiz
-  // "programming": ProgrammingImage,
-  // "science": ScienceImage,
-  // и т.д.
+  [QuizesCategoryOptions.stem]: STEMCover,
+  [QuizesCategoryOptions.general]: GeneralCover,
+  [QuizesCategoryOptions.math]: MathCover,
+  [QuizesCategoryOptions.history]: HistoryCover,
+  [QuizesCategoryOptions.law]: LawCover,
+  [QuizesCategoryOptions.language]: LanguageCover,
+  [QuizesCategoryOptions.art]: ArtsCover,
+  [QuizesCategoryOptions.popCulture]: PopCultureCover,
+  [QuizesCategoryOptions.psychology]: PsychologyCover,
 };
 
-// Получаем изображение для категории или используем fallback
 const coverImage = categoryImages[category] || beeCover;
 ---
 
