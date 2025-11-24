@@ -22,21 +22,18 @@ onRecordCreate((e) => {
 }, "subscriptions");
 
 onRecordUpdate((e) => {
-  const oldUsage = e.record.originalCopy().get("quizItemsUsage") || 0;
   const newUsage = e.record.get("quizItemsUsage") || 0;
-
-  if (oldUsage < 40 && newUsage >= 40) {
+  if (newUsage === 40) {
     const userId = e.record.get("user");
-    
     try {
       const user = $app.findRecordById("users", userId);
-      const email = user.get("email");
-      
+      const email = user?.get("email");
+
       $http.send({
         url: "https://eu.i.posthog.com/capture/",
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           api_key: process.env.PUBLIC_POSTHOG || "",
@@ -45,10 +42,10 @@ onRecordUpdate((e) => {
             distinct_id: userId,
             email: email,
             usage: newUsage,
-            threshold: 40
-          }
+            threshold: 40,
+          },
         }),
-        timeout: 10
+        timeout: 10,
       });
     } catch (err) {
       console.error("Failed to send posthog event:", err);
