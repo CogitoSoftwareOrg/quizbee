@@ -25,12 +25,13 @@ class QuizIndexer(Protocol):
     ) -> list[Quiz]: ...
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(slots=True)
 class PatchGeneratorDto:
     quiz: Quiz
     cache_key: str
     chunks: list[str] | None = None
-    item_order: int | None = None  # Order of the item to generate
+    item_order: int | None = None
+    used_chunk_indices: list[int] | None = None
 
 
 class PatchGenerator(Protocol):

@@ -129,7 +129,7 @@
 						<!-- Description Section -->
 						<div class={previousQuizes.length === 0 ? 'mb-2' : 'mb-2'}>
 							<div class="flex w-full items-start justify-between gap-3">
-								<h3 class="mb-3 block text-base font-semibold">Describe your quiz</h3>
+								<!-- <h3 class="mb-3 block text-base font-semibold">Describe your quiz</h3> -->
 								<!-- Mobile Draft Button - Shows on mobile only, next to title -->
 								<div class="lg:hidden">
 									<Draft

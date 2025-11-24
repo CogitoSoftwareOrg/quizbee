@@ -30,8 +30,7 @@ class VoyageReranker(Reranker):
             return []
 
         instruction = (
-            "Return theoretically useful chunks that contain fundamental, "
-            "substantive information rather than superficial content."
+            "Return theoretically useful and important chunks that contain fundamental substantive information."
         )
         query_with_instruction = f"{instruction}\n\nQuery: {query}"
 

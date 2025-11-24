@@ -89,16 +89,32 @@ class QuizGeneratorImpl(QuizGenerator):
             item_chunks = [contents for contents, _ in result][0]
             chunk_ids = [ids for _, ids in result][0]
 
-        await self._patch_generator.generate(
-            dto=PatchGeneratorDto(
-                quiz=quiz,
-                cache_key=cache_key,
-                chunks=item_chunks,
-                item_order=item.order,
-            )
+        dto = PatchGeneratorDto(
+            quiz=quiz,
+            cache_key=cache_key,
+            chunks=item_chunks,
+            item_order=item.order,
         )
+        
+        await self._patch_generator.generate(dto)
 
-        if len(chunk_ids) > 0:
+        if len(chunk_ids) > 0 and dto.used_chunk_indices is not None:
+            used_chunk_ids = [chunk_ids[i] for i in dto.used_chunk_indices if i < len(chunk_ids)]
+            
+            if len(used_chunk_ids) > 0:
+                await self._material_app.mark_chunks_as_used(used_chunk_ids)
+                logger.info(
+                    f"Marked {len(used_chunk_ids)}/{len(chunk_ids)} chunks as used "
+                    f"(LLM selected: {dto.used_chunk_indices})"
+                )
+            else:
+                logger.warning(
+                    f"LLM returned used_chunk_indices {dto.used_chunk_indices} but no valid chunk IDs found"
+                )
+        elif len(chunk_ids) > 0:
+            logger.warning(
+                f"LLM did not return used_chunk_indices, marking all {len(chunk_ids)} chunks as used"
+            )
             await self._material_app.mark_chunks_as_used(chunk_ids)
 
     async def _relevant_chunks(

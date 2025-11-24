@@ -9,17 +9,16 @@
 
 	const languages = [
 		{ value: 'English', label: 'English' },
-		{ value: 'Spanish', label: 'Spanish' },
-		{ value: 'French', label: 'French' },
-		{ value: 'German', label: 'German' },
-		{ value: 'Italian', label: 'Italian' },
-		{ value: 'Portuguese', label: 'Portuguese' },
-		{ value: 'Chinese', label: 'Chinese' },
-		{ value: 'Japanese', label: 'Japanese' },
-		{ value: 'Polish', label: 'Polish' },
-		{ value: 'Russian', label: 'Russian' },
-		{ value: 'Arabic', label: 'Arabic' },
-		{ value: 'Dutch', label: 'Dutch' }
+		{ value: 'Spanish', label: 'Español' },
+		{ value: 'French', label: 'Français' },
+		{ value: 'German', label: 'Deutsch' },
+		{ value: 'Italian', label: 'Italiano' },
+		{ value: 'Portuguese', label: 'Português' },
+		{ value: 'Polish', label: 'Polski' },
+		{ value: 'Russian', label: 'Русский' },
+		{ value: 'Dutch', label: 'Nederlands' },
+		{ value: 'Slovak', label: 'Slovenčina' },
+		{ value: 'Hungarian', label: 'Magyar' }
 	];
 </script>
 

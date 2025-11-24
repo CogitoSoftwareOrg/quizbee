@@ -19,8 +19,11 @@ class LLMS(StrEnum):
     # GEMINI_2_5_FLASH_LITE = "gemini-2.5-flash-lite"
 
     # Grok
-    GROK_4_FAST_REASONING = "grok:grok-4-fast"
+    GROK_4_1_FAST_REASONING = "grok:grok-4-1-fast-reasoning"
+    GROK_4_1_FAST = "grok:grok-4-1-fast-non-reasoning"
+
     GROK_4_FAST = "grok:grok-4-fast-non-reasoning"
+    GROK_4_FAST_REASONING = "grok:grok-4-fast-reasoning"
 
 
 class LLMCosts(BaseModel):
@@ -41,7 +44,7 @@ class LLMSCosts:
         output=0.0000036,
     )
 
-    GROK_4_FAST = LLMCosts(
+    GROK_4_1_FAST = LLMCosts(
         input_nc=0.0000002,
         input_cah=0.00000005,
         output=0.0000005,

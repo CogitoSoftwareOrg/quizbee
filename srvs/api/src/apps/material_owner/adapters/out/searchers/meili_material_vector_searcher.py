@@ -78,7 +78,9 @@ class MeiliMaterialVectorSearcher(Searcher):
 
                 docs: list[Doc] = [Doc.from_hit(hit) for hit in res.hits]
                 
-                if len(docs) < 20:
+
+                # Пока что если мы находим мало неиспользованных чанков, дополняем их использованными 
+                if len(docs) < 7:
                     needed = 20 - len(docs)
                     logging.info(
                         f"Found only {len(docs)} unused chunks, fetching {needed} used chunks"

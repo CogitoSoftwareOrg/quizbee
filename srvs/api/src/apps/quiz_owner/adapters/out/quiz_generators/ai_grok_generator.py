@@ -26,7 +26,7 @@ from ....domain.models import Quiz, QuizItemVariant
 from ....domain.constants import PATCH_LIMIT
 
 
-QUIZ_GENERATOR_LLM = LLMS.GROK_4_FAST
+QUIZ_GENERATOR_LLM = LLMS.GROK_4_1_FAST
 IN_QUERY = ""
 RETRIES = 1
 TEMPERATURE = 0.4
@@ -55,6 +55,13 @@ class AIGrokGeneratorOutput(BaseModel):
     question: Annotated[
         str, Field(title="Question", description="The quiz question text.")
     ]
+    hint: Annotated[
+        str,
+        Field(
+            title="Hint",
+            description="A helpful hint for the user to guide them towards the correct answer without revealing it directly.",
+        ),
+    ]
     answers: Annotated[
         list[AnswerSchema],
         Field(
@@ -64,16 +71,27 @@ class AIGrokGeneratorOutput(BaseModel):
             # max_length=4,
         ),
     ]
-    hint: Annotated[
-        str,
+
+    used_chunk_indices: Annotated[
+        list[int],
         Field(
-            title="Hint",
-            description="A helpful hint for the user to guide them towards the correct answer without revealing it directly.",
+            title="Used Chunk Indices",
+            description="Indices of chunks (0-based) that were actually used to generate this question. Only include chunks that directly contributed to the question, answers, or explanations.",
+            default_factory=list,
         ),
     ]
 
     @model_validator(mode="after")
     def _check_answers(self):
+        if not self.hint or not self.hint.strip():
+            raise ValueError("Hint is required and cannot be empty.")
+        
+        if not isinstance(self.used_chunk_indices, list):
+            raise ValueError("used_chunk_indices must be a list.")
+        
+        if len(self.used_chunk_indices) == 0:
+            logger.warning("No chunk indices were marked as used for this question.")
+        
         parsed_answers = []
         for a in self.answers:
             if not a.answer.strip() or not a.explanation.strip():
@@ -101,7 +119,7 @@ class AIGrokGeneratorOutput(BaseModel):
 
         return self
 
-    def merge(self, quiz: Quiz, item_order: int):
+    def merge(self, quiz: Quiz, item_order: int) -> list[int]:
         quiz.generation_step(
             question=self.question,
             variants=[
@@ -115,6 +133,7 @@ class AIGrokGeneratorOutput(BaseModel):
             order=item_order,
             hint=self.hint,
         )
+        return self.used_chunk_indices
 
 
 class AIGrokGenerator(PatchGenerator):
@@ -164,7 +183,9 @@ class AIGrokGenerator(PatchGenerator):
                 )
 
                 payload = run.output
-                payload.merge(dto.quiz, item_order=dto.item_order)
+                used_indices = payload.merge(dto.quiz, item_order=dto.item_order)
+                
+                dto.used_chunk_indices = used_indices
 
                 await update_span_with_result(
                     self._lf,
@@ -195,9 +216,12 @@ class AIGrokGenerator(PatchGenerator):
     def _build_pre_prompt(
         self, quiz: Quiz, chunks: list[str] | list[list[str]]
     ) -> list[ModelRequestPart]:
+        
+        prompt_name = "quizer/base_patch1" if chunks else "quizer/base_patch1_only_query"
+        
         parts: list[ModelRequestPart] = [
             SystemPromptPart(
-                content=self._lf.get_prompt("quizer/base_patch1", label=settings.env).compile(
+                content=self._lf.get_prompt(prompt_name, label=settings.env).compile(
                     target_language=quiz.target_language
                 )
             )
@@ -216,13 +240,15 @@ class AIGrokGenerator(PatchGenerator):
                 chunks_nested = cast(list[list[str]], chunks)
 
                 formatted_collections = []
+                chunk_idx = 0
                 for idx, chunk_list in enumerate(chunks_nested, 1):
                     collection_header = f"\n--- Chunk collection {idx} ---\n"
                     formatted_chunks = []
                     for chunk in chunk_list:
                         formatted_chunks.append(
-                            f"START OF CHUNK\n{chunk}\nEND OF CHUNK"
+                            f"[CHUNK {chunk_idx}]\n{chunk}\n[/CHUNK {chunk_idx}]"
                         )
+                        chunk_idx += 1
                     formatted_collections.append(
                         collection_header + "\n".join(formatted_chunks)
                     )
@@ -234,8 +260,8 @@ class AIGrokGenerator(PatchGenerator):
                 chunks_flat = cast(list[str], chunks)
 
                 formatted_chunks = []
-                for chunk in chunks_flat:
-                    formatted_chunks.append(f"START OF CHUNK\n{chunk}\nEND OF CHUNK")
+                for chunk_idx, chunk in enumerate(chunks_flat):
+                    formatted_chunks.append(f"[CHUNK {chunk_idx}]\n{chunk}\n[/CHUNK {chunk_idx}]")
 
                 user_contents.append("\n".join(formatted_chunks))
 
