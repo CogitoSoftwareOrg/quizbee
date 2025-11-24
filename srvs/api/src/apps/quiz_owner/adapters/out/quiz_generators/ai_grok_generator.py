@@ -199,7 +199,7 @@ class AIGrokGenerator(PatchGenerator):
 
                 payload = run.output
                 used_indices = payload.merge(dto.quiz, item_order=dto.item_order)
-                
+
                 dto.used_chunk_indices = used_indices
 
                 await update_span_with_result(
@@ -231,9 +231,11 @@ class AIGrokGenerator(PatchGenerator):
     def _build_pre_prompt(
         self, quiz: Quiz, chunks: list[str] | list[list[str]]
     ) -> list[ModelRequestPart]:
-        
-        prompt_name = "quizer/base_patch1" if chunks else "quizer/base_patch1_only_query"
-        
+
+        prompt_name = (
+            "quizer/base_patch1" if chunks else "quizer/base_patch1_only_query"
+        )
+
         parts: list[ModelRequestPart] = [
             SystemPromptPart(
                 content=self._lf.get_prompt(prompt_name, label=settings.env).compile(
@@ -276,7 +278,9 @@ class AIGrokGenerator(PatchGenerator):
 
                 formatted_chunks = []
                 for chunk_idx, chunk in enumerate(chunks_flat):
-                    formatted_chunks.append(f"[CHUNK {chunk_idx}]\n{chunk}\n[/CHUNK {chunk_idx}]")
+                    formatted_chunks.append(
+                        f"[CHUNK {chunk_idx}]\n{chunk}\n[/CHUNK {chunk_idx}]"
+                    )
 
                 user_contents.append("\n".join(formatted_chunks))
 
