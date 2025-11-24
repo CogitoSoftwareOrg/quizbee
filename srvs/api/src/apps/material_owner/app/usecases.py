@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import json
 import logging
+from typing import Any
 
 from src.lib.settings import settings
 
@@ -241,6 +242,20 @@ class MaterialAppImpl(MaterialApp):
         """
         logger.info(f"MaterialAppImpl.mark_chunks_as_used: {len(chunk_ids)} chunks")
         await self._indexer.mark_chunks_as_used(chunk_ids)
+
+    async def get_chunks_info(self, chunk_ids: list[str]) -> list[dict[str, Any]]:
+        """
+        Получает информацию о чанках.
+
+        Args:
+            chunk_ids: Список ID чанков
+
+        Returns:
+            Список диктов с информацией о каждом чанке
+        """
+        logger.info(f"MaterialAppImpl.get_chunks_info: {len(chunk_ids)} chunks")
+        chunks_info = await self._indexer.get_chunks_info(chunk_ids)
+        return chunks_info
 
     async def _deduplicate_material(self, cmd: AddMaterialCmd) -> Material | None:
         material = await self._material_repository.get(cmd.material_id)

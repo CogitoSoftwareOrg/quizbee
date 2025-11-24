@@ -51,7 +51,7 @@ class AnswerSchema(BaseModel):
     ]
 
 
-class AIGrokGeneratorOutput(BaseModel):
+class AIGrokGeneratorOutputOnlyQuery(BaseModel):
     question: Annotated[
         str, Field(title="Question", description="The quiz question text.")
     ]
@@ -68,16 +68,6 @@ class AIGrokGeneratorOutput(BaseModel):
             title="Answers",
             description="The answers to the question. 4 in total with ONLY one correct answer.",
             min_length=4,
-            # max_length=4,
-        ),
-    ]
-
-    used_chunk_indices: Annotated[
-        list[int],
-        Field(
-            title="Used Chunk Indices",
-            description="Indices of chunks (0-based) that were actually used to generate this question. Only include chunks that directly contributed to the question, answers, or explanations.",
-            default_factory=list,
         ),
     ]
 
@@ -85,13 +75,7 @@ class AIGrokGeneratorOutput(BaseModel):
     def _check_answers(self):
         if not self.hint or not self.hint.strip():
             raise ValueError("Hint is required and cannot be empty.")
-
-        if not isinstance(self.used_chunk_indices, list):
-            raise ValueError("used_chunk_indices must be a list.")
-
-        if len(self.used_chunk_indices) == 0:
-            logger.warning("No chunk indices were marked as used for this question.")
-
+        
         parsed_answers = []
         for a in self.answers:
             if not a.answer.strip() or not a.explanation.strip():
@@ -133,20 +117,49 @@ class AIGrokGeneratorOutput(BaseModel):
             order=item_order,
             hint=self.hint,
         )
+        return []
+
+
+class AIGrokGeneratorOutputWithChunks(AIGrokGeneratorOutputOnlyQuery):
+    used_chunk_indices: Annotated[
+        list[int],
+        Field(
+            title="Used Chunk Indices",
+            description="Indices of chunks (0-based) that were actually used to generate this question. Only include chunks that directly contributed to the question, answers, or explanations.",
+            default_factory=list,
+        ),
+    ]
+
+    @model_validator(mode="after")
+    def _check_chunk_indices(self):
+        if not isinstance(self.used_chunk_indices, list):
+            raise ValueError("used_chunk_indices must be a list.")
+        
+        if len(self.used_chunk_indices) == 0:
+            logger.warning("No chunk indices were marked as used for this question.")
+        
+        return self
+
+    def merge(self, quiz: Quiz, item_order: int) -> list[int]:
+        super().merge(quiz, item_order)
         return self.used_chunk_indices
 
 
 class AIGrokGenerator(PatchGenerator):
     def __init__(self, lf: Langfuse, provider: OpenAIProvider):
         self._lf = lf
+        self._ai = None
+        self._provider = provider
 
-        self._ai = Agent(
+    def _get_agent(self, has_chunks: bool):
+        output_type = AIGrokGeneratorOutputWithChunks if has_chunks else AIGrokGeneratorOutputOnlyQuery
+        
+        return Agent(
             history_processors=[self._inject_request_prompt],
-            output_type=AIGrokGeneratorOutput,
+            output_type=output_type,
             deps_type=AIGrokGeneratorDeps,
-            model=OpenAIChatModel(QUIZ_GENERATOR_LLM, provider=provider),
+            model=OpenAIChatModel(QUIZ_GENERATOR_LLM, provider=self._provider),
             retries=RETRIES,
-            # instrument=settings.env == "local",
         )
 
     async def generate(self, dto: PatchGeneratorDto) -> None:
@@ -158,10 +171,12 @@ class AIGrokGenerator(PatchGenerator):
         if dto.item_order is None:
             raise ValueError("Item order is required")
 
-        schema = AIGrokGeneratorOutput.model_json_schema()
+        has_chunks = bool(dto.chunks)
+        agent = self._get_agent(has_chunks)
+        
         try:
             with self._lf.start_as_current_span(name=f"quiz-patch") as span:
-                run = await self._ai.run(
+                run = await agent.run(
                     IN_QUERY,
                     model=QUIZ_GENERATOR_LLM,
                     deps=AIGrokGeneratorDeps(quiz=dto.quiz, chunks=dto.chunks),

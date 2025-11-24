@@ -95,6 +95,8 @@ class PBQuizRepository(QuizRepository):
         else:
             cluster_vectors = []
 
+       
+
         quiz = Quiz(
             id=rec.get("id", ""),
             materials=materials,
@@ -139,6 +141,8 @@ class PBQuizRepository(QuizRepository):
 
     def _rec_to_item(self, item_rec: Record) -> QuizItem:
         answers = item_rec.get("answers") or []
+        used_chunks_raw = item_rec.get("usedChunks", "[]")
+        used_chunks = json.loads(used_chunks_raw) if isinstance(used_chunks_raw, str) else used_chunks_raw
         return QuizItem(
             id=item_rec.get("id", ""),
             question=item_rec.get("question", ""),
@@ -147,6 +151,7 @@ class PBQuizRepository(QuizRepository):
             status=item_rec.get("status", ""),
             managed=item_rec.get("managed", False),
             hint=item_rec.get("hint", ""),
+            used_chunks=used_chunks if used_chunks else [],
         )
 
     def _rec_to_variant(self, rec: dict[str, Any]) -> QuizItemVariant:
@@ -177,6 +182,7 @@ class PBQuizRepository(QuizRepository):
             "dynamicConfig": self._config_to_rec(quiz.gen_config),
             "materials": [m.id for m in quiz.materials],
             "slug": quiz.slug,
+            
         }
 
         cluster_vectors_json = json.dumps(cluster_vectors)
@@ -204,6 +210,7 @@ class PBQuizRepository(QuizRepository):
             "status": item.status,
             "managed": item.managed,
             "hint": item.hint,
+            "usedChunks": json.dumps(item.used_chunks) if item.used_chunks else "[]",
         }
 
         if len(item.variants) > 0:

@@ -23,6 +23,7 @@
 	import MobileAIChat from './MobileAIChat.svelte';
 	import { X } from 'lucide-svelte';
 	import { patchApi } from '$lib/api/call-api';
+	import QuizItemSourceTooltip from '$lib/apps/quizes/QuizItemSourceTooltip.svelte';
 
 	const { data } = $props();
 
@@ -272,6 +273,7 @@
 							>
 								{@html item?.question}
 							</p>
+							<QuizItemSourceTooltip usedChunks={item?.usedChunks} {itemDecision} />
 						</div>
 
 						{#if item && quiz && quizAttempt}

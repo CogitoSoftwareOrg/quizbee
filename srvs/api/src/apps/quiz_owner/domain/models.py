@@ -73,6 +73,7 @@ class QuizItem:
     status: QuizItemStatus
     managed: bool
     hint: str = ""
+    used_chunks: list[dict[str, Any]] = field(default_factory=list)
 
     fresh_generated: bool = False
 
