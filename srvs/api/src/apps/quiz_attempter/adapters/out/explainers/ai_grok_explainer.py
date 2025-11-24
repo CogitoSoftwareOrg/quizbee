@@ -39,7 +39,7 @@ from ....domain.refs import (
 )
 from ....domain.out import Explainer
 
-EXPLAINER_LLM = LLMS.GROK_4_FAST
+EXPLAINER_LLM = LLMS.GROK_4_1_FAST
 
 
 @dataclass

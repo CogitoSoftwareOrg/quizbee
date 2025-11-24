@@ -26,7 +26,7 @@ from ....domain.models import Quiz, QuizItemVariant
 from ....domain.constants import PATCH_LIMIT
 
 
-QUIZ_GENERATOR_LLM = LLMS.GROK_4_FAST
+QUIZ_GENERATOR_LLM = LLMS.GROK_4_1_FAST
 IN_QUERY = ""
 RETRIES = 1
 TEMPERATURE = 0.4
@@ -189,7 +189,9 @@ class AIGrokGenerator(PatchGenerator):
     ) -> list[ModelRequestPart]:
         parts: list[ModelRequestPart] = [
             SystemPromptPart(
-                content=self._lf.get_prompt("quizer/base_patch1", label=settings.env).compile()
+                content=self._lf.get_prompt(
+                    "quizer/base_patch1", label=settings.env
+                ).compile()
             )
         ]
 

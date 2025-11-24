@@ -21,6 +21,8 @@ class LLMS(StrEnum):
     # Grok
     GROK_4_FAST_REASONING = "grok:grok-4-fast"
     GROK_4_FAST = "grok:grok-4-fast-non-reasoning"
+    GROK_4_1_FAST_REASONING = "grok:grok-4-1-fast"
+    GROK_4_1_FAST = "grok:grok-4-1-fast-non-reasoning"
 
 
 class LLMCosts(BaseModel):

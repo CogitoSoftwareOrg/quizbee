@@ -19,7 +19,7 @@ from src.lib.settings import settings
 from ...domain.out import AttemptFinalizer, AttemptRepository
 from ...domain.models import Attempt, Feedback
 
-ATTEMPT_FINALIZER_LLM = LLMS.GPT_5_MINI
+ATTEMPT_FINALIZER_LLM = LLMS.GROK_4_1_FAST
 IN_QUERY = "Finalize Attempt"
 
 

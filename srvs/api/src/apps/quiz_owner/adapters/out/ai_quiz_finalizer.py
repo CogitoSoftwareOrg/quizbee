@@ -22,7 +22,7 @@ from ...domain.models import QuizCategory, Quiz
 from ...domain.out import QuizFinalizer, QuizRepository
 
 
-QUIZ_FINALIZER_LLM = LLMS.GPT_5_MINI
+QUIZ_FINALIZER_LLM = LLMS.GROK_4_1_FAST
 IN_QUERY = "Finilize Quiz"
 
 
