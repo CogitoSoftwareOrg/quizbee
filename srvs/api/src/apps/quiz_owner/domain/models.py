@@ -73,6 +73,7 @@ class QuizItem:
     status: QuizItemStatus
     managed: bool
     hint: str = ""
+    used_chunks: list[dict[str, Any]] = field(default_factory=list)
 
     fresh_generated: bool = False
 
@@ -142,7 +143,6 @@ class Quiz:
     category: QuizCategory | None = None
     slug: str | None = None
     table_of_contents: dict[str, Any] | None = None
-    used_chunks: dict[str, list[int]] = field(default_factory=dict)
 
     need_build_material_content: bool = False
 
@@ -209,16 +209,6 @@ class Quiz:
 
     def set_table_of_contents(self, table_of_contents: dict[str, Any]):
         self.table_of_contents = table_of_contents
-
-    def add_used_chunks(self, chunks_by_document: dict[str, list[int]]) -> None:
-        """Добавляет информацию о использованных чанках к существующим."""
-        for doc_name, pages in chunks_by_document.items():
-            if doc_name not in self.used_chunks:
-                self.used_chunks[doc_name] = []
-            for page in pages:
-                if page not in self.used_chunks[doc_name]:
-                    self.used_chunks[doc_name].append(page)
-            self.used_chunks[doc_name].sort()
 
     def merge_similar_quizes(self, quizes: list["Quiz"]):
         questions = list(

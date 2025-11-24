@@ -3,3 +3,10 @@ export type Answer = {
 	correct: boolean;
 	explanation: string;
 };
+
+export type UsedChunk = {
+	id: string;
+	materialId: string;
+	title: string;
+	page: number;
+};

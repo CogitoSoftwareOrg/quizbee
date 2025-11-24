@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import logging
 import asyncio
+from typing import Any
 from voyageai.client_async import AsyncClient as VoyageAsyncClient
 from langfuse import Langfuse
 from meilisearch_python_sdk import AsyncClient
@@ -273,15 +274,15 @@ class MeiliMaterialIndexer(MaterialIndexer):
         else:
             logging.error(f"Unknown task status: {task}")
 
-    async def get_chunks_info(self, chunk_ids: list[str]) -> list[tuple[str, int | None]]:
+    async def get_chunks_info(self, chunk_ids: list[str]) -> list[dict[str, Any]]:
         """
-        Получает информацию о чанках (название документа и страница).
+        Получает информацию о чанках.
 
         Args:
             chunk_ids: Список ID чанков
 
         Returns:
-            Список кортежей (title, page) для каждого чанка
+            Список диктов с информацией о каждом чанке (id, materialId, title, page)
         """
         if len(chunk_ids) == 0:
             return []
@@ -292,13 +293,19 @@ class MeiliMaterialIndexer(MaterialIndexer):
             try:
                 doc_dict = await self.material_index.get_document(chunk_id)
                 doc = Doc.from_hit(doc_dict)
-                chunks_info.append((doc.title, doc.page))
-                logging.info(f"Chunk {chunk_id}: title='{doc.title}', page={doc.page}")
+                chunk_dict = {
+                    "id": doc.id,
+                    "materialId": doc.materialId,
+                    "title": doc.title,
+                    "page": doc.page,
+                }
+                chunks_info.append(chunk_dict)
+                logging.info(f"Chunk {chunk_id}: {chunk_dict}")
             except Exception as e:
                 logging.warning(f"Failed to get chunk {chunk_id}: {e}")
                 continue
 
-        logging.info(f"Got info for {len(chunks_info)}/{len(chunk_ids)} chunks: {chunks_info}")
+        logging.info(f"Got info for {len(chunks_info)}/{len(chunk_ids)} chunks")
         return chunks_info
 
     def _fill_template(self, doc: Doc):

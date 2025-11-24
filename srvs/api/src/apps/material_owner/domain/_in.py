@@ -1,6 +1,6 @@
 # APP
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Any, Protocol
 
 from src.apps.user_owner.domain._in import Principal
 
@@ -51,4 +51,4 @@ class MaterialApp(Protocol):
 
     async def mark_chunks_as_used(self, chunk_ids: list[str]) -> None: ...
 
-    async def get_chunks_info(self, chunk_ids: list[str]) -> dict[str, list[int]]: ...
+    async def get_chunks_info(self, chunk_ids: list[str]) -> list[dict[str, Any]]: ...
