@@ -273,6 +273,34 @@ class MeiliMaterialIndexer(MaterialIndexer):
         else:
             logging.error(f"Unknown task status: {task}")
 
+    async def get_chunks_info(self, chunk_ids: list[str]) -> list[tuple[str, int | None]]:
+        """
+        Получает информацию о чанках (название документа и страница).
+
+        Args:
+            chunk_ids: Список ID чанков
+
+        Returns:
+            Список кортежей (title, page) для каждого чанка
+        """
+        if len(chunk_ids) == 0:
+            return []
+
+        logging.info(f"Getting chunks info for {len(chunk_ids)} chunk IDs")
+        chunks_info = []
+        for chunk_id in chunk_ids:
+            try:
+                doc_dict = await self.material_index.get_document(chunk_id)
+                doc = Doc.from_hit(doc_dict)
+                chunks_info.append((doc.title, doc.page))
+                logging.info(f"Chunk {chunk_id}: title='{doc.title}', page={doc.page}")
+            except Exception as e:
+                logging.warning(f"Failed to get chunk {chunk_id}: {e}")
+                continue
+
+        logging.info(f"Got info for {len(chunks_info)}/{len(chunk_ids)} chunks: {chunks_info}")
+        return chunks_info
+
     def _fill_template(self, doc: Doc):
         return EMBEDDER_TEMPLATE.replace("{{doc.title}}", doc.title).replace(
             "{{doc.content}}", doc.content

@@ -102,18 +102,24 @@ class QuizGeneratorImpl(QuizGenerator):
             used_chunk_ids = [chunk_ids[i] for i in dto.used_chunk_indices if i < len(chunk_ids)]
             
             if len(used_chunk_ids) > 0:
+                chunks_by_document = await self._material_app.get_chunks_info(used_chunk_ids)
+                quiz.add_used_chunks(chunks_by_document)
                 await self._material_app.mark_chunks_as_used(used_chunk_ids)
                 logger.info(
                     f"Marked {len(used_chunk_ids)}/{len(chunk_ids)} chunks as used "
-                    f"(LLM selected: {dto.used_chunk_indices})"
+                    f"(LLM selected: {dto.used_chunk_indices}). "
+                    f"Documents used: {chunks_by_document}"
                 )
             else:
                 logger.warning(
                     f"LLM returned used_chunk_indices {dto.used_chunk_indices} but no valid chunk IDs found"
                 )
         elif len(chunk_ids) > 0:
+            chunks_by_document = await self._material_app.get_chunks_info(chunk_ids)
+            quiz.add_used_chunks(chunks_by_document)
             logger.warning(
-                f"LLM did not return used_chunk_indices, marking all {len(chunk_ids)} chunks as used"
+                f"LLM did not return used_chunk_indices, marking all {len(chunk_ids)} chunks as used. "
+                f"Documents used: {chunks_by_document}"
             )
             await self._material_app.mark_chunks_as_used(chunk_ids)
 
