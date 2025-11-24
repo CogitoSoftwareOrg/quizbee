@@ -85,13 +85,6 @@ class AIAttemptFinalizer(AttemptFinalizer):
             res = await self._ai.run(
                 IN_QUERY,
                 deps=AttemptFinalizerDeps(attempt=attempt),
-                model_settings={
-                    "extra_body": {
-                        "reasoning_effort": "low",
-                        "service_tier": "default",
-                        "prompt_cache_key": cache_key,
-                    }
-                },
                 model=ATTEMPT_FINALIZER_LLM,
             )
             await update_span_with_result(
@@ -127,7 +120,10 @@ class AIAttemptFinalizer(AttemptFinalizer):
             user_contents.append(attempt.quiz.material_content)
 
         parts = []
-        parts.append(UserPromptPart(content=user_contents))
+
+        if user_contents:
+            parts.append(UserPromptPart(content=user_contents))
+
         return parts
 
     def _build_post_prompt(self, attempt: Attempt) -> list[ModelRequestPart]:

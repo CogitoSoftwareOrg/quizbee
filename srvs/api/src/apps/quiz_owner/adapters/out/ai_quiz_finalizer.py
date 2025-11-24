@@ -96,13 +96,6 @@ class AIQuizFinalizer(QuizFinalizer):
             res = await self._ai.run(
                 IN_QUERY,
                 deps=QuizFinalizerDeps(quiz=quiz),
-                model_settings={
-                    "extra_body": {
-                        "reasoning_effort": "low",
-                        "service_tier": "default",
-                        "prompt_cache_key": cache_key,
-                    }
-                },
             )
             await update_span_with_result(
                 self._lf,
@@ -154,5 +147,6 @@ class AIQuizFinalizer(QuizFinalizer):
             user_contents.append(quiz.material_content)
 
         parts = []
-        parts.append(UserPromptPart(content=user_contents))
+        if user_contents:
+            parts.append(UserPromptPart(content=user_contents))
         return parts
