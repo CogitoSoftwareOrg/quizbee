@@ -4,6 +4,7 @@ from .adapters.out import (
     TiktokenTokenizer,
     OpenAIImageTokenizer,
     SimpleChunker,
+    ChonkieRecursiveChunker,
     VoyageEmbedder,
     VoyageReranker,
 )
@@ -13,7 +14,7 @@ from .domain.out import Vectorizer
 def init_llm_tools_deps() -> tuple[TextTokenizer, ImageTokenizer, Chunker, Vectorizer, Reranker]:
     text_tokenizer = TiktokenTokenizer()
     image_tokenizer = OpenAIImageTokenizer()
-    chunker = SimpleChunker(text_tokenizer)
+    chunker = ChonkieRecursiveChunker(text_tokenizer)
     vectorizer = VoyageEmbedder()
     reranker = VoyageReranker()
     return text_tokenizer, image_tokenizer, chunker, vectorizer, reranker
