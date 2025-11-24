@@ -186,8 +186,7 @@
 									<div class="min-w-0 flex-1">
 										<h3 class="mb-1 text-base font-semibold">Avoid repeating questions</h3>
 										<p class="text-sm text-base-content/60">
-											We prevent questions from your previous quizzes on similar topics from
-											appearing again
+											Prevents questions from your fully completed quizzes from appearing again.
 										</p>
 									</div>
 									<label class="flex shrink-0 cursor-pointer items-center gap-2 md:gap-3">
