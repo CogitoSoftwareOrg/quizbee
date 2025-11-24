@@ -6,16 +6,25 @@
 
 	import { Modal, Button } from '@quizbee/ui-svelte-daisy';
 	import type { ClassValue } from 'svelte/elements';
+	import { env } from '$env/dynamic/public';
 
 	interface Props {
 		quizId: string;
 		quizTitle: string;
+		category: string;
 		baseUrl?: string;
 		block?: boolean;
 		class?: ClassValue;
 	}
 
-	const { quizId, quizTitle, baseUrl = '', block = false, class: className = '' }: Props = $props();
+	const {
+		quizId,
+		quizTitle,
+		category,
+		baseUrl = env.PUBLIC_WEB_URL,
+		block = false,
+		class: className = ''
+	}: Props = $props();
 
 	let modalOpen = $state(false);
 	let qrDataUrl = $state('');
@@ -23,7 +32,7 @@
 
 	const shareUrl = $derived(
 		baseUrl
-			? `${baseUrl}/quizes/${quizId}`
+			? `${baseUrl}quizes/${category}/${quizId}`
 			: typeof window !== 'undefined'
 				? `${window.location.origin}/quizes/${quizId}`
 				: ''

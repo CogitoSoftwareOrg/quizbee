@@ -14,6 +14,7 @@
 	import { quizItemsStore } from '$lib/apps/quizes/quizItems.svelte';
 	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
 	import { uiStore } from '$lib/apps/users/ui.svelte';
+	import { env } from '$env/dynamic/public';
 
 	type Feedback = {
 		overview?: string;
@@ -251,7 +252,13 @@
 
 		{#if quiz}
 			<div class="fixed bottom-12 left-0 right-0 z-10 p-4 sm:static sm:p-0">
-				<ShareQuizButton quizId={quiz.id} quizTitle={quiz.title || 'Quiz'} block />
+				<ShareQuizButton
+					category={quiz.category || ''}
+					baseUrl={env.PUBLIC_WEB_URL}
+					quizId={quiz.id}
+					quizTitle={quiz.title || 'Quiz'}
+					block
+				/>
 			</div>
 		{/if}
 	</section>

@@ -88,7 +88,10 @@
 
 	onMount(() => {
 		if (!pb?.authStore.isValid) {
-			sessionStorage.setItem('postLoginPath', page.url.pathname + page.url.search);
+			// Only set postLoginPath if it's not already set (e.g., by +layout.ts)
+			if (!sessionStorage.getItem('postLoginPath')) {
+				sessionStorage.setItem('postLoginPath', page.url.pathname + page.url.search);
+			}
 			goto('/sign-in', { replaceState: true });
 		} else if (pb?.authStore.isValid && !pb.authStore.record?.verified) {
 			goto('/verify-email', { replaceState: true });

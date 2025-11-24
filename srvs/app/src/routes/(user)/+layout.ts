@@ -20,7 +20,7 @@ import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
 import { quizItemsStore } from '$lib/apps/quizes/quizItems.svelte';
 import { goto } from '$app/navigation';
 
-export async function load({ depends }) {
+export async function load({ depends, url }) {
 	depends('global:user');
 
 	const userLoadPromise: Promise<UsersResponse<unknown, UserExpand> | null> = pb!
@@ -97,6 +97,10 @@ export async function load({ depends }) {
 		})
 		.catch(async (error) => {
 			console.error('Failed to load user:', error);
+			// Save current path before redirecting to sign-in
+			if (typeof window !== 'undefined')
+				sessionStorage.setItem('postLoginPath', url.pathname + url.search);
+
 			await goto('/sign-in', { replaceState: true });
 			return null;
 		});

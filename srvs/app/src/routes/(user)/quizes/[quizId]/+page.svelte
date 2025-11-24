@@ -20,6 +20,7 @@
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
 	import { quizesStore } from '$lib/apps/quizes/quizes.svelte';
 	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
+	import { env } from '$env/dynamic/public';
 
 	const { data } = $props();
 	const quiz = $derived(
@@ -139,7 +140,13 @@
 
 						<div class="flex gap-2">
 							{#if quiz.visibility === QuizesVisibilityOptions.public || quiz.visibility === QuizesVisibilityOptions.search}
-								<ShareQuizButton block quizId={quiz.id} quizTitle={quiz.title || 'Quiz'} />
+								<ShareQuizButton
+									baseUrl={env.PUBLIC_WEB_URL}
+									category={quiz.category || ''}
+									block
+									quizId={quiz.id}
+									quizTitle={quiz.title || 'Quiz'}
+								/>
 							{/if}
 
 							{#if user?.id === quiz.author}
