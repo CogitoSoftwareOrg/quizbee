@@ -67,7 +67,7 @@
 </script>
 
 <div
-	class="mx-auto flex min-h-full w-full max-w-7xl flex-col gap-4 py-1 sm:gap-6 sm:px-6 sm:py-2 lg:gap-8 lg:px-8 lg:py-4"
+	class="mx-auto flex min-h-full w-full max-w-7xl flex-col gap-4 py-1 sm:gap-6 sm:px-6 lg:gap-8 lg:px-8"
 >
 	<!-- Upgrade Reminder for Free Plan -->
 	{#if isFreePlan}
@@ -75,34 +75,34 @@
 			onclick={() => {
 				uiStore.setPaywallOpen(true);
 			}}
-			class="border-warning/30 hover:border-warning/50 group relative cursor-pointer overflow-hidden rounded-2xl border p-4 shadow-lg transition-all hover:shadow-xl sm:rounded-3xl sm:p-5 md:p-6"
+			class="group relative cursor-pointer overflow-hidden rounded-2xl border border-warning/30 p-4 shadow-lg transition-all hover:border-warning/50 hover:shadow-xl sm:rounded-3xl sm:p-5 md:p-6"
 		>
 			<div class="relative z-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 				<div class="flex items-start gap-3 sm:items-center sm:gap-4">
 					<div
-						class="bg-warning/20 text-warning hidden rounded-xl p-2.5 transition-transform group-hover:scale-110 sm:block sm:p-3"
+						class="hidden rounded-xl bg-warning/20 p-2.5 text-warning transition-transform group-hover:scale-110 sm:block sm:p-3"
 					>
 						<Crown size={24} class="sm:size-7" />
 					</div>
 					<div class="space-y-1">
-						<h3 class="text-base-content text-base font-bold leading-tight sm:text-lg md:text-xl">
+						<h3 class="text-base leading-tight font-bold text-base-content sm:text-lg md:text-xl">
 							Unlock unlimited possibilities
 						</h3>
-						<p class="text-base-content/70 text-xs leading-relaxed sm:text-sm md:text-base">
+						<p class="text-xs leading-relaxed text-base-content/70 sm:text-sm md:text-base">
 							Upgrade to Plus or Pro for unlimited quizzes, advanced AI features, and priority
 							support
 						</p>
 					</div>
 				</div>
 				<div
-					class="bg-primary text-warning-content group-hover:bg-warning/90 mx-auto inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold shadow-md transition-all group-hover:shadow-lg sm:mx-0 sm:ml-0 sm:mt-0 sm:px-5 sm:py-3 sm:text-base"
+					class="mx-auto inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-warning-content shadow-md transition-all group-hover:bg-warning/90 group-hover:shadow-lg sm:mx-0 sm:mt-0 sm:ml-0 sm:px-5 sm:py-3 sm:text-base"
 				>
 					View Plans
 					<Sparkles size={16} class="sm:size-5" />
 				</div>
 			</div>
 			<div
-				class="from-warning/5 pointer-events-none absolute inset-0 bg-gradient-to-r to-transparent opacity-0 transition-opacity group-hover:opacity-100"
+				class="pointer-events-none absolute inset-0 bg-gradient-to-r from-warning/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100"
 			></div>
 		</button>
 	{/if}
@@ -126,21 +126,21 @@
 	{#if validAttempts.length === 0}
 		<!-- Empty State CTA -->
 		<section
-			class="from-primary/50 via-primary/40 to-secondary/50 text-base-content bg-warning/20 rounded-2xl p-8 shadow-lg sm:rounded-3xl sm:p-12 md:p-16 lg:p-20"
+			class="rounded-2xl bg-warning/20 from-primary/50 via-primary/40 to-secondary/50 p-8 text-base-content shadow-lg sm:rounded-3xl sm:p-12 md:p-16 lg:p-20"
 		>
 			<div class="mx-auto max-w-3xl space-y-6 text-center sm:space-y-8">
 				<div
-					class="bg-primary/10 mx-auto inline-flex items-center justify-center rounded-2xl p-4 sm:p-5"
+					class="mx-auto inline-flex items-center justify-center rounded-2xl bg-primary/10 p-4 sm:p-5"
 				>
 					<Sparkles size={32} class="text-primary sm:size-12" />
 				</div>
 				<div class="space-y-3 sm:space-y-4">
 					<h1
-						class="text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl lg:text-6xl"
+						class="text-3xl leading-tight font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl"
 					>
 						Ready to Start Your Learning Journey?
 					</h1>
-					<p class="text-base-content/70 text-base leading-relaxed sm:text-lg md:text-xl">
+					<p class="text-base leading-relaxed text-base-content/70 sm:text-lg md:text-xl">
 						Create your first AI-powered quiz and begin tracking your progress. Transform your study
 						materials into interactive quizzes in seconds.
 					</p>
@@ -162,18 +162,18 @@
 	{:else}
 		<!-- Hero Section -->
 		<section
-			class="from-primary/50 via-primary/40 to-secondary/50 text-base-content bg-warning/20 rounded-2xl p-4 shadow-lg sm:rounded-3xl sm:p-6 md:p-8 lg:p-10"
+			class="rounded-2xl bg-warning/20 from-primary/50 via-primary/40 to-secondary/50 p-4 text-base-content shadow-lg sm:rounded-3xl sm:p-6 md:p-8 lg:p-10"
 		>
 			<div class="mb-4 max-w-3xl space-y-2 sm:mb-6 sm:space-y-3">
-				<p class="text-base-content/60 text-xs font-medium uppercase tracking-widest">
+				<p class="text-xs font-medium tracking-widest text-base-content/60 uppercase">
 					Personal Dashboard
 				</p>
 				<h1
-					class="text-2xl font-bold leading-tight tracking-tight sm:text-3xl md:text-4xl lg:text-5xl"
+					class="text-2xl leading-tight font-bold tracking-tight sm:text-3xl md:text-4xl lg:text-5xl"
 				>
 					Stay consistent and keep sharpening your recall
 				</h1>
-				<p class="text-base-content/70 text-sm leading-relaxed sm:text-base md:text-lg">
+				<p class="text-sm leading-relaxed text-base-content/70 sm:text-base md:text-lg">
 					Monitor streaks, review performance, and jump straight into a new quiz when you're ready.
 				</p>
 			</div>
@@ -182,28 +182,28 @@
 			<div class="grid gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
 				<!-- Weekly Questions Card -->
 				<article
-					class="bg-base-100 border-base-300 group rounded-xl border p-4 shadow-lg transition-all hover:shadow-xl sm:rounded-2xl sm:p-5 md:p-6"
+					class="group rounded-xl border border-base-300 bg-base-100 p-4 shadow-lg transition-all hover:shadow-xl sm:rounded-2xl sm:p-5 md:p-6"
 				>
 					<div class="flex items-center justify-between">
-						<span class="text-base-content/70 text-xs font-medium sm:text-sm"
+						<span class="text-xs font-medium text-base-content/70 sm:text-sm"
 							>Questions this week</span
 						>
-						<div class="bg-primary/10 text-primary rounded-lg p-1.5 sm:p-2">
+						<div class="rounded-lg bg-primary/10 p-1.5 text-primary sm:p-2">
 							<Target size={18} class="sm:size-5" />
 						</div>
 					</div>
-					<p class="text-base-content mt-3 text-3xl font-bold sm:mt-4 sm:text-4xl">
+					<p class="mt-3 text-3xl font-bold text-base-content sm:mt-4 sm:text-4xl">
 						{weeklyQuestionCount}
 					</p>
-					<p class="text-base-content/60 mt-1.5 text-xs sm:mt-2 sm:text-sm">This week (Mon-Sun)</p>
+					<p class="mt-1.5 text-xs text-base-content/60 sm:mt-2 sm:text-sm">This week (Mon-Sun)</p>
 					<div class="mt-3 space-y-1.5 sm:mt-4 sm:space-y-2">
-						<div class="bg-base-300 h-2 w-full overflow-hidden rounded-full sm:h-2.5">
+						<div class="h-2 w-full overflow-hidden rounded-full bg-base-300 sm:h-2.5">
 							<div
-								class="bg-primary h-full rounded-full transition-all duration-500"
+								class="h-full rounded-full bg-primary transition-all duration-500"
 								style={`width: ${weeklyProgress}%`}
 							></div>
 						</div>
-						<p class="text-base-content/70 text-xs font-medium">
+						<p class="text-xs font-medium text-base-content/70">
 							{weeklyProgress}% of weekly goal ({weeklyGoal})
 						</p>
 					</div>
@@ -211,19 +211,19 @@
 
 				<!-- Streak Card -->
 				<article
-					class="bg-base-100 border-base-300 group rounded-xl border p-4 shadow-lg transition-all hover:shadow-xl sm:rounded-2xl sm:p-5 md:p-6"
+					class="group rounded-xl border border-base-300 bg-base-100 p-4 shadow-lg transition-all hover:shadow-xl sm:rounded-2xl sm:p-5 md:p-6"
 				>
 					<div class="flex items-center justify-between">
-						<span class="text-base-content/70 text-xs font-medium sm:text-sm">Current streak</span>
-						<div class="bg-warning/10 text-warning rounded-lg p-1.5 sm:p-2">
+						<span class="text-xs font-medium text-base-content/70 sm:text-sm">Current streak</span>
+						<div class="rounded-lg bg-warning/10 p-1.5 text-warning sm:p-2">
 							<Flame size={18} class="sm:size-5" />
 						</div>
 					</div>
-					<p class="text-base-content mt-3 text-3xl font-bold sm:mt-4 sm:text-4xl">
+					<p class="mt-3 text-3xl font-bold text-base-content sm:mt-4 sm:text-4xl">
 						{streak}
 						<span class="text-xl font-normal sm:text-2xl">{streak === 1 ? 'day' : 'days'}</span>
 					</p>
-					<p class="text-base-content/60 mt-1.5 text-xs sm:mt-2 sm:text-sm">
+					<p class="mt-1.5 text-xs text-base-content/60 sm:mt-2 sm:text-sm">
 						Keep it going! Practice daily to maintain your streak
 					</p>
 				</article>
@@ -233,54 +233,54 @@
 					href={latestAttempt
 						? `/quizes/${latestAttempt.quiz}/attempts/${latestAttempt.id}/feedback`
 						: '/quizes/new'}
-					class="bg-base-100 border-base-300 group rounded-xl border p-4 shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl sm:rounded-2xl sm:p-5 md:col-span-2 md:p-6 lg:col-span-1"
+					class="group rounded-xl border border-base-300 bg-base-100 p-4 shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl sm:rounded-2xl sm:p-5 md:col-span-2 md:p-6 lg:col-span-1"
 				>
 					<div class="flex items-center justify-between">
-						<span class="text-base-content/70 text-xs font-medium sm:text-sm">Latest attempt</span>
+						<span class="text-xs font-medium text-base-content/70 sm:text-sm">Latest attempt</span>
 						<div
-							class="bg-secondary/10 text-secondary rounded-lg p-1.5 transition-transform group-hover:rotate-12 sm:p-2"
+							class="rounded-lg bg-secondary/10 p-1.5 text-secondary transition-transform group-hover:rotate-12 sm:p-2"
 						>
 							<Sparkles size={18} class="sm:size-5" />
 						</div>
 					</div>
 					{#if latestAttemptSummary}
 						<p
-							class="text-base-content mt-3 line-clamp-2 text-base font-semibold leading-snug sm:mt-4 sm:text-lg"
+							class="mt-3 line-clamp-2 text-base leading-snug font-semibold text-base-content sm:mt-4 sm:text-lg"
 						>
 							{latestAttemptSummary.title}
 						</p>
-						<p class="text-base-content/60 mt-1 text-xs sm:mt-1.5 sm:text-sm">
+						<p class="mt-1 text-xs text-base-content/60 sm:mt-1.5 sm:text-sm">
 							Completed {formatDate(latestAttemptSummary.created)}
 						</p>
 						<div
 							class="mt-3 flex flex-wrap items-center gap-1.5 text-xs sm:mt-4 sm:gap-2 sm:text-sm"
 						>
-							<span class="badge badge-success gap-1 font-medium">
+							<span class="badge gap-1 font-medium badge-success">
 								{latestAttemptSummary.correctCount} correct
 							</span>
-							<span class="badge badge-info gap-1 font-medium">
+							<span class="badge gap-1 font-medium badge-info">
 								{latestAttemptSummary.totalCount} total
 							</span>
 						</div>
 						{#if latestAttemptSummary.score !== null}
 							<div
-								class="bg-base-200 mt-3 inline-block rounded-lg px-2.5 py-1 sm:mt-4 sm:px-3 sm:py-1.5"
+								class="mt-3 inline-block rounded-lg bg-base-200 px-2.5 py-1 sm:mt-4 sm:px-3 sm:py-1.5"
 							>
-								<p class="text-base-content text-base font-bold sm:text-lg">
+								<p class="text-base font-bold text-base-content sm:text-lg">
 									{latestAttemptSummary.score}%
-									<span class="text-base-content/60 text-xs font-normal sm:text-sm">accuracy</span>
+									<span class="text-xs font-normal text-base-content/60 sm:text-sm">accuracy</span>
 								</p>
 							</div>
 						{/if}
 					{:else}
-						<p class="text-base-content mt-3 text-base font-semibold sm:mt-4 sm:text-lg">
+						<p class="mt-3 text-base font-semibold text-base-content sm:mt-4 sm:text-lg">
 							No attempts yet
 						</p>
-						<p class="text-base-content/60 mt-1.5 text-xs sm:mt-2 sm:text-sm">
+						<p class="mt-1.5 text-xs text-base-content/60 sm:mt-2 sm:text-sm">
 							Launch your first quiz to start building history
 						</p>
 						<div
-							class="bg-base-200 group-hover:bg-base-300 mt-3 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors sm:mt-4 sm:gap-2 sm:px-3 sm:py-2 sm:text-sm"
+							class="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-base-200 px-2.5 py-1.5 text-xs font-medium transition-colors group-hover:bg-base-300 sm:mt-4 sm:gap-2 sm:px-3 sm:py-2 sm:text-sm"
 						>
 							<Plus size={14} class="sm:size-4" />
 							Start Now

@@ -84,7 +84,7 @@
 		<div class="flex items-start justify-center overflow-x-hidden">
 			<div class="quiz-container w-full max-w-3xl px-4">
 				<!-- Header with Title -->
-				<div class="{previousQuizes.length === 0 ? 'mb-4' : 'mb-4'} text-center">
+				<div class="-mt-1 mb-2 text-center">
 					<div
 						class="group relative mx-auto -mt-2 inline-flex items-center justify-center gap-1 pt-2"
 					>
