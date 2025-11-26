@@ -25,7 +25,7 @@ from ...domain.models import Quiz
 
 PREPROCESSOR_LLM = LLMS.GROK_4_1_FAST
 IN_QUERY = "Enhance the user query"
-RETRIES = 1
+RETRIES = 5
 TEMPERATURE = 0.3
 TOP_P = 0.95
 
@@ -67,9 +67,7 @@ class QuizPreprocessor:
             retries=RETRIES,
         )
 
-    async def enhance_query(
-        self, quiz: Quiz, cache_key: str
-    ) -> tuple[str, list[str]]:
+    async def enhance_query(self, quiz: Quiz, cache_key: str) -> tuple[str, list[str]]:
         logging.info(f"Enhancing query for quiz {quiz.id}")
 
         if not quiz.query:
@@ -134,11 +132,15 @@ class QuizPreprocessor:
             for idx, (material_id, toc) in enumerate(tocs.items(), 1):
                 try:
                     toc_json = json.dumps(toc, indent=2, ensure_ascii=False)
-                    content_parts.append(f"\n--- Material {material_id} TOC ---\n{toc_json}")
+                    content_parts.append(
+                        f"\n--- Material {material_id} TOC ---\n{toc_json}"
+                    )
                 except Exception as e:
-                    logger.warning(f"Failed to serialize table of contents for material {material_id}: {e}")
+                    logger.warning(
+                        f"Failed to serialize table of contents for material {material_id}: {e}"
+                    )
 
         return [UserPromptPart(content="\n".join(content_parts))]
 
     def _get_tocs_from_quiz(self, quiz: Quiz) -> dict[str, Any] | None:
-        return getattr(quiz, 'table_of_contents', None)
+        return getattr(quiz, "table_of_contents", None)

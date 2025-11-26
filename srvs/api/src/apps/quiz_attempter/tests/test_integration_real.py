@@ -103,7 +103,7 @@ class TestAIExplainerRealIntegration:
     @pytest.fixture
     async def real_explainer(self):
         """Реальный explainer с настоящими API вызовами"""
-        from ..adapters.out.ai_explainer import AIExplainer
+        from ..adapters.out.explainers.ai_grok_explainer import AIGrokExplainer
 
         # Предполагаем что переменные окружения настроены
         # explainer = AIExplainer(

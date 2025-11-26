@@ -40,6 +40,7 @@ from ....domain.refs import (
 from ....domain.out import Explainer
 
 EXPLAINER_LLM = LLMS.GROK_4_1_FAST
+RETRIES = 5
 
 
 @dataclass
@@ -60,6 +61,7 @@ class AIGrokExplainer(Explainer):
             deps_type=AIGrokExplainerDeps,
             model=EXPLAINER_LLM,
             output_type=str,
+            retries=RETRIES,
         )
 
     async def explain(
