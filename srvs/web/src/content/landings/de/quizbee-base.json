@@ -60,19 +60,19 @@
             "icon": "book-open-text"
           },
           {
+            "title": "Harte Arbeit, Unsichere Ergebnisse",
+            "description": "Sie lernen hart, aber vor der Prüfung wissen Sie nicht, was Sie wiederholen sollen oder was Ihnen entgangen ist.",
+            "icon": "frown"
+          },
+          {
             "title": "Materialien Überall, Keine Struktur",
-            "description": "Notizen, PDFs, Screenshots, aber keine Möglichkeit, sie in etwas Nützliches zum wirklichen Lernen umzuwandeln.",
+            "description": "Unmengen von PDFs, Vorlesungsfolien, Notizen, aber keine Möglichkeit, sie in etwas Nützliches zum wirklichen Lernen umzuwandeln.",
             "icon": "file-stack"
           },
           {
             "title": "Müde Unendlicher KI-Chats",
             "description": "Müde davon, dieselben Inhalte immer wieder zu KI-Chats hochzuladen und erneut zu erklären?",
             "icon": "message-circle-x"
-          },
-          {
-            "title": "Harte Arbeit, Unsichere Ergebnisse",
-            "description": "Sie lernen hart, aber vor der Prüfung wissen Sie nicht, was Sie wiederholen sollen oder was Ihnen entgangen ist.",
-            "icon": "frown"
           }
         ]
       }

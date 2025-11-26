@@ -48,7 +48,7 @@ async def startup(ctx):
     # GLOBAL
     admin_pb, lf, meili, http, grok_provider = init_global_deps()
 
-    parser_provider = init_document_parser_deps()
+    parser_provider = init_document_parser_deps(lf=lf)
     document_parser_app = init_document_parser_app(parser_provider=parser_provider)
 
     # V2 LLM TOOLS

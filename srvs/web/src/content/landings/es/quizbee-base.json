@@ -60,19 +60,19 @@
             "icon": "book-open-text"
           },
           {
+            "title": "Trabajo Duro, Resultados Inciertos",
+            "description": "Estudias mucho, pero antes del examen no sabes qué repasar ni qué te has perdido.",
+            "icon": "frown"
+          },
+          {
             "title": "Materiales por Todos Lados, Sin Estructura",
-            "description": "Notas, PDFs, capturas de pantalla, pero sin forma de convertirlos en algo útil para aprender de verdad.",
+            "description": "Montones de PDFs, diapositivas de clase, notas, pero sin forma de convertirlos en algo útil para aprender de verdad.",
             "icon": "file-stack"
           },
           {
             "title": "Harto de Chats Infinitos con IA",
             "description": "¿Cansado de subir y re-explicar el mismo contenido una y otra vez a chats de IA?",
             "icon": "message-circle-x"
-          },
-          {
-            "title": "Trabajo Duro, Resultados Inciertos",
-            "description": "Estudias mucho, pero antes del examen no sabes qué repasar ni qué te has perdido.",
-            "icon": "frown"
           }
         ]
       }

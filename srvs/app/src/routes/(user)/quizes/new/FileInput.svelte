@@ -55,6 +55,21 @@
 				: totalTokensAttached > maxTokensWithoutABook)
 	);
 
+	const hasLargeFile = $derived(
+		attachedFiles.some(
+			(f) => f.file && f.file.size > 15 * 1024 * 1024 && (f.isUploading || f.isIndexing)
+		)
+	);
+
+	const warningLargeFileProcessing = $derived(
+		hasLargeFile &&
+			!warningTooBigQuery &&
+			!warningTooBigFile &&
+			!warningUnsupportedFile &&
+			!warningNoText &&
+			!warningMaxTokensExceeded
+	);
+
 	let placeholderText = $state('Attach files • Add text');
 
 	let buttonElement = $state<HTMLButtonElement>();
@@ -168,10 +183,13 @@
 						setTimeout(() => {
 							warningNoText = null;
 						}, 5000);
+					} else if (foundMaterial.status === 'indexing') {
+						attachedFile.isIndexing = true;
 					} else if (foundMaterial.status === 'indexed') {
 						attachedFile.tokens = foundMaterial.tokens;
 						attachedFile.isBook = foundMaterial.isBook;
 						attachedFile.isUploading = false;
+						attachedFile.isIndexing = false;
 					}
 				}
 			}
@@ -492,6 +510,11 @@
 			degraded.
 		</div>
 	{/if}
+	{#if warningLargeFileProcessing}
+		<div class="text-md mt-2 text-orange-500">
+			You have attached a large file and the processing may take up to the minute. Please be patient.
+		</div>
+	{/if}
 	{#if attachedFiles.length > 0}
 		<div class="flex gap-3 overflow-x-auto px-1 pb-2" style="scrollbar-width: auto;">
 			{#each attachedFiles as attachedFile, index}
@@ -520,10 +543,13 @@
 
 					<!-- Индикатор загрузки -->
 					{#if attachedFile.isUploading}
-						<div class="absolute inset-0 flex items-center justify-center bg-base-content/50">
+						<div class="absolute inset-0 flex flex-col items-center justify-center bg-base-content/50">
 							<div
 								class="h-8 w-8 animate-spin rounded-full border-4 border-base-100 border-t-transparent"
 							></div>
+							{#if attachedFile.isIndexing}
+								<span class="mt-1 text-md font-bold text-base-100">Indexing</span>
+							{/if}
 						</div>
 					{/if}
 

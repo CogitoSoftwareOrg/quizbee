@@ -5,9 +5,10 @@ type AttachedFile = {
 	materialId: string;
 	name: string;
 	isUploading?: boolean;
+	isIndexing?: boolean;
 	tokens?: number;
 	isBook?: boolean;
-	textFile?: File
+	textFile?: File;
 };
 
 export type { AttachedFile };

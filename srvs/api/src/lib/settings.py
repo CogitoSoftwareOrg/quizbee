@@ -44,6 +44,8 @@ class Settings(BaseSettings):
     openai_api_key: str = Field(default="key")
     grok_api_key: str = Field(default="key")
     voyageai_api_key: str = Field(default="key")
+    gemini_api_key: str = Field(default="key", alias="GOOGLE_API_KEY")
+    gemini_image_model: str = Field(default="gemini-2.5-flash-lite")
 
     meili_url: str = Field(default="http://localhost:7700")
     meili_master_key: str = Field(default="key")

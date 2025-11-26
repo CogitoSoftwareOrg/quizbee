@@ -5,30 +5,51 @@ from typing import Any
 import logging
 import re
 
-from ....domain.out import DocumentParser
+from ....domain.out import DocumentParser, ImageDescriber
 from ....domain.models import ParsedDocument, DocumentImage
 
 
 class FitzPDFParser(DocumentParser):
     def __init__(
         self,
+        image_describer: ImageDescriber | None = None,
         min_width: int = 50,
         min_height: int = 50,
-        min_file_size: int = 3 * 1024,  # 3 KB по умолчанию
+        min_file_size: int = 5 * 1024,
+        min_rel_area: float = 0.15,
+        ignore_aspect_ratio_threshold: float = 6.0,
+        max_images_per_page: int = 2,
     ):
+        self.image_describer = image_describer
         self.min_width = min_width
         self.min_height = min_height
         self.min_file_size = min_file_size
+        self.min_rel_area = min_rel_area
+        self.ignore_aspect_ratio_threshold = ignore_aspect_ratio_threshold
+        self.max_images_per_page = max_images_per_page
 
     async def parse(
-        self, file_bytes: bytes, file_name: str, process_images: bool = False
+        self, file_bytes: bytes, file_name: str, process_images: bool = True
     ) -> ParsedDocument:
-        return await asyncio.to_thread(
+        result = await asyncio.to_thread(
             self._parse, file_bytes, file_name, process_images
         )
 
+        if process_images and result.images and self.image_describer:
+            logging.info(f"🖼️ Обработка {len(result.images)} изображений параллельно...")
+            image_descriptions = await self.image_describer.describe_batch(result.images)
+            result = ParsedDocument(
+                text=self._replace_markers_with_descriptions(result.text, image_descriptions),
+                images=result.images,
+                contents=result.contents,
+                is_book=result.is_book,
+            )
+            logging.info(f"✅ Обработано {len(image_descriptions)} изображений")
+
+        return result
+
     def _parse(
-        self, file_bytes: bytes, file_name: str, process_images: bool = False
+        self, file_bytes: bytes, file_name: str, process_images: bool = True
     ) -> ParsedDocument:
         """
         Извлекает текст и изображения из PDF-файла, фильтруя слишком маленькие изображения.
@@ -58,15 +79,17 @@ class FitzPDFParser(DocumentParser):
             is_book_doc = self.is_book(doc)
             toc_items = []  # Инициализируем пустым списком
 
-            # Статистика фильтрации
             stats = {
                 "total": 0,
                 "filtered_size": 0,
                 "filtered_dimensions": 0,
                 "filtered_duplicates": 0,
+                "filtered_background": 0,
                 "accepted": 0,
                 "full_page_screenshots": 0,
             }
+
+            is_presentation = self.is_presentation(doc)
 
             if is_book_doc:
                 logging.info(f"This is a book.")
@@ -83,13 +106,14 @@ class FitzPDFParser(DocumentParser):
                         title = item["title"]
                         page_num = item["page"]
 
-                        # Добавляем отступы в зависимости от уровня вложенности
                         indent = "  " * (level - 1)
                         logging.info(f"{indent}- {title} (стр. {page_num})")
 
-            if process_images:
-                # Вынесенная логика обработки изображений
+            should_process_images = process_images and is_presentation
+            if should_process_images:
                 self.extract_pictures(doc, page_count, images, image_positions, stats)
+            elif process_images and not is_presentation:
+                logging.info("⏭️ Пропуск обработки изображений - документ не является презентацией")
 
             # TEXT EXTRACTION
             md_text_parts = []
@@ -103,38 +127,27 @@ class FitzPDFParser(DocumentParser):
 
                 page_text = page_marker + page_text
 
-                if process_images:
-                    # Если на странице есть изображения, вставляем маркеры
+                if should_process_images:
                     if page_num in image_positions:
-                        # Разбиваем текст на параграфы/блоки
                         paragraphs = re.split(r"\n\n+", page_text)
-
-                        # Определяем количество параграфов и изображений
                         num_paragraphs = len(paragraphs)
                         num_images = len(image_positions[page_num])
 
-                        # Вставляем маркеры изображений между параграфами
-                        # Распределяем их равномерно
                         result_parts = []
                         images_inserted = 0
 
                         for i, para in enumerate(paragraphs):
                             result_parts.append(para)
 
-                            # Вставляем изображение после каждого N-го параграфа
                             if images_inserted < num_images and num_paragraphs > 0:
-                                # Простая эвристика: вставляем изображения пропорционально
                                 insert_threshold = (i + 1) / num_paragraphs
                                 image_threshold = (images_inserted + 1) / num_images
 
                                 if insert_threshold >= image_threshold:
-                                    _, marker = image_positions[page_num][
-                                        images_inserted
-                                    ]
+                                    _, marker = image_positions[page_num][images_inserted]
                                     result_parts.append(f"\n{marker}\n")
                                     images_inserted += 1
 
-                        # Вставляем оставшиеся изображения в конец
                         while images_inserted < num_images:
                             _, marker = image_positions[page_num][images_inserted]
                             result_parts.append(f"\n{marker}\n")
@@ -154,12 +167,13 @@ class FitzPDFParser(DocumentParser):
                 f"принято={stats['accepted']}, "
                 f"отфильтровано_по_размеру={stats['filtered_size']}, "
                 f"отфильтровано_по_измерениям={stats['filtered_dimensions']}, "
+                f"отфильтровано_фон={stats['filtered_background']}, "
                 f"дубликатов={stats['filtered_duplicates']}, "
                 f"скриншотов_страниц={stats['full_page_screenshots']}"
             )
 
             logging.info(
-                f"✅ PDF парсинг завершён: {len(md_text)} символов, {len(images)} изображений"
+                f"📄 PDF извлечение завершено: {len(md_text)} символов, {len(images)} изображений для обработки"
             )
 
             return ParsedDocument(
@@ -172,6 +186,14 @@ class FitzPDFParser(DocumentParser):
         except Exception as e:
             logging.error(f"❌ Ошибка при парсинге PDF файла {file_name}: {str(e)}")
             raise Exception(f"Ошибка при парсинге PDF файла: {str(e)}")
+
+    def _replace_markers_with_descriptions(self, text: str, descriptions: dict[str, str]) -> str:
+        for marker, description in descriptions.items():
+            if description:
+                text = text.replace(marker, description)
+            else:
+                text = text.replace(f"\n{marker}\n", "")
+        return text
 
     def extract_table_of_contents(self, doc: fitz.Document) -> list[dict[str, Any]]:
         """
@@ -245,13 +267,14 @@ class FitzPDFParser(DocumentParser):
         # Для отслеживания уже обработанных изображений (дедупликация)
         seen_xrefs = set()
 
-        # Порог минимального количества текста на странице (в символах), чтобы решать, делать ли скриншот всей страницы
-        MIN_TEXT_LENGTH = 100
+        MIN_TEXT_LENGTH = 50
 
         global_image_counter = 1
 
         for page_num in range(page_count):
             page = doc.load_page(page_num)
+            page_rect = page.rect
+            page_area = page_rect.width * page_rect.height
 
             page_text: str = page.get_text()  # type: ignore
             text_length = len(page_text.strip())
@@ -270,7 +293,7 @@ class FitzPDFParser(DocumentParser):
                         width=pix.width,  # type: ignore
                         height=pix.height,  # type: ignore
                         page=page_num + 1,
-                        index=0,
+                        index=len([img for img in images if img.page == page_num + 1]),
                         marker=marker,
                         file_name=f"img_p{page_num + 1}_0.png",
                     )
@@ -309,13 +332,30 @@ class FitzPDFParser(DocumentParser):
                     height = base_image.get("height", 0)
                     file_size = len(base_image["image"])
 
-                    # Фильтрация
                     if width < self.min_width or height < self.min_height:
                         stats["filtered_dimensions"] += 1
                         continue
 
                     if file_size < self.min_file_size:
                         stats["filtered_size"] += 1
+                        continue
+
+                    img_area = rect.width * rect.height
+                    rel_area = img_area / page_area if page_area > 0 else 0
+
+                    if rel_area < self.min_rel_area:
+                        stats["filtered_dimensions"] += 1
+                        continue
+
+                    if width > 0 and height > 0:
+                        aspect_ratio = width / height
+                        if (aspect_ratio > self.ignore_aspect_ratio_threshold) or \
+                           (aspect_ratio < 1 / self.ignore_aspect_ratio_threshold):
+                            stats["filtered_dimensions"] += 1
+                            continue
+
+                    if rel_area > 0.90 and text_length > 200:
+                        stats["filtered_background"] += 1
                         continue
 
                     seen_xrefs.add(xref)
@@ -335,9 +375,10 @@ class FitzPDFParser(DocumentParser):
             if not image_rects:
                 continue
 
-            # Группируем близкие изображения
-            # Порог близости в пунктах (points) - если изображения ближе, объединяем
-            PROXIMITY_THRESHOLD = 50  # пикселей
+            image_rects.sort(key=lambda x: x["width"] * x["height"], reverse=True)
+            image_rects = image_rects[:self.max_images_per_page]
+
+            PROXIMITY_THRESHOLD = 50
 
             def group_nearby_images(img_rects):
                 """Группирует изображения, которые находятся близко друг к другу"""
@@ -411,7 +452,7 @@ class FitzPDFParser(DocumentParser):
                             width=pix.width,  # type: ignore
                             height=pix.height,  # type: ignore
                             page=page_num + 1,
-                            index=len(images) + 1,
+                            index=len([img for img in images if img.page == page_num + 1]),
                             marker=marker,
                             file_name=f"img_p{page_num + 1}_{len(images) + 1}.png",
                         )
@@ -421,7 +462,6 @@ class FitzPDFParser(DocumentParser):
                     global_image_counter += 1
 
                 else:
-                    # Группа изображений - делаем скриншот области
                     logging.info(
                         f"Найдена группа из {len(group)} близких изображений на стр. {page_num + 1}, "
                         f"создаём объединённый скриншот"
@@ -462,7 +502,7 @@ class FitzPDFParser(DocumentParser):
                             width=pix.width,  # type: ignore
                             height=pix.height,  # type: ignore
                             page=page_num + 1,
-                            index=len(images) + 1,
+                            index=len([img for img in images if img.page == page_num + 1]),
                             marker=marker,
                             file_name=f"img_p{page_num + 1}_{len(images) + 1}.png",
                         )
@@ -557,6 +597,61 @@ class FitzPDFParser(DocumentParser):
             )
 
         return is_book_candidate
+
+    def is_presentation(self, doc: fitz.Document) -> bool:
+        """
+        Определяет, является ли PDF-документ презентацией.
+
+        Критерии:
+        1. Меньше 600 страниц
+        2. Преимущественно горизонтальная (ландшафтная) ориентация страниц
+
+        Args:
+            doc: Открытый PDF документ
+
+        Returns:
+            True если документ является презентацией, False в противном случае
+        """
+        page_count = len(doc)
+
+        if page_count >= 600:
+            logging.info(f"📄 Документ содержит {page_count} страниц (>= 600) - не презентация")
+            return False
+
+        sample_size = min(10, page_count)
+        sample_pages = [
+            0,
+            page_count // 4,
+            page_count // 2,
+            3 * page_count // 4,
+            page_count - 1,
+        ]
+        sample_pages = list(set(p for p in sample_pages if p < page_count))[:sample_size]
+
+        landscape_pages = 0
+
+        for page_num in sample_pages:
+            page = doc.load_page(page_num)
+            rect = page.rect
+            if rect.width > rect.height:
+                landscape_pages += 1
+
+        landscape_ratio = landscape_pages / len(sample_pages) if sample_pages else 0
+
+        is_presentation = landscape_ratio > 0.7
+
+        if is_presentation:
+            logging.info(
+                f"🎯 Документ определен как ПРЕЗЕНТАЦИЯ - "
+                f"{page_count} страниц, {landscape_ratio:.0%} горизонтальных"
+            )
+        else:
+            logging.info(
+                f"📄 Документ НЕ презентация - "
+                f"{page_count} страниц, {landscape_ratio:.0%} горизонтальных"
+            )
+
+        return is_presentation
 
     def extract_toc_from_structure(self, doc: fitz.Document) -> list[dict[str, Any]]:
         """

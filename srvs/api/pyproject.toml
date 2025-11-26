@@ -34,6 +34,7 @@ dependencies = [
     "voyageai>=0.3.5",
     "bertopic>=0.17.3",
     "posthog>=7.0.1",
+    "google-genai>=1.0.0",
     # Workspace packages (resolved from PyPI in production, workspace in dev)
     "quizbee-example-lib>=0.1.0",
 ]

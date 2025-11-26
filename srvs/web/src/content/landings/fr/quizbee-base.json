@@ -60,19 +60,19 @@
             "icon": "book-open-text"
           },
           {
+            "title": "Travail Acharné, Résultats Incertains",
+            "description": "Vous travaillez dur, mais avant l'examen, vous ne savez pas quoi réviser ni ce que vous avez manqué.",
+            "icon": "frown"
+          },
+          {
             "title": "Supports Partout, Aucune Structure",
-            "description": "Des notes, des PDFs, des captures d'écran, mais aucun moyen de les transformer en quelque chose d'utile pour vraiment apprendre.",
+            "description": "Des tonnes de PDFs, de diapositives de cours, de notes, mais aucun moyen de les transformer en quelque chose d'utile pour vraiment apprendre.",
             "icon": "file-stack"
           },
           {
             "title": "Fatigué des Chats IA Infinis",
             "description": "Fatigué de télécharger et de réexpliquer le même contenu encore et encore à des chats IA?",
             "icon": "message-circle-x"
-          },
-          {
-            "title": "Travail Acharné, Résultats Incertains",
-            "description": "Vous travaillez dur, mais avant l'examen, vous ne savez pas quoi réviser ni ce que vous avez manqué.",
-            "icon": "frown"
           }
         ]
       }

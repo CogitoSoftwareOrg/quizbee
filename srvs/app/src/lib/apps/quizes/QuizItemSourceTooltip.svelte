@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Info } from 'lucide-svelte';
+	import SearchSourceIcon from '$lib/assets/icons/search_source.svg';
 	import type { UsedChunk } from './types';
 
 	interface Props {
@@ -15,7 +15,7 @@
 {#if shouldShow}
 	<div class="dropdown dropdown-end dropdown-bottom dropdown-hover">
 		<div tabindex="0" role="button" class="btn btn-circle btn-ghost btn-sm">
-			<Info size={24} class="text-base-content/60" />
+			<img src={SearchSourceIcon} alt="Source" width="24" height="24" class="opacity-60" />
 		</div>
 		<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 		<div

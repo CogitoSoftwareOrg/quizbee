@@ -33,7 +33,7 @@
 </script>
 
 <div
-	class="mx-auto flex min-h-full w-full max-w-7xl flex-col space-y-4 px-1 sm:space-y-6 sm:p-6 lg:p-8"
+	class="mx-auto flex min-h-full w-full max-w-7xl flex-col space-y-4 sm:px-12 "
 >
 	<!-- Header -->
 	<div class="flex items-center gap-3">

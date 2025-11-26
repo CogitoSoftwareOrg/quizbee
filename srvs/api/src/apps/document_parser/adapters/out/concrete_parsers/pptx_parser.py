@@ -11,7 +11,7 @@ from io import BytesIO
 from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE_TYPE
 
-from ....domain.out import DocumentParser
+from ....domain.out import DocumentParser, ImageDescriber
 from ....domain.models import ParsedDocument, DocumentImage
 
 logger = logging.getLogger(__name__)
@@ -29,16 +29,19 @@ class PptxDocumentParser(DocumentParser):
 
     def __init__(
         self,
+        image_describer: ImageDescriber | None = None,
         min_width: int = 50,
         min_height: int = 50,
         min_file_size: int = 3 * 1024,
     ):
         """
         Args:
+            image_describer: Сервис для описания изображений
             min_width: Минимальная ширина изображения в пикселях
             min_height: Минимальная высота изображения в пикселях
             min_file_size: Минимальный размер файла изображения в байтах
         """
+        self.image_describer = image_describer
         self.min_width = min_width
         self.min_height = min_height
         self.min_file_size = min_file_size
@@ -46,9 +49,22 @@ class PptxDocumentParser(DocumentParser):
     async def parse(
         self, file_bytes: bytes, file_name: str, process_images: bool = False
     ) -> ParsedDocument:
-        return await asyncio.to_thread(
+        result = await asyncio.to_thread(
             self._parse, file_bytes, file_name, process_images
         )
+
+        if process_images and result.images and self.image_describer:
+            logger.info(f"🖼️ Обработка {len(result.images)} изображений параллельно...")
+            image_descriptions = await self.image_describer.describe_batch(result.images)
+            result = ParsedDocument(
+                text=self._replace_markers_with_descriptions(result.text, image_descriptions),
+                images=result.images,
+                contents=result.contents,
+                is_book=result.is_book,
+            )
+            logger.info(f"✅ Обработано {len(image_descriptions)} изображений")
+
+        return result
 
     def _parse(
         self,
@@ -126,7 +142,7 @@ class PptxDocumentParser(DocumentParser):
             )
 
         except Exception as e:
-            logger.error(f"❌ Ошибка при парсинге PPTX файла {file_name}: {str(e)}")
+         
             raise Exception(f"Ошибка при парсинге PPTX файла: {str(e)}")
 
     def get_slide_title(self, slide) -> str:
@@ -327,7 +343,7 @@ class PptxDocumentParser(DocumentParser):
                         height=height,
                         page=slide_num,
                         index=image_index,
-                        marker=f"[IMAGE_{slide_num}_{image_index}]",
+                        marker=f"{{quizbee_unique_image_{slide_num}_{image_index}}}",
                         file_name=f"slide_{slide_num}_image_{image_index}.{ext}",
                     )
 
@@ -402,7 +418,7 @@ class PptxDocumentParser(DocumentParser):
                         height=height,
                         page=slide_num,
                         index=image_index,
-                        marker=f"[IMAGE_{slide_num}_{image_index}]",
+                        marker=f"{{quizbee_unique_image_{slide_num}_{image_index}}}",
                         file_name=f"slide_{slide_num}_image_{image_index}.{ext}",
                     )
 
@@ -414,7 +430,6 @@ class PptxDocumentParser(DocumentParser):
                         f"Не удалось извлечь изображение из группы на слайде {slide_num}: {str(e)}"
                     )
 
-            # Рекурсивно обрабатываем вложенные группы
             elif shape.shape_type == MSO_SHAPE_TYPE.GROUP:
                 nested_images = self.extract_images_from_group_shape(
                     shape, slide_num, image_index
@@ -423,3 +438,11 @@ class PptxDocumentParser(DocumentParser):
                 image_index += len(nested_images)
 
         return images
+
+    def _replace_markers_with_descriptions(self, text: str, descriptions: dict[str, str]) -> str:
+        for marker, description in descriptions.items():
+            if description:
+                text = text.replace(marker, description)
+            else:
+                text = text.replace(f"\n{marker}\n", "")
+        return text

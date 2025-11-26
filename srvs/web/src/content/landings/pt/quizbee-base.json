@@ -60,19 +60,19 @@
             "icon": "book-open-text"
           },
           {
+            "title": "Trabalho Árduo, Resultados Incertos",
+            "description": "Você estuda muito, mas antes da prova você não sabe o que revisar ou o que perdeu.",
+            "icon": "frown"
+          },
+          {
             "title": "Materiais em Todo Lugar, Sem Estrutura",
-            "description": "Notas, PDFs, capturas de tela, mas nenhuma maneira de transformá-los em algo útil para aprender de verdade.",
+            "description": "Toneladas de PDFs, slides de aula, notas, mas nenhuma maneira de transformá-los em algo útil para aprender de verdade.",
             "icon": "file-stack"
           },
           {
             "title": "Cansado de Chats de IA Infinitos",
             "description": "Cansado de carregar e re-explicar o mesmo conteúdo repetidamente para chats de IA?",
             "icon": "message-circle-x"
-          },
-          {
-            "title": "Trabalho Árduo, Resultados Incertos",
-            "description": "Você estuda muito, mas antes da prova você não sabe o que revisar ou o que perdeu.",
-            "icon": "frown"
           }
         ]
       }

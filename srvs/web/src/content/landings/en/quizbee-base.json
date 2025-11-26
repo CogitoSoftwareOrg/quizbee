@@ -60,19 +60,19 @@
             "icon": "book-open-text"
           },
           {
+            "title": "Hard Work, Unclear Results",
+            "description": "You study hard, but before the exam, you’re unsure what to review or what you’ve missed.",
+            "icon": "frown"
+          },
+          {
             "title": "Materials Everywhere, No Structure",
-            "description": "Notes, PDFs, screenshots — but no way to turn them into something useful for real learning.",
+            "description": "Tons of pdfs, lectures slides, notes — but no way to turn them into something useful for real learning.",
             "icon": "file-stack"
           },
           {
             "title": "Tired of endless AI Chats",
             "description": "Tired of re-uploading and re-explaining the same content over and over to AI chats? ",
             "icon": "message-circle-x"
-          },
-          {
-            "title": "Hard Work, Unclear Results",
-            "description": "You study hard, but before the exam, you’re unsure what to review or what you’ve missed.",
-            "icon": "frown"
           }
         ]
       }
