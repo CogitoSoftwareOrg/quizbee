@@ -30,10 +30,10 @@
     {
       "type": "Hero",
       "props": {
-        "title": "Transforme Seus Materiais de Estudo em",
-        "titleHighlight": "Questionários Interativos",
+        "title": "Passe nos Seus Exames",
+        "titleHighlight": "Sem Estresse e Incerteza",
         "description": "Carregue suas notas de aula, livros didáticos ou guias de estudo. QuizBee usa IA para gerar questionários personalizados que ajudam você a passar em seus testes e exames.",
-        "buttonText": "Começar a criar quizzes",
+        "buttonText": "Comece Sua Preparação Agora",
         "footerText": "Grátis para começar • Nenhum cartão de crédito necessário",
         "href": "{{APP_URL}}",
         "image": "",

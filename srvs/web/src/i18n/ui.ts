@@ -15,7 +15,7 @@ export const ui = {
     "nav.home": "Home",
     "nav.about": "About",
     "nav.blog": "Blog",
-    "nav.quizes": "Quizes",
+    "nav.quizes": "Quizzes",
     "cta.start_for_free": "Start for free",
   },
   es: {

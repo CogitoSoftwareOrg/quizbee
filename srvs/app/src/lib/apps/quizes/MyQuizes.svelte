@@ -234,8 +234,8 @@
 	<header class="flex shrink-0 flex-col gap-3">
 		<div class="flex items-start justify-between gap-4">
 			<div>
-				<h1 class="text-3xl font-semibold tracking-tight">My Quizes</h1>
-				<p class="text-base-content/70 mt-1 text-sm">
+				<h1 class="text-3xl font-semibold tracking-tight">My Quizzes</h1>
+				<p class="mt-1 text-sm text-base-content/70">
 					View all quizzes you've attempted, sorted by most recent activity.
 				</p>
 			</div>
@@ -271,7 +271,7 @@
 		</div>
 
 		{#if showFilters}
-			<div class="bg-base-200/50 border-base-300 flex flex-col gap-5 rounded-xl border p-5">
+			<div class="flex flex-col gap-5 rounded-xl border border-base-300 bg-base-200/50 p-5">
 				<!-- In Progress & Archived Filter -->
 				<div class="flex flex-col gap-2">
 					<span class="label-text font-medium">Status</span>
@@ -362,7 +362,7 @@
 				</div>
 
 				{#if hasActiveFilters}
-					<div class="border-base-300 flex justify-end border-t pt-3">
+					<div class="flex justify-end border-t border-base-300 pt-3">
 						<Button size="sm" style="ghost" onclick={resetFilters}>Reset all filters</Button>
 					</div>
 				{/if}
@@ -373,13 +373,13 @@
 	<section class="-ml-5 flex flex-col gap-4 md:min-h-0 md:flex-1">
 		{#if filteredQuizes.length === 0}
 			<div
-				class="border-base-200 bg-base-100 flex flex-col items-center gap-3 rounded-xl border p-8 text-center shadow-sm"
+				class="flex flex-col items-center gap-3 rounded-xl border border-base-200 bg-base-100 p-8 text-center shadow-sm"
 			>
 				{#if hasActiveFilters}
 					<Search class="opacity-40" size={48} />
 					<div>
 						<p class="font-medium">No quizzes match your search</p>
-						<p class="text-base-content/70 text-sm">
+						<p class="text-sm text-base-content/70">
 							Adjust the keywords or clear the filters to see more results.
 						</p>
 					</div>
@@ -388,7 +388,7 @@
 					<BookOpen class="opacity-40" size={48} />
 					<div>
 						<p class="font-medium">No quizzes yet</p>
-						<p class="text-base-content/70 text-sm">Create your first quiz to get started.</p>
+						<p class="text-sm text-base-content/70">Create your first quiz to get started.</p>
 					</div>
 				{/if}
 			</div>
@@ -399,10 +399,10 @@
 					<li>
 						<a
 							class={[
-								'group flex flex-col gap-4 rounded-xl border p-5 no-underline shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
+								'group flex flex-col gap-4 rounded-xl border p-5 no-underline shadow-sm transition focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
 								item.isInProgress
 									? 'border-primary/50 bg-primary/5 hover:bg-primary/10'
-									: 'border-base-200 hover:bg-base-200/60 bg-base-100'
+									: 'border-base-200 bg-base-100 hover:bg-base-200/60'
 							]}
 							href={`/quizes/${item.quizId}`}
 						>
@@ -410,20 +410,20 @@
 								<div class="flex-1">
 									<p
 										class={[
-											'text-lg font-semibold leading-tight transition',
+											'text-lg leading-tight font-semibold transition',
 											item.isInProgress
-												? 'group-hover:text-primary text-primary'
+												? 'text-primary group-hover:text-primary'
 												: 'group-hover:text-primary'
 										]}
 									>
 										{item.title}
 									</p>
 									{#if item.summary}
-										<p class="text-base-content/60 mt-1 text-sm leading-relaxed">
+										<p class="mt-1 text-sm leading-relaxed text-base-content/60">
 											{item.summary.slice(0, 500)}...
 										</p>
 									{/if}
-									<div class="text-base-content/70 mt-2 flex items-center gap-2 text-xs">
+									<div class="mt-2 flex items-center gap-2 text-xs text-base-content/70">
 										<Clock size={12} class="opacity-60" />
 										<span>Last attempt: {formatDateTime(item.lastAttemptDate)}</span>
 									</div>
@@ -476,7 +476,7 @@
 							{#if item.materials.length > 0}
 								<div class="flex flex-wrap gap-2">
 									{#each item.materials as material}
-										<span class="badge badge-soft badge-primary text-xs" title={material}>
+										<span class="badge badge-soft text-xs badge-primary" title={material}>
 											{material}
 										</span>
 									{/each}

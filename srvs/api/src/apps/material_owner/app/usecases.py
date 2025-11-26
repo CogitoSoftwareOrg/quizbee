@@ -66,6 +66,7 @@ class MaterialAppImpl(MaterialApp):
                     file_name=cmd.file.file_name,
                     file_bytes=cmd.file.file_bytes,
                 ),
+                hash=cmd.hash,
             )
             material.to_big()
             await self._material_repository.create(material)
@@ -81,6 +82,7 @@ class MaterialAppImpl(MaterialApp):
             user_id=cmd.user.id,
             title=cmd.title,
             file=cmd.file,
+            hash=cmd.hash,
         )
 
         if material.file.file_name.lower().endswith(

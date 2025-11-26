@@ -123,11 +123,11 @@ const alignToClass = (align: "left" | "center" | "right") => {
         {
           titleHighlight ? (
             <>
-              <span>{title}</span>
-              <br />
               <span class="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                {titleHighlight}
+                {title}
               </span>
+              <br />
+              <span>{titleHighlight}</span>
             </>
           ) : (
             title

@@ -180,6 +180,7 @@ async def add_material(
     title: str = Form(...),
     material_id: str = Form(...),
     quiz_id: str | None = Form(None),
+    hash: str = Form(""),
 ):
     print("add_material called with quiz_id:", quiz_id)
     file_bytes = await file.read()
@@ -193,6 +194,7 @@ async def add_material(
         ),
         title=title,
         material_id=material_id,
+        hash=hash,
     )
     await arq_pool.enqueue_job(
         JobName.add_material, asdict(cmd), _queue_name=ARQ_QUEUE_NAME

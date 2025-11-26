@@ -14,6 +14,7 @@ class AddMaterialCmd:
     title: str
     material_id: str
     quiz_id: str
+    hash: str = ""
 
 
 # class SearchIntent(StrEnum):

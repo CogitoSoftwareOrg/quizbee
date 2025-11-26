@@ -8,7 +8,10 @@ async function addExistingMaterial(materialId: string, quizTemplateId: string) {
 	const attachedFile: AttachedFile = {
 		name: material!.title,
 		isUploading: false,
+		isIndexing: false,
 		materialId: material!.id,
+		tokens: material!.tokens || 0,
+		isBook: material!.isBook || false,
 		previewUrl:
 			material!.file && /\.(jpg|jpeg|png|gif|webp)$/i.test(material!.file)
 				? pb!.files.getURL(material!, material!.file)

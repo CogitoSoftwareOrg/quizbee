@@ -30,10 +30,10 @@
     {
       "type": "Hero",
       "props": {
-        "title": "Verwandeln Sie Ihre Lernmaterialien in",
-        "titleHighlight": "Interaktive Quiz",
+        "title": "Bestehen Sie Ihre Prüfungen",
+        "titleHighlight": "Ohne Stress und Unsicherheit",
         "description": "Laden Sie Ihre Vorlesungsnotizen, Lehrbücher oder Lernratgeber hoch. QuizBee nutzt KI, um personalisierte Quiz zu generieren, die Ihnen bei Ihren Klausuren und Prüfungen helfen.",
-        "buttonText": "Anfangen, Quiz zu erstellen",
+        "buttonText": "Jetzt mit der Prüfungsvorbereitung starten",
         "footerText": "Kostenlos zu beginnen • Keine Kreditkarte erforderlich",
         "href": "{{APP_URL}}",
         "image": "",

@@ -24,7 +24,7 @@
 		},
 		{
 			name: '/quizes',
-			label: 'Quizes',
+			label: 'Quizzes',
 			href: '/quizes',
 			icon: History
 		},
@@ -67,7 +67,7 @@
 	}
 </script>
 
-<nav class={['overflow-y-auto overflow-x-hidden', className]}>
+<nav class={['overflow-x-hidden overflow-y-auto', className]}>
 	{#if expanded}
 		<ul class="menu menu-vertical w-full gap-1 px-2 pb-2">
 			<div class="flex w-full flex-col items-center gap-2 py-2">

@@ -10,6 +10,7 @@
 	import type { AttachedFile } from '$lib/types/attached-file';
 	import { pb } from '$lib/pb';
 	import { generateId } from '$lib/utils/generate-id';
+	import { computeFileHash } from '$lib/utils/file-hash';
 	import { removeFile } from '../new/removeFile';
 	import { addExistingMaterial } from '../new/addExistingMaterial';
 	import PreviousQuizes from './PreviousQuizes.svelte';
@@ -55,20 +56,15 @@
 				: totalTokensAttached > maxTokensWithoutABook)
 	);
 
-	const hasLargeFile = $derived(
-		attachedFiles.some(
-			(f) => f.file && f.file.size > 15 * 1024 * 1024 && (f.isUploading || f.isIndexing)
-		)
-	);
+	let warningLargeFileProcessing = $state(false);
 
-	const warningLargeFileProcessing = $derived(
-		hasLargeFile &&
-			!warningTooBigQuery &&
-			!warningTooBigFile &&
-			!warningUnsupportedFile &&
-			!warningNoText &&
-			!warningMaxTokensExceeded
-	);
+	function updateLargeFileWarning() {
+		const hasLargeFile = attachedFiles.some(
+			(f) => f.file && f.file.size > 15 * 1024 * 1024 && (f.isUploading || f.isIndexing)
+		);
+		const isAnyFileHashing = attachedFiles.some((f) => f.isHashing);
+		warningLargeFileProcessing = hasLargeFile && !isAnyFileHashing;
+	}
 
 	let placeholderText = $state('Attach files • Add text');
 
@@ -145,6 +141,7 @@
 				previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
 				name: file.name,
 				isUploading: true,
+				isHashing: true,
 				materialId: generateId()
 			}));
 
@@ -160,10 +157,19 @@
 		// Обход с конца, чтобы безопасно удалять элементы
 		for (let i = attachedFiles.length - 1; i >= 0; i--) {
 			const attachedFile = attachedFiles[i];
+			console.log(
+				'$effect checking file:',
+				attachedFile.name,
+				'isUploading:',
+				attachedFile.isUploading,
+				'materialId:',
+				attachedFile.materialId
+			);
 			if (attachedFile.isUploading && attachedFile.materialId) {
 				const foundMaterial = materialsStore.materials.find(
 					(m) => m.id === attachedFile.materialId
 				);
+				console.log('foundMaterial:', foundMaterial);
 
 				if (foundMaterial) {
 					// Check if file is too big
@@ -190,6 +196,7 @@
 						attachedFile.isBook = foundMaterial.isBook;
 						attachedFile.isUploading = false;
 						attachedFile.isIndexing = false;
+						updateLargeFileWarning();
 					}
 				}
 			}
@@ -216,10 +223,60 @@
 				return;
 			}
 
+			const hash = await computeFileHash(attachedFile.file!);
+			attachedFile.hash = hash;
+			attachedFile.isHashing = false;
+			attachedFiles = attachedFiles;
+			updateLargeFileWarning();
+
+			const existingMaterial = materialsStore.materials.find((m) => m.hash === hash);
+			console.log('Hash computed:', hash, 'existingMaterial:', existingMaterial);
+			if (existingMaterial) {
+				console.log('Found duplicate! Reusing existing material');
+				const fileIndex = attachedFiles.findIndex((f) => f.materialId === attachedFile.materialId);
+				console.log('fileIndex:', fileIndex);
+				if (fileIndex !== -1) {
+					if (attachedFile.previewUrl) {
+						URL.revokeObjectURL(attachedFile.previewUrl);
+					}
+
+					const material = materialsStore.materials.find((m) => m.id === existingMaterial.id);
+
+					attachedFiles[fileIndex].name = material!.title;
+					attachedFiles[fileIndex].isUploading = false;
+					attachedFiles[fileIndex].isIndexing = false;
+					attachedFiles[fileIndex].materialId = material!.id;
+					attachedFiles[fileIndex].tokens = material!.tokens || 0;
+					attachedFiles[fileIndex].isBook = material!.isBook || false;
+					attachedFiles[fileIndex].previewUrl =
+						material!.file && /\.(jpg|jpeg|png|gif|webp)$/i.test(material!.file)
+							? pb!.files.getURL(material!, material!.file)
+							: null;
+
+					if (quizTemplateId) {
+						try {
+							const quiz = await pb!.collection('quizes').getOne(quizTemplateId);
+							const updatedMaterials = [...(quiz.materials || []), material!.id];
+							await pb!
+								.collection('quizes')
+								.update(quizTemplateId, { materials: updatedMaterials });
+						} catch (error) {
+							console.error('Failed to attach material to quiz:', error);
+						}
+					}
+
+					attachedFiles = attachedFiles;
+					updateLargeFileWarning();
+					console.log('Updated attachedFile:', attachedFiles[fileIndex]);
+				}
+				return;
+			}
+
 			const formData = new FormData();
 			formData.append('file', attachedFile.file!);
 			formData.append('title', attachedFile.name);
 			formData.append('material_id', attachedFile.materialId!);
+			formData.append('hash', hash);
 
 			if (quizTemplateId) formData.append('quiz_id', quizTemplateId);
 
@@ -437,9 +494,9 @@
 						>
 					</div>
 					<div class="mt-2 max-h-67">
-						{#each materialsStore.materials.filter((m) => m.title
-								.toLowerCase()
-								.includes(searchQuery.toLowerCase())) as material}
+						{#each materialsStore.materials.filter((m) => (m.status === 'indexed' || m.status === 'used') && m.title
+									.toLowerCase()
+									.includes(searchQuery.toLowerCase())) as material}
 							<button
 								class="flex w-full cursor-pointer items-center justify-between gap-2 rounded p-3 text-left transition-colors duration-200 hover:bg-primary"
 								onclick={() => {
@@ -512,7 +569,7 @@
 	{/if}
 	{#if warningLargeFileProcessing}
 		<div class="text-md mt-2 text-orange-500">
-			You have attached a large file and the processing may take up to the minute. Please be patient.
+			You have attached a large file and the processing may take up to a minute. Please be patient.
 		</div>
 	{/if}
 	{#if attachedFiles.length > 0}
@@ -543,12 +600,14 @@
 
 					<!-- Индикатор загрузки -->
 					{#if attachedFile.isUploading}
-						<div class="absolute inset-0 flex flex-col items-center justify-center bg-base-content/50">
+						<div
+							class="absolute inset-0 flex flex-col items-center justify-center bg-base-content/50"
+						>
 							<div
 								class="h-8 w-8 animate-spin rounded-full border-4 border-base-100 border-t-transparent"
 							></div>
 							{#if attachedFile.isIndexing}
-								<span class="mt-1 text-md font-bold text-base-100">Indexing</span>
+								<span class="text-md mt-1 font-bold text-base-100">Indexing</span>
 							{/if}
 						</div>
 					{/if}

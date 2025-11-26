@@ -30,10 +30,10 @@
     {
       "type": "Hero",
       "props": {
-        "title": "Transform Your Study Materials into",
-        "titleHighlight": "Interactive Quizzes",
-        "description": "Upload your lecture notes, textbooks, or study guides. QuizBee uses AI to generate personalized quizzes that help you ace your midterms and exams.",
-        "buttonText": "Start creating quizzes",
+        "title": "Ace Your Exams",
+        "titleHighlight": "Without Stress and Uncertainty",
+        "description": "Upload your lecture notes, textbooks, or study guides. Quizbee uses AI to turn them into your personalized exam prep tests. Spot and fix your knowledge gaps before your professor finds them.",
+        "buttonText": "Start Exam Prep Now",
         "footerText": "Free to start • No credit card required ",
         "href": "{{APP_URL}}",
         "image": "",

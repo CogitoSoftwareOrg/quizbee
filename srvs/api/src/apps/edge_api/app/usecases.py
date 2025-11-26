@@ -126,6 +126,7 @@ class EdgeAPIAppImpl(EdgeAPIApp):
                 file=cmd.file,
                 title=cmd.title,
                 material_id=cmd.material_id,
+                hash=cmd.hash,
             )
         )
 

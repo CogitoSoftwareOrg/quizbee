@@ -88,6 +88,7 @@ class Material:
     status: MaterialStatus = MaterialStatus.UPLOADED
     text_file: MaterialFile | None = None
     table_of_contents: list[dict] | None = None
+    hash: str = ""
     id: str = field(default_factory=genID)
 
     @classmethod
@@ -97,12 +98,14 @@ class Material:
         user_id: str,
         title: str,
         file: MaterialFile,
+        hash: str = "",
     ) -> "Material":
         return cls(
             id=id,
             title=title,
             user_id=user_id,
             file=file,
+            hash=hash,
         )
 
     def to_big(self):

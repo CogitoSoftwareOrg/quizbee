@@ -30,10 +30,10 @@
     {
       "type": "Hero",
       "props": {
-        "title": "Transformez Vos Supports d'Étude en",
-        "titleHighlight": "Quiz Interactifs",
+        "title": "Réussissez Vos Examens",
+        "titleHighlight": "Sans Stress ni Incertitude",
         "description": "Téléchargez vos notes de cours, vos manuels ou vos guides d'étude. QuizBee utilise l'IA pour générer des quiz personnalisés qui vous aident à réussir vos examens.",
-        "buttonText": "Commencez à créer des quiz",
+        "buttonText": "Commencez Votre Préparation Maintenant",
         "footerText": "Gratuit pour commencer • Aucune carte de crédit requise",
         "href": "{{APP_URL}}",
         "image": "",

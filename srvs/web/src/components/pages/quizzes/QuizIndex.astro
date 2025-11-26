@@ -25,8 +25,8 @@ const quizes = page.data;
 const tp = useTranslatedPath(locale);
 
 // SEO
-const title = "Quizes";
-const desc = `All quizes (${page.currentPage} of ${page.lastPage})`;
+const title = "Quizzes";
+const desc = `All quizzes (${page.currentPage} of ${page.lastPage})`;
 
 // ссылки для пагинации
 const pageHref = (n: number) => (n === 1 ? tp("/quizes") : tp(`/quizes/${n}`));
@@ -40,9 +40,9 @@ const pageHref = (n: number) => (n === 1 ? tp("/quizes") : tp(`/quizes/${n}`));
         <nav class="text-sm text-muted-foreground">
           <a href={tp("/")} class="hover:underline">Home</a>
           <span class="mx-1">/</span>
-          <span>Quizes</span>
+          <span>Quizzes</span>
         </nav>
-        <h1 class="text-4xl md:text-5xl font-bold tracking-tight">Quizes</h1>
+        <h1 class="text-4xl md:text-5xl font-bold tracking-tight">Quizzes</h1>
         <p class="text-muted-foreground">{desc}</p>
       </div>
 

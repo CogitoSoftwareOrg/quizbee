@@ -70,6 +70,7 @@ class PBMaterialRepository(MaterialRepository):
             kind=MaterialKind(rec.get("kind") or ""),
             tokens=rec.get("tokens") or 0,
             size_bytes=rec.get("bytes") or 0,
+            hash=rec.get("hash") or "",
             file=MaterialFile(
                 file_name=rec.get("file") or "",
                 file_bytes=file_bytes,
@@ -111,6 +112,7 @@ class PBMaterialRepository(MaterialRepository):
             "tokens": material.tokens,
             "contents": material.contents,
             "isBook": material.is_book,
+            "hash": material.hash,
             "file": FileUpload((material.file.file_name, material.file.file_bytes)),
             "textFile": (
                 FileUpload(

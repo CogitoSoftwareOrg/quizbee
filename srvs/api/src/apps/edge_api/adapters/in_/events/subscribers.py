@@ -81,6 +81,7 @@ async def add_material_job(ctx, payload: dict):
         cache_key=payload["cache_key"],
         title=payload["title"],
         material_id=payload["material_id"],
+        hash=payload.get("hash", ""),
     )
     return await edge.add_material(cmd)
 

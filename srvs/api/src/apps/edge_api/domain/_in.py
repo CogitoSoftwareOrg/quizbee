@@ -56,6 +56,7 @@ class PublicAddMaterialCmd:
     file: MaterialFile
     title: str
     material_id: str
+    hash: str = ""
 
 
 @dataclass(frozen=True, slots=True)
