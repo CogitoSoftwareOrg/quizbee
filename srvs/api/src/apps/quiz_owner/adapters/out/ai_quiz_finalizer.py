@@ -24,6 +24,7 @@ from ...domain.out import QuizFinalizer, QuizRepository
 
 QUIZ_FINALIZER_LLM = LLMS.GROK_4_1_FAST
 IN_QUERY = "Finilize Quiz"
+RETRIES = 5
 
 
 @dataclass
@@ -87,6 +88,7 @@ class AIQuizFinalizer(QuizFinalizer):
             output_type=QuizFinalizerOutput,
             deps_type=QuizFinalizerDeps,
             model=QUIZ_FINALIZER_LLM,
+            retries=RETRIES,
         )
 
     async def finalize(self, quiz: Quiz, cache_key: str) -> None:

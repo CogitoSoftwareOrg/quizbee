@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock, MagicMock
 from pocketbase import PocketBase
 
 from ..adapters.out.pb_attempt_repository import PBAttemptRepository
-from ..adapters.out.ai_explainer import AIExplainer
+from ..adapters.out.explainers.ai_grok_explainer import AIGrokExplainer
 from ..domain.models import Attempt, Choice
 from ..domain.refs import (
     MessageMetadata,

@@ -21,6 +21,7 @@ from ...domain.models import Attempt, Feedback
 
 ATTEMPT_FINALIZER_LLM = LLMS.GROK_4_1_FAST
 IN_QUERY = "Finalize Attempt"
+RETRIES = 5
 
 
 @dataclass
@@ -78,6 +79,7 @@ class AIAttemptFinalizer(AttemptFinalizer):
             output_type=AttemptFinalizerOutput,
             deps_type=AttemptFinalizerDeps,
             model=ATTEMPT_FINALIZER_LLM,
+            retries=RETRIES,
         )
 
     async def finalize(self, attempt: Attempt, cache_key: str) -> None:

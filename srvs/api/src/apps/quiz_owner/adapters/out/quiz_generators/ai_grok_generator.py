@@ -28,7 +28,7 @@ from ....domain.constants import PATCH_LIMIT
 
 QUIZ_GENERATOR_LLM = LLMS.GROK_4_1_FAST
 IN_QUERY = ""
-RETRIES = 1
+RETRIES = 5
 TEMPERATURE = 0.4
 TOP_P = 0.95
 
@@ -75,7 +75,7 @@ class AIGrokGeneratorOutputOnlyQuery(BaseModel):
     def _check_answers(self):
         if not self.hint or not self.hint.strip():
             raise ValueError("Hint is required and cannot be empty.")
-        
+
         parsed_answers = []
         for a in self.answers:
             if not a.answer.strip() or not a.explanation.strip():
@@ -134,10 +134,10 @@ class AIGrokGeneratorOutputWithChunks(AIGrokGeneratorOutputOnlyQuery):
     def _check_chunk_indices(self):
         if not isinstance(self.used_chunk_indices, list):
             raise ValueError("used_chunk_indices must be a list.")
-        
+
         if len(self.used_chunk_indices) == 0:
             logger.warning("No chunk indices were marked as used for this question.")
-        
+
         return self
 
     def merge(self, quiz: Quiz, item_order: int) -> list[int]:
@@ -152,8 +152,12 @@ class AIGrokGenerator(PatchGenerator):
         self._provider = provider
 
     def _get_agent(self, has_chunks: bool):
-        output_type = AIGrokGeneratorOutputWithChunks if has_chunks else AIGrokGeneratorOutputOnlyQuery
-        
+        output_type = (
+            AIGrokGeneratorOutputWithChunks
+            if has_chunks
+            else AIGrokGeneratorOutputOnlyQuery
+        )
+
         return Agent(
             history_processors=[self._inject_request_prompt],
             output_type=output_type,
@@ -173,7 +177,7 @@ class AIGrokGenerator(PatchGenerator):
 
         has_chunks = bool(dto.chunks)
         agent = self._get_agent(has_chunks)
-        
+
         try:
             with self._lf.start_as_current_span(name=f"quiz-patch") as span:
                 run = await agent.run(
