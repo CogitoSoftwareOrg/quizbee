@@ -63,6 +63,7 @@
 			(quiz?.expand as QuizExpand)?.quizItems_via_quiz ||
 			[]
 	);
+	const genItems = $derived(quizItems.filter((i) => i.status === 'generated' || i.status === 'generating'));
 	const lastFinalItem = $derived(quizItems.filter((i) => i.status === 'final').at(-1));
 
 	const order = $derived.by(() => {
@@ -169,7 +170,7 @@
 			gotoItem(order + 1);
 		}
 
-		if (quiz.author === user?.id && quizDecisions.length === item?.order + 1) {
+		if (quiz.author === user?.id && quizDecisions.length === item?.order + 1 && genItems.length < 2) {
 			await patchApi(`quizes/${quiz.id}`, {
 				attempt_id: quizAttempt.id,
 				mode: 'continue'

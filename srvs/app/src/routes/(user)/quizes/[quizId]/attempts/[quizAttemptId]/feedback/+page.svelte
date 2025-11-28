@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { Search, ChevronRight, ChevronLeft, Sparkles } from 'lucide-svelte';
+	import { Search, ChevronRight, ChevronLeft, Sparkles, Info } from 'lucide-svelte';
 
 	import { Button, Input } from '@quizbee/ui-svelte-daisy';
 	import type { QuizExpand, QuizItemsResponse } from '@quizbee/pb-types';
@@ -61,6 +61,21 @@
 					return answers.some((a) => (a.content || '').toLowerCase().includes(q));
 				})
 			: items;
+	});
+
+	let feedbackError = $state(false);
+
+	$effect(() => {
+		if (feedback?.overview) {
+			feedbackError = false;
+			return;
+		}
+
+		const timer = setTimeout(() => {
+			feedbackError = true;
+		}, 60000);
+
+		return () => clearTimeout(timer);
 	});
 </script>
 
@@ -124,14 +139,27 @@
 					</div>
 				</div>
 				<div
-					class="from-primary/10 pointer-events-none absolute inset-0 bg-gradient-to-br to-transparent opacity-50 transition-opacity group-hover:opacity-70"
+					class="from-primary/10 bg-linear-to-br pointer-events-none absolute inset-0 to-transparent opacity-50 transition-opacity group-hover:opacity-70"
 				></div>
 			</button>
 		</section>
 	{:else if !feedback?.overview}
 		<section class="flex flex-1 flex-col items-center justify-center gap-4">
-			<p class="loading loading-spinner loading-xl"></p>
-			<p class="text-center font-semibold">We are giving your feedback...</p>
+			{#if feedbackError}
+				<div class="flex w-full max-w-md flex-col items-center text-center">
+					<div class="bg-error/10 text-error mb-6 rounded-full p-6">
+						<Info size={48} />
+					</div>
+					<h2 class="mb-2 text-2xl font-bold">Something went wrong</h2>
+					<p class="text-base-content/70 mb-8">
+						We couldn't generate your feedback. Please try again later.
+					</p>
+					<Button href="/home" color="primary">Back to Home</Button>
+				</div>
+			{:else}
+				<p class="loading loading-spinner loading-xl"></p>
+				<p class="text-center font-semibold">We are giving your feedback...</p>
+			{/if}
 		</section>
 	{:else if feedback?.overview}
 		<section class="flex w-full flex-1 flex-col gap-6 px-3 sm:overflow-y-auto">
