@@ -1,7 +1,7 @@
 import type { AttachedFile } from '$lib/types/attached-file';
 
 import { pb } from '$lib/pb';
-import { deleteApi, postApi } from '$lib/api/call-api';
+import { deleteApi } from '$lib/api/call-api';
 
 async function removeFile(index: number, attachedFiles: AttachedFile[], quizTemplateId: string) {
 	const fileToRemove = attachedFiles[index];
@@ -27,7 +27,7 @@ async function removeFile(index: number, attachedFiles: AttachedFile[], quizTemp
 			const material = await pb!.collection('materials').getOne(fileToRemove.materialId);
 			if (material.status !== 'used') {
 				// await pb!.collection('materials').delete(fileToRemove.materialId);
-				await deleteApi(`quizes/${quizTemplateId}/materials/${fileToRemove.materialId}`);
+				await deleteApi(`materials/${fileToRemove.materialId}`);
 			}
 		} catch (error) {
 			console.error('Failed to delete material:', error);

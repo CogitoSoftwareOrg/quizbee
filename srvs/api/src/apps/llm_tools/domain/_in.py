@@ -21,5 +21,10 @@ class LLMToolsApp(Protocol):
 
     async def vectorize(self, chunks: list[str]) -> np.ndarray: ...
     async def rerank(
-        self, query: str, documents: list[str], top_k: int = 4
+        self,
+        user_id: str,
+        session_id: str,
+        query: str,
+        documents: list[str],
+        top_k: int = 4,
     ) -> list[RerankResult]: ...

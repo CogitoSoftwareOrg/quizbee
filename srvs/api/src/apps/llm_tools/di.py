@@ -1,3 +1,5 @@
+from langfuse import Langfuse
+
 from .domain.out import TextTokenizer, ImageTokenizer, Chunker, Reranker
 from .app.usecases import LLMToolsAppImpl
 from .adapters.out import (
@@ -11,12 +13,14 @@ from .adapters.out import (
 from .domain.out import Vectorizer
 
 
-def init_llm_tools_deps() -> tuple[TextTokenizer, ImageTokenizer, Chunker, Vectorizer, Reranker]:
+def init_llm_tools_deps(
+    lf: Langfuse,
+) -> tuple[TextTokenizer, ImageTokenizer, Chunker, Vectorizer, Reranker]:
     text_tokenizer = TiktokenTokenizer()
     image_tokenizer = OpenAIImageTokenizer()
     chunker = ChonkieRecursiveChunker(text_tokenizer)
     vectorizer = VoyageEmbedder()
-    reranker = VoyageReranker()
+    reranker = VoyageReranker(lf=lf)
     return text_tokenizer, image_tokenizer, chunker, vectorizer, reranker
 
 
