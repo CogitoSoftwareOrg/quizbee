@@ -3,6 +3,7 @@ import redis.asyncio as redis
 import asyncio
 
 from src.apps.material_owner.domain._in import MaterialApp, SearchCmd
+from src.apps.material_owner.domain.models import SearchType
 from src.apps.user_owner.domain._in import Principal
 from src.lib.distributed_lock import DistributedLock
 
@@ -140,6 +141,7 @@ class QuizGeneratorImpl(QuizGenerator):
 
         for idx, vector in enumerate(central_vectors):
             logger.info(f"Searching for vector {idx + 1}/{len(central_vectors)}")
+            logger.info(f"Vector data: {vector[0], vector[1], vector[-1]}")
 
             chunks = await self._material_app.search(
                 SearchCmd(
@@ -147,6 +149,7 @@ class QuizGeneratorImpl(QuizGenerator):
                     material_ids=[m.id for m in quiz.materials],
                     limit_tokens=PATCH_CHUNK_TOKEN_LIMIT,
                     vectors=[vector],
+                    search_type=SearchType.GENERATOR,
                 )
             )
 

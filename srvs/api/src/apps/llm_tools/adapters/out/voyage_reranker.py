@@ -30,9 +30,11 @@ class VoyageReranker(Reranker):
             return []
 
         instruction = (
-            "Return theoretically useful and important chunks that contain fundamental substantive information."
+            "Retrieve academically rigorous passages that provide core definitions, "
+            "formal terminology, theorems, and fundamental mechanisms. "
+            "Focus on dense theoretical explanations containing substantive facts."
         )
-        query_with_instruction = f"{instruction}\n\nQuery: {query}"
+        query_with_instruction = f"Instruct: {instruction}\n\nQuery: {query}"
 
         result = await self._aclient.rerank(
             query=query_with_instruction,

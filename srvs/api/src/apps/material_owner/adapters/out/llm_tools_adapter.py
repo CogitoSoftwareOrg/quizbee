@@ -26,8 +26,8 @@ class LLMToolsAdapter(LLMTools):
     def count_image(self, width: int, height: int) -> int:
         return self._llm_tools_app.count_image(width, height)
 
-    def chunk(self, text: str, respect_pages: bool = False) -> list[str] | list:
-        return self._llm_tools_app.chunk(text, respect_pages)
+    def chunk(self, text: str) -> list[str]:
+        return self._llm_tools_app.chunk(text)
 
     async def rerank(
         self, query: str, documents: list[str], top_k: int = 4

@@ -192,7 +192,9 @@ class MaterialAppImpl(MaterialApp):
         limit_chunks = int(cmd.limit_tokens / self._llm_tools.chunk_size)
 
         ratio = 0.0
-        if cmd.all_chunks:
+        if cmd.search_type is not None:
+            search_type = cmd.search_type
+        elif cmd.all_chunks:
             search_type = SearchType.ALL
         elif (
             cmd.vectors is not None and len(cmd.vectors) > 0 and cmd.query.strip() == ""

@@ -48,6 +48,7 @@ class SearchType(StrEnum):
     DISTRIBUTION = "ditribution"
     ALL = "all"
     VECTOR = "vector"
+    GENERATOR = "generator"
 
 
 class ChunkKind(StrEnum):

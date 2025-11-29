@@ -5,6 +5,7 @@ from .meili_material_query_searcher import MeiliMaterialQuerySearcher
 from .meili_material_distribution_searcher import MeiliMaterialDistributionSearcher
 from .meili_all_searcher import MeiliMaterialAllSearcher
 from .meili_material_vector_searcher import MeiliMaterialVectorSearcher
+from .meili_generator_vector_searcher import MeiliGeneratorVectorSearcher
 
 
 class MaterialSearcherProvider(SearcherProvider):
@@ -24,11 +25,13 @@ class MaterialSearcherProvider(SearcherProvider):
         distribution_searcher: MeiliMaterialDistributionSearcher,
         all_searcher: MeiliMaterialAllSearcher,
         vector_searcher: MeiliMaterialVectorSearcher,
+        generator_vector_searcher: MeiliGeneratorVectorSearcher,
     ):
         self._query_searcher = query_searcher
         self._distribution_searcher = distribution_searcher
         self._all_searcher = all_searcher
         self._vector_searcher = vector_searcher
+        self._generator_vector_searcher = generator_vector_searcher
 
     def get(self, search_type: SearchType) -> Searcher:
         """
@@ -52,5 +55,7 @@ class MaterialSearcherProvider(SearcherProvider):
                 return self._all_searcher
             case SearchType.VECTOR:
                 return self._vector_searcher
+            case SearchType.GENERATOR:
+                return self._generator_vector_searcher
             case _:
                 raise ValueError(f"Unknown search type: {search_type}")

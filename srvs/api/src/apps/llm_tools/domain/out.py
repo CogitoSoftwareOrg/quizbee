@@ -37,9 +37,7 @@ class Chunker(Protocol):
     @property
     def chunk_size(self) -> int: ...
 
-    def chunk(
-        self, text: str, respect_pages: bool = False
-    ) -> list[str] | list[TextChunk]: ...
+    def chunk(self, text: str) -> list[str]: ...
 
 
 class Vectorizer(Protocol):

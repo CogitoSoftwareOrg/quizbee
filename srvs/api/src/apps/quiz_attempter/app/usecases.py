@@ -18,6 +18,7 @@ from src.apps.llm_tools.domain._in import LLMToolsApp
 from src.apps.user_owner.domain.models import Tariff
 from src.apps.material_owner.domain._in import MaterialApp, SearchCmd
 from src.apps.material_owner.domain.constants import RAG_CHUNK_TOKEN_LIMIT
+from src.apps.material_owner.domain.models import SearchType
 
 
 from ..domain.models import Attempt
@@ -94,6 +95,7 @@ class QuizAttempterAppImpl(QuizAttempterApp):
                 user=cmd.user,
                 material_ids=material_ids,
                 vectors=[q_vec],
+                search_type=SearchType.VECTOR,
             )
         )
 

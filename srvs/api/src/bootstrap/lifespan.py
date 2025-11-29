@@ -99,6 +99,7 @@ async def lifespan(app: FastAPI):
         quiz_finalizer,
         quiz_indexer,
         quiz_preprocessor,
+        quiz_clusterer,
     ) = await init_quiz_deps(
         meili=meili,
         lf=lf,
@@ -106,6 +107,7 @@ async def lifespan(app: FastAPI):
         http=http,
         llm_tools=llm_tools,
         llm_provider=grok_provider,
+        material_app=material_app,
     )
 
     # V2 QUIZ ATTEMPTER
@@ -145,6 +147,7 @@ async def lifespan(app: FastAPI):
         patch_generator=patch_generator,
         finalizer=quiz_finalizer,
         quiz_preprocessor=quiz_preprocessor,
+        quiz_clusterer=quiz_clusterer,
         redis_client=redis_client,
     )
 

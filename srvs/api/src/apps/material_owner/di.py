@@ -25,6 +25,7 @@ from .adapters.out import (
     LLMToolsAdapter,
     MeiliMaterialAllSearcher,
     MeiliMaterialVectorSearcher,
+    MeiliGeneratorVectorSearcher,
 )
 from .app.usecases import MaterialAppImpl
 
@@ -51,7 +52,8 @@ async def init_material_deps(
             lf=lf, llm_tools=llm_tools, meili=meili
         ),
         all_searcher=MeiliMaterialAllSearcher(lf=lf, llm_tools=llm_tools, meili=meili),
-        vector_searcher=MeiliMaterialVectorSearcher(
+        vector_searcher=MeiliMaterialVectorSearcher(meili=meili),
+        generator_vector_searcher=MeiliGeneratorVectorSearcher(
             lf=lf, llm_tools=llm_tools, meili=meili
         ),
     )

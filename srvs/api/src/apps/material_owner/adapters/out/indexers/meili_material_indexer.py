@@ -7,6 +7,9 @@ from langfuse import Langfuse
 from meilisearch_python_sdk import AsyncClient
 from meilisearch_python_sdk.models.search import Hybrid
 from meilisearch_python_sdk.models.settings import Embedders, UserProvidedEmbedder
+from meilisearch_python_sdk.models.settings import Pagination
+
+
 
 from src.lib.config import LLMS
 from src.lib.settings import settings
@@ -15,7 +18,6 @@ from ....domain.models import Material, MaterialChunk, MaterialKind
 from ....domain.constants import MAX_TEXT_INDEX_TOKENS
 from ....domain.out import MaterialIndexer, LLMTools
 from ....domain.errors import TooManyTextTokensError
-from src.apps.llm_tools.domain.out import TextChunk
 
 EMBEDDER_NAME = "materialChunk"  # здесь я поменял с materialChunks потому что иначе у меня требовало размерность прошлого эмбедера
 EMBEDDER_TEMPLATE = "Chunk {{doc.title}}: {{doc.content}}"
@@ -107,6 +109,7 @@ class MeiliMaterialIndexer(MaterialIndexer):
         await instance.material_index.update_filterable_attributes(
             ["userId", "materialId", "idx", "used", "page"]
         )
+        await instance.material_index.update_pagination(settings=Pagination(max_total_hits=5000))
         return instance
 
     async def index(self, material: Material) -> None:
@@ -126,39 +129,22 @@ class MeiliMaterialIndexer(MaterialIndexer):
         if not text or not text.strip():
             raise ValueError("Material has no text content")
 
-        # Check if text has page markers (O(n) worst case, but typically O(1) due to early match)
-        has_page_markers = "{quizbee_page_number_" in text[:100_000]
-
-        chunks_result = self.llm_tools.chunk(text, respect_pages=has_page_markers)
+        chunks_result = self.llm_tools.chunk(text)
         docs: list[Doc] = []
 
         for i, chunk in enumerate(chunks_result):
-            if isinstance(chunk, TextChunk):
-                docs.append(
-                    Doc(
-                        id=f"{material.id}-{i}",
-                        materialId=material.id,
-                        userId=material.user_id,
-                        title=material.title,
-                        content=chunk.content,
-                        idx=i,
-                        used=False,
-                        page=chunk.page,
-                    )
+            docs.append(
+                Doc(
+                    id=f"{material.id}-{i}",
+                    materialId=material.id,
+                    userId=material.user_id,
+                    title=material.title,
+                    content=chunk,
+                    idx=i,
+                    used=False,
+                    page=None,
                 )
-            else:
-                docs.append(
-                    Doc(
-                        id=f"{material.id}-{i}",
-                        materialId=material.id,
-                        userId=material.user_id,
-                        title=material.title,
-                        content=str(chunk),
-                        idx=i,
-                        used=False,
-                        page=None,
-                    )
-                )
+            )
 
         docs_tokens = sum(
             [
