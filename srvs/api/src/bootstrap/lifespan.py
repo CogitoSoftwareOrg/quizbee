@@ -115,7 +115,13 @@ async def lifespan(app: FastAPI):
         attempt_repository,
         explainer,
         attempt_finalizer,
-    ) = init_quiz_attempter_deps(lf=lf, admin_pb=admin_pb, http=http)
+    ) = init_quiz_attempter_deps(
+        lf=lf,
+        admin_pb=admin_pb,
+        http=http,
+        material_app=material_app,
+        llm_tools=llm_tools,
+    )
     quiz_attempter_app = init_quiz_attempter_app(
         message_owner=message_owner_app,
         llm_tools=llm_tools,

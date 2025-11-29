@@ -216,6 +216,7 @@ class MaterialAppImpl(MaterialApp):
                 user_id=cmd.user.id,
                 material_ids=cmd.material_ids,
                 query=cmd.query,
+                rerank_prefix=cmd.rerank_prefix,
                 limit=limit_chunks,
                 ratio=ratio,
                 vectors=cmd.vectors,

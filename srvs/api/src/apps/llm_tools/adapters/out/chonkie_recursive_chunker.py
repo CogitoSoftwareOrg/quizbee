@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from ...domain.out import Chunker, TextTokenizer
 from ...domain.constants import DEFAULT_CHUNK_SIZE, DEFAULT_CHUNK_OVERLAP
 
+PAGE_MARKER_PATTERN = re.compile(r'\{quizbee_page_number_\d+\}')
+
 
 @dataclass
 class RecursiveLevel:
@@ -135,9 +137,59 @@ class ChonkieRecursiveChunker(Chunker):
         text = text.strip()
 
         chunks = self._recursive_chunk(text, level=0)
+        chunks = self._merge_chunks_with_page_markers(chunks)
         if self._overlap > 0:
             chunks = self._apply_overlap(chunks)
         return chunks
+
+    def _merge_chunks_with_page_markers(self, chunks: list[str]) -> list[str]:
+        """
+        Merge small chunks that contain only page markers or minimal content
+        with adjacent chunks. This prevents orphaned fragments.
+        """
+        if len(chunks) <= 1:
+            return chunks
+
+        min_content_tokens = self._chunk_size // 4
+        
+        def get_content_without_markers(text: str) -> str:
+            return PAGE_MARKER_PATTERN.sub('', text).strip()
+        
+        def is_small_chunk(text: str) -> bool:
+            content = get_content_without_markers(text)
+            if not content:
+                return True
+            return self._tokenizer.count_text(content) < min_content_tokens
+        
+        merged = []
+        i = 0
+        
+        while i < len(chunks):
+            current = chunks[i]
+            
+            while i + 1 < len(chunks) and is_small_chunk(current):
+                next_chunk = chunks[i + 1]
+                combined = current.rstrip() + "\n\n" + next_chunk.lstrip()
+                if self._tokenizer.count_text(combined) <= self._chunk_size:
+                    current = combined
+                    i += 1
+                else:
+                    break
+            
+            if merged and is_small_chunk(current):
+                last = merged.pop()
+                combined = last.rstrip() + "\n\n" + current.lstrip()
+                if self._tokenizer.count_text(combined) <= self._chunk_size:
+                    merged.append(combined)
+                else:
+                    merged.append(last)
+                    merged.append(current)
+            else:
+                merged.append(current)
+            
+            i += 1
+        
+        return merged
 
     def _split_text(self, text: str, recursive_level: RecursiveLevel) -> list[str]:
         """

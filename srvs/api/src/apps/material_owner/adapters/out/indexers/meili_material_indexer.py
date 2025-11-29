@@ -1,6 +1,7 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import logging
 import asyncio
+import re
 from typing import Any
 from voyageai.client_async import AsyncClient as VoyageAsyncClient
 from langfuse import Langfuse
@@ -30,6 +31,20 @@ meiliVoyageEmbeddings = {
 }
 
 
+PAGE_MARKER_PATTERN = re.compile(r'\{quizbee_page_number_(\d+)\}')
+
+
+def extract_pages_from_text(text: str) -> list[int]:
+    matches = PAGE_MARKER_PATTERN.findall(text)
+    if not matches:
+        return []
+    return sorted(set(int(m) for m in matches))
+
+
+def clean_page_markers(text: str) -> str:
+    return PAGE_MARKER_PATTERN.sub('', text)
+
+
 @dataclass
 class Doc:
     id: str
@@ -39,11 +54,14 @@ class Doc:
     content: str
     idx: int = 0
     used: bool = False
-    page: int | None = None
+    pages: list[int] = field(default_factory=list)
     _vectors: dict[str, dict[str, list[list[float]]]] | None = None
 
     @classmethod
     def from_hit(cls, hit: dict) -> "Doc":
+        pages_raw = hit.get("pages", [])
+        if pages_raw is None:
+            pages_raw = []
         return cls(
             id=hit.get("id", ""),
             materialId=hit.get("materialId", ""),
@@ -52,7 +70,7 @@ class Doc:
             content=hit.get("content", ""),
             idx=hit.get("idx", 0),
             used=hit.get("used", False),
-            page=hit.get("page"),
+            pages=pages_raw,
             _vectors=hit.get("_vectors", {}),
         )
 
@@ -68,6 +86,7 @@ class Doc:
             content=self.content,
             vector=vector,
             used=self.used,
+            pages=self.pages,
         )
 
     def to_dict(self) -> dict:
@@ -79,9 +98,8 @@ class Doc:
             "content": self.content,
             "idx": self.idx,
             "used": self.used,
+            "pages": self.pages,
         }
-        if self.page is not None:
-            doc_dict["page"] = self.page
         if self._vectors:
             doc_dict["_vectors"] = self._vectors
         return doc_dict
@@ -107,7 +125,7 @@ class MeiliMaterialIndexer(MaterialIndexer):
             )
         )
         await instance.material_index.update_filterable_attributes(
-            ["userId", "materialId", "idx", "used", "page"]
+            ["userId", "materialId", "idx", "used", "pages"]
         )
         await instance.material_index.update_pagination(settings=Pagination(max_total_hits=5000))
         return instance
@@ -133,16 +151,19 @@ class MeiliMaterialIndexer(MaterialIndexer):
         docs: list[Doc] = []
 
         for i, chunk in enumerate(chunks_result):
+            pages = extract_pages_from_text(chunk)
+            clean_content = clean_page_markers(chunk).strip()
+            logging.info(f"Chunk {i}: found pages {pages} (chunk length: {len(chunk)})")
             docs.append(
                 Doc(
                     id=f"{material.id}-{i}",
                     materialId=material.id,
                     userId=material.user_id,
                     title=material.title,
-                    content=chunk,
+                    content=clean_content,
                     idx=i,
                     used=False,
-                    page=None,
+                    pages=pages,
                 )
             )
 
@@ -283,7 +304,7 @@ class MeiliMaterialIndexer(MaterialIndexer):
                     "id": doc.id,
                     "materialId": doc.materialId,
                     "title": doc.title,
-                    "page": doc.page,
+                    "pages": doc.pages,
                 }
                 chunks_info.append(chunk_dict)
                 logging.info(f"Chunk {chunk_id}: {chunk_dict}")

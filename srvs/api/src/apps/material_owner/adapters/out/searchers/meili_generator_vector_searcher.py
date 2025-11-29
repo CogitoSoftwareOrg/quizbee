@@ -108,28 +108,12 @@ class MeiliGeneratorVectorSearcher(Searcher):
                         f"Added {len(docs_used)} used chunks, total: {len(docs)}"
                     )
 
-                if len(docs) > 0:
-                    documents = [doc.content for doc in docs]
-                    query_for_reranking = f"Cluster {idx + 1}: semantically related educational content"
-                    
-                    logging.info(f"Reranking {len(documents)} chunks for vector {idx + 1}")
-                    rerank_results = await self._llm_tools.rerank(
-                        query=query_for_reranking,
-                        documents=documents,
-                        top_k=4
-                    )
-                    
-                    for result in rerank_results:
-                        doc = docs[result.index]
-                        chunk = doc.to_chunk()
-                        
-                        if chunk.id not in seen_chunk_ids:
-                            seen_chunk_ids.add(chunk.id)
-                            all_chunks.append(chunk)
-                            logging.info(
-                                f"Vector {idx + 1}: Reranked chunk #{result.index} "
-                                f"(score: {result.relevance_score:.3f})"
-                            )
+                for doc in docs[:4]:
+                    chunk = doc.to_chunk()
+                    if chunk.id not in seen_chunk_ids:
+                        seen_chunk_ids.add(chunk.id)
+                        all_chunks.append(chunk)
+                        logging.info(f"Vector {idx + 1}: Added chunk {chunk.id}")
 
             except Exception as e:
                 logging.error(f"Error searching for vector {idx + 1}: {e}")

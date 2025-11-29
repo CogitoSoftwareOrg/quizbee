@@ -93,6 +93,7 @@ class SearchDto:
     user_id: str
     material_ids: list[str]
     query: str = "*"
+    rerank_prefix: str = ""
     limit: int = 100
     ratio: float = 0.0
     vectors: list[list[float]] | None = None

@@ -28,8 +28,8 @@
 					{#each usedChunks || [] as chunk}
 						<li>
 							<span class="block font-medium">{chunk.title}</span>
-							{#if chunk.page}
-								<span class="text-base-content/60">Page {chunk.page}</span>
+							{#if chunk.pages && chunk.pages.length > 0}
+								<span class="text-base-content/60">Page {chunk.pages[0]}</span>
 							{/if}
 						</li>
 					{/each}

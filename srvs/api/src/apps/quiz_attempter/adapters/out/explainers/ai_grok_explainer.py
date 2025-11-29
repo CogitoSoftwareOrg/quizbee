@@ -21,7 +21,10 @@ from pydantic_ai import (
     TextPart,
 )
 
-from src.apps.material_owner.domain.models import MaterialChunk
+from src.apps.material_owner.domain._in import MaterialApp, SearchCmd
+from src.apps.material_owner.domain.models import MaterialChunk, SearchType
+from src.apps.material_owner.domain.constants import RAG_CHUNK_TOKEN_LIMIT
+from src.apps.llm_tools.domain._in import LLMToolsApp
 from src.lib.config import LLMS
 from src.lib.settings import settings
 from src.lib.utils import update_span_with_result
@@ -41,6 +44,7 @@ from ....domain.out import Explainer
 
 EXPLAINER_LLM = LLMS.GROK_4_1_FAST
 RETRIES = 5
+RERANK_QUERY_PREFIX = "Find educational content that thoroughly can explain:"
 
 
 @dataclass
@@ -54,8 +58,10 @@ logger = logging.getLogger(__name__)
 
 
 class AIGrokExplainer(Explainer):
-    def __init__(self, lf: Langfuse):
+    def __init__(self, lf: Langfuse, material_app: MaterialApp, llm_tools: LLMToolsApp):
         self._lf = lf
+        self._material_app = material_app
+        self._llm_tools = llm_tools
         self._ai = Agent(
             history_processors=[self._inject_system_prompt],
             deps_type=AIGrokExplainerDeps,
@@ -71,8 +77,15 @@ class AIGrokExplainer(Explainer):
         item: QuizItemRef,
         ai_msg: MessageRef,
         cache_key: str,
-        chunks: list[MaterialChunk],
+        material_ids: list[str],
+        user: Any,
     ) -> AsyncIterable[MessageRef]:
+        search_query = self._build_search_query(query, item)
+        logger.info(f"Explainer search_query: '{search_query[:200]}...'")
+        
+        chunks = await self._search_chunks(search_query, material_ids, user)
+        logger.info(f"Explainer found {len(chunks)} chunks")
+        
         queue: asyncio.Queue[MessageRef | None] = asyncio.Queue()
         deps = AIGrokExplainerDeps(quiz=attempt.quiz, current_item=item, chunks=chunks)
 
@@ -190,7 +203,6 @@ class AIGrokExplainer(Explainer):
         ai: list[ModelMessage] = []
 
         for msg in history:
-            # name = pb_message.get("sentBy")
             role = msg.role
             meta = msg.metadata
             content = msg.content.strip()
@@ -215,7 +227,6 @@ class AIGrokExplainer(Explainer):
                 if parts:
                     ai.append(ModelResponse(parts=parts))
 
-                # CREARE REQUEST WITH TOOL RESULTS
                 parts = []
                 for tr in meta.tool_results:
                     parts.append(
@@ -237,3 +248,25 @@ class AIGrokExplainer(Explainer):
                 pass
 
         return ai
+
+    def _build_search_query(self, query: str, item: QuizItemRef) -> str:
+        answers_text = " ".join(item.answers)
+        return f"{item.question} {answers_text} {query}"
+
+    async def _search_chunks(
+        self, search_query: str, material_ids: list[str], user: Any
+    ) -> list[MaterialChunk]:
+        q_vec = (await self._llm_tools.vectorize([search_query]))[0].tolist()
+        
+        chunks = await self._material_app.search(
+            SearchCmd(
+                limit_tokens=RAG_CHUNK_TOKEN_LIMIT,
+                user=user,
+                material_ids=material_ids,
+                vectors=[q_vec],
+                query=search_query,
+                rerank_prefix=RERANK_QUERY_PREFIX,
+                search_type=SearchType.VECTOR,
+            )
+        )
+        return chunks

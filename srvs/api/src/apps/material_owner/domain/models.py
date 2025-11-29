@@ -73,6 +73,7 @@ class MaterialChunk:
     kind: ChunkKind = ChunkKind.MATERIAL_ONLY
     vector: list[float] | None = None
     used: bool = False
+    pages: list[int] = field(default_factory=list)
 
 
 @dataclass(slots=True, kw_only=True)

@@ -79,7 +79,7 @@ class BertopicQuizClusterer:
             f"Starting BERTopic for quiz {quiz_id}: {n_samples} documents, {n_features} embedding dimensions"
         )
 
-        umap_components = min(3, n_samples - 1)
+        umap_components = min(5, n_samples - 1)
         n_neighbors = min(15, n_samples - 1)
         logger.info(
             f"Configuring UMAP: {n_features} → {umap_components} dimensions (n_neighbors={n_neighbors})"

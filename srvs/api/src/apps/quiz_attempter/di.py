@@ -16,10 +16,14 @@ from .app.usecases import QuizAttempterAppImpl
 
 
 def init_quiz_attempter_deps(
-    lf: Langfuse, admin_pb: PocketBase, http: httpx.AsyncClient
+    lf: Langfuse,
+    admin_pb: PocketBase,
+    http: httpx.AsyncClient,
+    material_app: MaterialApp,
+    llm_tools: LLMToolsApp,
 ) -> tuple[AttemptRepository, Explainer, AttemptFinalizer]:
     attempt_repository = PBAttemptRepository(admin_pb, http=http)
-    explainer = AIGrokExplainer(lf=lf)
+    explainer = AIGrokExplainer(lf=lf, material_app=material_app, llm_tools=llm_tools)
     finalizer = AIAttemptFinalizer(lf=lf, attempt_repository=attempt_repository)
     return attempt_repository, explainer, finalizer
 
