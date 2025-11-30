@@ -10,7 +10,6 @@ from meilisearch_python_sdk.models.settings import Embedders, UserProvidedEmbedd
 from meilisearch_python_sdk.models.settings import Pagination
 
 
-
 from src.lib.config import LLMS
 from src.lib.settings import settings
 
@@ -112,7 +111,9 @@ class MeiliMaterialIndexer(MaterialIndexer):
         await instance.material_index.update_filterable_attributes(
             ["userId", "materialId", "idx", "used", "pages"]
         )
-        await instance.material_index.update_pagination(settings=Pagination(max_total_hits=5000))
+        await instance.material_index.update_pagination(
+            settings=Pagination(max_total_hits=5000)
+        )
         return instance
 
     async def index(self, material: Material) -> None:
@@ -136,7 +137,9 @@ class MeiliMaterialIndexer(MaterialIndexer):
         docs: list[Doc] = []
 
         for i, chunk in enumerate(chunks_result):
-            logging.info(f"Chunk {i}: found pages {chunk.pages} (chunk length: {len(chunk.content)})")
+            logging.info(
+                f"Chunk {i}: found pages {chunk.pages} (chunk length: {len(chunk.content)})"
+            )
             docs.append(
                 Doc(
                     id=f"{material.id}-{i}",
