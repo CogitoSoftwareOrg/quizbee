@@ -268,35 +268,31 @@ class MeiliMaterialIndexer(MaterialIndexer):
             logging.error(f"Unknown task status: {task}")
 
     async def get_chunks_info(self, chunk_ids: list[str]) -> list[dict[str, Any]]:
-        """
-        Получает информацию о чанках.
-
-        Args:
-            chunk_ids: Список ID чанков
-
-        Returns:
-            Список диктов с информацией о каждом чанке (id, materialId, title, page)
-        """
-        if len(chunk_ids) == 0:
+        if not chunk_ids:
             return []
 
         logging.info(f"Getting chunks info for {len(chunk_ids)} chunk IDs")
+
         chunks_info = []
-        for chunk_id in chunk_ids:
+        batch_size = 100
+
+        for i in range(0, len(chunk_ids), batch_size):
+            batch_ids = chunk_ids[i : i + batch_size]
             try:
-                doc_dict = await self.material_index.get_document(chunk_id)
-                doc = Doc.from_hit(doc_dict)
-                chunk_dict = {
-                    "id": doc.id,
-                    "materialId": doc.materialId,
-                    "title": doc.title,
-                    "pages": doc.pages,
-                }
-                chunks_info.append(chunk_dict)
-                logging.info(f"Chunk {chunk_id}: {chunk_dict}")
+                result = await self.material_index.get_documents(
+                    document_ids=batch_ids,
+                    fields=["id", "materialId", "title", "pages"],
+                    limit=batch_size,
+                )
+                for doc in result.results:
+                    chunks_info.append({
+                        "id": doc.get("id", ""),
+                        "materialId": doc.get("materialId", ""),
+                        "title": doc.get("title", ""),
+                        "pages": doc.get("pages") or [],
+                    })
             except Exception as e:
-                logging.warning(f"Failed to get chunk {chunk_id}: {e}")
-                continue
+                logging.warning(f"Failed to get chunks batch {i}-{i + batch_size}: {e}")
 
         logging.info(f"Got info for {len(chunks_info)}/{len(chunk_ids)} chunks")
         return chunks_info

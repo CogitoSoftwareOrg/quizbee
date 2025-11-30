@@ -49,6 +49,13 @@
 	let warningTooBigFile = $state<string | null>(null);
 	let warningUnsupportedFile = $state<string | null>(null);
 	let warningNoText = $state<string | null>(null);
+	let warningTotalSizeExceeded = $state<string | null>(null);
+
+	const MAX_TOTAL_SIZE = 76 * 1024 * 1024;
+	const totalSizeAttached = $derived(
+		attachedFiles.reduce((sum, file) => sum + (file.size || 0), 0)
+	);
+
 	let warningMaxTokensExceeded = $derived(
 		attachedFiles.length >= 2 &&
 			(hasBook
@@ -56,15 +63,26 @@
 				: totalTokensAttached > maxTokensWithoutABook)
 	);
 
-	let warningLargeFileProcessing = $state(false);
-
-	function updateLargeFileWarning() {
+	let isLargeFileProcessingCondition = $derived.by(() => {
 		const hasLargeFile = attachedFiles.some(
 			(f) => f.file && f.file.size > 15 * 1024 * 1024 && (f.isUploading || f.isIndexing)
 		);
 		const isAnyFileHashing = attachedFiles.some((f) => f.isHashing);
-		warningLargeFileProcessing = hasLargeFile && !isAnyFileHashing;
-	}
+		return hasLargeFile && !isAnyFileHashing;
+	});
+
+	let warningLargeFileProcessing = $state(false);
+
+	$effect(() => {
+		if (isLargeFileProcessingCondition) {
+			const timer = setTimeout(() => {
+				warningLargeFileProcessing = true;
+			}, 500);
+			return () => clearTimeout(timer);
+		} else {
+			warningLargeFileProcessing = false;
+		}
+	});
 
 	let placeholderText = $state('Attach files • Add text');
 
@@ -122,10 +140,20 @@
 			}
 
 			// Check file size (100MB limit)
-			if (file.size > 1024 * 1024 * 100) {
+			if (file.size > 1024 * 1024 * 75) {
 				warningTooBigFile = file.name;
 				setTimeout(() => {
 					warningTooBigFile = null;
+				}, 5000);
+				continue;
+			}
+
+			const currentTotalSize = attachedFiles.reduce((sum, f) => sum + (f.size || 0), 0);
+			const pendingFilesSize = validFiles.reduce((sum, f) => sum + f.size, 0);
+			if (currentTotalSize + pendingFilesSize + file.size > MAX_TOTAL_SIZE) {
+				warningTotalSizeExceeded = file.name;
+				setTimeout(() => {
+					warningTotalSizeExceeded = null;
 				}, 5000);
 				continue;
 			}
@@ -142,7 +170,8 @@
 				name: file.name,
 				isUploading: true,
 				isHashing: true,
-				materialId: generateId()
+				materialId: generateId(),
+				size: file.size
 			}));
 
 			attachedFiles = [...attachedFiles, ...attachedFilesBatch];
@@ -198,7 +227,6 @@
 						attachedFile.isBook = foundMaterial.isBook;
 						attachedFile.isUploading = false;
 						attachedFile.isIndexing = false;
-						updateLargeFileWarning();
 					}
 				}
 			}
@@ -220,16 +248,12 @@
 	async function uploadFileAsync(attachedFile: AttachedFile) {
 		console.log('uploadFileAsync called with attachedFile:', attachedFile);
 		try {
-			if ((attachedFile.file?.size || 0) > 1024 * 1024 * 200) {
-				console.warn('File is too big');
-				return;
-			}
+			
 
 			const hash = await computeFileHash(attachedFile.file!);
 			attachedFile.hash = hash;
 			attachedFile.isHashing = false;
 			attachedFiles = attachedFiles;
-			updateLargeFileWarning();
 
 			const existingMaterial = materialsStore.materials.find((m) => m.hash === hash);
 			console.log('Hash computed:', hash, 'existingMaterial:', existingMaterial);
@@ -268,7 +292,6 @@
 					}
 
 					attachedFiles = attachedFiles;
-					updateLargeFileWarning();
 					console.log('Updated attachedFile:', attachedFiles[fileIndex]);
 				}
 				return;
@@ -550,7 +573,12 @@
 	{/if}
 	{#if warningTooBigFile}
 		<div class="text-md mt-2 text-red-500">
-			File "{warningTooBigFile}" is too big and cannot be uploaded.
+			File "{warningTooBigFile}" is too big and cannot be uploaded. Maximum file size is 75MB.
+		</div>
+	{/if}
+	{#if warningTotalSizeExceeded}
+		<div class="text-md mt-2 text-red-500">
+			File "{warningTotalSizeExceeded}" cannot be attached. Total size of all files cannot exceed 75MB. Please consider starting several quizzes with fewer materials.
 		</div>
 	{/if}
 	{#if warningNoText}
@@ -560,7 +588,8 @@
 	{/if}
 	{#if warningUnsupportedFile}
 		<div class="text-md mt-2 text-red-500">
-			File "{warningUnsupportedFile}" has an unsupported format and cannot be uploaded.
+			File "{warningUnsupportedFile}" has an unsupported format and cannot be uploaded. We support PDF, PPTX,
+			DOCX and text based formats (MD, TXT, HTML, CSV).
 		</div>
 	{/if}
 	{#if warningMaxTokensExceeded}
@@ -571,7 +600,7 @@
 	{/if}
 	{#if warningLargeFileProcessing}
 		<div class="text-md mt-2 text-orange-500">
-			You have attached a large file and the processing may take up to a minute. Please be patient.
+			You've attached a large file and the processing may take up to a few minutes. Please be patient, you can reuse the material in other quizzes after it is processed.
 		</div>
 	{/if}
 	{#if attachedFiles.length > 0}

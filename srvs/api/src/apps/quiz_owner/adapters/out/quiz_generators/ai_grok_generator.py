@@ -13,6 +13,7 @@ from pydantic_ai import (
     RunContext,
     SystemPromptPart,
     UserPromptPart,
+    UnexpectedModelBehavior,
 )
 from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.providers.openai import OpenAIProvider
@@ -29,6 +30,7 @@ from ....domain.constants import PATCH_LIMIT
 QUIZ_GENERATOR_LLM = LLMS.GROK_4_FAST
 IN_QUERY = ""
 RETRIES = 5
+UNEXPECTED_BEHAVIOR_RETRIES = 3
 TEMPERATURE = 0.4
 TOP_P = 0.95
 
@@ -38,7 +40,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class AIGrokGeneratorDeps:
     quiz: Quiz
-    chunks: list[str] | list[list[str]]
+    chunks: list[str] | list[list[str]] | None
 
 
 class AnswerSchema(BaseModel):
@@ -170,55 +172,64 @@ class AIGrokGenerator(PatchGenerator):
         logging.info(
             f"Generating quiz instant for quiz {dto.quiz.id} (generation {dto.quiz.generation})"
         )
-        if dto.chunks is None:
-            raise ValueError("Chunks are required")
         if dto.item_order is None:
             raise ValueError("Item order is required")
 
         has_chunks = bool(dto.chunks)
         agent = self._get_agent(has_chunks)
 
-        try:
-            with self._lf.start_as_current_span(name=f"quiz-patch") as span:
-                run = await agent.run(
-                    IN_QUERY,
-                    model=QUIZ_GENERATOR_LLM,
-                    deps=AIGrokGeneratorDeps(quiz=dto.quiz, chunks=dto.chunks),
-                    model_settings={
-                        "temperature": TEMPERATURE,
-                        "top_p": TOP_P,
-                        "extra_body": {
-                            # "response_format": {
-                            #     "type": "json_schema",
-                            #     "json_schema": {
-                            #         "name": "AIGrokGeneratorOutput",
-                            #         "schema": schema,
-                            #     },
-                            #     "strict": True,
-                            # },
-                            # "tool_choice": "none",
+        last_error: Exception | None = None
+
+        for attempt in range(UNEXPECTED_BEHAVIOR_RETRIES):
+            try:
+                with self._lf.start_as_current_span(name=f"quiz-patch") as span:
+                    run = await agent.run(
+                        IN_QUERY,
+                        model=QUIZ_GENERATOR_LLM,
+                        deps=AIGrokGeneratorDeps(quiz=dto.quiz, chunks=dto.chunks or []),
+                        model_settings={
+                            "temperature": TEMPERATURE,
+                            "top_p": TOP_P,
+                            "extra_body": {},
                         },
-                    },
-                )
+                    )
 
-                payload = run.output
-                used_indices = payload.merge(dto.quiz, item_order=dto.item_order)
+                    payload = run.output
+                    used_indices = payload.merge(dto.quiz, item_order=dto.item_order)
 
-                dto.used_chunk_indices = used_indices
+                    dto.used_chunk_indices = used_indices
 
-                await update_span_with_result(
-                    self._lf,
-                    run,
-                    span,
-                    dto.quiz.author_id,
-                    dto.cache_key,
-                    QUIZ_GENERATOR_LLM,
-                )
+                    await update_span_with_result(
+                        self._lf,
+                        run,
+                        span,
+                        dto.quiz.author_id,
+                        dto.cache_key,
+                        QUIZ_GENERATOR_LLM,
+                    )
 
-        except Exception as e:
-            logging.exception("Failed to generate quiz instant: %s", e)
-            dto.quiz.fail()
-            raise e
+                return
+
+            except UnexpectedModelBehavior as e:
+                last_error = e
+                if attempt < UNEXPECTED_BEHAVIOR_RETRIES - 1:
+                    logger.warning(
+                        f"UnexpectedModelBehavior on attempt {attempt + 1}/{UNEXPECTED_BEHAVIOR_RETRIES}, "
+                        f"retrying: {e}"
+                    )
+                else:
+                    logger.error(
+                        f"UnexpectedModelBehavior on final attempt {attempt + 1}/{UNEXPECTED_BEHAVIOR_RETRIES}: {e}"
+                    )
+
+            except Exception as e:
+                logging.exception("Failed to generate quiz instant: %s", e)
+                dto.quiz.fail()
+                raise e
+
+        logging.exception("Failed to generate quiz instant after retries: %s", last_error)
+        dto.quiz.fail()
+        raise last_error  # type: ignore
 
     async def _inject_request_prompt(
         self, ctx: RunContext[AIGrokGeneratorDeps], messages: list[ModelMessage]
@@ -233,7 +244,7 @@ class AIGrokGenerator(PatchGenerator):
         )
 
     def _build_pre_prompt(
-        self, quiz: Quiz, chunks: list[str] | list[list[str]]
+        self, quiz: Quiz, chunks: list[str] | list[list[str]] | None
     ) -> list[ModelRequestPart]:
 
         prompt_name = (

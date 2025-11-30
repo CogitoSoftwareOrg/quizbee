@@ -38,16 +38,22 @@ onRecordCreate((e) => {
         return;
       }
 
-      const firstQuizCreated = new Date(userQuizes[userQuizes.length - 1].get("created"));
+      const firstQuizCreated = new Date(
+        userQuizes[userQuizes.length - 1].get("created")
+      );
       const now = new Date();
-      const daysSinceFirstQuiz = Math.floor((now - firstQuizCreated) / (1000 * 60 * 60 * 24));
+      const daysSinceFirstQuiz = Math.floor(
+        (now - firstQuizCreated) / (1000 * 60 * 60 * 24)
+      );
 
       if (daysSinceFirstQuiz > 0 && daysSinceFirstQuiz <= 7) {
         const uniqueDays = new Set();
-        
+
         userQuizes.forEach((quiz) => {
           const quizDate = new Date(quiz.get("created"));
-          const quizDaysSince = Math.floor((quizDate - firstQuizCreated) / (1000 * 60 * 60 * 24));
+          const quizDaysSince = Math.floor(
+            (quizDate - firstQuizCreated) / (1000 * 60 * 60 * 24)
+          );
           if (quizDaysSince <= 7) {
             uniqueDays.add(quizDaysSince);
           }
@@ -56,12 +62,12 @@ onRecordCreate((e) => {
         if (uniqueDays.size >= 2) {
           const user = $app.findRecordById("users", userId);
           const email = user.get("email");
-          
+
           $http.send({
             url: "https://eu.i.posthog.com/capture/",
             method: "POST",
             headers: {
-              "Content-Type": "application/json"
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({
               api_key: process.env.PUBLIC_POSTHOG || "",
@@ -70,10 +76,10 @@ onRecordCreate((e) => {
                 distinct_id: userId,
                 email: email,
                 activeDays: uniqueDays.size,
-                daysSinceFirstQuiz: daysSinceFirstQuiz
-              }
+                daysSinceFirstQuiz: daysSinceFirstQuiz,
+              },
             }),
-            timeout: 10
+            timeout: 10,
           });
         }
       }

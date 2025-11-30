@@ -1,4 +1,3 @@
-// это тип для прикрепленного файла при создании нового квиза
 type AttachedFile = {
 	file?: File;
 	previewUrl: string | null;
@@ -11,6 +10,7 @@ type AttachedFile = {
 	isBook?: boolean;
 	textFile?: File;
 	hash?: string;
+	size?: number;
 };
 
 export type { AttachedFile };

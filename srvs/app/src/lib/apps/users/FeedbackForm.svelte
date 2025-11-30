@@ -47,7 +47,7 @@
 	}
 </script>
 
-<div class="flex flex-col gap-8">
+<div class="flex flex-col gap-8 p-1">
 	<!-- Header -->
 	<div class="flex items-start gap-4">
 		<div class="bg-primary/10 text-primary rounded-xl p-3">
