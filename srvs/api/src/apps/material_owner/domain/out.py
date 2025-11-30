@@ -3,6 +3,7 @@ from typing import Any, Protocol
 
 from src.lib.config.llms import LLMS
 from src.apps.document_parser.domain import DocumentParseCmd
+from src.apps.llm_tools.domain.out import ChunkWithPages
 
 from .models import Material, MaterialFile, MaterialChunk, ParsedDocument, SearchType
 
@@ -69,8 +70,10 @@ class LLMTools(Protocol):
         """Подсчитывает токены для изображения по его размерам."""
         ...
 
-    def chunk(self, text: str, respect_pages: bool = False) -> list[str] | list:
-        """Разбивает текст на chunks. Если respect_pages=True, возвращает список TextChunk с информацией о страницах."""
+    def chunk(self, text: str) -> list[str]:
+        ...
+
+    def chunk_with_pages(self, text: str) -> list[ChunkWithPages]:
         ...
 
     async def rerank(
@@ -99,9 +102,11 @@ class SearchDto:
     user_id: str
     material_ids: list[str]
     query: str = "*"
+    rerank_prefix: str = ""
     limit: int = 100
     ratio: float = 0.0
     vectors: list[list[float]] | None = None
+    vector_thresholds: list[float] | None = None
 
 
 class Searcher(Protocol):

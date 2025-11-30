@@ -2,10 +2,11 @@ import re
 from bisect import bisect_right
 from itertools import accumulate
 from dataclasses import dataclass
-from typing import Any
 
-from ...domain.out import Chunker, TextTokenizer, TextChunk
+from ...domain.out import Chunker, TextTokenizer, ChunkWithPages
 from ...domain.constants import DEFAULT_CHUNK_SIZE, DEFAULT_CHUNK_OVERLAP
+
+PAGE_MARKER_PATTERN = re.compile(r'\{quizbee_page_number_(\d+)\}')
 
 
 @dataclass
@@ -129,31 +130,87 @@ class ChonkieRecursiveChunker(Chunker):
     def chunk_size(self) -> int:
         return self._chunk_size
 
-    def chunk(
-        self, text: str, respect_pages: bool = False
-    ) -> list[str] | list[TextChunk]:
-        """
-        Split text into chunks using recursive hierarchical splitting.
-
-        Args:
-            text: Input text to chunk
-            respect_pages: If True, returns TextChunk objects with page information
-
-        Returns:
-            List of text chunks (str) or TextChunk objects if respect_pages=True
-        """
+    def chunk(self, text: str) -> list[str]:
         if not text or not text.strip():
             return []
 
         text = text.strip()
 
-        if respect_pages:
-            return self._chunk_with_pages(text)
-        else:
-            chunks = self._recursive_chunk(text, level=0)
-            if self._overlap > 0:
-                chunks = self._apply_overlap(chunks)
+        chunks = self._recursive_chunk(text, level=0)
+        chunks = self._merge_chunks_with_page_markers(chunks)
+        if self._overlap > 0:
+            chunks = self._apply_overlap(chunks)
+        return chunks
+
+    def chunk_with_pages(self, text: str) -> list[ChunkWithPages]:
+        raw_chunks = self.chunk(text)
+        result: list[ChunkWithPages] = []
+        last_page: int | None = None
+
+        for chunk in raw_chunks:
+            pages = self._extract_pages(chunk)
+            if pages:
+                last_page = pages[-1]
+            elif last_page is not None:
+                pages = [last_page]
+            result.append(ChunkWithPages(content=chunk, pages=pages))
+
+        return result
+
+    def _extract_pages(self, text: str) -> list[int]:
+        matches = PAGE_MARKER_PATTERN.findall(text)
+        if not matches:
+            return []
+        return sorted(set(int(m) for m in matches))
+
+    def _merge_chunks_with_page_markers(self, chunks: list[str]) -> list[str]:
+        """
+        Merge small chunks that contain only page markers or minimal content
+        with adjacent chunks. This prevents orphaned fragments.
+        """
+        if len(chunks) <= 1:
             return chunks
+
+        min_content_tokens = self._chunk_size // 4
+        
+        def get_content_without_markers(text: str) -> str:
+            return PAGE_MARKER_PATTERN.sub('', text).strip()
+        
+        def is_small_chunk(text: str) -> bool:
+            content = get_content_without_markers(text)
+            if not content:
+                return True
+            return self._tokenizer.count_text(content) < min_content_tokens
+        
+        merged = []
+        i = 0
+        
+        while i < len(chunks):
+            current = chunks[i]
+            
+            while i + 1 < len(chunks) and is_small_chunk(current):
+                next_chunk = chunks[i + 1]
+                combined = current.rstrip() + "\n\n" + next_chunk.lstrip()
+                if self._tokenizer.count_text(combined) <= self._chunk_size:
+                    current = combined
+                    i += 1
+                else:
+                    break
+            
+            if merged and is_small_chunk(current):
+                last = merged.pop()
+                combined = last.rstrip() + "\n\n" + current.lstrip()
+                if self._tokenizer.count_text(combined) <= self._chunk_size:
+                    merged.append(combined)
+                else:
+                    merged.append(last)
+                    merged.append(current)
+            else:
+                merged.append(current)
+            
+            i += 1
+        
+        return merged
 
     def _split_text(self, text: str, recursive_level: RecursiveLevel) -> list[str]:
         """
@@ -334,70 +391,7 @@ class ChonkieRecursiveChunker(Chunker):
 
         return chunks
 
-    def _chunk_with_pages(self, text: str) -> list[TextChunk]:
-        """
-        Chunk text while preserving page information from markers.
-
-        Args:
-            text: Input text with page markers
-
-        Returns:
-            List of TextChunk objects with page information
-        """
-        page_pattern = r'\{quizbee_page_number_(\d+)\}'
-        segments = re.split(page_pattern, text)
-
-        page_texts: list[tuple[int | None, str]] = []
-
-        if len(segments) == 1:
-            page_texts.append((None, segments[0]))
-        else:
-            if segments[0].strip():
-                page_texts.append((None, segments[0]))
-
-            for i in range(1, len(segments), 2):
-                if i < len(segments):
-                    page_num = int(segments[i])
-                    text_content = segments[i + 1] if i + 1 < len(segments) else ""
-                    if text_content.strip():
-                        page_texts.append((page_num, text_content))
-
-        all_chunks: list[TextChunk] = []
-        global_char_offset = 0
-
-        for page_num, page_text in page_texts:
-            text_chunks = self._recursive_chunk(page_text)
-
-            if self._overlap > 0:
-                text_chunks = self._apply_overlap(text_chunks)
-
-            for chunk_text in text_chunks:
-                start_char = global_char_offset
-                end_char = start_char + len(chunk_text)
-
-                all_chunks.append(
-                    TextChunk(
-                        content=chunk_text,
-                        page=page_num,
-                        start_char=start_char,
-                        end_char=end_char,
-                    )
-                )
-
-                global_char_offset = end_char
-
-        return all_chunks
-
     def _apply_overlap(self, chunks: list[str]) -> list[str]:
-        """
-        Apply overlap between consecutive chunks.
-        
-        Args:
-            chunks: List of text chunks
-            
-        Returns:
-            List of chunks with overlap applied
-        """
         if len(chunks) <= 1 or self._overlap == 0:
             return chunks
 

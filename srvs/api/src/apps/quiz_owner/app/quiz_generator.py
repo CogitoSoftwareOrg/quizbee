@@ -1,8 +1,11 @@
 import logging
 import redis.asyncio as redis
 import asyncio
+import re
+from dataclasses import dataclass
 
 from src.apps.material_owner.domain._in import MaterialApp, SearchCmd
+from src.apps.material_owner.domain.models import MaterialChunk, SearchType
 from src.apps.user_owner.domain._in import Principal
 from src.lib.distributed_lock import DistributedLock
 
@@ -15,6 +18,72 @@ from ..domain.constants import HOLDOUT, PATCH_CHUNK_TOKEN_LIMIT, PATCH_LIMIT
 from .errors import NoItemsReadyForGenerationError
 
 logger = logging.getLogger(__name__)
+
+PAGE_MARKER_PATTERN = re.compile(r"\{quizbee_page_number_(\d+)\}")
+
+
+@dataclass
+class SubChunk:
+    chunk_id: str
+    page: int
+    content: str
+    material_id: str
+    title: str
+
+
+def split_chunk_by_pages(
+    chunk_id: str,
+    content: str,
+    pages: list[int],
+    material_id: str,
+    title: str,
+) -> list[SubChunk]:
+    if not pages or len(pages) <= 1:
+        page = pages[0] if pages else 0
+        clean_content = PAGE_MARKER_PATTERN.sub("", content).strip()
+        return [
+            SubChunk(
+                chunk_id=chunk_id,
+                page=page,
+                content=clean_content,
+                material_id=material_id,
+                title=title,
+            )
+        ]
+
+    sub_chunks: list[SubChunk] = []
+    parts = PAGE_MARKER_PATTERN.split(content)
+
+    current_page = pages[0]
+    for i, part in enumerate(parts):
+        if i % 2 == 1:
+            current_page = int(part)
+        else:
+            clean_part = part.strip()
+            if clean_part:
+                sub_chunks.append(
+                    SubChunk(
+                        chunk_id=chunk_id,
+                        page=current_page,
+                        content=clean_part,
+                        material_id=material_id,
+                        title=title,
+                    )
+                )
+
+    return (
+        sub_chunks
+        if sub_chunks
+        else [
+            SubChunk(
+                chunk_id=chunk_id,
+                page=pages[0],
+                content=PAGE_MARKER_PATTERN.sub("", content).strip(),
+                material_id=material_id,
+                title=title,
+            )
+        ]
+    )
 
 
 class QuizGeneratorImpl(QuizGenerator):
@@ -184,47 +253,30 @@ class QuizGeneratorImpl(QuizGenerator):
         tuple[str, list[QuizItemVariant], str] | None,
         tuple[list[dict], list[str]] | None,
     ]:
-        item_chunks = []
-        chunk_ids = []
+        chunks: list[MaterialChunk] = []
+        sub_chunks: list[SubChunk] = []
 
         if len(quiz.materials) > 0:
-            result = await self._relevant_chunks(quiz, [item], user)
-            item_chunks = [contents for contents, _ in result][0]
-            chunk_ids = [ids for _, ids in result][0]
+            chunks = await self._relevant_chunks(quiz, item, user)
+            for chunk in chunks:
+                sub_chunks.extend(
+                    split_chunk_by_pages(
+                        chunk_id=chunk.id,
+                        content=chunk.content,
+                        pages=chunk.pages,
+                        material_id=chunk.material_id,
+                        title=chunk.title,
+                    )
+                )
+
+        sub_chunk_contents = [sc.content for sc in sub_chunks]
 
         dto = PatchGeneratorDto(
             quiz=quiz,
             cache_key=cache_key,
-            chunks=item_chunks,
+            chunks=sub_chunk_contents if sub_chunk_contents else None,
             item_order=item.order,
         )
-
-        # This modifies the item in place in the original code?
-        # No, `patch_generator.generate(dto)` likely returns something or modifies dto?
-        # Let's check `PatchGenerator`. It's an interface.
-        # Assuming it modifies `item` indirectly or we need to see how it was used.
-        # Original code: `await self._patch_generator.generate(dto)`
-        # Then it checks `dto.used_chunk_indices`.
-        # Wait, where does the generated content go?
-        # Ah, `PatchGenerator` probably calls `quiz.generation_step`?
-        # Let's check `PatchGenerator` interface or implementation if possible.
-        # But I don't have access to it right now without looking.
-        # However, `quiz_generator.py` original code didn't seem to extract question/answer from `dto`.
-        # It just called `generate(dto)`.
-        # This implies `patch_generator.generate` has side effects on the `quiz` or `item`?
-        # Or it calls `quiz.generation_step`.
-
-        # If `patch_generator.generate` calls `quiz.generation_step`, it modifies the `quiz` object passed to it.
-        # Since we are passing the `quiz` object from the Reservation phase (which might be stale),
-        # `patch_generator` will modify THAT stale object.
-        # We need to capture those modifications and apply them to the fresh quiz in Result phase.
-
-        # But `patch_generator` might be calling `quiz.generation_step` which does:
-        # item = next(...)
-        # item.to_generated(...)
-
-        # So the `item` inside `quiz` (the stale one) gets updated.
-        # We can extract the new state from that `item` and return it.
 
         await self._patch_generator.generate(dto)
 
@@ -234,60 +286,89 @@ class QuizGeneratorImpl(QuizGenerator):
             generated_data = (item.question, item.variants, item.hint)
 
         used_chunks_data = None
-        if len(chunk_ids) > 0 and dto.used_chunk_indices is not None:
-            used_chunk_ids = [
-                chunk_ids[i] for i in dto.used_chunk_indices if i < len(chunk_ids)
+        if len(sub_chunks) > 0 and dto.used_chunk_indices is not None:
+            logger.info(f"Number of used sub-chunks: {len(dto.used_chunk_indices)}")
+            used_sub_chunks = [
+                sub_chunks[i] for i in dto.used_chunk_indices if i < len(sub_chunks)
             ]
 
-            if len(used_chunk_ids) > 0:
+            if len(used_sub_chunks) > 0:
+                used_chunk_to_pages: dict[str, set[int]] = {}
+                for sc in used_sub_chunks:
+                    if sc.chunk_id not in used_chunk_to_pages:
+                        used_chunk_to_pages[sc.chunk_id] = set()
+                    used_chunk_to_pages[sc.chunk_id].add(sc.page)
+
+                used_chunk_ids = list(used_chunk_to_pages.keys())
+
                 chunks_info = await self._material_app.get_chunks_info(used_chunk_ids)
+
+                for info in chunks_info:
+                    chunk_id = info.get("id", "")
+                    if chunk_id in used_chunk_to_pages:
+                        info["pages"] = sorted(used_chunk_to_pages[chunk_id])
+
                 await self._material_app.mark_chunks_as_used(used_chunk_ids)
                 used_chunks_data = (chunks_info, used_chunk_ids)
                 logger.info(
-                    f"Marked {len(used_chunk_ids)}/{len(chunk_ids)} chunks as used "
-                    f"(LLM selected: {dto.used_chunk_indices}). "
+                    f"Marked {len(used_chunk_ids)} chunks as used "
+                    f"(LLM selected {len(used_sub_chunks)} sub-chunks from {len(sub_chunks)} total). "
+                    f"Chunks info: {chunks_info}"
                 )
             else:
                 logger.warning(
-                    f"LLM returned used_chunk_indices {dto.used_chunk_indices} but no valid chunk IDs found"
+                    f"LLM returned used_chunk_indices {dto.used_chunk_indices} but no valid sub-chunks found"
                 )
-        elif len(chunk_ids) > 0:
-            chunks_info = await self._material_app.get_chunks_info(chunk_ids)
-            used_chunks_data = (chunks_info, chunk_ids)
+        elif len(sub_chunks) > 0:
+            chunk_to_pages: dict[str, set[int]] = {}
+            for sc in sub_chunks:
+                if sc.chunk_id not in chunk_to_pages:
+                    chunk_to_pages[sc.chunk_id] = set()
+                chunk_to_pages[sc.chunk_id].add(sc.page)
+
+            all_chunk_ids = list(chunk_to_pages.keys())
+            chunks_info = await self._material_app.get_chunks_info(all_chunk_ids)
+
+            for info in chunks_info:
+                chunk_id = info.get("id", "")
+                if chunk_id in chunk_to_pages:
+                    info["pages"] = sorted(chunk_to_pages[chunk_id])
+
+            await self._material_app.mark_chunks_as_used(all_chunk_ids)
+            used_chunks_data = (chunks_info, all_chunk_ids)
             logger.warning(
-                f"LLM did not return used_chunk_indices, marking all {len(chunk_ids)} chunks as used. "
+                f"LLM did not return used_chunk_indices, marking all {len(all_chunk_ids)} chunks as used. "
+                f"Chunks info: {chunks_info}"
             )
-            await self._material_app.mark_chunks_as_used(chunk_ids)
 
         return generated_data, used_chunks_data
 
     async def _relevant_chunks(
-        self, quiz: Quiz, items: list[QuizItem], user: Principal
-    ) -> list[tuple[list[str], list[str]]]:
+        self, quiz: Quiz, item: QuizItem, user: Principal
+    ) -> list[MaterialChunk]:
         num_clusters = len(quiz.cluster_vectors)
-        central_vectors = [
-            quiz.cluster_vectors[item.order % num_clusters] for item in items
-        ]
-        logger.info(f"Central vectors: {len(central_vectors)}")
+        cluster_idx = item.order % num_clusters
+        vector = quiz.cluster_vectors[cluster_idx]
+        threshold = (
+            quiz.cluster_thresholds[cluster_idx]
+            if cluster_idx < len(quiz.cluster_thresholds)
+            else None
+        )
 
-        result_list: list[tuple[list[str], list[str]]] = []
+        logger.info(
+            f"Searching for item {item.order} with vector cluster {cluster_idx}, threshold: {threshold}"
+        )
 
-        for idx, vector in enumerate(central_vectors):
-            logger.info(f"Searching for vector {idx + 1}/{len(central_vectors)}")
-
-            chunks = await self._material_app.search(
-                SearchCmd(
-                    user=user,
-                    material_ids=[m.id for m in quiz.materials],
-                    limit_tokens=PATCH_CHUNK_TOKEN_LIMIT,
-                    vectors=[vector],
-                )
+        chunks = await self._material_app.search(
+            SearchCmd(
+                user=user,
+                material_ids=[m.id for m in quiz.materials],
+                limit_tokens=PATCH_CHUNK_TOKEN_LIMIT,
+                vectors=[vector],
+                vector_thresholds=[threshold] if threshold else None,
+                search_type=SearchType.GENERATOR,
             )
+        )
 
-            chunk_ids = [c.id for c in chunks]
-            chunk_contents = [c.content for c in chunks]
-
-            result_list.append((chunk_contents, chunk_ids))
-            logger.info(f"Vector {idx + 1}: found {len(chunks)} chunks")
-
-        return result_list
+        logger.info(f"Found {len(chunks)} chunks for item {item.order}")
+        return chunks

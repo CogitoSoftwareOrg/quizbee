@@ -8,5 +8,5 @@ export type UsedChunk = {
 	id: string;
 	materialId: string;
 	title: string;
-	page: number;
+	pages: number[];
 };

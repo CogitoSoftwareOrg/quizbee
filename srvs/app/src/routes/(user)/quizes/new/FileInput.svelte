@@ -147,8 +147,10 @@
 
 			attachedFiles = [...attachedFiles, ...attachedFilesBatch];
 
-			// Загружаем батч параллельно, но следующий батч ждем завершения текущего
-			await Promise.all(attachedFilesBatch.map((attachedFile) => uploadFileAsync(attachedFile)));
+			// Обрабатываем файлы последовательно чтобы избежать race condition при модификации attachedFiles
+			for (const attachedFile of attachedFilesBatch) {
+				await uploadFileAsync(attachedFile);
+			}
 		}
 	}
 

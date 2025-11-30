@@ -1,8 +1,14 @@
 from typing import Protocol
 import numpy as np
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from src.lib.config import LLMS
+
+
+@dataclass
+class ChunkWithPages:
+    content: str
+    pages: list[int] = field(default_factory=list)
 
 
 @dataclass
@@ -37,9 +43,9 @@ class Chunker(Protocol):
     @property
     def chunk_size(self) -> int: ...
 
-    def chunk(
-        self, text: str, respect_pages: bool = False
-    ) -> list[str] | list[TextChunk]: ...
+    def chunk(self, text: str) -> list[str]: ...
+
+    def chunk_with_pages(self, text: str) -> list[ChunkWithPages]: ...
 
 
 class Vectorizer(Protocol):

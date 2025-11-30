@@ -10,6 +10,7 @@ from ..domain.out import (
     Vectorizer,
     Reranker,
     RerankResult,
+    ChunkWithPages,
 )
 
 from ..domain._in import LLMToolsApp
@@ -57,9 +58,13 @@ class LLMToolsAppImpl(LLMToolsApp):
         logger.debug("LLMToolsAppImpl.count_image")
         return self.image_tokenizer.count_image(width, height)
 
-    def chunk(self, text: str, respect_pages: bool = False) -> list[str] | list:
+    def chunk(self, text: str) -> list[str]:
         logger.debug("LLMToolsAppImpl.chunk")
-        return self.chunker.chunk(text, respect_pages)
+        return self.chunker.chunk(text)
+
+    def chunk_with_pages(self, text: str) -> list[ChunkWithPages]:
+        logger.debug("LLMToolsAppImpl.chunk_with_pages")
+        return self.chunker.chunk_with_pages(text)
 
     async def vectorize(self, chunks: list[str]) -> np.ndarray:
         logger.debug("LLMToolsAppImpl.vectorize")

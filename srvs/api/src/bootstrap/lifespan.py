@@ -101,6 +101,7 @@ async def lifespan(app: FastAPI):
         quiz_finalizer,
         quiz_indexer,
         quiz_preprocessor,
+        quiz_clusterer,
     ) = await init_quiz_deps(
         meili=meili,
         lf=lf,
@@ -108,6 +109,7 @@ async def lifespan(app: FastAPI):
         http=http,
         llm_tools=llm_tools,
         llm_provider=grok_provider,
+        material_app=material_app,
     )
 
     # V2 QUIZ ATTEMPTER
@@ -115,7 +117,13 @@ async def lifespan(app: FastAPI):
         attempt_repository,
         explainer,
         attempt_finalizer,
-    ) = init_quiz_attempter_deps(lf=lf, admin_pb=admin_pb, http=http)
+    ) = init_quiz_attempter_deps(
+        lf=lf,
+        admin_pb=admin_pb,
+        http=http,
+        material_app=material_app,
+        llm_tools=llm_tools,
+    )
     quiz_attempter_app = init_quiz_attempter_app(
         message_owner=message_owner_app,
         llm_tools=llm_tools,
@@ -147,6 +155,7 @@ async def lifespan(app: FastAPI):
         patch_generator=patch_generator,
         finalizer=quiz_finalizer,
         quiz_preprocessor=quiz_preprocessor,
+        quiz_clusterer=quiz_clusterer,
         redis_client=redis_client,
     )
 

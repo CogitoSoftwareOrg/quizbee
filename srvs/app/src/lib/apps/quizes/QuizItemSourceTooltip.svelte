@@ -10,6 +10,26 @@
 	const { usedChunks, itemDecision }: Props = $props();
 
 	const shouldShow = $derived(!!itemDecision && usedChunks && usedChunks.length > 0);
+
+	const groupedChunks = $derived(() => {
+		if (!usedChunks) return [];
+		const grouped = new Map<string, number[]>();
+		for (const chunk of usedChunks) {
+			const pages = grouped.get(chunk.title) || [];
+			if (chunk.pages) {
+				for (const page of chunk.pages) {
+					if (!pages.includes(page)) {
+						pages.push(page);
+					}
+				}
+			}
+			grouped.set(chunk.title, pages);
+		}
+		return Array.from(grouped.entries()).map(([title, pages]) => ({
+			title,
+			pages: pages.sort((a, b) => a - b)
+		}));
+	});
 </script>
 
 {#if shouldShow}
@@ -25,11 +45,13 @@
 			<div class="card-body">
 				<h3 class="card-title text-md">Source Material</h3>
 				<ul class="space-y-2 text-xs">
-					{#each usedChunks || [] as chunk}
+					{#each groupedChunks() as chunk}
 						<li>
 							<span class="block font-medium">{chunk.title}</span>
-							{#if chunk.page}
-								<span class="text-base-content/60">Page {chunk.page}</span>
+							{#if chunk.pages && chunk.pages.length == 1}
+								<span class="text-base-content/60">Page {chunk.pages[0]}</span>
+							{:else if chunk.pages && chunk.pages.length > 1}
+								<span class="text-base-content/60">Pages {chunk.pages.join(', ')}</span>
 							{/if}
 						</li>
 					{/each}

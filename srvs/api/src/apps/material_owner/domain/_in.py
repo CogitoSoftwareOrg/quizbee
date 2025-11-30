@@ -4,7 +4,7 @@ from typing import Any, Protocol
 
 from src.apps.user_owner.domain._in import Principal
 
-from .models import Material, MaterialFile, MaterialChunk
+from .models import Material, MaterialFile, MaterialChunk, SearchType
 
 
 @dataclass
@@ -29,10 +29,11 @@ class SearchCmd:
     material_ids: list[str]
     limit_tokens: int = 100
     query: str = ""
+    rerank_prefix: str = ""
     all_chunks: bool = False
     vectors: list[list[float]] | None = None
-
-    # search_type: SearchType = SearchType.QUERY
+    vector_thresholds: list[float] | None = None
+    search_type: SearchType | None = None
 
 
 @dataclass

@@ -8,6 +8,7 @@ from ..domain.out import (
     PatchGenerator,
     QuizIndexer,
     QuizRepository,
+    QuizClusterer,
 )
 from ..domain.errors import (
     NotQuizOwnerError,
@@ -31,6 +32,7 @@ class QuizAppImpl(QuizApp):
         patch_generator: PatchGenerator,
         finalizer: QuizFinalizer,
         quiz_preprocessor: QuizPreprocessor,
+        quiz_clusterer: QuizClusterer,
         redis_client: redis.Redis,
     ):
         self._quiz_repository = quiz_repository
@@ -50,6 +52,7 @@ class QuizAppImpl(QuizApp):
             material_app=material,
             quiz_indexer=quiz_indexer,
             quiz_preprocessor=quiz_preprocessor,
+            quiz_clusterer=quiz_clusterer,
             llm_tools=llm_tools,
         )
 

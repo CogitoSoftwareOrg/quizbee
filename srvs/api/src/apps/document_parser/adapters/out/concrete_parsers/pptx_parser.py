@@ -18,33 +18,21 @@ logger = logging.getLogger(__name__)
 
 
 class PptxDocumentParser(DocumentParser):
-    """
-    Парсер для PPTX файлов.
-
-    Извлекает:
-    - Текст из слайдов (заголовки, текстовые блоки, таблицы)
-    - Структуру презентации (заголовки слайдов)
-    - Изображения из презентации
-    """
-
     def __init__(
         self,
         image_describer: ImageDescriber | None = None,
-        min_width: int = 50,
-        min_height: int = 50,
-        min_file_size: int = 3 * 1024,
+        min_width: int = 100,
+        min_height: int = 100,
+        min_file_size: int = 5 * 1024,
+        min_rel_area: float = 0.40,
+        max_text_length_for_images: int = 150,
     ):
-        """
-        Args:
-            image_describer: Сервис для описания изображений
-            min_width: Минимальная ширина изображения в пикселях
-            min_height: Минимальная высота изображения в пикселях
-            min_file_size: Минимальный размер файла изображения в байтах
-        """
         self.image_describer = image_describer
         self.min_width = min_width
         self.min_height = min_height
         self.min_file_size = min_file_size
+        self.min_rel_area = min_rel_area
+        self.max_text_length_for_images = max_text_length_for_images
 
     async def parse(
         self, file_bytes: bytes, file_name: str, process_images: bool = False
@@ -100,18 +88,20 @@ class PptxDocumentParser(DocumentParser):
             images: list[DocumentImage] = []
             contents = []
 
+            slide_width = prs.slide_width
+            slide_height = prs.slide_height
+            slide_area = slide_width * slide_height if slide_width and slide_height else 0
+
             for slide_num, slide in enumerate(prs.slides, start=1):
                 logger.debug(f"Обработка слайда {slide_num}/{len(prs.slides)}")
 
-                # Добавляем маркер номера слайда в начало
                 page_marker = f"{{quizbee_page_number_{slide_num}}}\n\n"
                 
-                # Извлекаем текст из слайда
                 slide_text = self.extract_text_from_slide(slide, slide_num)
+                slide_text_length = len(slide_text.strip())
                 slide_text = page_marker + slide_text
                 text_parts.append(slide_text)
 
-                # Добавляем заголовок слайда в оглавление
                 slide_title = self.get_slide_title(slide)
                 if slide_title:
                     contents.append(
@@ -122,9 +112,10 @@ class PptxDocumentParser(DocumentParser):
                         }
                     )
 
-                # Извлекаем изображения если нужно
-                if process_images:
-                    slide_images = self.extract_images_from_slide(slide, slide_num)
+                if process_images and slide_text_length <= self.max_text_length_for_images:
+                    slide_images = self.extract_images_from_slide(
+                        slide, slide_num, slide_area
+                    )
                     images.extend(slide_images)
 
             final_text = "\n\n".join(text_parts)
@@ -281,28 +272,18 @@ class PptxDocumentParser(DocumentParser):
 
         return "\n".join(formatted_rows)
 
-    def extract_images_from_slide(self, slide, slide_num: int) -> list[DocumentImage]:
-        """
-        Извлекает изображения из слайда.
-
-        Args:
-            slide: Объект Slide из python-pptx
-            slide_num: Номер слайда
-
-        Returns:
-            Список изображений
-        """
+    def extract_images_from_slide(
+        self, slide, slide_num: int, slide_area: int
+    ) -> list[DocumentImage]:
         images = []
         image_index = 0
 
         for shape in slide.shapes:
-            # Изображения
             if shape.shape_type == MSO_SHAPE_TYPE.PICTURE:
                 try:
                     image = shape.image
                     image_bytes = image.blob
 
-                    # Проверяем размер файла
                     if len(image_bytes) < self.min_file_size:
                         logger.debug(
                             f"Пропуск изображения на слайде {slide_num}: "
@@ -310,24 +291,26 @@ class PptxDocumentParser(DocumentParser):
                         )
                         continue
 
-                    # Определяем расширение
                     ext = image.ext or "png"
                     if ext.startswith("."):
                         ext = ext[1:]
 
-                    # Получаем размеры (в пикселях, приблизительно)
-                    # python-pptx возвращает размеры в EMU (English Metric Units)
-                    # 1 дюйм = 914400 EMU, предполагаем 96 DPI
-                    width = (
-                        int(shape.width / 914400 * 96) if hasattr(shape, "width") else 0
-                    )
-                    height = (
-                        int(shape.height / 914400 * 96)
-                        if hasattr(shape, "height")
-                        else 0
-                    )
+                    shape_width = shape.width if hasattr(shape, "width") else 0
+                    shape_height = shape.height if hasattr(shape, "height") else 0
+                    shape_area = shape_width * shape_height
 
-                    # Проверяем минимальные размеры
+                    if slide_area > 0:
+                        rel_area = shape_area / slide_area
+                        if rel_area < self.min_rel_area:
+                            logger.debug(
+                                f"Пропуск изображения на слайде {slide_num}: "
+                                f"площадь {rel_area:.1%} < {self.min_rel_area:.0%}"
+                            )
+                            continue
+
+                    width = int(shape_width / 914400 * 96) if shape_width else 0
+                    height = int(shape_height / 914400 * 96) if shape_height else 0
+
                     if width < self.min_width or height < self.min_height:
                         logger.debug(
                             f"Пропуск изображения на слайде {slide_num}: "
@@ -349,20 +332,15 @@ class PptxDocumentParser(DocumentParser):
 
                     images.append(doc_image)
                     image_index += 1
-                    logger.debug(
-                        f"Извлечено изображение со слайда {slide_num}: "
-                        f"{width}x{height}, {len(image_bytes)} байт"
-                    )
 
                 except Exception as e:
                     logger.warning(
                         f"Не удалось извлечь изображение со слайда {slide_num}: {str(e)}"
                     )
 
-            # Обрабатываем группы фигур
             elif shape.shape_type == MSO_SHAPE_TYPE.GROUP:
                 group_images = self.extract_images_from_group_shape(
-                    shape, slide_num, image_index
+                    shape, slide_num, image_index, slide_area
                 )
                 images.extend(group_images)
                 image_index += len(group_images)
@@ -370,19 +348,8 @@ class PptxDocumentParser(DocumentParser):
         return images
 
     def extract_images_from_group_shape(
-        self, group_shape, slide_num: int, start_index: int
+        self, group_shape, slide_num: int, start_index: int, slide_area: int
     ) -> list[DocumentImage]:
-        """
-        Извлекает изображения из группы фигур.
-
-        Args:
-            group_shape: Группа фигур
-            slide_num: Номер слайда
-            start_index: Начальный индекс для изображений
-
-        Returns:
-            Список изображений
-        """
         images = []
         image_index = start_index
 
@@ -399,14 +366,17 @@ class PptxDocumentParser(DocumentParser):
                     if ext.startswith("."):
                         ext = ext[1:]
 
-                    width = (
-                        int(shape.width / 914400 * 96) if hasattr(shape, "width") else 0
-                    )
-                    height = (
-                        int(shape.height / 914400 * 96)
-                        if hasattr(shape, "height")
-                        else 0
-                    )
+                    shape_width = shape.width if hasattr(shape, "width") else 0
+                    shape_height = shape.height if hasattr(shape, "height") else 0
+                    shape_area = shape_width * shape_height
+
+                    if slide_area > 0:
+                        rel_area = shape_area / slide_area
+                        if rel_area < self.min_rel_area:
+                            continue
+
+                    width = int(shape_width / 914400 * 96) if shape_width else 0
+                    height = int(shape_height / 914400 * 96) if shape_height else 0
 
                     if width < self.min_width or height < self.min_height:
                         continue
@@ -432,7 +402,7 @@ class PptxDocumentParser(DocumentParser):
 
             elif shape.shape_type == MSO_SHAPE_TYPE.GROUP:
                 nested_images = self.extract_images_from_group_shape(
-                    shape, slide_num, image_index
+                    shape, slide_num, image_index, slide_area
                 )
                 images.extend(nested_images)
                 image_index += len(nested_images)

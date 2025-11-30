@@ -16,8 +16,7 @@ from src.apps.message_owner.domain.models import (
 )
 from src.apps.llm_tools.domain._in import LLMToolsApp
 from src.apps.user_owner.domain.models import Tariff
-from src.apps.material_owner.domain._in import MaterialApp, SearchCmd
-from src.apps.material_owner.domain.constants import RAG_CHUNK_TOKEN_LIMIT
+from src.apps.material_owner.domain._in import MaterialApp
 
 
 from ..domain.models import Attempt
@@ -85,23 +84,13 @@ class QuizAttempterAppImpl(QuizAttempterApp):
         attempt.set_history(history)
 
         item = attempt.get_item(cmd.item_id)
-
-        q_vec = (await self._llm_tools.vectorize([cmd.query]))[0].tolist()
         material_ids = attempt.quiz.material_ids
-        chunks = await self._material_app.search(
-            SearchCmd(
-                limit_tokens=RAG_CHUNK_TOKEN_LIMIT,
-                user=cmd.user,
-                material_ids=material_ids,
-                vectors=[q_vec],
-            )
-        )
 
         logger.info(
-            f"Explain attempt: {attempt.id} with material content: {len(attempt.quiz.material_ids)}"
+            f"Explain attempt: {attempt.id} with {len(material_ids)} materials"
         )
         async for chunk in self.explainer.explain(
-            cmd.query, attempt, item, ai_message_ref, cmd.cache_key, chunks
+            cmd.query, attempt, item, ai_message_ref, cmd.cache_key, material_ids, cmd.user
         ):
             logger.debug(f"Message: {len(chunk.content)} chars, id: {chunk.id}")
             status = "chunk" if chunk.status == "streaming" else "done"

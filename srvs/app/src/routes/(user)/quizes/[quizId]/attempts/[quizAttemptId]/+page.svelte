@@ -63,7 +63,11 @@
 			(quiz?.expand as QuizExpand)?.quizItems_via_quiz ||
 			[]
 	);
-	const genItems = $derived(quizItems.filter((i) => i.status === 'generated' || i.status === 'generating'));
+	const nextGenItems = $derived(
+		quizItems.filter(
+			(i) => i.order > order && (i.status === 'generated' || i.status === 'generating')
+		)
+	);
 	const lastFinalItem = $derived(quizItems.filter((i) => i.status === 'final').at(-1));
 
 	const order = $derived.by(() => {
@@ -170,7 +174,11 @@
 			gotoItem(order + 1);
 		}
 
-		if (quiz.author === user?.id && quizDecisions.length === item?.order + 1 && genItems.length < 2) {
+		if (
+			quiz.author === user?.id &&
+			quizDecisions.length === item?.order + 1 &&
+			nextGenItems.length < 2
+		) {
 			await patchApi(`quizes/${quiz.id}`, {
 				attempt_id: quizAttempt.id,
 				mode: 'continue'
@@ -257,7 +265,7 @@
 		<div class="relative flex h-full min-w-0 flex-1">
 			<!-- Main column -->
 			<main
-				class="h-full min-w-0 flex-1 overflow-x-hidden border-r border-base-200 transition-[width] duration-300 ease-out"
+				class="border-base-200 h-full min-w-0 flex-1 overflow-x-hidden border-r transition-[width] duration-300 ease-out"
 				style:width={mainColumnWidth}
 			>
 				<SwipeableContent
@@ -267,10 +275,10 @@
 					onSwipeRight={handleSwipeRight}
 					class="relative h-full overflow-x-hidden pb-2"
 				>
-					<div class="mx-auto flex h-full max-w-3xl min-w-0 flex-col py-2">
+					<div class="mx-auto flex h-full min-w-0 max-w-3xl flex-col py-2">
 						<div class="flex min-w-0 items-start justify-between gap-4 px-3">
 							<p
-								class="wrap-break-words min-w-0 flex-1 text-center text-2xl leading-snug font-bold"
+								class="wrap-break-words min-w-0 flex-1 text-center text-2xl font-bold leading-snug"
 							>
 								{@html item?.question}
 							</p>
@@ -314,13 +322,13 @@
 			</main>
 
 			{#if !chatOpen}
-				<div class="absolute top-1/2 -right-3 hidden -translate-y-1/2 sm:block">
+				<div class="absolute -right-3 top-1/2 hidden -translate-y-1/2 sm:block">
 					<button
-						class="flex-1 cursor-pointer rounded-2xl bg-primary p-2 text-center text-2xl font-semibold"
+						class="bg-primary flex-1 cursor-pointer rounded-2xl p-2 text-center text-2xl font-semibold"
 						onclick={() => (chatOpen = !chatOpen)}
 					>
 						<span
-							class="block tracking-widest whitespace-nowrap text-black select-none"
+							class="block select-none whitespace-nowrap tracking-widest text-black"
 							style="writing-mode: vertical-rl; transform: rotate(180deg);"
 						>
 							AI Chat
