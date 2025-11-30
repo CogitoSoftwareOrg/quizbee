@@ -280,7 +280,7 @@ class MeiliMaterialIndexer(MaterialIndexer):
             batch_ids = chunk_ids[i : i + batch_size]
             try:
                 result = await self.material_index.get_documents(
-                    document_ids=batch_ids,
+                    ids=batch_ids,
                     fields=["id", "materialId", "title", "pages"],
                     limit=batch_size,
                 )

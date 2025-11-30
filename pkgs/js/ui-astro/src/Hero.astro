@@ -90,7 +90,7 @@ const alignToClass = (align: "left" | "center" | "right") => {
   {overlay && image && <div class="hero-overlay" />}
 
   <div
-    class={`hero-content flex-col gap-6 w-full pb-4 ${positionClasses[position]} ${verticalAlignClasses[verticalAlign]} ${overlay && center ? "text-center" : ""} ${overlay ? "text-neutral-content" : ""}`}
+    class={`hero-content flex-col gap-6 w-full pb-22 lg:pb-4 ${positionClasses[position]} ${verticalAlignClasses[verticalAlign]} ${overlay && center ? "text-center" : ""} ${overlay ? "text-neutral-content" : ""}`}
   >
     {
       image && !overlay && (
@@ -141,7 +141,7 @@ const alignToClass = (align: "left" | "center" | "right") => {
         {description}
       </p>
 
-      <div class={`flex gap-4 pt-4 ${center ? "justify-center" : ""}`}>
+      <div class={`flex gap-4 pt-0 lg:pt-4 ${center ? "justify-center" : ""}`}>
         <Button
           href={href}
           target={target}
@@ -176,7 +176,7 @@ const alignToClass = (align: "left" | "center" | "right") => {
     </div>
   </div>
 
-  <div class="absolute bottom-16 w-full flex justify-center">
+  <div class="absolute bottom-16 w-full hidden lg:flex justify-center">
     <span class="loading loading-ball loading-xl text-primary"></span>
   </div>
 </section>

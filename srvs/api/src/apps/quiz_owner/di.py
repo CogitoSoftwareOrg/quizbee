@@ -40,7 +40,7 @@ async def init_quiz_deps(
     quiz_repository = PBQuizRepository(admin_pb, http=http)
     patch_generator = AIGrokGenerator(lf=lf, provider=llm_provider)
     quiz_preprocessor = QuizPreprocessor(lf=lf, provider=llm_provider)
-    quiz_clusterer = BertopicQuizClusterer(llm_tools=llm_tools, material_app=material_app)
+    quiz_clusterer = KMeansQuizClusterer( material_app=material_app)
     finalizer = AIQuizFinalizer(
         lf=lf,
         quiz_repository=quiz_repository,
