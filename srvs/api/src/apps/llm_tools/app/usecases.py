@@ -3,7 +3,7 @@ import numpy as np
 
 from src.lib.config import LLMS
 
-from ..domain.out import TextTokenizer, ImageTokenizer, Chunker, Vectorizer, Reranker, RerankResult
+from ..domain.out import TextTokenizer, ImageTokenizer, Chunker, Vectorizer, Reranker, RerankResult, ChunkWithPages
 
 from ..domain._in import LLMToolsApp
 
@@ -53,6 +53,10 @@ class LLMToolsAppImpl(LLMToolsApp):
     def chunk(self, text: str) -> list[str]:
         logger.debug("LLMToolsAppImpl.chunk")
         return self.chunker.chunk(text)
+
+    def chunk_with_pages(self, text: str) -> list[ChunkWithPages]:
+        logger.debug("LLMToolsAppImpl.chunk_with_pages")
+        return self.chunker.chunk_with_pages(text)
 
     async def vectorize(self, chunks: list[str]) -> np.ndarray:
         logger.debug("LLMToolsAppImpl.vectorize")

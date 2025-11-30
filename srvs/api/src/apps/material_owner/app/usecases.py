@@ -220,6 +220,7 @@ class MaterialAppImpl(MaterialApp):
                 limit=limit_chunks,
                 ratio=ratio,
                 vectors=cmd.vectors,
+                vector_thresholds=cmd.vector_thresholds,
             )
         )
 

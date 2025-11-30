@@ -6,6 +6,7 @@ from typing import Any
 
 from src.lib.config import LLMS
 from src.apps.llm_tools.domain._in import LLMToolsApp
+from src.apps.llm_tools.domain.out import ChunkWithPages
 
 from ...domain.out import LLMTools
 
@@ -28,6 +29,9 @@ class LLMToolsAdapter(LLMTools):
 
     def chunk(self, text: str) -> list[str]:
         return self._llm_tools_app.chunk(text)
+
+    def chunk_with_pages(self, text: str) -> list[ChunkWithPages]:
+        return self._llm_tools_app.chunk_with_pages(text)
 
     async def rerank(
         self, query: str, documents: list[str], top_k: int = 4

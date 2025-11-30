@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 import logging
 import asyncio
-import re
 from typing import Any
 from voyageai.client_async import AsyncClient as VoyageAsyncClient
 from langfuse import Langfuse
@@ -29,20 +28,6 @@ meiliVoyageEmbeddings = {
         dimensions=1024,
     ),
 }
-
-
-PAGE_MARKER_PATTERN = re.compile(r'\{quizbee_page_number_(\d+)\}')
-
-
-def extract_pages_from_text(text: str) -> list[int]:
-    matches = PAGE_MARKER_PATTERN.findall(text)
-    if not matches:
-        return []
-    return sorted(set(int(m) for m in matches))
-
-
-def clean_page_markers(text: str) -> str:
-    return PAGE_MARKER_PATTERN.sub('', text)
 
 
 @dataclass
@@ -147,23 +132,21 @@ class MeiliMaterialIndexer(MaterialIndexer):
         if not text or not text.strip():
             raise ValueError("Material has no text content")
 
-        chunks_result = self.llm_tools.chunk(text)
+        chunks_result = self.llm_tools.chunk_with_pages(text)
         docs: list[Doc] = []
 
         for i, chunk in enumerate(chunks_result):
-            pages = extract_pages_from_text(chunk)
-            clean_content = clean_page_markers(chunk).strip()
-            logging.info(f"Chunk {i}: found pages {pages} (chunk length: {len(chunk)})")
+            logging.info(f"Chunk {i}: found pages {chunk.pages} (chunk length: {len(chunk.content)})")
             docs.append(
                 Doc(
                     id=f"{material.id}-{i}",
                     materialId=material.id,
                     userId=material.user_id,
                     title=material.title,
-                    content=clean_content,
+                    content=chunk.content,
                     idx=i,
                     used=False,
-                    pages=pages,
+                    pages=chunk.pages,
                 )
             )
 

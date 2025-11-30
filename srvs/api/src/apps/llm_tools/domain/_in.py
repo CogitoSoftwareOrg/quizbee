@@ -3,7 +3,7 @@ import numpy as np
 
 from src.lib.config import LLMS
 
-from ..domain.out import Vectorizer, RerankResult
+from ..domain.out import Vectorizer, RerankResult, ChunkWithPages
 
 
 class LLMToolsApp(Protocol):
@@ -18,6 +18,7 @@ class LLMToolsApp(Protocol):
     def count_text(self, text: str, llm: LLMS = LLMS.GPT_5_MINI) -> int: ...
     def count_image(self, width: int, height: int) -> int: ...
     def chunk(self, text: str) -> list[str]: ...
+    def chunk_with_pages(self, text: str) -> list[ChunkWithPages]: ...
 
     async def vectorize(self, chunks: list[str]) -> np.ndarray: ...
     async def rerank(

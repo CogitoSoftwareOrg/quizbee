@@ -3,10 +3,10 @@ from bisect import bisect_right
 from itertools import accumulate
 from dataclasses import dataclass
 
-from ...domain.out import Chunker, TextTokenizer
+from ...domain.out import Chunker, TextTokenizer, ChunkWithPages
 from ...domain.constants import DEFAULT_CHUNK_SIZE, DEFAULT_CHUNK_OVERLAP
 
-PAGE_MARKER_PATTERN = re.compile(r'\{quizbee_page_number_\d+\}')
+PAGE_MARKER_PATTERN = re.compile(r'\{quizbee_page_number_(\d+)\}')
 
 
 @dataclass
@@ -141,6 +141,27 @@ class ChonkieRecursiveChunker(Chunker):
         if self._overlap > 0:
             chunks = self._apply_overlap(chunks)
         return chunks
+
+    def chunk_with_pages(self, text: str) -> list[ChunkWithPages]:
+        raw_chunks = self.chunk(text)
+        result: list[ChunkWithPages] = []
+        last_page: int | None = None
+
+        for chunk in raw_chunks:
+            pages = self._extract_pages(chunk)
+            if pages:
+                last_page = pages[-1]
+            elif last_page is not None:
+                pages = [last_page]
+            result.append(ChunkWithPages(content=chunk, pages=pages))
+
+        return result
+
+    def _extract_pages(self, text: str) -> list[int]:
+        matches = PAGE_MARKER_PATTERN.findall(text)
+        if not matches:
+            return []
+        return sorted(set(int(m) for m in matches))
 
     def _merge_chunks_with_page_markers(self, chunks: list[str]) -> list[str]:
         """

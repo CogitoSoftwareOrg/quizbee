@@ -49,8 +49,8 @@ class QuizStarterImpl(QuizStarter):
             logger.info(f"Using {len(topics_vectors)} topic vectors from preprocessor")
             quiz.set_cluster_vectors(topics_vectors)
         elif len(quiz.materials) > 0:
-            cluster_vectors = await self._quiz_clusterer.cluster(quiz, cmd.user)
-            quiz.set_cluster_vectors(cluster_vectors)
+            cluster_vectors, cluster_thresholds = await self._quiz_clusterer.cluster(quiz, cmd.user)
+            quiz.set_cluster_vectors(cluster_vectors, cluster_thresholds)
         else:
             quiz.set_cluster_vectors([])
 
@@ -84,6 +84,7 @@ class QuizStarterImpl(QuizStarter):
                 material_ids=[m.id for m in quiz.materials],
                 limit_tokens=SUMMARY_TOKEN_LIMIT,
                 vectors=quiz.cluster_vectors,
+                vector_thresholds=quiz.cluster_thresholds,
             )
         )
 

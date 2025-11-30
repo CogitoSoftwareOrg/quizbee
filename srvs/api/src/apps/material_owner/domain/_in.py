@@ -32,6 +32,7 @@ class SearchCmd:
     rerank_prefix: str = ""
     all_chunks: bool = False
     vectors: list[list[float]] | None = None
+    vector_thresholds: list[float] | None = None
     search_type: SearchType | None = None
 
 

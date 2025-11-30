@@ -57,11 +57,16 @@ class MeiliGeneratorVectorSearcher(Searcher):
         seen_chunk_ids = set()
 
         for idx, vector in enumerate(dto.vectors):
+            logging.info('thresholds: %s', dto.vector_thresholds)
+            threshold = 0.0
+            if dto.vector_thresholds and idx < len(dto.vector_thresholds):
+                threshold = dto.vector_thresholds[idx]
+            
             f_unused = f"userId = {dto.user_id} AND used = false"
             if dto.material_ids:
                 f_unused += f" AND materialId IN [{','.join(dto.material_ids)}]"
 
-            logging.info(f"Meili Vector Search {idx + 1}/{len(dto.vectors)} (unused): {f_unused}, limit: 20")
+        
 
             try:
                 res = await self._material_index.search(
@@ -71,17 +76,17 @@ class MeiliGeneratorVectorSearcher(Searcher):
                         semantic_ratio=1.0, embedder=EMBEDDER_NAME
                     ),
                     filter=f_unused,
-                    limit=20,
-                    ranking_score_threshold=0,
+                    limit=4,
+                    ranking_score_threshold=threshold,
                     show_ranking_score=True,
                 )
 
                 docs: list[Doc] = [Doc.from_hit(hit) for hit in res.hits]
                 
-
+                logging.info(f" threshold: {threshold}, found {len(docs)} unused chunks")
                 # Пока что если мы находим мало неиспользованных чанков, дополняем их использованными 
-                if len(docs) < 7:
-                    needed = 20 - len(docs)
+                if len(docs) < 4:
+                    needed = 4 - len(docs)
                     logging.info(
                         f"Found only {len(docs)} unused chunks, fetching {needed} used chunks"
                     )
@@ -98,11 +103,17 @@ class MeiliGeneratorVectorSearcher(Searcher):
                         ),
                         filter=f_used,
                         limit=needed,
-                        ranking_score_threshold=0,
+                        ranking_score_threshold=threshold,
                         show_ranking_score=True,
                     )
                     
                     docs_used: list[Doc] = [Doc.from_hit(hit) for hit in res_used.hits]
+                    
+                    for i, hit in enumerate(res_used.hits):
+                        score = hit.get("_rankingScore", "N/A")
+                        doc_id = hit.get("id", "unknown")
+                        logging.info(f"Vector {idx + 1} used hit {i + 1}: id={doc_id}, ranking_score={score}")
+                    
                     docs.extend(docs_used)
                     logging.info(
                         f"Added {len(docs_used)} used chunks, total: {len(docs)}"

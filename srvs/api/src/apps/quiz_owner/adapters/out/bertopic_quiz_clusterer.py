@@ -25,7 +25,7 @@ class BertopicQuizClusterer:
         self._llm_tools = llm_tools
         self._material_app = material_app
 
-    async def cluster(self, quiz: Quiz, user: Principal) -> list[list[float]]:
+    async def cluster(self, quiz: Quiz, user: Principal) -> tuple[list[list[float]], list[float]]:
         chunks = await self._material_app.search(
             SearchCmd(
                 user=user,
@@ -33,7 +33,9 @@ class BertopicQuizClusterer:
                 all_chunks=True,
             )
         )
-
+        logger.info(
+                    f"Found {len(chunks)} chunks with vectors and content for quiz {quiz.id}"
+                )
         chunks_with_vectors = [
             c
             for c in chunks
@@ -47,7 +49,7 @@ class BertopicQuizClusterer:
             logger.warning(
                 f"No valid chunks found for quiz {quiz.id}, returning empty cluster vectors"
             )
-            return []
+            return [], []
 
         embeddings = np.array([c.vector for c in chunks_with_vectors], dtype=np.float32)
         documents = [c.content.strip() for c in chunks_with_vectors]
@@ -59,7 +61,7 @@ class BertopicQuizClusterer:
                 f"Not enough chunks for quiz {quiz.id}: found {n_samples} chunks, "
                 f"but quiz length is {quiz.length}. Using all available vectors."
             )
-            return embeddings.tolist()
+            return embeddings.tolist(), []
 
         return await asyncio.to_thread(
             self._run_bertopic, quiz.id, quiz.length, documents, embeddings
@@ -71,7 +73,7 @@ class BertopicQuizClusterer:
         quiz_length: int,
         documents: list[str],
         embeddings: np.ndarray,
-    ) -> list[list[float]]:
+    ) -> tuple[list[list[float]], list[float]]:
         n_samples = len(documents)
         n_features = embeddings.shape[1]
 
@@ -150,22 +152,30 @@ class BertopicQuizClusterer:
                     )
 
             centers = []
+            thresholds = []
             unique_topics = [t for t in np.unique(topics) if t != -1]
 
             for topic_id in unique_topics:
                 topic_mask = topics == topic_id
                 topic_embeddings = embeddings[topic_mask]
                 center = np.mean(topic_embeddings, axis=0)
+                center_normalized = center / np.linalg.norm(center)
+                
+                cosine_similarities = np.dot(topic_embeddings, center_normalized)
+                min_similarity = float(np.min(cosine_similarities))
+                
                 centers.append(center.tolist())
+                thresholds.append(min_similarity)
+                
                 logger.info(
-                    f"Topic {topic_id}: {np.sum(topic_mask)} documents, center computed"
+                    f"Topic {topic_id}: {np.sum(topic_mask)} docs, threshold={min_similarity:.4f}"
                 )
-
+            
             logger.info(
-                f"Final cluster vectors: {len(centers)} vectors for quiz {quiz_id}"
+                f"Final cluster vectors: {len(centers)} vectors, thresholds: {[f'{t:.4f}' for t in thresholds]} for quiz {quiz_id}"
             )
 
-            return centers
+            return centers, thresholds
 
         except Exception as e:
             logger.error(
@@ -173,4 +183,4 @@ class BertopicQuizClusterer:
             )
             logger.warning(f"Falling back to using first {quiz_length} embeddings")
             n_vectors = min(quiz_length, len(embeddings))
-            return embeddings[:n_vectors].tolist()
+            return embeddings[:n_vectors].tolist(), []

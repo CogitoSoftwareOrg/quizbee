@@ -155,7 +155,7 @@ class QuizGeneratorImpl(QuizGenerator):
                 ))
 
         sub_chunk_contents = [sc.content for sc in sub_chunks]
-
+        
         dto = PatchGeneratorDto(
             quiz=quiz,
             cache_key=cache_key,
@@ -166,6 +166,7 @@ class QuizGeneratorImpl(QuizGenerator):
         await self._patch_generator.generate(dto)
 
         if len(sub_chunks) > 0 and dto.used_chunk_indices is not None:
+            logger.info(f"Number of used sub-chunks: {len(dto.used_chunk_indices)}")
             used_sub_chunks = [
                 sub_chunks[i] for i in dto.used_chunk_indices if i < len(sub_chunks)
             ]
@@ -227,9 +228,11 @@ class QuizGeneratorImpl(QuizGenerator):
         self, quiz: Quiz, item: QuizItem, user: Principal
     ) -> list[MaterialChunk]:
         num_clusters = len(quiz.cluster_vectors)
-        vector = quiz.cluster_vectors[item.order % num_clusters]
+        cluster_idx = item.order % num_clusters
+        vector = quiz.cluster_vectors[cluster_idx]
+        threshold = quiz.cluster_thresholds[cluster_idx] if cluster_idx < len(quiz.cluster_thresholds) else None
         
-        logger.info(f"Searching for item {item.order} with vector cluster {item.order % num_clusters}")
+        logger.info(f"Searching for item {item.order} with vector cluster {cluster_idx}, threshold: {threshold}")
 
         chunks = await self._material_app.search(
             SearchCmd(
@@ -237,6 +240,7 @@ class QuizGeneratorImpl(QuizGenerator):
                 material_ids=[m.id for m in quiz.materials],
                 limit_tokens=PATCH_CHUNK_TOKEN_LIMIT,
                 vectors=[vector],
+                vector_thresholds=[threshold] if threshold else None,
                 search_type=SearchType.GENERATOR,
             )
         )

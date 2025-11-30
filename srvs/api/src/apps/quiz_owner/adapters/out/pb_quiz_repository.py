@@ -91,11 +91,16 @@ class PBQuizRepository(QuizRepository):
         fname = rec.get("materialsContext")
         if fname:
             total_content = await self._load_file_text("quizes", q_id, fname)
-            cluster_vectors = json.loads(total_content)
+            cluster_data = json.loads(total_content)
+            if isinstance(cluster_data, dict):
+                cluster_vectors = cluster_data.get("vectors", [])
+                cluster_thresholds = cluster_data.get("thresholds", [])
+            else:
+                cluster_vectors = cluster_data
+                cluster_thresholds = []
         else:
             cluster_vectors = []
-
-       
+            cluster_thresholds = []
 
         quiz = Quiz(
             id=rec.get("id", ""),
@@ -117,6 +122,7 @@ class PBQuizRepository(QuizRepository):
             gen_config=self._rec_to_config(rec),
             generation=rec.get("generation", 0),
             cluster_vectors=cluster_vectors,
+            cluster_thresholds=cluster_thresholds,
         )
 
         return quiz
@@ -185,12 +191,16 @@ class PBQuizRepository(QuizRepository):
             
         }
 
-        cluster_vectors_json = json.dumps(cluster_vectors)
+        cluster_data = {
+            "vectors": cluster_vectors,
+            "thresholds": quiz.cluster_thresholds,
+        }
+        cluster_data_json = json.dumps(cluster_data)
         f = (
             FileUpload(
                 (
                     self._file_url("quizes", quiz.id, "clusterVectors.json"),
-                    cluster_vectors_json.encode("utf-8"),
+                    cluster_data_json.encode("utf-8"),
                 )
             )
             if cluster_vectors and len(cluster_vectors) > 0
