@@ -119,7 +119,9 @@ class MaterialAppImpl(MaterialApp):
                 material.tokens = text_tokens + image_tokens
                 material.contents = json.dumps(doc_data.contents)
                 material.is_book = doc_data.is_book
-                material.table_of_contents = doc_data.contents if doc_data.is_book else None
+                material.table_of_contents = (
+                    doc_data.contents if doc_data.is_book else None
+                )
 
                 # Сохраняем текст как файл
                 text_bytes = text.encode("utf-8")
@@ -181,7 +183,7 @@ class MaterialAppImpl(MaterialApp):
 
         if cmd.quiz_id:
             await self._material_repository.attach_to_quiz(material, cmd.quiz_id)
-            
+
         await self._material_repository.update(material)
 
         return material

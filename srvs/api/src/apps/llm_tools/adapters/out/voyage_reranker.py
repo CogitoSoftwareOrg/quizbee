@@ -1,6 +1,8 @@
+from langfuse import Langfuse
 from voyageai.client_async import AsyncClient
 
 from src.lib.settings import settings
+from src.lib.config import LLMS
 
 from ...domain.out import Reranker, RerankResult
 
@@ -8,12 +10,18 @@ from ...domain.out import Reranker, RerankResult
 class VoyageReranker(Reranker):
     """Voyage AI reranker for improving search result relevance."""
 
-    def __init__(self, model: str = "rerank-2.5-lite"):
+    def __init__(self, lf: Langfuse, model: str = LLMS.VOYAGE_RERANKER_2_5_LITE):
         self._aclient = AsyncClient(api_key=settings.voyageai_api_key)
         self._model = model
+        self._lf = lf
 
     async def rerank(
-        self, query: str, documents: list[str], top_k: int = 4
+        self,
+        user_id: str,
+        session_id: str,
+        query: str,
+        documents: list[str],
+        top_k: int = 4,
     ) -> list[RerankResult]:
         """
         Rerank documents by relevance to query.
@@ -44,6 +52,8 @@ class VoyageReranker(Reranker):
             truncation=True,
         )
 
+        self._log_langfuse(user_id, session_id, result.total_tokens, "reranker")
+
         return [
             RerankResult(
                 index=r.index,
@@ -52,3 +62,20 @@ class VoyageReranker(Reranker):
             )
             for r in result.results
         ]
+
+    def _log_langfuse(
+        self, user_id: str, session_id: str, total_tokens: int, name: str
+    ) -> None:
+        with self._lf.start_as_current_span(name=name) as span:
+            self._lf.update_current_generation(
+                model=LLMS.VOYAGE_RERANKER_2_5_LITE,
+                usage_details={
+                    "total": total_tokens,
+                },
+            )
+            span.update_trace(
+                input=f"User: {user_id}, Session: {session_id}",
+                output=f"Total tokens: {total_tokens}",
+                user_id=user_id,
+                session_id=session_id,
+            )

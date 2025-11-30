@@ -29,7 +29,9 @@ class MeiliMaterialVectorSearcher(Searcher):
             filter_str += f" AND materialId IN [{','.join(dto.material_ids)}]"
 
         fetch_limit = max(dto.limit * 3, 20)
-        logging.info(f"Explainer search: filter={filter_str}, fetch_limit={fetch_limit}")
+        logging.info(
+            f"Explainer search: filter={filter_str}, fetch_limit={fetch_limit}"
+        )
 
         res = await self._material_index.search(
             query="",
@@ -48,7 +50,9 @@ class MeiliMaterialVectorSearcher(Searcher):
             if content_length >= MIN_CHUNK_CONTENT_LENGTH:
                 chunks.append(chunk)
             else:
-                logging.debug(f"Skipping small chunk {chunk.id}: {content_length} chars")
+                logging.debug(
+                    f"Skipping small chunk {chunk.id}: {content_length} chars"
+                )
 
         if not chunks:
             logging.warning("No chunks found after filtering")
@@ -56,14 +60,26 @@ class MeiliMaterialVectorSearcher(Searcher):
 
         if len(chunks) <= RERANK_TOP_K:
             logging.info(f"Skipping rerank: only {len(chunks)} chunks")
-            return chunks[:dto.limit]
+            return chunks[: dto.limit]
 
         documents = [c.content for c in chunks]
-        base_query = dto.query if dto.query and dto.query != "*" else "relevant educational content"
-        rerank_query = f"{dto.rerank_prefix} {base_query}".strip() if dto.rerank_prefix else base_query
+        base_query = (
+            dto.query
+            if dto.query and dto.query != "*"
+            else "relevant educational content"
+        )
+        rerank_query = (
+            f"{dto.rerank_prefix} {base_query}".strip()
+            if dto.rerank_prefix
+            else base_query
+        )
 
-        logging.info(f"Reranking {len(documents)} chunks with query: {rerank_query[:100]}...")
+        logging.info(
+            f"Reranking {len(documents)} chunks with query: {rerank_query[:100]}..."
+        )
         rerank_results = await self._llm_tools.rerank(
+            user_id=dto.user_id,
+            session_id=",".join(dto.material_ids),
             query=rerank_query,
             documents=documents,
             top_k=min(dto.limit, len(documents)),

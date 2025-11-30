@@ -23,7 +23,7 @@ from src.lib.settings import settings
 from ...domain.models import Quiz
 
 
-PREPROCESSOR_LLM = LLMS.GROK_4_1_FAST
+PREPROCESSOR_LLM = LLMS.GROK_4_FAST
 IN_QUERY = "Enhance the user query"
 RETRIES = 5
 TEMPERATURE = 0.3

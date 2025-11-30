@@ -1,0 +1,119 @@
+name: quizbee-srvs
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: ./srvs/api/Dockerfile
+    environment:
+      - ENV=${ENV:-production}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_FORMAT=${LOG_FORMAT:-json}
+
+      - PUBLIC_APP_URL=${PUBLIC_APP_URL}
+
+      - PB_URL=${PB_URL}
+      - PB_EMAIL=${PB_EMAIL}
+      - PB_PASSWORD=${PB_PASSWORD}
+
+      - REDIS_DSN=${REDIS_DSN}
+
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+
+      - MEILI_URL=${MEILI_URL}
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
+
+      - TG_TOKEN=${TG_TOKEN}
+      - TG_ID=${TG_ID}
+
+      - STRIPE_API_KEY=${STRIPE_API_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
+      - LANGFUSE_HOST=${LANGFUSE_HOST}
+
+      - GROK_API_KEY=${GROK_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+
+      - VOYAGEAI_API_KEY=${VOYAGEAI_API_KEY}
+
+  worker:
+    build:
+      context: .
+      dockerfile: ./srvs/api/Dockerfile
+    command:
+      [
+        "uv",
+        "run",
+        "--directory",
+        "/repo/srvs/api",
+        "arq",
+        "src.bootstrap.worker.WorkerSettings",
+      ]
+    environment:
+      - ENV=${ENV:-production}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_FORMAT=${LOG_FORMAT:-json}
+
+      - PUBLIC_APP_URL=${PUBLIC_APP_URL}
+
+      - PB_URL=${PB_URL}
+      - PB_EMAIL=${PB_EMAIL}
+      - PB_PASSWORD=${PB_PASSWORD}
+
+      - REDIS_DSN=${REDIS_DSN}
+
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+
+      - MEILI_URL=${MEILI_URL}
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
+
+      - TG_TOKEN=${TG_TOKEN}
+      - TG_ID=${TG_ID}
+
+      - STRIPE_API_KEY=${STRIPE_API_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
+      - LANGFUSE_HOST=${LANGFUSE_HOST}
+
+      - GROK_API_KEY=${GROK_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+
+      - VOYAGEAI_API_KEY=${VOYAGEAI_API_KEY}
+
+  web:
+    build:
+      context: .
+      dockerfile: ./srvs/web/Dockerfile
+      # args:
+      #   - PUBLIC_APP_URL=${PUBLIC_APP_URL}
+      #   - PUBLIC_PB_URL=${PUBLIC_PB_URL}
+      #   - PB_URL=${PUBLIC_PB_URL}
+      #   - PB_EMAIL=${PB_EMAIL}
+      #   - PB_PASSWORD=${PB_PASSWORD}
+    environment:
+      - PUBLIC_APP_URL=${PUBLIC_APP_URL:-https://app.quizbee.academy/}
+      - PUBLIC_PB_URL=${PUBLIC_PB_URL:-https://pb.quizbee.academy/}
+      - PB_URL=${PB_URL:-https://pb.quizbee.academy/}
+      - PB_EMAIL=${PB_EMAIL}
+      - PB_PASSWORD=${PB_PASSWORD}
+      - COOLIFY_URL=${COOLIFY_URL}
+      - PUBLIC_POSTHOG=${PUBLIC_POSTHOG}
+
+  app:
+    build:
+      context: .
+      dockerfile: ./srvs/app/Dockerfile
+      # args:
+      #   - PUBLIC_PB_URL=${PUBLIC_PB_URL}
+      #   - STRIPE_API_KEY=${STRIPE_API_KEY}
+    environment:
+      - PUBLIC_ENV=${PUBLIC_ENV:-production}
+      - PUBLIC_WEB_URL=${PUBLIC_WEB_URL:-https://quizbee.academy/}
+      - PUBLIC_API_URL=${PUBLIC_API_URL:-https://api.quizbee.academy/}
+      - PUBLIC_PB_URL=${PUBLIC_PB_URL:-https://pb.quizbee.academy/}
+      - PUBLIC_POSTHOG=${PUBLIC_POSTHOG}
+      - STRIPE_API_KEY=${STRIPE_API_KEY}

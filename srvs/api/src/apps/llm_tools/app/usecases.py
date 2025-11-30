@@ -3,7 +3,15 @@ import numpy as np
 
 from src.lib.config import LLMS
 
-from ..domain.out import TextTokenizer, ImageTokenizer, Chunker, Vectorizer, Reranker, RerankResult, ChunkWithPages
+from ..domain.out import (
+    TextTokenizer,
+    ImageTokenizer,
+    Chunker,
+    Vectorizer,
+    Reranker,
+    RerankResult,
+    ChunkWithPages,
+)
 
 from ..domain._in import LLMToolsApp
 
@@ -63,7 +71,12 @@ class LLMToolsAppImpl(LLMToolsApp):
         return await self.vectorizer.vectorize(chunks)
 
     async def rerank(
-        self, query: str, documents: list[str], top_k: int = 4
+        self,
+        user_id: str,
+        session_id: str,
+        query: str,
+        documents: list[str],
+        top_k: int = 4,
     ) -> list[RerankResult]:
         logger.debug("LLMToolsAppImpl.rerank")
-        return await self._reranker.rerank(query, documents, top_k)
+        return await self._reranker.rerank(user_id, session_id, query, documents, top_k)

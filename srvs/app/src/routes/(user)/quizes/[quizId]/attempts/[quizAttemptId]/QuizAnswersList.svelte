@@ -13,7 +13,14 @@
 	} from '@quizbee/pb-types';
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
 	import type { Answer } from '$lib/apps/quizes/types';
-	import { ChevronDown, ChevronRight, Info, ThumbsDown, ThumbsUp } from 'lucide-svelte';
+	import {
+		ChevronDown,
+		ChevronRight,
+		CircleAlert,
+		Info,
+		ThumbsDown,
+		ThumbsUp
+	} from 'lucide-svelte';
 	import { patchApi, putApi } from '$lib/api/call-api';
 
 	import { userStore } from '$lib/apps/users/user.svelte.js';
@@ -147,6 +154,21 @@
 			showThankYou = false;
 		}
 	}
+
+	let generationError = $state(false);
+
+	$effect(() => {
+		if (item.status === 'final' || item.status === 'generated') {
+			generationError = false;
+			return;
+		}
+
+		const timer = setTimeout(() => {
+			generationError = true;
+		}, 60000);
+
+		return () => clearTimeout(timer);
+	});
 </script>
 
 <div class={[className, 'min-w-0']}>
@@ -182,11 +204,11 @@
 
 									item.status = QuizItemsStatusOptions.final;
 									try {
-										await pb!.collection('quizAttempts').update(quizAttempt!.id, {
+										await pb.collection('quizAttempts').update(quizAttempt.id, {
 											choices: newDecisions
 										});
 										if (quiz.author === user?.id) {
-											await pb!.collection('quizItems').update(item.id, {
+											await pb.collection('quizItems').update(item.id, {
 												status: QuizItemsStatusOptions.final
 											});
 										}
@@ -200,6 +222,25 @@
 										item.order + 1 === quizItems.length &&
 										!(quizAttempt?.feedback as any)?.overview
 									) {
+										// Safety check: Ensure all previous items are final
+										const previousItems = quizItems.slice(0, item.order);
+										const nonFinalItems = previousItems.filter(
+											(i) => i.status === QuizItemsStatusOptions.generated
+										);
+
+										if (nonFinalItems.length > 0) {
+											console.log('Finalizing previous items:', nonFinalItems);
+											await Promise.all(
+												nonFinalItems.map((i) =>
+													pb.collection('quizItems').update(i.id, {
+														status: QuizItemsStatusOptions.final
+													})
+												)
+											);
+											// Update local state
+											nonFinalItems.forEach((i) => (i.status = QuizItemsStatusOptions.final));
+										}
+
 										await finalizeAttempt();
 									}
 
@@ -318,100 +359,115 @@
 		{/if}
 	{:else}
 		<div class="flex h-full flex-col items-center justify-center gap-8 px-4 py-16">
-			<!-- Main Loading Container -->
-			<div class="w-full max-w-md">
-				<!-- Animated Header -->
-				<div class="mb-8 text-center">
-					<div class="mb-4 flex justify-center">
-						<div class="relative h-24 w-24">
-							<!-- Outer rotating ring -->
-							<div
-								class="border-t-primary border-r-primary absolute inset-0 animate-spin rounded-full border-4 border-transparent opacity-70"
-							></div>
-							<!-- Middle pulsing ring -->
-							<div
-								class="border-primary/30 absolute inset-2 animate-pulse rounded-full border-2"
-							></div>
-							<!-- Inner icon -->
-							<div class="absolute inset-0 flex items-center justify-center">
+			{#if generationError}
+				<div class="flex w-full max-w-md flex-col items-center text-center">
+					<div class="bg-error/10 text-error mb-6 rounded-full p-6">
+						<CircleAlert class="h-12 w-12" />
+					</div>
+					<h2 class="mb-2 text-2xl font-bold">Something went wrong</h2>
+					<p class="text-base-content/70 mb-8">
+						We couldn't generate your next question. Please try again later.
+					</p>
+					<Button href="/quizes" color="primary">Back to Quizzes</Button>
+				</div>
+			{:else}
+				<!-- Main Loading Container -->
+				<div class="w-full max-w-md">
+					<!-- Animated Header -->
+					<div class="mb-8 text-center">
+						<div class="mb-4 flex justify-center">
+							<div class="relative h-24 w-24">
+								<!-- Outer rotating ring -->
 								<div
-									class="bg-primary/10 flex h-full w-full items-center justify-center rounded-full"
-								>
-									<span class="text-3xl">✨</span>
+									class="border-t-primary border-r-primary absolute inset-0 animate-spin rounded-full border-4 border-transparent opacity-70"
+								></div>
+								<!-- Middle pulsing ring -->
+								<div
+									class="border-primary/30 absolute inset-2 animate-pulse rounded-full border-2"
+								></div>
+								<!-- Inner icon -->
+								<div class="absolute inset-0 flex items-center justify-center">
+									<div
+										class="bg-primary/10 flex h-full w-full items-center justify-center rounded-full"
+									>
+										<span class="text-3xl">✨</span>
+									</div>
 								</div>
 							</div>
 						</div>
+						<h2 class="text-base-content mb-2 text-2xl font-bold">Building Your Quiz</h2>
+						<p class="text-base-content/70">
+							We're preparing personalized questions just for you...
+						</p>
 					</div>
-					<h2 class="text-base-content mb-2 text-2xl font-bold">Building Your Quiz</h2>
-					<p class="text-base-content/70">We're preparing personalized questions just for you...</p>
-				</div>
 
-				<!-- Progress Indicators -->
-				<div class="mb-8 hidden space-y-4 sm:block">
-					<div class="flex items-center gap-3">
+					<!-- Progress Indicators -->
+					<div class="mb-8 hidden space-y-4 sm:block">
+						<div class="flex items-center gap-3">
+							<div
+								class="bg-success/20 flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+							>
+								<span class="text-success">✓</span>
+							</div>
+							<div class="flex-1">
+								<p class="text-base-content text-sm font-medium">Quiz initialized</p>
+								<p class="text-base-content/60 text-xs">Ready to generate questions</p>
+							</div>
+						</div>
+
+						<div class="flex items-center gap-3">
+							<div
+								class="bg-primary/20 flex h-8 w-8 shrink-0 animate-pulse items-center justify-center rounded-full"
+							>
+								<span class="text-primary">⚡</span>
+							</div>
+							<div class="flex-1">
+								<p class="text-base-content text-sm font-medium">Generating questions</p>
+								<p class="text-base-content/60 text-xs">Using AI to create unique challenges</p>
+							</div>
+						</div>
+
+						<div class="flex items-center gap-3 opacity-50">
+							<div
+								class="border-base-300 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-dashed"
+							>
+								<span class="text-base-content/40">3</span>
+							</div>
+							<div class="flex-1">
+								<p class="text-base-content text-sm font-medium">Ready to answer</p>
+								<p class="text-base-content/60 text-xs">Questions will appear shortly</p>
+							</div>
+						</div>
+					</div>
+
+					<!-- Timeline Info -->
+					<div class="bg-base-200/50 rounded-lg p-4 text-center">
+						<p class="text-base-content/70 text-sm">
+							<span class="text-base-content font-semibold">
+								Usually takes less than {item.order === 0 ? 30 : 10} seconds
+							</span>
+							<br />
+							<span class="text-xs">Your AI tutor is working hard! ⏱️</span>
+						</p>
+					</div>
+
+					<!-- Animated dots -->
+					<div class="mt-8 flex justify-center gap-2">
 						<div
-							class="bg-success/20 flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
-						>
-							<span class="text-success">✓</span>
-						</div>
-						<div class="flex-1">
-							<p class="text-base-content text-sm font-medium">Quiz initialized</p>
-							<p class="text-base-content/60 text-xs">Ready to generate questions</p>
-						</div>
-					</div>
-
-					<div class="flex items-center gap-3">
+							class="bg-primary h-2 w-2 animate-bounce rounded-full"
+							style="animation-delay: 0s"
+						></div>
 						<div
-							class="bg-primary/20 flex h-8 w-8 shrink-0 animate-pulse items-center justify-center rounded-full"
-						>
-							<span class="text-primary">⚡</span>
-						</div>
-						<div class="flex-1">
-							<p class="text-base-content text-sm font-medium">Generating questions</p>
-							<p class="text-base-content/60 text-xs">Using AI to create unique challenges</p>
-						</div>
-					</div>
-
-					<div class="flex items-center gap-3 opacity-50">
+							class="bg-primary h-2 w-2 animate-bounce rounded-full"
+							style="animation-delay: 0.2s"
+						></div>
 						<div
-							class="border-base-300 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-dashed"
-						>
-							<span class="text-base-content/40">3</span>
-						</div>
-						<div class="flex-1">
-							<p class="text-base-content text-sm font-medium">Ready to answer</p>
-							<p class="text-base-content/60 text-xs">Questions will appear shortly</p>
-						</div>
+							class="bg-primary h-2 w-2 animate-bounce rounded-full"
+							style="animation-delay: 0.4s"
+						></div>
 					</div>
 				</div>
-
-				<!-- Timeline Info -->
-				<div class="bg-base-200/50 rounded-lg p-4 text-center">
-					<p class="text-base-content/70 text-sm">
-						<span class="text-base-content font-semibold">
-							Usually takes less than {item.order === 0 ? 30 : 10} seconds
-						</span>
-						<br />
-						<span class="text-xs">Your AI tutor is working hard! ⏱️</span>
-					</p>
-				</div>
-
-				<!-- Animated dots -->
-				<div class="mt-8 flex justify-center gap-2">
-					<div
-						class="bg-primary h-2 w-2 animate-bounce rounded-full"
-						style="animation-delay: 0s"
-					></div>
-					<div
-						class="bg-primary h-2 w-2 animate-bounce rounded-full"
-						style="animation-delay: 0.2s"
-					></div>
-					<div
-						class="bg-primary h-2 w-2 animate-bounce rounded-full"
-						style="animation-delay: 0.4s"
-					></div>
-				</div>
-			</div>
+			{/if}
 		</div>
 	{/if}
 </div>

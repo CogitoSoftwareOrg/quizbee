@@ -10,10 +10,10 @@ class LLMS(StrEnum):
     GPT_5_NANO = "openai:gpt-5-nano"
     GPT_4O_MINI = "openai:gpt-4o-mini"
     GPT_4O_NANO = "openai:gpt-4o-nano"
-    TEXT_EMBEDDING_3_SMALL = "text-embedding-3-small"
 
-    # Voyage AI
+    TEXT_EMBEDDING_3_SMALL = "text-embedding-3-small"
     VOYAGE_3_5_LITE = "voyage-3.5-lite"
+    VOYAGE_RERANKER_2_5_LITE = "rerank-2.5-lite"
 
     # Gemini
     # GEMINI_2_5_FLASH_LITE = "gemini-2.5-flash-lite"

@@ -6,6 +6,7 @@
 **/.env.development
 **/.env.local
 **/.env.preview
+**/.env.migration
 
 **/pb/pb_data
 **/meilisearch/data

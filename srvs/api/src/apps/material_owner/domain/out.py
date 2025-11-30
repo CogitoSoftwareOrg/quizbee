@@ -77,7 +77,12 @@ class LLMTools(Protocol):
         ...
 
     async def rerank(
-        self, query: str, documents: list[str], top_k: int = 4
+        self,
+        user_id: str,
+        session_id: str,
+        query: str,
+        documents: list[str],
+        top_k: int = 4,
     ) -> list[Any]:
         """Reranks documents by relevance to query."""
         ...
