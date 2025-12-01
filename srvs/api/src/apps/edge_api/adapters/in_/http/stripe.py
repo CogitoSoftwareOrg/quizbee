@@ -164,7 +164,7 @@ async def create_stripe_checkout(
         allow_promotion_codes=True,
         billing_address_collection="auto",
         payment_method_collection="if_required",
-        # automatic_tax={"enabled": True},
+        automatic_tax={"enabled": True},
     )
 
     stripeCustomer = subscription.get("stripeCustomer")
