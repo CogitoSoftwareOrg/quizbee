@@ -22,6 +22,7 @@ class MessageMetadataRef:
 class MessageRef:
     id: str
     attempt_id: str
+    item_id: str
     content: str
     role: MessageRoleRef
     status: MessageStatusRef

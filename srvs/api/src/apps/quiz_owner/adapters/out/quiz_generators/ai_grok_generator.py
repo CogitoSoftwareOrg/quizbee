@@ -27,10 +27,10 @@ from ....domain.models import Quiz, QuizItemVariant
 from ....domain.constants import PATCH_LIMIT
 
 
-QUIZ_GENERATOR_LLM = LLMS.GROK_4_FAST
+QUIZ_GENERATOR_LLM = LLMS.GROK_4_1_FAST
 IN_QUERY = ""
 RETRIES = 5
-UNEXPECTED_BEHAVIOR_RETRIES = 3
+UNEXPECTED_BEHAVIOR_RETRIES = 5
 TEMPERATURE = 0.4
 TOP_P = 0.95
 
@@ -186,7 +186,9 @@ class AIGrokGenerator(PatchGenerator):
                     run = await agent.run(
                         IN_QUERY,
                         model=QUIZ_GENERATOR_LLM,
-                        deps=AIGrokGeneratorDeps(quiz=dto.quiz, chunks=dto.chunks or []),
+                        deps=AIGrokGeneratorDeps(
+                            quiz=dto.quiz, chunks=dto.chunks or []
+                        ),
                         model_settings={
                             "temperature": TEMPERATURE,
                             "top_p": TOP_P,
@@ -227,7 +229,9 @@ class AIGrokGenerator(PatchGenerator):
                 dto.quiz.fail()
                 raise e
 
-        logging.exception("Failed to generate quiz instant after retries: %s", last_error)
+        logging.exception(
+            "Failed to generate quiz instant after retries: %s", last_error
+        )
         dto.quiz.fail()
         raise last_error  # type: ignore
 
