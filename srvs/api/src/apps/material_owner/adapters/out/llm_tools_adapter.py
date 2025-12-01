@@ -2,6 +2,7 @@
 Адаптер для LLMTools.
 Связывает порт LLMTools из domain с конкретной реализацией LLMToolsApp.
 """
+
 from typing import Any
 
 from src.lib.config import LLMS
@@ -34,6 +35,13 @@ class LLMToolsAdapter(LLMTools):
         return self._llm_tools_app.chunk_with_pages(text)
 
     async def rerank(
-        self, query: str, documents: list[str], top_k: int = 4
+        self,
+        user_id: str,
+        session_id: str,
+        query: str,
+        documents: list[str],
+        top_k: int = 4,
     ) -> list[Any]:
-        return await self._llm_tools_app.rerank(query, documents, top_k)
+        return await self._llm_tools_app.rerank(
+            user_id, session_id, query, documents, top_k
+        )
