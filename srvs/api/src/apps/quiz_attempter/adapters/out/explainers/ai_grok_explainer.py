@@ -82,10 +82,10 @@ class AIGrokExplainer(Explainer):
     ) -> AsyncIterable[MessageRef]:
         search_query = self._build_search_query(query, item)
         logger.info(f"Explainer search_query: '{search_query[:200]}...'")
-        
+
         chunks = await self._search_chunks(search_query, material_ids, user)
         logger.info(f"Explainer found {len(chunks)} chunks")
-        
+
         queue: asyncio.Queue[MessageRef | None] = asyncio.Queue()
         deps = AIGrokExplainerDeps(quiz=attempt.quiz, current_item=item, chunks=chunks)
 
@@ -110,6 +110,7 @@ class AIGrokExplainer(Explainer):
                                 MessageRef(
                                     id=ai_msg.id,
                                     attempt_id=attempt.id,
+                                    item_id=item.id,
                                     content=delta,
                                     role=MessageRoleRef.AI,
                                     status=MessageStatusRef.STREAMING,
@@ -121,6 +122,7 @@ class AIGrokExplainer(Explainer):
                         MessageRef(
                             id=ai_msg.id,
                             attempt_id=attempt.id,
+                            item_id=item.id,
                             content=content,
                             role=MessageRoleRef.AI,
                             status=MessageStatusRef.FINAL,
@@ -257,7 +259,7 @@ class AIGrokExplainer(Explainer):
         self, search_query: str, material_ids: list[str], user: Any
     ) -> list[MaterialChunk]:
         q_vec = (await self._llm_tools.vectorize([search_query]))[0].tolist()
-        
+
         chunks = await self._material_app.search(
             SearchCmd(
                 limit_tokens=RAG_CHUNK_TOKEN_LIMIT,

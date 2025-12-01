@@ -80,17 +80,21 @@ class QuizAttempterAppImpl(QuizAttempterApp):
             GetAttemptHistoryCmd(attempt_id=attempt.id, limit=100)
         )
         history = [self._to_message_ref(msg) for msg in history]
-        history = self._trim_history(history)
+        history = self._trim_history(history, cmd.item_id)
         attempt.set_history(history)
 
         item = attempt.get_item(cmd.item_id)
         material_ids = attempt.quiz.material_ids
 
-        logger.info(
-            f"Explain attempt: {attempt.id} with {len(material_ids)} materials"
-        )
+        logger.info(f"Explain attempt: {attempt.id} with {len(material_ids)} materials")
         async for chunk in self.explainer.explain(
-            cmd.query, attempt, item, ai_message_ref, cmd.cache_key, material_ids, cmd.user
+            cmd.query,
+            attempt,
+            item,
+            ai_message_ref,
+            cmd.cache_key,
+            material_ids,
+            cmd.user,
         ):
             logger.debug(f"Message: {len(chunk.content)} chars, id: {chunk.id}")
             status = "chunk" if chunk.status == "streaming" else "done"
@@ -120,13 +124,16 @@ class QuizAttempterAppImpl(QuizAttempterApp):
                 attempt_id=attempt.id, user_id=user.id, quiz_id=attempt.quiz.id
             )
 
-    def _trim_history(self, history: list[MessageRef]) -> list[MessageRef]:
-        return history
+    def _trim_history(
+        self, history: list[MessageRef], item_id: str
+    ) -> list[MessageRef]:
+        return [msg for msg in history if msg.item_id == item_id]
 
     def _to_message_ref(self, message: Message) -> MessageRef:
         return MessageRef(
             id=message.id,
             attempt_id=message.attempt_id,
+            item_id=message.metadata.item_id,
             content=message.content,
             role=self._to_message_role_ref(message.role),
             status=self._to_message_status_ref(message.status),
