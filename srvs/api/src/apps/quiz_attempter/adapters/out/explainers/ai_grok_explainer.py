@@ -42,7 +42,7 @@ from ....domain.refs import (
 )
 from ....domain.out import Explainer
 
-EXPLAINER_LLM = LLMS.GROK_4_FAST
+EXPLAINER_LLM = LLMS.GROK_4_1_FAST
 RETRIES = 5
 RERANK_QUERY_PREFIX = "Find educational content that thoroughly can explain:"
 
