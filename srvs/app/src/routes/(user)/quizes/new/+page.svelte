@@ -217,6 +217,11 @@
 							{isUploading}
 							{selectedLanguage}
 						/>
+
+						<p class="mt-0 text-center text-sm text-base-content/50">
+							"We are currently unable to process images. Please make sure attached materials
+							contain text."
+						</p>
 					</div>
 				</div>
 			</div>
