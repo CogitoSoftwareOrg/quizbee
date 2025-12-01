@@ -8,7 +8,7 @@ from ....domain.out import SearchDto, Searcher, LLMTools
 from ..indexers.meili_material_indexer import EMBEDDER_NAME, Doc
 
 MIN_CHUNK_CONTENT_LENGTH = 100
-RERANK_TOP_K = 4
+RERANK_TOP_K = 5
 
 
 class MeiliMaterialVectorSearcher(Searcher):

@@ -43,7 +43,7 @@ class MeiliGeneratorVectorSearcher(Searcher):
             dto: SearchDto с параметрами поиска
                 - user_id: ID пользователя
                 - material_ids: Список ID материалов для поиска
-                - limit: Максимальное количество чанков (обычно 4)
+                - limit: Максимальное количество чанков (обычно 5)
                 - vectors: Список векторов для поиска
 
         Returns:
@@ -76,7 +76,7 @@ class MeiliGeneratorVectorSearcher(Searcher):
                         semantic_ratio=1.0, embedder=EMBEDDER_NAME
                     ),
                     filter=f_unused,
-                    limit=4,
+                    limit=5,
                     ranking_score_threshold=threshold,
                     show_ranking_score=True,
                 )
@@ -85,8 +85,8 @@ class MeiliGeneratorVectorSearcher(Searcher):
                 
                 logging.info(f" threshold: {threshold}, found {len(docs)} unused chunks")
                 # Пока что если мы находим мало неиспользованных чанков, дополняем их использованными 
-                if len(docs) < 4:
-                    needed = 4 - len(docs)
+                if len(docs) < 5:
+                    needed = 5 - len(docs)
                     logging.info(
                         f"Found only {len(docs)} unused chunks, fetching {needed} used chunks"
                     )
@@ -119,7 +119,7 @@ class MeiliGeneratorVectorSearcher(Searcher):
                         f"Added {len(docs_used)} used chunks, total: {len(docs)}"
                     )
 
-                for doc in docs[:4]:
+                for doc in docs[:5]:
                     chunk = doc.to_chunk()
                     if chunk.id not in seen_chunk_ids:
                         seen_chunk_ids.add(chunk.id)
