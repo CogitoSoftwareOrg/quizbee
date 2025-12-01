@@ -63,26 +63,9 @@
 				: totalTokensAttached > maxTokensWithoutABook)
 	);
 
-	let isLargeFileProcessingCondition = $derived.by(() => {
-		const hasLargeFile = attachedFiles.some(
-			(f) => f.file && f.file.size > 15 * 1024 * 1024 && (f.isUploading || f.isIndexing)
-		);
-		const isAnyFileHashing = attachedFiles.some((f) => f.isHashing);
-		return hasLargeFile && !isAnyFileHashing;
-	});
-
-	let warningLargeFileProcessing = $state(false);
-
-	$effect(() => {
-		if (isLargeFileProcessingCondition) {
-			const timer = setTimeout(() => {
-				warningLargeFileProcessing = true;
-			}, 500);
-			return () => clearTimeout(timer);
-		} else {
-			warningLargeFileProcessing = false;
-		}
-	});
+	let warningLargeFileProcessing = $derived(
+		attachedFiles.some((f) => f.file && f.file.size > 15 * 1024 * 1024 && f.isUploading)
+	);
 
 	let placeholderText = $state('Attach files • Add text');
 
@@ -248,8 +231,6 @@
 	async function uploadFileAsync(attachedFile: AttachedFile) {
 		console.log('uploadFileAsync called with attachedFile:', attachedFile);
 		try {
-			
-
 			const hash = await computeFileHash(attachedFile.file!);
 			attachedFile.hash = hash;
 			attachedFile.isHashing = false;
@@ -578,7 +559,8 @@
 	{/if}
 	{#if warningTotalSizeExceeded}
 		<div class="text-md mt-2 text-red-500">
-			File "{warningTotalSizeExceeded}" cannot be attached. Total size of all files cannot exceed 75MB. Please consider starting several quizzes with fewer materials.
+			File "{warningTotalSizeExceeded}" cannot be attached. Total size of all files cannot exceed
+			75MB. Please consider starting several quizzes with fewer materials.
 		</div>
 	{/if}
 	{#if warningNoText}
@@ -588,8 +570,8 @@
 	{/if}
 	{#if warningUnsupportedFile}
 		<div class="text-md mt-2 text-red-500">
-			File "{warningUnsupportedFile}" has an unsupported format and cannot be uploaded. We support PDF, PPTX,
-			DOCX and text based formats (MD, TXT, HTML, CSV).
+			File "{warningUnsupportedFile}" has an unsupported format and cannot be uploaded. We support
+			PDF, PPTX, DOCX and text based formats (MD, TXT, HTML, CSV).
 		</div>
 	{/if}
 	{#if warningMaxTokensExceeded}
@@ -600,7 +582,8 @@
 	{/if}
 	{#if warningLargeFileProcessing}
 		<div class="text-md mt-2 text-orange-500">
-			You've attached a large file and the processing may take up to a few minutes. Please be patient, you can reuse the material in other quizzes after it is processed.
+			You've attached a large file and the processing may take up to a few minutes. Please be
+			patient, you can reuse the material in other quizzes after it is processed.
 		</div>
 	{/if}
 	{#if attachedFiles.length > 0}

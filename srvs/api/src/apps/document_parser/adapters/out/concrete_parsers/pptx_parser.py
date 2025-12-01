@@ -11,7 +11,7 @@ from io import BytesIO
 from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE_TYPE
 
-from ....domain.out import DocumentParser, ImageDescriber
+from ....domain.out import DocumentParser
 from ....domain.models import ParsedDocument, DocumentImage
 
 logger = logging.getLogger(__name__)
@@ -20,14 +20,12 @@ logger = logging.getLogger(__name__)
 class PptxDocumentParser(DocumentParser):
     def __init__(
         self,
-        image_describer: ImageDescriber | None = None,
         min_width: int = 100,
         min_height: int = 100,
         min_file_size: int = 5 * 1024,
         min_rel_area: float = 0.40,
         max_text_length_for_images: int = 150,
     ):
-        self.image_describer = image_describer
         self.min_width = min_width
         self.min_height = min_height
         self.min_file_size = min_file_size
@@ -35,22 +33,11 @@ class PptxDocumentParser(DocumentParser):
         self.max_text_length_for_images = max_text_length_for_images
 
     async def parse(
-        self, file_bytes: bytes, file_name: str, process_images: bool = False
+        self, file_bytes: bytes, file_name: str
     ) -> ParsedDocument:
         result = await asyncio.to_thread(
-            self._parse, file_bytes, file_name, process_images
+            self._parse, file_bytes, file_name
         )
-
-        if process_images and result.images and self.image_describer:
-            logger.info(f"🖼️ Обработка {len(result.images)} изображений параллельно...")
-            image_descriptions = await self.image_describer.describe_batch(result.images)
-            result = ParsedDocument(
-                text=self._replace_markers_with_descriptions(result.text, image_descriptions),
-                images=result.images,
-                contents=result.contents,
-                is_book=result.is_book,
-            )
-            logger.info(f"✅ Обработано {len(image_descriptions)} изображений")
 
         return result
 
@@ -58,7 +45,6 @@ class PptxDocumentParser(DocumentParser):
         self,
         file_bytes: bytes,
         file_name: str,
-        process_images: bool = False,
     ) -> ParsedDocument:
         """
         Парсит PPTX документ.
@@ -66,7 +52,6 @@ class PptxDocumentParser(DocumentParser):
         Args:
             file_bytes: Байты PPTX файла
             file_name: Имя файла (для логирования)
-            process_images: Извлекать ли изображения
 
         Returns:
             ParsedDocument с результатом парсинга
@@ -111,12 +96,6 @@ class PptxDocumentParser(DocumentParser):
                             "page": slide_num,
                         }
                     )
-
-                if process_images and slide_text_length <= self.max_text_length_for_images:
-                    slide_images = self.extract_images_from_slide(
-                        slide, slide_num, slide_area
-                    )
-                    images.extend(slide_images)
 
             final_text = "\n\n".join(text_parts)
 
@@ -272,147 +251,8 @@ class PptxDocumentParser(DocumentParser):
 
         return "\n".join(formatted_rows)
 
-    def extract_images_from_slide(
-        self, slide, slide_num: int, slide_area: int
-    ) -> list[DocumentImage]:
-        images = []
-        image_index = 0
 
-        for shape in slide.shapes:
-            if shape.shape_type == MSO_SHAPE_TYPE.PICTURE:
-                try:
-                    image = shape.image
-                    image_bytes = image.blob
 
-                    if len(image_bytes) < self.min_file_size:
-                        logger.debug(
-                            f"Пропуск изображения на слайде {slide_num}: "
-                            f"размер {len(image_bytes)} < {self.min_file_size} байт"
-                        )
-                        continue
 
-                    ext = image.ext or "png"
-                    if ext.startswith("."):
-                        ext = ext[1:]
 
-                    shape_width = shape.width if hasattr(shape, "width") else 0
-                    shape_height = shape.height if hasattr(shape, "height") else 0
-                    shape_area = shape_width * shape_height
 
-                    if slide_area > 0:
-                        rel_area = shape_area / slide_area
-                        if rel_area < self.min_rel_area:
-                            logger.debug(
-                                f"Пропуск изображения на слайде {slide_num}: "
-                                f"площадь {rel_area:.1%} < {self.min_rel_area:.0%}"
-                            )
-                            continue
-
-                    width = int(shape_width / 914400 * 96) if shape_width else 0
-                    height = int(shape_height / 914400 * 96) if shape_height else 0
-
-                    if width < self.min_width or height < self.min_height:
-                        logger.debug(
-                            f"Пропуск изображения на слайде {slide_num}: "
-                            f"размер {width}x{height} меньше минимального "
-                            f"{self.min_width}x{self.min_height}"
-                        )
-                        continue
-
-                    doc_image = DocumentImage(
-                        bytes=image_bytes,
-                        ext=ext,
-                        width=width,
-                        height=height,
-                        page=slide_num,
-                        index=image_index,
-                        marker=f"{{quizbee_unique_image_{slide_num}_{image_index}}}",
-                        file_name=f"slide_{slide_num}_image_{image_index}.{ext}",
-                    )
-
-                    images.append(doc_image)
-                    image_index += 1
-
-                except Exception as e:
-                    logger.warning(
-                        f"Не удалось извлечь изображение со слайда {slide_num}: {str(e)}"
-                    )
-
-            elif shape.shape_type == MSO_SHAPE_TYPE.GROUP:
-                group_images = self.extract_images_from_group_shape(
-                    shape, slide_num, image_index, slide_area
-                )
-                images.extend(group_images)
-                image_index += len(group_images)
-
-        return images
-
-    def extract_images_from_group_shape(
-        self, group_shape, slide_num: int, start_index: int, slide_area: int
-    ) -> list[DocumentImage]:
-        images = []
-        image_index = start_index
-
-        for shape in group_shape.shapes:
-            if shape.shape_type == MSO_SHAPE_TYPE.PICTURE:
-                try:
-                    image = shape.image
-                    image_bytes = image.blob
-
-                    if len(image_bytes) < self.min_file_size:
-                        continue
-
-                    ext = image.ext or "png"
-                    if ext.startswith("."):
-                        ext = ext[1:]
-
-                    shape_width = shape.width if hasattr(shape, "width") else 0
-                    shape_height = shape.height if hasattr(shape, "height") else 0
-                    shape_area = shape_width * shape_height
-
-                    if slide_area > 0:
-                        rel_area = shape_area / slide_area
-                        if rel_area < self.min_rel_area:
-                            continue
-
-                    width = int(shape_width / 914400 * 96) if shape_width else 0
-                    height = int(shape_height / 914400 * 96) if shape_height else 0
-
-                    if width < self.min_width or height < self.min_height:
-                        continue
-
-                    doc_image = DocumentImage(
-                        bytes=image_bytes,
-                        ext=ext,
-                        width=width,
-                        height=height,
-                        page=slide_num,
-                        index=image_index,
-                        marker=f"{{quizbee_unique_image_{slide_num}_{image_index}}}",
-                        file_name=f"slide_{slide_num}_image_{image_index}.{ext}",
-                    )
-
-                    images.append(doc_image)
-                    image_index += 1
-
-                except Exception as e:
-                    logger.warning(
-                        f"Не удалось извлечь изображение из группы на слайде {slide_num}: {str(e)}"
-                    )
-
-            elif shape.shape_type == MSO_SHAPE_TYPE.GROUP:
-                nested_images = self.extract_images_from_group_shape(
-                    shape, slide_num, image_index, slide_area
-                )
-                images.extend(nested_images)
-                image_index += len(nested_images)
-
-        return images
-
-    def _replace_markers_with_descriptions(self, text: str, descriptions: dict[str, str]) -> str:
-        for marker, description in descriptions.items():
-            if description:
-                text = text.replace(marker, description)
-            else:
-                text = text.replace(f"\n{marker}\n", "")
-        return text

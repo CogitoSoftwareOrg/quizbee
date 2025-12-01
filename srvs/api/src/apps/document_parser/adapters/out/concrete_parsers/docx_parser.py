@@ -46,17 +46,16 @@ class DocxDocumentParser(DocumentParser):
         self.min_file_size = min_file_size
 
     async def parse(
-        self, file_bytes: bytes, file_name: str, process_images: bool = False
+        self, file_bytes: bytes, file_name: str
     ) -> ParsedDocument:
         return await asyncio.to_thread(
-            self._parse, file_bytes, file_name, process_images
+            self._parse, file_bytes, file_name
         )
 
     def _parse(
         self,
         file_bytes: bytes,
         file_name: str,
-        process_images: bool = False,
     ) -> ParsedDocument:
         """
         Парсит DOCX документ.
@@ -64,7 +63,6 @@ class DocxDocumentParser(DocumentParser):
         Args:
             file_bytes: Байты DOCX файла
             file_name: Имя файла (для логирования)
-            process_images: Извлекать ли изображения (TODO: пока не реализовано)
 
         Returns:
             ParsedDocument с результатом парсинга
@@ -90,13 +88,6 @@ class DocxDocumentParser(DocumentParser):
 
             # Изображения
             images: list[DocumentImage] = []
-            if process_images:
-                logger.warning(
-                    "Извлечение изображений из DOCX пока не реализовано. "
-                    "Это будет добавлено в будущих версиях."
-                )
-                # TODO: Реализовать извлечение изображений
-                # Можно использовать doc.inline_shapes и doc.part.rels для доступа к изображениям
 
             return ParsedDocument(
                 text=final_text,

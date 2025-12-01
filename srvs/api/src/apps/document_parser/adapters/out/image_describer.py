@@ -5,7 +5,7 @@ from google import genai
 from google.genai import types
 from langfuse import Langfuse
 
-from ...domain.out import ImageDescriber
+
 from ...domain.models import DocumentImage
 from src.lib.settings import settings
 

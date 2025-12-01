@@ -5,41 +5,28 @@ from typing import Any
 import logging
 import re
 
-from ....domain.out import DocumentParser, ImageDescriber
+from ....domain.out import DocumentParser
 from ....domain.models import ParsedDocument, DocumentImage
 
 
 class FitzPDFParser(DocumentParser):
     def __init__(
         self,
-        image_describer: ImageDescriber | None = None,
         max_text_length_for_images: int = 150,
     ):
-        self.image_describer = image_describer
         self.max_text_length_for_images = max_text_length_for_images
 
     async def parse(
-        self, file_bytes: bytes, file_name: str, process_images: bool = True
+        self, file_bytes: bytes, file_name: str
     ) -> ParsedDocument:
         result = await asyncio.to_thread(
-            self._parse, file_bytes, file_name, process_images
+            self._parse, file_bytes, file_name
         )
-
-        if process_images and result.images and self.image_describer:
-            logging.info(f"🖼️ Обработка {len(result.images)} изображений параллельно...")
-            image_descriptions = await self.image_describer.describe_batch(result.images)
-            result = ParsedDocument(
-                text=self._replace_markers_with_descriptions(result.text, image_descriptions),
-                images=result.images,
-                contents=result.contents,
-                is_book=result.is_book,
-            )
-            logging.info(f"✅ Обработано {len(image_descriptions)} изображений")
 
         return result
 
     def _parse(
-        self, file_bytes: bytes, file_name: str, process_images: bool = True
+        self, file_bytes: bytes, file_name: str
     ) -> ParsedDocument:
         """
         Извлекает текст и изображения из PDF-файла, фильтруя слишком маленькие изображения.
@@ -49,7 +36,6 @@ class FitzPDFParser(DocumentParser):
         Args:
             file_bytes: Байты PDF файла
             file_name: Имя файла (для логирования)
-            process_images: Обрабатывать ли изображения
 
         Returns:
             ParsedDocument с извлечённым текстом и списком отфильтрованных изображений
@@ -99,12 +85,6 @@ class FitzPDFParser(DocumentParser):
                         indent = "  " * (level - 1)
                         logging.info(f"{indent}- {title} (стр. {page_num})")
 
-            should_process_images = process_images and is_presentation
-            if should_process_images:
-                self.extract_pictures(doc, page_count, images, image_positions, stats)
-            elif process_images and not is_presentation:
-                logging.info("⏭️ Пропуск обработки изображений - документ не является презентацией")
-
             # TEXT EXTRACTION
             md_text_parts = []
 
@@ -116,34 +96,6 @@ class FitzPDFParser(DocumentParser):
                 page_marker = f"{{quizbee_page_number_{page_num + 1}}}\n\n"
 
                 page_text = page_marker + page_text
-
-                if should_process_images:
-                    if page_num in image_positions:
-                        paragraphs = re.split(r"\n\n+", page_text)
-                        num_paragraphs = len(paragraphs)
-                        num_images = len(image_positions[page_num])
-
-                        result_parts = []
-                        images_inserted = 0
-
-                        for i, para in enumerate(paragraphs):
-                            result_parts.append(para)
-
-                            if images_inserted < num_images and num_paragraphs > 0:
-                                insert_threshold = (i + 1) / num_paragraphs
-                                image_threshold = (images_inserted + 1) / num_images
-
-                                if insert_threshold >= image_threshold:
-                                    _, marker = image_positions[page_num][images_inserted]
-                                    result_parts.append(f"\n{marker}\n")
-                                    images_inserted += 1
-
-                        while images_inserted < num_images:
-                            _, marker = image_positions[page_num][images_inserted]
-                            result_parts.append(f"\n{marker}\n")
-                            images_inserted += 1
-
-                        page_text = "\n\n".join(result_parts)
 
                 md_text_parts.append(page_text)
 
@@ -177,13 +129,7 @@ class FitzPDFParser(DocumentParser):
             logging.error(f"❌ Ошибка при парсинге PDF файла {file_name}: {str(e)}")
             raise Exception(f"Ошибка при парсинге PDF файла: {str(e)}")
 
-    def _replace_markers_with_descriptions(self, text: str, descriptions: dict[str, str]) -> str:
-        for marker, description in descriptions.items():
-            if description:
-                text = text.replace(marker, description)
-            else:
-                text = text.replace(f"\n{marker}\n", "")
-        return text
+
 
     def extract_table_of_contents(self, doc: fitz.Document) -> list[dict[str, Any]]:
         """
@@ -241,46 +187,7 @@ class FitzPDFParser(DocumentParser):
 
         return toc_items
 
-    def extract_pictures(
-        self,
-        doc: fitz.Document,
-        page_count: int,
-        images: list[DocumentImage],
-        image_positions: dict,
-        stats: dict,
-    ) -> None:
-        global_image_counter = 1
 
-        for page_num in range(page_count):
-            page = doc.load_page(page_num)
-
-            page_text: str = page.get_text()  # type: ignore
-            words = page_text.strip().split()
-
-            if len(words) >= 2:
-                continue
-
-            pix = page.get_pixmap()  # type: ignore
-            img_bytes = pix.tobytes("png")  # type: ignore
-
-            marker = f"{{quizbee_unique_image_{global_image_counter}}}"
-
-            images.append(
-                DocumentImage(
-                    bytes=img_bytes,
-                    ext="png",
-                    width=pix.width,  # type: ignore
-                    height=pix.height,  # type: ignore
-                    page=page_num + 1,
-                    index=0,
-                    marker=marker,
-                    file_name=f"img_p{page_num + 1}_0.png",
-                )
-            )
-
-            image_positions[page_num] = [(0, marker)]
-            global_image_counter += 1
-            stats["full_page_screenshots"] += 1
 
     def is_book(self, doc: fitz.Document) -> bool:
         """
