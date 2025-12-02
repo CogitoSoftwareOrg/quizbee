@@ -116,7 +116,7 @@ class MeiliMaterialIndexer(MaterialIndexer):
         )
         return instance
 
-    async def index(self, material: Material) -> None:
+    async def index(self, material: Material) -> int:
         total_tokens = 0
 
         # Extract text from material
@@ -217,6 +217,8 @@ class MeiliMaterialIndexer(MaterialIndexer):
         self._log_langfuse(
             material.user_id, material.id, total_tokens, "material-index-add"
         )
+
+        return len(docs)
 
     async def delete(self, material_ids: list[str]) -> None:
         if len(material_ids) == 0:

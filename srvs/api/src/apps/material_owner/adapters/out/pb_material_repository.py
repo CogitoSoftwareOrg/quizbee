@@ -71,6 +71,7 @@ class PBMaterialRepository(MaterialRepository):
             tokens=rec.get("tokens") or 0,
             size_bytes=rec.get("bytes") or 0,
             hash=rec.get("hash") or "",
+            num_chunks=rec.get("num_chunks") or 0,
             file=MaterialFile(
                 file_name=rec.get("file") or "",
                 file_bytes=file_bytes,
@@ -129,4 +130,5 @@ class PBMaterialRepository(MaterialRepository):
                 else None
             ),
             "bytes": total_bytes,
+            "num_chunks": material.num_chunks,
         }

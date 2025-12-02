@@ -24,7 +24,6 @@ from src.lib.settings import settings
 
 from ....domain.out import PatchGenerator, PatchGeneratorDto
 from ....domain.models import Quiz, QuizItemVariant
-from ....domain.constants import PATCH_LIMIT
 
 
 QUIZ_GENERATOR_LLM = LLMS.GROK_4_1_FAST

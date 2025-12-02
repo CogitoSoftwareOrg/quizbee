@@ -28,6 +28,7 @@ class SearchCmd:
     user: Principal
     material_ids: list[str]
     limit_tokens: int = 100
+    limit_chunks: int | None = None
     query: str = ""
     rerank_prefix: str = ""
     all_chunks: bool = False

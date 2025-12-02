@@ -91,6 +91,7 @@ class Material:
     text_file: MaterialFile | None = None
     table_of_contents: list[dict] | None = None
     hash: str = ""
+    num_chunks: int = 0
     id: str = field(default_factory=genID)
 
     @classmethod

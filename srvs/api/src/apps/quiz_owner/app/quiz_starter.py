@@ -13,6 +13,17 @@ from ..adapters.out.quiz_preprocesser import QuizPreprocessor
 logger = logging.getLogger(__name__)
 
 
+def _calculate_chunks_per_question(total_chunks: int) -> int:
+    if total_chunks <= 8:
+        return 2
+    elif total_chunks <= 11:
+        return 3
+    elif total_chunks <= 14:
+        return 4
+    else:
+        return 5
+
+
 class QuizStarterImpl(QuizStarter):
     def __init__(
         self,
@@ -45,14 +56,27 @@ class QuizStarterImpl(QuizStarter):
 
         logger.info(f"Building cluster vectors for quiz {quiz.id}")
 
+        total_chunks = 0
+        for material_ref in quiz.materials:
+            material = await self._material_app.get_material(material_ref.id)
+            if material:
+                total_chunks += material.num_chunks
+
+        chunks_per_question = _calculate_chunks_per_question(total_chunks)
+        logger.info(
+            f"Total chunks: {total_chunks}, chunks_per_question: {chunks_per_question}"
+        )
+
         if topics_vectors:
             logger.info(f"Using {len(topics_vectors)} topic vectors from preprocessor")
-            quiz.set_cluster_vectors(topics_vectors)
+            quiz.set_cluster_vectors(topics_vectors, chunks_per_question=chunks_per_question)
         elif len(quiz.materials) > 0:
-            cluster_vectors, cluster_thresholds = await self._quiz_clusterer.cluster(quiz, cmd.user)
-            quiz.set_cluster_vectors(cluster_vectors, cluster_thresholds)
+            cluster_vectors, cluster_thresholds = await self._quiz_clusterer.cluster(
+                quiz, cmd.user, chunks_per_question
+            )
+            quiz.set_cluster_vectors(cluster_vectors, cluster_thresholds, chunks_per_question)
         else:
-            quiz.set_cluster_vectors([])
+            quiz.set_cluster_vectors([], chunks_per_question=chunks_per_question)
 
         if quiz.avoid_repeat:
             logger.info(f"Building quiz summary for quiz {quiz.id}")

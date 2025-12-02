@@ -20,7 +20,9 @@ class KMeansQuizClusterer:
     ):
         self._material_app = material_app
 
-    async def cluster(self, quiz: Quiz, user: Principal) -> tuple[list[list[float]], list[float]]:
+    async def cluster(
+        self, quiz: Quiz, user: Principal, chunks_per_question: int
+    ) -> tuple[list[list[float]], list[float]]:
         chunks = await self._material_app.search(
             SearchCmd(
                 user=user,

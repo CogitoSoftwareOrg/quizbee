@@ -136,6 +136,7 @@ class Quiz:
     items: list[QuizItem] = field(default_factory=list)
     cluster_vectors: list[list[float]] = field(default_factory=list)
     cluster_thresholds: list[float] = field(default_factory=list)
+    chunks_per_question: int = 0
 
     gen_config: QuizGenConfig = field(default_factory=QuizGenConfig)
 
@@ -187,9 +188,15 @@ class Quiz:
         self.material_content = content
         self.need_build_material_content = False
 
-    def set_cluster_vectors(self, vectors: list[list[float]], thresholds: list[float] | None = None):
+    def set_cluster_vectors(
+        self,
+        vectors: list[list[float]],
+        thresholds: list[float] | None = None,
+        chunks_per_question: int = 0,
+    ):
         self.cluster_vectors = vectors
         self.cluster_thresholds = thresholds or []
+        self.chunks_per_question = chunks_per_question
 
     def request_build_material_content(self) -> None:
         self.need_build_material_content = True

@@ -12,7 +12,6 @@ from meilisearch_python_sdk.models.search import Hybrid
 
 from ....domain.models import MaterialChunk
 from ....domain.out import SearchDto, Searcher, LLMTools
-from .....quiz_owner.domain.constants import PATCH_CHUNK_TOKEN_LIMIT
 
 from ..indexers.meili_material_indexer import EMBEDDER_NAME, Doc
 
@@ -76,7 +75,7 @@ class MeiliGeneratorVectorSearcher(Searcher):
                         semantic_ratio=1.0, embedder=EMBEDDER_NAME
                     ),
                     filter=f_unused,
-                    limit=5,
+                    limit=dto.limit,
                     ranking_score_threshold=threshold,
                     show_ranking_score=True,
                 )
@@ -84,9 +83,8 @@ class MeiliGeneratorVectorSearcher(Searcher):
                 docs: list[Doc] = [Doc.from_hit(hit) for hit in res.hits]
                 
                 logging.info(f" threshold: {threshold}, found {len(docs)} unused chunks")
-                # Пока что если мы находим мало неиспользованных чанков, дополняем их использованными 
-                if len(docs) < 5:
-                    needed = 5 - len(docs)
+                if len(docs) < dto.limit:
+                    needed = dto.limit - len(docs)
                     logging.info(
                         f"Found only {len(docs)} unused chunks, fetching {needed} used chunks"
                     )
@@ -119,7 +117,7 @@ class MeiliGeneratorVectorSearcher(Searcher):
                         f"Added {len(docs_used)} used chunks, total: {len(docs)}"
                     )
 
-                for doc in docs[:5]:
+                for doc in docs[:dto.limit]:
                     chunk = doc.to_chunk()
                     if chunk.id not in seen_chunk_ids:
                         seen_chunk_ids.add(chunk.id)

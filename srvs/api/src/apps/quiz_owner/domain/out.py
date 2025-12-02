@@ -16,7 +16,9 @@ class QuizRepository(Protocol):
 
 
 class QuizClusterer(Protocol):
-    async def cluster(self, quiz: Quiz, user: Principal) -> list[list[float]]: ...
+    async def cluster(
+        self, quiz: Quiz, user: Principal, chunks_per_question: int
+    ) -> tuple[list[list[float]], list[float]]: ...
 
 
 class QuizIndexer(Protocol):

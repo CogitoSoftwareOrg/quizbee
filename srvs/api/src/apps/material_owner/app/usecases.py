@@ -173,7 +173,8 @@ class MaterialAppImpl(MaterialApp):
 
         # Индексируем материал
         try:
-            await self._indexer.index(material)
+            num_chunks = await self._indexer.index(material)
+            material.num_chunks = num_chunks
         except TooManyTextTokensError as e:
             material.status = MaterialStatus.TOO_BIG
             await self._material_repository.update(material)
@@ -191,7 +192,10 @@ class MaterialAppImpl(MaterialApp):
     async def search(self, cmd: SearchCmd) -> list[MaterialChunk]:
         logger.info("MaterialAppImpl.search")
 
-        limit_chunks = int(cmd.limit_tokens / self._llm_tools.chunk_size)
+        if cmd.limit_chunks is not None:
+            limit_chunks = cmd.limit_chunks
+        else:
+            limit_chunks = 5
 
         ratio = 0.0
         if cmd.search_type is not None:

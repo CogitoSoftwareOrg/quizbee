@@ -13,7 +13,7 @@ from ..domain._in import GenMode, GenerateCmd, QuizGenerator
 from ..domain.errors import NotQuizOwnerError
 from ..domain.out import PatchGenerator, PatchGeneratorDto, QuizIndexer, QuizRepository
 from ..domain.models import Quiz, QuizItem, QuizItemVariant
-from ..domain.constants import HOLDOUT, PATCH_CHUNK_TOKEN_LIMIT, PATCH_LIMIT
+from ..domain.constants import DEFAULT_CHUNKS_PER_QUESTION, HOLDOUT, PATCH_LIMIT
 
 from .errors import NoItemsReadyForGenerationError
 
@@ -359,11 +359,13 @@ class QuizGeneratorImpl(QuizGenerator):
             f"Searching for item {item.order} with vector cluster {cluster_idx}, threshold: {threshold}"
         )
 
+        limit_chunks = quiz.chunks_per_question or DEFAULT_CHUNKS_PER_QUESTION
+
         chunks = await self._material_app.search(
             SearchCmd(
                 user=user,
                 material_ids=[m.id for m in quiz.materials],
-                limit_tokens=PATCH_CHUNK_TOKEN_LIMIT,
+                limit_chunks=limit_chunks,
                 vectors=[vector],
                 vector_thresholds=[threshold] if threshold else None,
                 search_type=SearchType.GENERATOR,
