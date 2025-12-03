@@ -1,14 +1,15 @@
 <script lang="ts">
 	import { ChevronUp, X } from 'lucide-svelte';
-	import { Button } from '@quizbee/ui-svelte-daisy';
 
-	import type { Sender } from '$lib/apps/messages/types';
+	import { Button } from '@quizbee/ui-svelte-daisy';
 	import type {
 		MessagesResponse,
 		QuizAttemptsResponse,
 		QuizItemsResponse,
 		QuizesResponse
-	} from '$lib/pb';
+	} from '@quizbee/pb-types';
+
+	import type { Sender } from '$lib/apps/messages/types';
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
 
 	import AIChat from './AIChat.svelte';
@@ -223,6 +224,7 @@
 	class:pointer-events-none={!open}
 	style:transform={`translateY(${chatTranslateY()})`}
 	style:height="95vh"
+	style:padding-top="env(safe-area-inset-top)"
 	style:transition-duration={isDragging ? '0ms' : '300ms'}
 >
 	<div

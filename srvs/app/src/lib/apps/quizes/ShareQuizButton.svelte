@@ -32,7 +32,7 @@
 
 	const shareUrl = $derived(
 		baseUrl
-			? `${baseUrl}quizes/${category}/${quizId}`
+			? `${baseUrl}quizes/${category || 'general'}/${quizId}`
 			: typeof window !== 'undefined'
 				? `${window.location.origin}/quizes/${quizId}`
 				: ''

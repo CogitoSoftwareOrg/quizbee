@@ -1,10 +1,16 @@
 <script lang="ts">
 	import { Button } from '@quizbee/ui-svelte-daisy';
 
-	import type { QuizAttemptsResponse, QuizItemsResponse, QuizesResponse } from '$lib/pb';
+	import {
+		type QuizAttemptsResponse,
+		type QuizItemsResponse,
+		type QuizesResponse
+	} from '@quizbee/pb-types';
+	import { QuizItemsStatusOptions } from '@quizbee/pb-types';
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
 	import type { Sender } from '$lib/apps/messages/types';
 	import ExplainMore from '$lib/apps/messages/ExplainMore.svelte';
+	import { pb } from '$lib/pb';
 
 	interface Props {
 		quizAttempt: QuizAttemptsResponse;
@@ -31,6 +37,13 @@
 		onPrevious,
 		onNext
 	}: Props = $props();
+
+	async function handleNext(e: Event) {
+		e.preventDefault();
+		// Safety check: finalize all previous items before navigating
+		// await finalizePreviousItems();
+		onNext();
+	}
 </script>
 
 <!-- Desktop: Explain on left, Previous and Next on right -->
@@ -66,16 +79,7 @@
 		{/if}
 
 		{#if itemDecision}
-			<Button
-				color="primary"
-				size="lg"
-				onclick={(e) => {
-					e.preventDefault();
-					onNext();
-				}}
-			>
-				Next
-			</Button>
+			<Button color="primary" size="lg" onclick={handleNext}>Next</Button>
 		{:else}
 			<Button size="lg" class="pointer-events-none invisible">Next</Button>
 		{/if}
@@ -106,7 +110,7 @@
 				color="neutral"
 				style="outline"
 				size="lg"
-				class="flex-1 dark:text-base-content/90"
+				class="dark:text-base-content/90 flex-1"
 				onclick={(e) => {
 					e.preventDefault();
 					onPrevious();
@@ -120,17 +124,7 @@
 
 		<!-- Next button -->
 		{#if itemDecision}
-			<Button
-				color="primary"
-				size="lg"
-				class="flex-1"
-				onclick={(e) => {
-					e.preventDefault();
-					onNext();
-				}}
-			>
-				Next
-			</Button>
+			<Button color="primary" size="lg" class="flex-1" onclick={handleNext}>Next</Button>
 		{:else}
 			<Button size="lg" class="pointer-events-none invisible flex-1">Next</Button>
 		{/if}

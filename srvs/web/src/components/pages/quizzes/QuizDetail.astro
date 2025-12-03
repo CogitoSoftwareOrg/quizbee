@@ -24,7 +24,7 @@ try {
   quiz = await pb
     .collection("quizes")
     .getFirstListItem(
-      `(slug = "${quizSlugOrId}" || id = "${quizSlugOrId}") && (visibility = "public" || visibility = "search") && (category = "${category}")`,
+      `(slug = "${quizSlugOrId}" || id = "${quizSlugOrId}") && (visibility = "public" || visibility = "search")`,
       { expand: "quizItems_via_quiz", sort: "quizItems_via_quiz.order" }
     );
 } catch {

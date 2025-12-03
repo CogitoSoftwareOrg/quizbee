@@ -114,6 +114,30 @@
 		});
 	});
 
+	/**
+	 * Safety check: Ensure all previous items are final before moving to next question.
+	 * If question i is answered, all questions k < i should already be final.
+	 */
+	async function finalizePreviousItems() {
+		const previousItems = quizItems.slice(0, item.order);
+		const nonFinalItems = previousItems.filter(
+			(i) => i.status === QuizItemsStatusOptions.generated
+		);
+
+		if (nonFinalItems.length > 0) {
+			console.log('Finalizing previous items:', nonFinalItems);
+			await Promise.all(
+				nonFinalItems.map((i) =>
+					pb!.collection('quizItems').update(i.id, {
+						status: QuizItemsStatusOptions.final
+					})
+				)
+			);
+			// Update local state
+			nonFinalItems.forEach((i) => (i.status = QuizItemsStatusOptions.final));
+		}
+	}
+
 	async function finalizeQuiz() {
 		posthog.capture('quiz_finalize_started', {
 			quizId: quiz.id,
@@ -198,6 +222,8 @@
 										correct: answer.correct
 									};
 
+									await finalizePreviousItems();
+
 									// Create new decisions array and place decision at the correct position (item.order)
 									const newDecisions = [...quizDecisions];
 									newDecisions[item.order] = itemDecision;
@@ -222,25 +248,6 @@
 										item.order + 1 === quizItems.length &&
 										!(quizAttempt?.feedback as any)?.overview
 									) {
-										// Safety check: Ensure all previous items are final
-										const previousItems = quizItems.slice(0, item.order);
-										const nonFinalItems = previousItems.filter(
-											(i) => i.status === QuizItemsStatusOptions.generated
-										);
-
-										if (nonFinalItems.length > 0) {
-											console.log('Finalizing previous items:', nonFinalItems);
-											await Promise.all(
-												nonFinalItems.map((i) =>
-													pb.collection('quizItems').update(i.id, {
-														status: QuizItemsStatusOptions.final
-													})
-												)
-											);
-											// Update local state
-											nonFinalItems.forEach((i) => (i.status = QuizItemsStatusOptions.final));
-										}
-
 										await finalizeAttempt();
 									}
 
