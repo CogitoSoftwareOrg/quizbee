@@ -9,14 +9,12 @@
 		QuizAttemptsResponse,
 		QuizItemsResponse,
 		QuizesResponse
-	} from '$lib/pb';
+	} from '@quizbee/pb-types';
 
 	import type { Decision } from '$lib/apps/quiz-attempts/types';
 	import Messages from '$lib/apps/messages/Messages.svelte';
 	import MessageControls from '$lib/apps/messages/MessageControls.svelte';
-	import { Crown, HelpCircle, X } from 'lucide-svelte';
-	import { subscriptionStore } from '$lib/apps/billing/subscriptions.svelte';
-	import { uiStore } from '$lib/apps/users/ui.svelte';
+	import { HelpCircle, X } from 'lucide-svelte';
 	import { messagesStore } from '$lib/apps/messages/stores/messages.svelte';
 
 	interface Props {
@@ -45,8 +43,6 @@
 		showCloseButton = true
 	}: Props = $props();
 
-	const sub = $derived(subscriptionStore.subscription);
-	const isFreePlan = $derived(sub?.tariff === 'free');
 	const canChat = $derived(itemDecision && item && quizAttempt && quiz);
 
 	async function handleSend(content: string) {
@@ -102,19 +98,7 @@
 	</section>
 
 	<footer class="border-base-200 border-t px-3 py-2">
-		{#if isFreePlan && quiz && item && quizAttempt}
-			<Button
-				size="lg"
-				color="neutral"
-				style="soft"
-				block
-				onclick={() => uiStore.setPaywallOpen(true)}
-				class="flex items-center justify-center gap-2"
-			>
-				<p class="text-center font-semibold">Only premium users can use chat with AI</p>
-				<Crown class="block" size={24} />
-			</Button>
-		{:else if quiz && item && quizAttempt}
+		{#if quiz && item && quizAttempt}
 			<MessageControls {messages} onSend={handleSend} />
 		{/if}
 	</footer>
