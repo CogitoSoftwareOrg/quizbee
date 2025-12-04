@@ -87,8 +87,16 @@ class KMeansQuizClusterer:
 
         logger.info(f"Configuring KMeans: n_clusters={n_clusters}")
 
+        if n_samples > 1000:
+            reassignment_ratio = 0.0
+        elif n_samples < 50:
+            reassignment_ratio = 0.07
+        else:
+            reassignment_ratio = 0.01
+
         kmeans = MiniBatchKMeans(
             n_clusters=n_clusters,
+            reassignment_ratio=reassignment_ratio,
             random_state=505,
             batch_size=min(256, n_samples),
             n_init=3,
@@ -113,14 +121,20 @@ class KMeansQuizClusterer:
                 center = np.mean(cluster_embeddings, axis=0)
                 center_normalized = center / np.linalg.norm(center)
 
-                cosine_similarities = np.dot(cluster_embeddings, center_normalized)
+                embeddings_normalized = cluster_embeddings / np.linalg.norm(
+                    cluster_embeddings, axis=1, keepdims=True
+                )
+                cosine_similarities = np.dot(embeddings_normalized, center_normalized)
+
                 min_similarity = float(np.min(cosine_similarities))
+                margin = 0.1
+                threshold = min_similarity - margin
 
                 centers.append(center.tolist())
-                thresholds.append(min_similarity)
+                thresholds.append(threshold)
 
                 logger.info(
-                    f"  Cluster {cluster_id} ({cluster_count} docs): threshold={min_similarity:.4f}"
+                    f"  Cluster {cluster_id} ({cluster_count} docs): threshold={threshold:.4f} (min={min_similarity:.4f})"
                 )
 
             # Reorder to maximize distance between adjacent clusters
