@@ -98,7 +98,7 @@
 	</section>
 
 	<footer class="border-base-200 border-t px-3 py-2">
-		{#if quiz && item && quizAttempt}
+		{#if quiz && item && quizAttempt && itemDecision}
 			<MessageControls {messages} onSend={handleSend} />
 		{/if}
 	</footer>
