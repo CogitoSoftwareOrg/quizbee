@@ -223,7 +223,7 @@
 	class="bg-base-100 fixed inset-x-0 bottom-0 z-40 flex max-w-full flex-col overflow-hidden rounded-t-3xl shadow-2xl transition-transform duration-300 ease-out sm:hidden"
 	class:pointer-events-none={!open}
 	style:transform={`translateY(${chatTranslateY()})`}
-	style:height="95vh"
+	style:height="90vh"
 	style:padding-top="env(safe-area-inset-top)"
 	style:transition-duration={isDragging ? '0ms' : '300ms'}
 >
