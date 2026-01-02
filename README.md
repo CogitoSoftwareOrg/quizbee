@@ -53,4 +53,4 @@ The application delivers a native-like experience on iOS and Android through **C
 
 ### Real-Time Reactive State
 
-State management is powered by **Svelte 5** combined with **PocketBase Realtime** subscriptions. Stores automatically sync with the backend, instantly updating the UI when data changes on the server (e.g., new quiz generation progress). This provides a seamless, collaborative user experience without the need for manual polling or complex state synchronization logic.
+State management is powered by **Svelte 5** combined with **PocketBase Realtime** subscriptions.
