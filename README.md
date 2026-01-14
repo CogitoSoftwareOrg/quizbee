@@ -13,19 +13,22 @@ https://www.producthunt.com/products/quizbee
 
 # How to run it yourself
 
-
 ### 1. Environment Setup
+
 Copy your `env.example` to a new file named `.env` and fill in all the required API keys.
 
 ### 2. External Dependencies
+
 **Important:** This project requires **Redis**, **PocketBase**, and **MeiliSearch** to be running. Since they are not included in your `docker-compose.yml`, ensure the URLs in your `.env` point to active instances.
 
 ### 3. Build and Launch
+
 Run the following command in the root directory:
 
 ```bash
 docker compose up --build
 ```
+
 It will download all the required packages for all the modules and start the whole app.
 
 # Technical Highlights and Architecture
