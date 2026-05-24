@@ -6,7 +6,7 @@ Quizbee is a powerful web application that transforms lecture slides, textbooks,
 
 ### 🔗 Quick Links
 
-**Live Demo:** [quizbee.academy](https://quizbee.academy) (Free tier available!)  
+
 **ProductHunt:** [Support us on ProductHunt](https://www.producthunt.com/products/quizbee)
 
 ---
